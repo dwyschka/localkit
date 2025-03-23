@@ -1,0 +1,6 @@
+POST http://10.10.46.39/6/api/connected/20240413L12893
+Content-Type: application/json
+Content-Type: application/x-www-form-urlencoded
+
+connected=1
+

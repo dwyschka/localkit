@@ -1,0 +1,4 @@
+POST http://localhost/6/t4/dev_ota_check
+User-Agent: PETKIT DEV
+Content-Type: application/x-www-form-urlencoded
+X-Device: id=400061044&nonce=D8ea5O6BGK9l&timestamp=1739098321&type=T4&sign=3e4ee0dc2dece5350ccdffcaf06b4909

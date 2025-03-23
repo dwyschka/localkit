@@ -1,0 +1,3 @@
+GET http://10.10.46.39/6/api/topics/20240413L12893
+Content-Type: application/json
+
