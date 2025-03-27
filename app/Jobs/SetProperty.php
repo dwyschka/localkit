@@ -28,7 +28,7 @@ class SetProperty implements ShouldQueue
     {
         foreach($this->changes as $key => $change) {
             $message = PropertySetMessage::send($this->device, [$key => $change]);
-            MQTT::publish($message->getTopic(), $message->getMessage());
+            MQTT::connection('publisher')->publish($message->getTopic(), $message->getMessage());
         }
 
     }

@@ -27,6 +27,6 @@ class ServiceStart implements ShouldQueue
     public function handle(): void
     {
         $message = ServiceStartMessage::send($this->device, $this->startAction);
-        MQTT::publish($message->getTopic(), $message->getMessage());
+        MQTT::connection('publisher')->publish($message->getTopic(), $message->getMessage());
     }
 }

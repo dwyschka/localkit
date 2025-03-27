@@ -28,6 +28,6 @@ class ServiceEnd implements ShouldQueue
     public function handle(): void
     {
         $message = ServiceEndMessage::send($this->device, $this->endAction);
-        MQTT::publish($message->getTopic(), $message->getMessage());
+        MQTT::connection('publisher')->publish($message->getTopic(), $message->getMessage());
     }
 }

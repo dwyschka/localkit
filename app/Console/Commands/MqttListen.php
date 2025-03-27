@@ -46,8 +46,7 @@ class MqttListen extends Command
 
         $output = $this->output;
         $output->writeln('Listening for messages...');
-        $mqtt->subscribe('/#', function(string $topic, $message) use($mqtt, $definitions, $output) {
-
+        $mqtt->subscribe('#', function(string $topic, $message) use($mqtt, $definitions, $output) {
             $output->writeln(sprintf('Got Message on Topic %s', $topic));
             $message = json_decode($message, false);
             try {
@@ -64,7 +63,7 @@ class MqttListen extends Command
                 $output->writeln(sprintf('Error: %s', $exception->getMessage()));
                 Log::error($exception->getMessage());
             }
-        }, MqttClient::QOS_AT_LEAST_ONCE);
+        }, MqttClient::QOS_AT_MOST_ONCE);
 
         $mqtt->loop(false, false);
     }
