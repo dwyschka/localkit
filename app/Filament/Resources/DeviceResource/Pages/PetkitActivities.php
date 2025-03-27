@@ -64,6 +64,7 @@ class PetkitActivities extends Page
                         ActivityIcon::make('type')
                             ->icon(fn(string|null $state): string|null => match ($state) {
                                 'IN_USE' => 'heroicon-m-exclamation-triangle',
+                                'CLEANING' => 'heroicon-m-arrow-path-rounded-square',
                                 'MAINTENANCE' => 'heroicon-m-wrench-screwdriver',
                                 default => $state,
                             })
@@ -74,11 +75,12 @@ class PetkitActivities extends Page
                             ->animation(IconAnimation::Ping)
                             ->color(fn(string|null $state): string|null => match ($state) {
                                 'MAINTENANCE' => 'info',
+                                'CLEANING' => 'info',
                                 'IN_USE' => 'warning',
                                 default => 'gray',
                             }),
                     ])
-                    ->showItemsCount(8) // Show up to 2 items
+                    ->showItemsCount(16) // Show up to 2 items
                     ->showItemsLabel('View Old') // Show "View Old" as link label
                     ->showItemsIcon('heroicon-m-chevron-down') // Show button icon
                     ->showItemsColor('gray') // Show button color and it supports all colors

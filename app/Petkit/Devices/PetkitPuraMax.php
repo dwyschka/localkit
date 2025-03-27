@@ -15,8 +15,6 @@ use App\MQTT\UserGet;
 use App\Petkit\DeviceActions;
 use App\Petkit\DeviceDefinition;
 use App\Petkit\DeviceStates;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use PhpMqtt\Client\Facades\MQTT;
 
 class PetkitPuraMax implements DeviceDefinition
@@ -52,23 +50,13 @@ class PetkitPuraMax implements DeviceDefinition
             sprintf('/sys/%s/%s/thing/event/work_continue/post', $this->device->productKey(), $this->device->deviceName()) => function(Device $device, string $topic, \stdClass|null $message){
 
                 $content = json_decode($message?->params?->content, false);
+                $deviceStatus = $this->deviceStatus($content?->action);
 
-                $deviceStatus = DeviceStates::IDLE->value;
-                switch ($content?->action) {
-
-                    case 0:
-                        $deviceStatus = DeviceStates::CLEANING->value;
-                        break;
-                    case 9:
-                        $deviceStatus = DeviceStates::MAINTENANCE->value;
-                        break;
-                }
                 $device->update([
                     'working_state' => $deviceStatus
                 ]);
 
                 $this->reply($topic, $message);
-
             },
             sprintf('/sys/%s/%s/thing/event/work_suspend/post', $this->device->productKey(), $this->device->deviceName()) => function(Device $device, string $topic, \stdClass|null $message){
                 $device->update([
@@ -80,17 +68,7 @@ class PetkitPuraMax implements DeviceDefinition
             sprintf('/sys/%s/%s/thing/event/work_start/post', $this->device->productKey(), $this->device->deviceName()) => function(Device $device, string $topic, \stdClass|null $message){
 
                 $content = json_decode($message?->params?->content, false);
-
-                $deviceStatus = DeviceStates::IDLE->value;
-                switch ($content?->action) {
-
-                    case 0:
-                        $deviceStatus = DeviceStates::CLEANING->value;
-                        break;
-                    case 9:
-                        $deviceStatus = DeviceStates::MAINTENANCE->value;
-                        break;
-                }
+                $deviceStatus = $this->deviceStatus($content?->action);
 
                 if($deviceStatus !== DeviceStates::IDLE->value) {
                     History::create([
@@ -127,6 +105,7 @@ class PetkitPuraMax implements DeviceDefinition
                 $device->update([
                     'working_state' => DeviceStates::IDLE->value
                 ]);
+                $this->updateHistory($message);
                 $this->reply($topic, $message);
 
             },
@@ -134,9 +113,7 @@ class PetkitPuraMax implements DeviceDefinition
                 $device->update([
                     'working_state' => DeviceStates::PET_IN->value
                 ]);
-
                 $this->reply($topic, $message);
-
             },
             sprintf('/sys/%s/%s/thing/event/pet_out/post', $this->device->productKey(), $this->device->deviceName()) => function(Device $device, string $topic, \stdClass|null $message){
                 $device->update([
@@ -159,8 +136,7 @@ class PetkitPuraMax implements DeviceDefinition
                 $msg = json_decode($msg, false);
 
                 $device->update([
-                    'working_state' => DeviceStates::ERROR->value,
-                    'error' => $this->parseErrorMessage($msg->err)
+                    'error' => __(sprintf('petkit.error.%s'.$msg->err))
                 ]);
                 History::create([
                     'messageId' => 'custom-err-'.now()->timestamp,
@@ -171,14 +147,9 @@ class PetkitPuraMax implements DeviceDefinition
                     ],
                     'device_id' => $device->id,
                 ]);
-                Log::info('got message', ['message' => $msg]);
-                //$this->reply($topic, $message);
+                $this->reply($topic, $message);
             },
             sprintf('/sys/%s/%s/thing/event/error_over/post', $this->device->productKey(), $this->device->deviceName()) => function(Device $device, string $topic, \stdClass|null $message){
-
-                Log::info('got message', ['message' => $message]);
-
-
                 $device->update([
                     'working_state' => DeviceStates::IDLE->value,
                     'error' => null
@@ -203,8 +174,11 @@ class PetkitPuraMax implements DeviceDefinition
                     $device->update(['configuration' => $configuration]);
                 }
 
-                if(!isset($message?->params?->work_mode)) {
+                if(!isset($message?->params?->work_state)) {
                     $device->update(['working_state' => DeviceStates::IDLE->value]);
+                } else {
+                    $deviceStatus = $this->deviceStatus($message->params->work_state->work_mode);
+                    $device->update(['working_state' => $deviceStatus]);
                 }
 
                 $msg = UserGet::replyToState($device->productKey(), $device->deviceName(), $message);
@@ -270,18 +244,6 @@ class PetkitPuraMax implements DeviceDefinition
 
     public function startLightning(Device $record) {
         ServiceStart::dispatchSync($record,  7);
-    }
-
-    private function parseErrorMessage($err): string
-    {
-        Log::info('Got message', [$err]);
-        switch($err) {
-            case "hallT":
-                return "The lid is not closed";
-            case "full":
-                return "The bin is full";
-        }
-        return "Unknown error ($err)";
     }
 
     public static function deviceName() {
@@ -354,5 +316,37 @@ class PetkitPuraMax implements DeviceDefinition
             }
         }
         SetProperty::dispatchSync($device, $difference);
+    }
+
+
+    private function deviceStatus($parameter): string {
+        $deviceStatus = DeviceStates::IDLE->value;
+        switch ($parameter) {
+
+            case 0:
+                $deviceStatus = DeviceStates::CLEANING->value;
+                break;
+            case 9:
+                $deviceStatus = DeviceStates::MAINTENANCE->value;
+                break;
+        }
+        return $deviceStatus;
+    }
+
+    private function updateHistory(\stdClass|null $message)
+    {
+        if(is_null($message)) {
+            return;
+        }
+        $content = json_decode($message->params->content, true);
+        $history = History::where('messageId', $message->params->event_id)->first();
+        if(!is_null($history)) {
+            $history->update([
+                'parameters' => [
+                    ...$history->parameters,
+                    ...$content
+                ]
+            ]);
+        }
     }
 }

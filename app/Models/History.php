@@ -29,6 +29,10 @@ class History extends Model
         switch($this->type) {
             case 'IN_USE':
                 return $this->createInUseMessage();
+            case 'CLEANING':
+                return $this->createCleaningMessage();
+            case 'MAINTENANCE':
+                return $this->createMaintenanceMessage();
         }
         return '';
     }
@@ -47,6 +51,28 @@ class History extends Model
         return __('petkit.history.in_use', [
             'name' => $this->pet?->name ?? __('petkit.unknown'),
             'duration' => $duration,
+        ]);
+    }
+
+    private function createCleaningMessage()
+    {
+        return __('petkit.history.cleaning', [
+            'name' => $this->pet?->name ?? __('petkit.unknown')
+        ]);
+    }
+
+    private function createMaintenanceMessage()
+    {
+        $params = $this->parameters;
+
+        $duration = 0;
+        if(isset($params['over_time']) && isset($params['start_time'])) {
+            $duration = $params['over_time'] - $params['start_time'];
+        }
+
+
+        return __('petkit.history.maintenance', [
+            'duration' => $duration
         ]);
     }
 }

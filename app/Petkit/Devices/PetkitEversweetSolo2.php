@@ -200,7 +200,6 @@ class PetkitEversweetSolo2 implements DeviceDefinition
 
     private function parseErrorMessage($err): string
     {
-        Log::info('Got message', [$err]);
         switch($err) {
             case "hallT":
                 return "The lid is not closed";
