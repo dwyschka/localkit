@@ -53,7 +53,7 @@ class DevDeviceInfoResource extends PetkitHttpResource
                 'disturbRange' =>$config['disturbRange'],
                 'sandSetUseConfig' =>$config['sandSetUseConfig'],
                 'k3Config' => $config['k3Config'],
-                'relateK3Switch' => (int)$config['hasK3'],
+                'relateK3Switch' => (int)$config['relateK3Switch'] ?? 0,
                 'lightest' =>$config['lightest'],
                 'deepClean' => (int)$config['deepClean'],
                 'removeSand' => (int)$config['removeSand'],

@@ -50,50 +50,89 @@ class PetkitPuraMax implements DeviceDefinition
     public function stateTopics(): array {
         return [
             sprintf('/sys/%s/%s/thing/event/work_continue/post', $this->device->productKey(), $this->device->deviceName()) => function(Device $device, string $topic, \stdClass|null $message){
+
+                $content = json_decode($message?->params?->content, false);
+
+                $deviceStatus = DeviceStates::IDLE->value;
+                switch ($content?->action) {
+
+                    case 0:
+                        $deviceStatus = DeviceStates::CLEANING->value;
+                        break;
+                    case 9:
+                        $deviceStatus = DeviceStates::MAINTENANCE->value;
+                        break;
+                }
                 $device->update([
-                    'working_state' => DeviceStates::CLEANING
+                    'working_state' => $deviceStatus
                 ]);
+
                 $this->reply($topic, $message);
 
             },
             sprintf('/sys/%s/%s/thing/event/work_suspend/post', $this->device->productKey(), $this->device->deviceName()) => function(Device $device, string $topic, \stdClass|null $message){
                 $device->update([
-                    'working_state' => DeviceStates::IDLE
+                    'working_state' => DeviceStates::IDLE->value
                 ]);
                 $this->reply($topic, $message);
 
             },
             sprintf('/sys/%s/%s/thing/event/work_start/post', $this->device->productKey(), $this->device->deviceName()) => function(Device $device, string $topic, \stdClass|null $message){
+
+                $content = json_decode($message?->params?->content, false);
+
+                $deviceStatus = DeviceStates::IDLE->value;
+                switch ($content?->action) {
+
+                    case 0:
+                        $deviceStatus = DeviceStates::CLEANING->value;
+                        break;
+                    case 9:
+                        $deviceStatus = DeviceStates::MAINTENANCE->value;
+                        break;
+                }
+
+                if($deviceStatus !== DeviceStates::IDLE->value) {
+                    History::create([
+                        'messageId' => $message->params->event_id,
+                        'pet_id' => null,
+                        'type' => $deviceStatus,
+                        'parameters' => $content,
+                        'device_id' => $device->id
+                    ]);
+                }
+
                 $device->update([
-                    'working_state' => DeviceStates::CLEANING
+                    'working_state' => $deviceStatus
                 ]);
+
                 $this->reply($topic, $message);
 
             },
             sprintf('/sys/%s/%s/thing/event/clean_over/post', $this->device->productKey(), $this->device->deviceName()) => function(Device $device, string $topic, \stdClass|null $message){
                 $device->update([
-                    'working_state' => DeviceStates::IDLE
+                    'working_state' => DeviceStates::IDLE->value
                 ]);
                 $this->reply($topic, $message);
 
             },
             sprintf('/sys/%s/%s/thing/event/dump_over/post', $this->device->productKey(), $this->device->deviceName()) => function(Device $device, string $topic, \stdClass|null $message){
                 $device->update([
-                    'working_state' => DeviceStates::IDLE
+                    'working_state' => DeviceStates::IDLE->value
                 ]);
                 $this->reply($topic, $message);
 
             },
             sprintf('/sys/%s/%s/thing/event/reset_over/post', $this->device->productKey(), $this->device->deviceName()) => function(Device $device, string $topic, \stdClass|null $message){
                 $device->update([
-                    'working_state' => DeviceStates::IDLE
+                    'working_state' => DeviceStates::IDLE->value
                 ]);
                 $this->reply($topic, $message);
 
             },
             sprintf('/sys/%s/%s/thing/event/pet_in/post', $this->device->productKey(), $this->device->deviceName()) => function(Device $device, string $topic, \stdClass|null $message){
                 $device->update([
-                    'working_state' => DeviceStates::PET_IN
+                    'working_state' => DeviceStates::PET_IN->value
                 ]);
 
                 $this->reply($topic, $message);
@@ -101,7 +140,7 @@ class PetkitPuraMax implements DeviceDefinition
             },
             sprintf('/sys/%s/%s/thing/event/pet_out/post', $this->device->productKey(), $this->device->deviceName()) => function(Device $device, string $topic, \stdClass|null $message){
                 $device->update([
-                    'working_state' => DeviceStates::IDLE
+                    'working_state' => DeviceStates::IDLE->value
                 ]);
                 $this->reply($topic, $message);
 
@@ -120,7 +159,7 @@ class PetkitPuraMax implements DeviceDefinition
                 $msg = json_decode($msg, false);
 
                 $device->update([
-                    'working_state' => DeviceStates::ERROR,
+                    'working_state' => DeviceStates::ERROR->value,
                     'error' => $this->parseErrorMessage($msg->err)
                 ]);
                 History::create([
@@ -141,7 +180,7 @@ class PetkitPuraMax implements DeviceDefinition
 
 
                 $device->update([
-                    'working_state' => DeviceStates::IDLE,
+                    'working_state' => DeviceStates::IDLE->value,
                     'error' => null
                 ]);
                 $this->reply($topic, $message);
@@ -164,26 +203,8 @@ class PetkitPuraMax implements DeviceDefinition
                     $device->update(['configuration' => $configuration]);
                 }
 
-                if(!empty($message?->params?->work_state)) {
-                    $mode = $message->params->work_state->work_mode;
-
-                    $deviceState = DeviceStates::IDLE;
-                    switch($mode) {
-                        case 9:
-                            $deviceState = DeviceStates::MAINTENANCE;
-                        case 1:
-                            $deviceState = DeviceStates::CLEANING;
-                    }
-                    $device->update(['working_state' => $deviceState]);
-                    History::create([
-                        'pet_id' => null,
-                        'device_id' => $device->id,
-                        'messageId' => 'custom-history'.now()->timestamp,
-                        'type' => 'WORKMODE',
-                        'parameters' => $message->params->work_mode,
-                    ]);
-                } else {
-                    $device->update(['working_state' => DeviceStates::IDLE]);
+                if(!isset($message?->params?->work_mode)) {
+                    $device->update(['working_state' => DeviceStates::IDLE->value]);
                 }
 
                 $msg = UserGet::replyToState($device->productKey(), $device->deviceName(), $message);

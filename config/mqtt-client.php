@@ -49,11 +49,11 @@ return [
             // A clean session will let the broker forget about subscriptions and
             // queued messages when the client disconnects. Also, if available,
             // data of a previous session will be deleted when connecting.
-            'use_clean_session' => env('MQTT_CLEAN_SESSION', true),
+            'use_clean_session' => env('MQTT_CLEAN_SESSION', false),
 
             // Whether logging shall be enabled. The default logger will be used
             // with the log level as configured.
-            'enable_logging' => env('MQTT_ENABLE_LOGGING', false),
+            'enable_logging' => env('MQTT_ENABLE_LOGGING', true),
 
             // Which logging channel to use for logs produced by the MQTT client.
             // If left empty, the default log channel or stack is being used.
@@ -104,11 +104,11 @@ return [
 
                 // The interval (in seconds) in which the client will send a ping to the broker,
                 // if no other message has been sent.
-                'keep_alive_interval' => env('MQTT_KEEP_ALIVE_INTERVAL', 10),
+                'keep_alive_interval' => env('MQTT_KEEP_ALIVE_INTERVAL', 60),
 
                 // Additional settings for the optional auto-reconnect. The delay between reconnect attempts is in seconds.
                 'auto_reconnect' => [
-                    'enabled' => env('MQTT_AUTO_RECONNECT_ENABLED', false),
+                    'enabled' => env('MQTT_AUTO_RECONNECT_ENABLED', true),
                     'max_reconnect_attempts' => env('MQTT_AUTO_RECONNECT_MAX_RECONNECT_ATTEMPTS', 3),
                     'delay_between_reconnect_attempts' => env('MQTT_AUTO_RECONNECT_DELAY_BETWEEN_RECONNECT_ATTEMPTS', 0),
                 ],

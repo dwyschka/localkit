@@ -45,7 +45,8 @@ class MqttListen extends Command
         $definitions = Device::whereProxyMode(0)->get()->map(fn(Device $device) => $device->definition());
 
         $output = $this->output;
-        $mqtt->subscribe('#', function(string $topic, $message) use($mqtt, $definitions, $output) {
+        $output->writeln('Listening for messages...');
+        $mqtt->subscribe('/#', function(string $topic, $message) use($mqtt, $definitions, $output) {
 
             $output->writeln(sprintf('Got Message on Topic %s', $topic));
             $message = json_decode($message, false);
@@ -60,6 +61,7 @@ class MqttListen extends Command
                         });
                 });
             } catch (\Exception $exception) {
+                $output->writeln(sprintf('Error: %s', $exception->getMessage()));
                 Log::error($exception->getMessage());
             }
         }, MqttClient::QOS_AT_LEAST_ONCE);
