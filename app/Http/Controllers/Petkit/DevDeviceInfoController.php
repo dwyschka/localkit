@@ -1,20 +1,25 @@
 <?php
 
-namespace App\Http\Controllers\Petkit\T4;
+namespace App\Http\Controllers\Petkit;
 
 use App\Helpers\PetkitHeader;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\DevScheduleGetResource;
+use App\Http\Resources\DevDeviceInfoResource;
 use App\Models\Device;
 use Illuminate\Http\Request;
 
-class DevScheduleGetController extends Controller
+class DevDeviceInfoController extends Controller
 {
-
     public function __invoke(string $deviceType, Request $request)
     {
+
         $deviceId = PetkitHeader::petkitId($request->header('X-Device'));
         $device = Device::wherePetkitId($deviceId)->firstOrFail();
-        return new DevScheduleGetResource($device);
+
+        if(is_null($device) || ($device?->proxy_mode ?? 1)) {
+            $this->proxy($request);
+        }
+
+        return new DevDeviceInfoResource($device);
     }
 }

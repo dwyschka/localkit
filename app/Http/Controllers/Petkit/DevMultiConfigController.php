@@ -1,17 +1,14 @@
 <?php
 
-namespace App\Http\Controllers\Petkit\T4;
+namespace App\Http\Controllers\Petkit;
 
 use App\Helpers\PetkitHeader;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\DevBleDeviceResource;
-use App\Http\Resources\DevIotDeviceInfoResource;
-use App\Http\Resources\DevSignupResource;
+use App\Http\Resources\DevMultiConfigResource;
 use App\Models\Device;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
-class DevBleDeviceController extends Controller
+class DevMultiConfigController extends Controller
 {
 
     public function __invoke(string $deviceType, Request $request)
@@ -20,10 +17,9 @@ class DevBleDeviceController extends Controller
         $device = Device::wherePetkitId($deviceId)->firstOrFail();
 
         if(is_null($device) || ($device?->proxy_mode ?? 1)) {
-
-            Log::info($deviceId, ['proxy']);
             $this->proxy($request);
         }
-        return new DevBleDeviceResource($device);
+
+        return new DevMultiConfigResource($device);
     }
 }

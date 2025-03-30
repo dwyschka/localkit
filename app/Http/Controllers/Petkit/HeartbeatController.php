@@ -1,20 +1,20 @@
 <?php
 
-namespace App\Http\Controllers\Petkit\T4;
+namespace App\Http\Controllers\Petkit;
 
 use App\Helpers\PetkitHeader;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\DevMultiConfigResource;
-use App\Http\Resources\DevSignupResource;
+use App\Http\Resources\HeartbeatResource;
 use App\Models\Device;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
-class DevMultiConfigController extends Controller
+class HeartbeatController extends Controller
 {
 
     public function __invoke(string $deviceType, Request $request)
     {
+
         $deviceId = PetkitHeader::petkitId($request->header('X-Device'));
         $device = Device::wherePetkitId($deviceId)->firstOrFail();
 
@@ -22,6 +22,11 @@ class DevMultiConfigController extends Controller
             $this->proxy($request);
         }
 
-        return new DevMultiConfigResource($device);
+        $device->update([
+            'last_heartbeat' => time()
+        ]);
+
+        Log::info($deviceId, ['heartbeat']);
+        return new HeartbeatResource($device);
     }
 }

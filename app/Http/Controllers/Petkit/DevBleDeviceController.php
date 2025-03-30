@@ -1,16 +1,15 @@
 <?php
 
-namespace App\Http\Controllers\Petkit\T4;
+namespace App\Http\Controllers\Petkit;
 
 use App\Helpers\PetkitHeader;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\DevIotDeviceInfoResource;
-use App\Http\Resources\DevServerinfoResource;
+use App\Http\Resources\DevBleDeviceResource;
 use App\Models\Device;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
-class DevServerinfoController extends Controller
+class DevBleDeviceController extends Controller
 {
 
     public function __invoke(string $deviceType, Request $request)
@@ -23,7 +22,6 @@ class DevServerinfoController extends Controller
             Log::info($deviceId, ['proxy']);
             $this->proxy($request);
         }
-
-        return new DevServerinfoResource($device);
+        return new DevBleDeviceResource($device);
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Petkit\T4;
+namespace App\Http\Controllers\Petkit;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;

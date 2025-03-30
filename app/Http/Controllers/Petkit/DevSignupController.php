@@ -1,14 +1,11 @@
 <?php
 
-namespace App\Http\Controllers\Petkit\T4;
+namespace App\Http\Controllers\Petkit;
 
-use App\Helpers\PetkitHeader;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\DevSignupResource;
 use App\Models\Device;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 
 class DevSignupController extends Controller
 {
