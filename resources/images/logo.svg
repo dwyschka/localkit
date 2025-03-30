@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Hintergrund mit eckigem Quadrat und dunklerem Farbverlauf -->
+  <defs>
+    <linearGradient id="background-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#CC0052" />
+      <stop offset="33%" stop-color="#CC2900" />
+      <stop offset="66%" stop-color="#CC7A00" />
+      <stop offset="100%" stop-color="#4D00CC" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Eckiges Quadrat mit Farbverlauf als Hintergrund -->
+  <rect x="0" y="0" width="32" height="32" fill="url(#background-gradient)" />
+  
+  <!-- Vergrößerte Schrift "LK" in grauer Farbe, zentriert -->
+  <text x="2" y="24" font-family="Arial, sans-serif" font-weight="bold" font-size="22" fill="#BBBBBB">LK</text>
+</svg>

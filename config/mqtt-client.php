@@ -132,7 +132,7 @@ return [
 
             // A specific client id to be used for the connection. If omitted,
             // a random client id will be generated for each new connection.
-            'client_id' => env('HOMEASSISTANT_CLIENT_ID').'_publisher',
+            'client_id' => env('HOMEASSISTANT_CLIENT_ID'),
 
             // Whether a clean session shall be used and requested by the client.
             // A clean session will let the broker forget about subscriptions and
@@ -158,7 +158,7 @@ return [
 
                 // The TLS settings used for the connection. Must match the specified port.
                 'tls' => [
-                    'enabled' => env('HOMEASSISTANT_TLS_ENABLED', true),
+                    'enabled' => env('HOMEASSISTANT_TLS_ENABLED', false),
                     'allow_self_signed_certificate' => env('HOMEASSISTANT_TLS_ALLOW_SELF_SIGNED_CERT', true),
                     'verify_peer' => env('HOMEASSISTANT_TLS_VERIFY_PEER', false),
                     'verify_peer_name' => env('HOMEASSISTANT_TLS_VERIFY_PEER_NAME', false),
