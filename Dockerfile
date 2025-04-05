@@ -58,6 +58,7 @@ RUN useradd -u 1000 -ms /bin/bash -g www www
 # Copy application files
 COPY --chown=www:www . /var/www/html
 
+RUN cp mv /var/www/html/.env.example /var/www/html/.env
 # Set permissions
 RUN chown -R www:www /var/www/html \
     && chmod -R 755 /var/www/html \

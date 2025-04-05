@@ -5,16 +5,15 @@ set -e
 setup_laravel() {
     echo "Setting up Laravel application..."
 
-    cp mv /var/www/html/.env.example /var/www/html/.env
     # Install dependencies
     if [ -f "composer.json" ]; then
         composer install --no-interaction --optimize-autoloader
     fi
 
     # Generate app key if not set
-    if [ -z "$APP_KEY" ] || [ "$APP_KEY" = "base64:replace-with-your-key" ]; then
-        php artisan key:generate
-    fi
+#    if [ -z "$APP_KEY" ] || [ "$APP_KEY" = "base64:replace-with-your-key" ]; then
+#        php artisan key:generate
+#    fi
 
     # Run migrations if env variable set
     if [ "${RUN_MIGRATIONS}" = "true" ]; then
