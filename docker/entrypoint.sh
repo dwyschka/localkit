@@ -5,6 +5,7 @@ set -e
 setup_laravel() {
     echo "Setting up Laravel application..."
 
+    cp mv /var/www/html/.env.example /var/www/html/.env
     # Install dependencies
     if [ -f "composer.json" ]; then
         composer install --no-interaction --optimize-autoloader
