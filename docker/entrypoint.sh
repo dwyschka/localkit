@@ -17,10 +17,8 @@ setup_laravel() {
     fi
 
     # Run migrations if env variable set
-    if [ "${RUN_MIGRATIONS}" = "true" ]; then
-        echo "Running database migrations..."
-        php artisan migrate --force
-    fi
+
+    php artisan migrate --force
 
     # Clear cache if needed
     if [ "${CLEAR_CACHE}" = "true" ]; then
@@ -37,6 +35,9 @@ setup_laravel() {
         php artisan route:cache
         php artisan view:cache
     fi
+
+    npm install
+    npm run build
 }
 
 # Switch to root to handle file permissions and services
