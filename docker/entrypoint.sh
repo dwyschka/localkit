@@ -51,7 +51,7 @@ fi
 
 # Execute Laravel setup as www user
 if [ "$SKIP_LARAVEL_SETUP" != "true" ]; then
-    bash -c 'cd /var/www/html && setup_laravel'
+    setup_laravel;
 fi
 
 # Run custom command if provided
