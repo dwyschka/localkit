@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Helpers\HomeassistantHelper;
 use App\Helpers\JsonHelper;
 use App\Jobs\SetProperty;
 use App\Petkit\Devices;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Arr;
+use PhpMqtt\Client\Facades\MQTT;
 
 class Device extends Model
 {
@@ -18,9 +20,13 @@ class Device extends Model
     protected static function booted()
     {
         self::updated(function ($device) {
-            if(isset($device->getChanges()['configuration'])) {
-                $device->definition()->propertyChange($device);
-            }
+            try {
+                if (isset($device->getChanges()['configuration'])) {
+                    $device->definition()->propertyChange($device);
+                }
+            } catch (\Exception $e) {}
+            MQTT::connection('homeassistant')->publish(HomeassistantHelper::deviceTopic($device), $device->definition()->toHomeassistant());
+
         });
     }
     protected  $casts = [

@@ -3,6 +3,7 @@
 namespace App\Petkit\Devices;
 
 use App\Helpers\JsonHelper;
+use App\Homeassistant\HomeassistantTopic;
 use App\Jobs\ServiceEnd;
 use App\Jobs\ServiceStart;
 use App\Jobs\SetProperty;
@@ -16,6 +17,7 @@ use App\Petkit\DeviceActions;
 use App\Petkit\DeviceDefinition;
 use App\Petkit\Devices\Configuration\ConfigurationInterface;
 use App\Petkit\DeviceStates;
+use Illuminate\Support\Facades\Log;
 use PhpMqtt\Client\Facades\MQTT;
 
 class PetkitPuraMax implements DeviceDefinition
@@ -375,5 +377,37 @@ class PetkitPuraMax implements DeviceDefinition
 
     public function configurationDefinition(): ConfigurationInterface {
         return new Configuration\PetkitPuraMax($this->getDevice());
+    }
+
+    #[HomeassistantTopic(topic: 'setting/set')]
+    public function settings(\stdClass $message) {
+        dump($message);
+        $configuration = $this->configurationDefinition();
+        $keys = get_object_vars($message);
+
+        foreach($keys as $attributeName => $value) {
+            $methodName = 'set' . ucfirst($attributeName);
+            $configuration->$methodName($value);
+        }
+
+        $deviceConfig = $this->getDevice()->configuration;
+        $deviceConfig['settings'] = $configuration->toArray()['settings'];
+
+        $this->getDevice()->update(['configuration' => $deviceConfig]);
+    }
+
+    #[HomeassistantTopic('action/start')]
+    public function action(\stdClass $message): void {
+        $action = $message->action;
+        switch ($action) {
+            case 'start_maintenance':
+                $this->startMaintenance($this->getDevice());
+                break;
+            case 'start_cleaning':
+                $this->startCleaning($this->getDevice());
+                break;
+            default:
+                Log::error('Unknown action: ' . $action);
+        }
     }
 }

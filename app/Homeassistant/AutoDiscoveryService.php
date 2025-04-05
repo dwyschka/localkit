@@ -16,7 +16,6 @@ class AutoDiscoveryService
     {
         $reflectionClass = new \ReflectionClass($configuration);
 
-        $discovers = [];
         $properties = $reflectionClass->getProperties();
         foreach ($properties as $property) {
             $propertyAttributes = $property->getAttributes();
@@ -26,7 +25,12 @@ class AutoDiscoveryService
             /** @var \ReflectionAttribute $attr */
             foreach($propertyAttributes as $attr) {
                 $instance = $attr->newInstance();
-                $instance->setDevice($configuration->getDevice());
+
+                if(!($instance instanceof BaseEntity)) {
+                    continue;
+                }
+
+                    $instance->setDevice($configuration->getDevice());
 
                 $this->mqttClient->publish($instance->toTopic(), $instance->toPayload());
             }

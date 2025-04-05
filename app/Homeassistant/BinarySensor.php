@@ -18,7 +18,8 @@ class BinarySensor extends BaseEntity
         public bool $availabilityMode = true,
         public ?string $uniqueId = null,
         public int $qos = 0,
-        public bool $retain = false
+        public bool $retain = false,
+        public ?string $entityCategory = null,
     ) {
     }
 }
