@@ -267,60 +267,7 @@ class PetkitPuraMax implements DeviceDefinition
 
     public function defaultConfiguration()
     {
-        return [
-            'litter' => [
-                'weight' => 0,
-                'usedTimes' => 0,
-                'percent' => 100,
-            ],
-            'settings' => [
-                'shareOpen' => 0,
-                'withK3' => 0,
-                'typeCode' => 1,
-                'sandType' => 1,
-                'manualLock' => 0,
-                'clickOkEnable' => 1,
-                'lightMode' => 1,
-                'lightRange' => [0, 1440],
-                'autoWork' => 1,
-                'fixedTimeClear' => 0,
-                'downpos' => 0,
-                'deepRefresh' => 0,
-                'autoIntervalMin' => 0,
-                'stillTime' => 30,
-                'unit' => 0,
-                'language' => 'de_DE',
-                'avoidRepeat' => 1,
-                'underweight' => 0,
-                'kitten' => 0,
-                'stopTime' => 600,
-                'sandFullWeight' => [3200, 5800, 3000, 3200, 3200],
-                'disturbMode' => 0,
-                'disturbRange' => [40, 520],
-                'sandSetUseConfig' => [
-                    [40, 60, 85],
-                    [40, 60, 85],
-                    [40, 60, 85],
-                    [40, 60, 85]
-                ],
-                'k3Config' => [
-                    'config' => [
-                        'standard' => [5, 30],
-                        'lightness' => 100,
-                        'lowVoltage' => 5,
-                        'refreshTotalTime' => 11500,
-                        'singleRefreshTime' => 25,
-                        'singleLightTime' => 120
-                    ]
-                ],
-                'relateK3Switch' => 1,
-                'lightest' => 1840,
-                'deepClean' => 0,
-                'removeSand' => 1,
-                'bury' => 0,
-                'petInTipLimit' => 15
-            ],
-        ];
+        return $this->configurationDefinition()->toArray();
     }
 
     public function propertyChange(Device $device): void
