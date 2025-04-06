@@ -31,7 +31,7 @@ class DevSignupController extends Controller
         }
 
         $device->update([
-            'configuration' => array_merge($device->definition()->defaultConfiguration(), $device->configuration ?? [])
+            'configuration' => $device->definition()->defaultConfiguration() + ($device->configuration ?? [])
         ]);
 
         $device->refresh();
