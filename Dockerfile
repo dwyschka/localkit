@@ -68,11 +68,15 @@ RUN useradd -u 1000 -ms /bin/bash -g www www
 # Copy application files
 COPY --chown=www:www . /var/www/html
 
-RUN cd /var/www/html && npm install && npm run build
+
 # Set permissions
 RUN chown -R www:www /var/www/html \
     && chmod -R 755 /var/www/html \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+
+USER root
+RUN cd /var/www/html && npm install && npm run build
+
 
 # Copy entrypoint script
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
