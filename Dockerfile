@@ -26,8 +26,9 @@ RUN apt-get update && apt-get install -y \
 
 
 
-RUN curl -o- https://fnm.vercel.app/install | bash
-RUN fnm install $NODE_VERSION
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.2/install.sh | bash \
+    \. "$HOME/.nvm/nvm.sh" \
+    nvm install $NODE_VERSION
 
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
