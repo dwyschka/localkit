@@ -75,6 +75,10 @@ RUN chown -R www:www /var/www/html \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 USER root
+RUN cd /var/www/html && cp /var/www/html/.env.example /var/www/html/.env \
+    composer install --no-interaction --optimize-autoloader
+
+
 RUN cd /var/www/html && npm install && npm run build
 
 
