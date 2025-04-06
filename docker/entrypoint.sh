@@ -36,8 +36,6 @@ setup_laravel() {
         php artisan view:cache
     fi
 
-    npm install
-    npm run build
 }
 
 # Switch to root to handle file permissions and services
