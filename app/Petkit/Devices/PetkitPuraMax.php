@@ -165,12 +165,12 @@ class PetkitPuraMax implements DeviceDefinition
             },
             sprintf('/ota/device/inform/%s/%s', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
                 $message = OtaMessage::send($device);
-                MQTT::publish($message->getTopic(), $message->getMessage());
+                MQTT::connection('publisher')->publish($message->getTopic(), $message->getMessage());
             },
             sprintf('/sys/%s/%s/thing/event/data_get/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
                 $this->reply($topic, $message);
                 $msg = UserGet::reply($device->productKey(), $device->deviceName(), $message);
-                MQTT::publish($msg->getTopic(), $msg->getMessage());
+                MQTT::connection('publisher')->publish($msg->getTopic(), $msg->getMessage());
             },
             sprintf('/sys/%s/%s/thing/event/property/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
                 $this->reply($topic, $message);
@@ -189,7 +189,7 @@ class PetkitPuraMax implements DeviceDefinition
                 }
 
                 $msg = UserGet::replyToState($device->productKey(), $device->deviceName(), $message);
-                MQTT::publish($msg->getTopic(), $msg->getMessage());
+                MQTT::connection('publisher')->publish($msg->getTopic(), $msg->getMessage());
             }
         ];
     }
@@ -227,7 +227,7 @@ class PetkitPuraMax implements DeviceDefinition
     private function reply(string $topic, ?\stdClass $message)
     {
         $generic = GenericReply::reply($topic, $message);
-        MQTT::publish($generic->getTopic(), $generic->getMessage());
+        MQTT::connection('publisher')->publish($generic->getTopic(), $generic->getMessage());
     }
 
     public function startCleaning(Device $record)
@@ -352,6 +352,12 @@ class PetkitPuraMax implements DeviceDefinition
                 break;
             case 'start_cleaning':
                 $this->startCleaning($this->getDevice());
+                break;
+            case 'stop_maintenance':
+                $this->stopMaintenance($this->getDevice());
+                break;
+            case 'clean_litter':
+                $this->cleanLitter($this->getDevice());
                 break;
             default:
                 Log::error('Unknown action: ' . $action);
