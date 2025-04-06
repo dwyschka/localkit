@@ -24,11 +24,10 @@ RUN apt-get update && apt-get install -y \
     libicu-dev \
     libxml2-dev
 
-RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key \
-        && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_VERSION.x nodistro main" > /etc/apt/sources.list.d/nodesource.list \
-        && apt-get update \
-        && apt-get install -y nodejs
 
+
+RUN curl -o- https://fnm.vercel.app/install | bash
+RUN fnm install $NODE_VERSION
 
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
