@@ -37,7 +37,7 @@ class MqttListen extends Command
      */
     public function handle()
     {
-        $mqtt = MQTT::connection();
+        $mqtt = MQTT::connection('localkit');
         pcntl_signal(SIGINT, function () use ($mqtt) {
             $mqtt->interrupt();
         });

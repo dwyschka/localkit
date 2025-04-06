@@ -25,7 +25,7 @@ class Device extends Model
                     $device->definition()->propertyChange($device);
                 }
             } catch (\Exception $e) {}
-            MQTT::connection('homeassistant')->publish(HomeassistantHelper::deviceTopic($device), $device->definition()->toHomeassistant());
+            MQTT::connection('homeassistant-publisher')->publish(HomeassistantHelper::deviceTopic($device), $device->definition()->toHomeassistant());
 
         });
     }
