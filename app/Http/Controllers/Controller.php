@@ -75,7 +75,8 @@ abstract class Controller
 
         Log::info('Proxy-Data', [
             'url' => $destinationUrl,
-            'data' => $responseBody
+            'data' => $responseBody,
+            'request' => $body
         ]);
 //        file_put_contents(storage_path('logs/proxy.log'), $responseBody);
         echo $responseBody;
