@@ -78,7 +78,6 @@ abstract class Controller
             'data' => $responseBody,
             'request' => $body
         ]);
-//        file_put_contents(storage_path('logs/proxy.log'), $responseBody);
         echo $responseBody;
         die();
 

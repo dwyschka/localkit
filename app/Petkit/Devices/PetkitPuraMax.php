@@ -112,6 +112,7 @@ class PetkitPuraMax implements DeviceDefinition
                 $device->update([
                     'working_state' => DeviceStates::IDLE->value
                 ]);
+                $this->updateLitter($device, $message);
                 $this->updateHistory($message);
                 $this->reply($topic, $message);
 
@@ -362,5 +363,16 @@ class PetkitPuraMax implements DeviceDefinition
             default:
                 Log::error('Unknown action: ' . $action);
         }
+    }
+
+    private function updateLitter(Device $device, ?\stdClass $message)
+    {
+        if (is_null($message)) {
+            return;
+        }
+        $state = json_decode($message->params->state, false);
+        $configuration = $device->configuration;
+        $configuration['litter'] = (array)$state->litter;
+        $device->update(['configuration' => $configuration]);
     }
 }
