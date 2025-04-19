@@ -17,6 +17,7 @@ use App\Petkit\DeviceActions;
 use App\Petkit\DeviceDefinition;
 use App\Petkit\Devices\Configuration\ConfigurationInterface;
 use App\Petkit\DeviceStates;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use PhpMqtt\Client\Facades\MQTT;
 
@@ -30,7 +31,8 @@ class PetkitPuraMax implements DeviceDefinition
         DeviceActions::STOP_MAINTENANCE,
         DeviceActions::CLEAN_LITTER,
         DeviceActions::START_ODOUR,
-        DeviceActions::START_LIGHTNING
+        DeviceActions::START_LIGHTNING,
+        DeviceActions::RESET_N50
     ];
     public static $workingStates = [
         DeviceStates::WORKING, DeviceStates::IDLE, DeviceStates::PET_IN, DeviceStates::CLEANING, DeviceStates::MAINTENANCE,
@@ -209,6 +211,9 @@ class PetkitPuraMax implements DeviceDefinition
             return false;
         }
         switch ($action) {
+            case DeviceActions::RESET_N50:
+                return $hasAction;
+
             case DeviceActions::CLEAN_LITTER:
             case DeviceActions::START_MAINTENANCE:
             case DeviceActions::START_CLEAN:
@@ -259,6 +264,23 @@ class PetkitPuraMax implements DeviceDefinition
     public function startLightning(Device $record)
     {
         ServiceStart::dispatchSync($record, 7);
+    }
+
+
+    public function resetN50(Device $record) {
+        $consumables = $record->configuration['consumables'] ?? $record->definition()->defaultConfiguration()['consumables'];
+        $durability = $consumables['n50_durability'];
+        $nextChange = Carbon::now()->addDays((int)$durability);
+
+        $configuration = $record->configuration;
+        $configuration['consumables'] = [
+            'n50_durability' => $durability,
+            'n50_next_change' => $nextChange->timestamp
+        ];
+
+        $record->update([
+            'configuration' => $configuration
+        ]);
     }
 
     public static function deviceName()
@@ -375,4 +397,6 @@ class PetkitPuraMax implements DeviceDefinition
         $configuration['litter'] = (array)$state->litter;
         $device->update(['configuration' => $configuration]);
     }
+
+
 }

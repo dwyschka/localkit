@@ -18,6 +18,8 @@ class DeviceActions
     public const START_ODOUR = 'start_odour';
     public const START_LIGHTNING = 'start_lightning';
 
+    public const RESET_N50 = 'reset_n50';
+
     public static function actions()
     {
         return [
@@ -48,6 +50,13 @@ class DeviceActions
                 })
                 ->action(function (Device $record) {
                     $record->definition()->cleanLitter($record);
+                }),
+            Action::make('Reset N50')
+                ->visible(function (Device $record) {
+                    return $record->definition()->hasAction(self::RESET_N50);
+                })
+                ->action(function (Device $record) {
+                    $record->definition()->resetN50($record);
                 }),
             Action::make('Start Odour')
                 ->visible(function (Device $record) {

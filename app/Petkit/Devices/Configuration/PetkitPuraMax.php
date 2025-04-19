@@ -388,6 +388,13 @@ class PetkitPuraMax implements ConfigurationInterface
     private int $removeSand = 1;
     private int $bury = 0;
     private int $petInTipLimit = 15;
+    /**
+     * @var int
+     */
+    private mixed $n50NextChange = 0;
+
+
+    private int $n50Durability = 30;
 
     /**
      * Constructor that initializes the configuration from a Device object
@@ -414,6 +421,11 @@ class PetkitPuraMax implements ConfigurationInterface
             $this->litterWeight = $config['litter']['weight'] ?? 0;
             $this->litterUsedTimes = $config['litter']['usedTimes'] ?? 0;
             $this->litterPercent = $config['litter']['percent'] ?? 100;
+        }
+
+        if (isset($config['consumables'])) {
+            $this->n50Durability = $config['consumables']['n50_durability'] ?? 30;
+            $this->n50NextChange = $config['consumables']['n50_next_change'] ?? 0;
         }
 
         // Settings
@@ -474,6 +486,10 @@ class PetkitPuraMax implements ConfigurationInterface
     public function toArray(): array
     {
         return [
+            'consumables' => [
+                'n50_durability' => $this->n50Durability,
+                'n50_last_change' => $this->n50NextChange,
+            ],
             'states' => [
                 'error' => $this->error,
                 'state' => $this->workingState,

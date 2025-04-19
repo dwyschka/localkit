@@ -11,6 +11,7 @@ use App\MQTT\UserGet;
 use App\Petkit\DeviceActions;
 use App\Petkit\DeviceDefinition;
 use App\Petkit\DeviceStates;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use PhpMqtt\Client\Facades\MQTT;
 use Filament\Forms;
@@ -20,6 +21,19 @@ class PetkitPuraMax
 
     public function formFields(): array {
         return [
+            Forms\Components\Section::make('consumables')->columns(3)->schema([
+                Forms\Components\TextInput::make('configuration.consumables.n50_durability')->numeric(),
+                Forms\Components\TextInput::make('configuration.consumables.n50_next_change')->label('Next Reset in Days')->formatStateUsing(function ($state) {
+                    if($state <= 0) {
+                        return 'Not set';
+                    }
+                    $date = Carbon::parse($state);
+                    $now = Carbon::now();
+
+                    return round($now->diffInDays($date));
+
+                })->readOnly(),
+            ]),
             Forms\Components\Section::make('Litter')->columns(3)->schema([
                 Forms\Components\TextInput::make('configuration.litter.usedTimes')->readOnly(),
                 Forms\Components\TextInput::make('configuration.litter.percent')->readOnly(),
