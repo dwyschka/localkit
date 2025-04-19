@@ -351,7 +351,6 @@ class PetkitPuraMax implements DeviceDefinition
 
     #[HomeassistantTopic(topic: 'setting/set')]
     public function settings(\stdClass $message) {
-        dump($message);
         $configuration = $this->configurationDefinition();
         $keys = get_object_vars($message);
 
@@ -362,6 +361,7 @@ class PetkitPuraMax implements DeviceDefinition
 
         $deviceConfig = $this->getDevice()->configuration;
         $deviceConfig['settings'] = $configuration->toArray()['settings'];
+        $deviceConfig['consumables'] = $configuration->toArray()['consumables'];
 
         $this->getDevice()->update(['configuration' => $deviceConfig]);
     }
@@ -381,6 +381,9 @@ class PetkitPuraMax implements DeviceDefinition
                 break;
             case 'clean_litter':
                 $this->cleanLitter($this->getDevice());
+                break;
+            case 'reset_n50':
+                $this->resetN50($this->getDevice());
                 break;
             default:
                 Log::error('Unknown action: ' . $action);

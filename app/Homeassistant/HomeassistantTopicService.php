@@ -32,7 +32,6 @@ class HomeassistantTopicService
                     /** @var HomeassistantTopic $instance */
                     $instance = $attribute->newInstance();
                     if ($instance->getTopic($device) == $topic) {
-                        dump($topic);
                         $device->definition()->{$method->getName()}($message);
                     }
 

@@ -51,6 +51,7 @@ class BaseEntity
         ];
 
 
+
         if (isset($this->commandTopic)) {
             $config['command_topic'] = HomeassistantHelper::deviceTopic($this->device) . '/' . $this->commandTopic;
         }
@@ -115,6 +116,15 @@ class BaseEntity
         }
         if (isset($this->entityCategory)) {
             $config['entity_category'] = $this->entityCategory;
+        }
+        if (isset($this->min)) {
+            $config['min'] = $this->min;
+        }
+        if (isset($this->max)) {
+            $config['max'] = $this->max;
+        }
+        if (isset($this->step)) {
+            $config['step'] = $this->step;
         }
 
         return $config;

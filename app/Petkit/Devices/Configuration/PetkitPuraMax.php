@@ -6,6 +6,7 @@ use App\Helpers\HomeassistantHelper;
 use App\Homeassistant\BinarySensor;
 use App\Homeassistant\Button;
 use App\Homeassistant\HASwitch;
+use App\Homeassistant\Number;
 use App\Homeassistant\Select;
 use App\Homeassistant\Sensor;
 use App\Models\Device;
@@ -273,6 +274,16 @@ class PetkitPuraMax implements ConfigurationInterface
     private int $avoidRepeat = 1;
 
     #[Button(
+        technicalName: 'action_reset_n50',
+        name: 'Reset N50',
+        commandTopic: 'action/start',
+        icon: 'mdi:information-outline',
+        commandTemplate: '{"action": "reset_n50"}',
+        availabilityTemplate: 'online',
+    )]
+    private $actionResetN50 = 9;
+
+    #[Button(
         technicalName: 'action_maintenance_start',
         name: 'Maintenance Start',
         commandTopic: 'action/start',
@@ -388,12 +399,32 @@ class PetkitPuraMax implements ConfigurationInterface
     private int $removeSand = 1;
     private int $bury = 0;
     private int $petInTipLimit = 15;
-    /**
-     * @var int
-     */
+
+
+    #[Sensor(
+        technicalName: 'durability_in_days',
+        name: 'Next N50 Change in Days',
+        icon: 'mdi:update',
+        valueTemplate: '{{ ((value_json.consumables.n50_next_change - as_timestamp(now())) / 86400) | round(1) }}',
+        entityCategory: 'diagnostic'
+    )]
     private mixed $n50NextChange = 0;
 
 
+    #[Number(
+        technicalName: 'n50_durability',
+        name: 'N50 Durability',
+        commandTopic: 'setting/set',
+        icon: 'mdi:diamond-stone',
+        valueTemplate: '{{ value_json.consumables.n50_durability }}',
+        commandTemplate: '{"n50Durability":{{ value }}}',
+        payloadOn: 1,
+        payloadOff: 0,
+        entityCategory: 'config',
+        min: 0,
+        max: 90,
+        step: 1
+    )]
     private int $n50Durability = 30;
 
     /**
@@ -488,7 +519,7 @@ class PetkitPuraMax implements ConfigurationInterface
         return [
             'consumables' => [
                 'n50_durability' => $this->n50Durability,
-                'n50_last_change' => $this->n50NextChange,
+                'n50_next_change' => $this->n50NextChange,
             ],
             'states' => [
                 'error' => $this->error,
@@ -994,5 +1025,15 @@ class PetkitPuraMax implements ConfigurationInterface
     public function getDevice()
     {
         return $this->device;
+    }
+
+    public function getN50Durability(): int
+    {
+        return $this->n50Durability;
+    }
+
+    public function setN50Durability(int $n50Durability): void
+    {
+        $this->n50Durability = $n50Durability;
     }
 }

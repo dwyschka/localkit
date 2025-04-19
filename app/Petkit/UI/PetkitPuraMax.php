@@ -32,7 +32,7 @@ class PetkitPuraMax
 
                     return round($now->diffInDays($date));
 
-                })->readOnly(),
+                })->readOnly()->disabled(true),
             ]),
             Forms\Components\Section::make('Litter')->columns(3)->schema([
                 Forms\Components\TextInput::make('configuration.litter.usedTimes')->readOnly(),
