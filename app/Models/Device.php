@@ -39,7 +39,7 @@ class Device extends Model
     ];
 
     public function histories(): HasMany {
-        return $this->hasMany( History::class, 'device_id', 'id' );
+        return $this->hasMany( History::class, 'device_id', 'id' )->orderBy('created_at', 'desc');
     }
 
     public function deviceName()

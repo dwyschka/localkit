@@ -3,7 +3,7 @@
 return [
     'unknown' => 'Unknown',
     'history' => [
-        'in_use' => 'In use by :name for :duration seconds',
+        'in_use' => 'In use by :name (:weight) for :duration seconds',
         'in_use_title' => 'Cat pooping',
         'cleaning' => 'Manual Cleaning',
         'cleaning_title' => 'Manual Cleaning',
