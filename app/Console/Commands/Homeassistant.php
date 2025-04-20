@@ -35,7 +35,7 @@ class Homeassistant extends Command
         $devices = Device::whereProxyMode(0)->get();
 
         $devices->each(function(Device $device) use ($mqtt) {
-            $mqtt->publish(HomeassistantHelper::deviceTopic($device), $device->definition()->toHomeassistant());
+            $mqtt->publish(HomeassistantHelper::deviceTopic($device), $device->definition()->toHomeassistant(), 0, true);
 
             $configuration = $device->definition()->configurationDefinition();
             $service = new AutoDiscoveryService($mqtt);
