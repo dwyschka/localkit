@@ -177,9 +177,9 @@ class PetkitPuraMax implements ConfigurationInterface
         icon: 'mdi:weight',
         valueTemplate: '
                 {% if value_json.settings.unit == 0 %}
-                  Pound
-                {% else %}
                   Kilogram
+                {% else %}
+                  Pound
                 {% endif %}
         ',
         commandTemplate: '
