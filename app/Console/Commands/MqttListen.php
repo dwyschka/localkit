@@ -49,8 +49,6 @@ class MqttListen extends Command
         $mqtt->subscribe('#', function(string $topic, $message) use($mqtt, $definitions, $output) {
             $output->writeln(sprintf('Got Message on Topic %s', $topic));
 
-            Log::info('Message', ['topic' => $topic, 'message' => $message]);
-
             $message = json_decode($message, false);
             try {
                 $definitions->each(function ($definition) use ($topic, $message, $output) {

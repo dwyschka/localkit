@@ -53,8 +53,8 @@ class PetkitPuraMax
                     'fr_FR' => 'French',
                 ]),
                 Forms\Components\Select::make('configuration.settings.unit')->options([
-                    '0' => 'Pound',
-                    '1' => 'Kg'
+                    '0' => 'Kg',
+                    '1' => 'Pound'
                 ]),
                 Forms\Components\Select::make('configuration.settings.sandType')->options([
                     '1' => 'Betonit/Mineral',

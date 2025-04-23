@@ -146,8 +146,9 @@ class PetkitPuraMax implements DeviceDefinition
                 $msg = json_decode($msg, false);
 
                 $device->update([
-                    'error' => __(sprintf('petkit.error.%s' . $msg->err))
+                    'error' => $msg->err
                 ]);
+
                 History::create([
                     'messageId' => 'custom-err-' . now()->timestamp,
                     'pet_id' => null,

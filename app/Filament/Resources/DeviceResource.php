@@ -68,6 +68,9 @@ class DeviceResource extends Resource
                     }),
                 Tables\Columns\TextColumn::make('error')
                     ->badge()
+                    ->formatStateUsing(function (string $state) {
+                        return __('petkit.error.'.$state);
+                    })
                     ->color(fn(string $state): string => 'danger'),
                 Tables\Columns\TextColumn::make('serial_number'),
                 Tables\Columns\TextColumn::make('last_heartbeat')->dateTime('Y-m-d H:i:s'),
