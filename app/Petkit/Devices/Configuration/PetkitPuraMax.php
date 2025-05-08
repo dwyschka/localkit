@@ -351,6 +351,7 @@ class PetkitPuraMax implements ConfigurationInterface
     private int $stopTime = 600;
     private array $sandFullWeight = [3200, 5800, 3000, 3200, 3200];
 
+    private array $k3Device = [];
 
     #[HASwitch(
         technicalName: 'disturb_mode',
@@ -427,6 +428,7 @@ class PetkitPuraMax implements ConfigurationInterface
     )]
     private int $n50Durability = 30;
 
+    private int $k3Id = 0;
     /**
      * Constructor that initializes the configuration from a Device object
      */
@@ -465,6 +467,7 @@ class PetkitPuraMax implements ConfigurationInterface
 
             $this->shareOpen = $settings['shareOpen'] ?? 0;
             $this->withK3 = $settings['withK3'] ?? 0;
+            $this->relateK3Switch = 1;
             $this->typeCode = $settings['typeCode'] ?? 0;
             $this->sandType = $settings['sandType'] ?? 0;
             $this->manualLock = $settings['manualLock'] ?? 0;
@@ -502,12 +505,15 @@ class PetkitPuraMax implements ConfigurationInterface
                     'singleLightTime' => 120
                 ]
             ];
-            $this->relateK3Switch = $settings['relateK3Switch'] ?? 1;
             $this->lightest = $settings['lightest'] ?? 1840;
             $this->deepClean = $settings['deepClean'] ?? 0;
             $this->removeSand = $settings['removeSand'] ?? 1;
             $this->bury = $settings['bury'] ?? 0;
             $this->petInTipLimit = $settings['petInTipLimit'] ?? 15;
+            if(!empty($settings['k3Device'])) {
+                $this->k3Device = $settings['k3Device'] ?? [];
+                $this->k3Id = $settings['k3Device']['id'] ?? '';
+            }
         }
     }
 
@@ -1035,5 +1041,25 @@ class PetkitPuraMax implements ConfigurationInterface
     public function setN50Durability(int $n50Durability): void
     {
         $this->n50Durability = $n50Durability;
+    }
+
+    public function getK3Device(): array
+    {
+        return $this->k3Device;
+    }
+
+    public function setK3Device(array $k3Device): void
+    {
+        $this->k3Device = $k3Device;
+    }
+
+    public function getK3Id(): int
+    {
+        return $this->k3Id;
+    }
+
+    public function setK3Id(int $k3Id): void
+    {
+        $this->k3Id = $k3Id;
     }
 }

@@ -207,7 +207,7 @@ class PetkitPuraMax implements DeviceDefinition
     public function hasAction(string $action): bool
     {
         $hasAction = in_array($action, $this->actions);
-        $hasK3 = $this->device->configuration['withK3'] ?? false;
+        $hasK3 = !empty($this->device->configuration['k3Device']);
         if ($this->device->proxy_mode == 1) {
             return false;
         }

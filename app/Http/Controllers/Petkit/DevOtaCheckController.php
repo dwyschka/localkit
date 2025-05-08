@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Petkit;
 use App\Helpers\PetkitHeader;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\DevOtaCheckResource;
+use App\Http\Resources\DevOtaResource;
 use App\Models\Device;
 use Illuminate\Http\Request;
 
@@ -17,11 +18,16 @@ class DevOtaCheckController extends Controller
         $deviceId = PetkitHeader::petkitId($request->header('X-Device'));
         $device = Device::wherePetkitId($deviceId)->first();
 
+        if($device->ota_state) {
+            $device->update([
+                'ota_state' => 0,
+            ]);
+            return new DevOtaResource(null);
+        }
+
         if(is_null($device) || ($device?->proxy_mode ?? 1)) {
             return $this->proxy($request);
         }
-
-
 
         $obj = new \stdClass();
         $obj->result = new \stdClass();

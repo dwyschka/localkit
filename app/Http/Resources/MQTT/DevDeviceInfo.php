@@ -11,6 +11,7 @@ class DevDeviceInfo extends JsonResource
     public function toArray(Request $request)
     {
         $config = $this->resource->configuration['settings'];
+        $k3 = $this->resource->configuration['k3Device'] ?? false;
 
         return [
             'msgType' => 0,
@@ -25,7 +26,8 @@ class DevDeviceInfo extends JsonResource
                     'locale' => $this->locale,
                     'shareOpen' => (int)$config['shareOpen'],
                     'typeCode' => (int)$config['typeCode'],
-                    'withK3' => (int)$config['withK3'],
+                    'withK3' => (int)isset($k3['id']),
+                    'k3Id' => $k3['id'] ?? 0,
                     'btMac' => $this->btMac,
                     'settings' => [
                         'sandType' => (int)$config['sandType'],
@@ -55,6 +57,12 @@ class DevDeviceInfo extends JsonResource
                         'deepClean' => (int)$config['deepClean'],
                         'removeSand' => (int)$config['removeSand'],
                         'bury' => (int)$config['bury'],
+                    ],
+                    'k3Device' => [
+                      'id' => $k3['id'] ?? 0,
+                      'mac' => $k3['mac'] ?? '',
+                      'sn' => $k3['sn'] ?? '',
+                      'secret' => $k3['secret'] ?? '',
                     ],
                     'multiConfig' => 0,
                     'petInTipLimit' => (int)$config['petInTipLimit'],

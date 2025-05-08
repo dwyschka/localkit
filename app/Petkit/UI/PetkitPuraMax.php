@@ -119,7 +119,6 @@ class PetkitPuraMax
                     Forms\Components\Toggle::make('configuration.settings.removeSand')->label('Remove Sand'),
                     Forms\Components\Toggle::make('configuration.settings.clickOkEnable')->label('Click OK Enable'),
                     Forms\Components\Toggle::make('configuration.settings.disturbMode')->label('Do not Disturb'),
-                    Forms\Components\Toggle::make('configuration.settings.relateK3Switch')->label('Relate K3Switch')->disabled(),
                 ]),
 
 
@@ -133,7 +132,15 @@ class PetkitPuraMax
                     ])->disabled(),
                     Forms\Components\Toggle::make('configuration.settings.shareOpen')->label('Share Open')->disabled(),
 
-                ])
+                ]),
+
+            Forms\Components\Section::make('K3')->schema([
+                Forms\Components\TextInput::make('configuration.k3Device.id')->label('k3 Id'),
+                Forms\Components\TextInput::make('configuration.k3Device.mac')->label('k3 Mac'),
+                Forms\Components\TextInput::make('configuration.k3Device.sn')->label('K3 Serial Number'),
+                Forms\Components\TextInput::make('configuration.k3Device.secret')->label('K3 Secret'),
+
+            ])
 
         ];
     }
