@@ -18,6 +18,7 @@ class DevDeviceInfoResource extends PetkitHttpResource
     public function toArray(Request $request): array
     {
         $config = $this->resource->configuration['settings'];
+        $k3 = $this->resource->configuration['k3Device'] ?? false;
 
         return [
             'id' => $this->petkit_id,
@@ -28,7 +29,8 @@ class DevDeviceInfoResource extends PetkitHttpResource
             'locale' => $this->locale,
             'shareOpen' => (int)$config['shareOpen'],
             'typeCode' => (int)$config['typeCode'],
-            'withK3' => (int)$config['withK3'],
+            'withK3' => (int)isset($k3['id']),
+            'k3Id' => (int)($k3['id'] ?? 0),
             'btMac' => $this->bt_mac,
             'settings' => [
                 'sandType' => (int)$config['sandType'],
@@ -59,6 +61,13 @@ class DevDeviceInfoResource extends PetkitHttpResource
                 'removeSand' => (int)$config['removeSand'],
                 'bury' => (int)$config['bury'],
             ],
+            'k3Device' => [
+                'id' => (int)($k3['id'] ?? 0),
+                'mac' => $k3['mac'] ?? '',
+                'sn' => $k3['sn'] ?? '',
+                'secret' => $k3['secret'] ?? '',
+            ],
+            'multiConfig' => (bool)($k3['id'] ?? 0) > 0,
             'petInTipLimit' => (int)$config['petInTipLimit'],
         ];
     }
