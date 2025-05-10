@@ -23,7 +23,7 @@ class DevDeviceInfoResource extends PetkitHttpResource
             'id' => $this->petkit_id,
             'mac' => $this->mac,
             'sn' => $this->serial_number,
-            'secret' => '',
+            'secret' => $this->secret,
             'timezone' => $this->timezone,
             'locale' => $this->locale,
             'shareOpen' => (int)$config['shareOpen'],
