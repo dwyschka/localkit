@@ -48,6 +48,7 @@ class DevDeviceInfo extends JsonResource
                         'kitten' => (int)$config['kitten'],
                         'stopTime' =>$config['stopTime'],
                         'sandFullWeight' => $config['sandFullWeight'],
+                        'autoRefresh' => ($k3['id'] ?? 0) > 0 ? 1 : 0,
                         'disturbMode' => (int)$config['disturbMode'],
                         'disturbRange' =>$config['disturbRange'],
                         'sandSetUseConfig' =>$config['sandSetUseConfig'],
