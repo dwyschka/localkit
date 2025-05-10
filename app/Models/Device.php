@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Log;
 use PhpMqtt\Client\Facades\MQTT;
 
 class Device extends Model
@@ -22,9 +23,14 @@ class Device extends Model
         self::updated(function ($device) {
             try {
                 if (isset($device->getChanges()['configuration'])) {
+                    Log::info('Configuration changed', [
+                        'changes' => $device->getChanges()['configuration']
+                    ]);
                     $device->definition()->propertyChange($device);
                 }
-            } catch (\Exception $e) {}
+            } catch (\Exception $e) {
+
+            }
 
             MQTT::connection('homeassistant-publisher')->publish(HomeassistantHelper::deviceTopic($device), $device->definition()->toHomeassistant(), 0, true);
 

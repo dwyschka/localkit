@@ -360,9 +360,7 @@ class PetkitPuraMax implements DeviceDefinition
             $configuration->$methodName($value);
         }
 
-        $deviceConfig = $this->getDevice()->configuration;
-        $deviceConfig['settings'] = $configuration->toArray()['settings'];
-        $deviceConfig['consumables'] = $configuration->toArray()['consumables'];
+        $deviceConfig =  $configuration->toArray() + ($device->configuration ?? []);
 
         $this->getDevice()->update(['configuration' => $deviceConfig]);
     }

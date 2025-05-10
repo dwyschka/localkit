@@ -510,10 +510,8 @@ class PetkitPuraMax implements ConfigurationInterface
             $this->removeSand = $settings['removeSand'] ?? 1;
             $this->bury = $settings['bury'] ?? 0;
             $this->petInTipLimit = $settings['petInTipLimit'] ?? 15;
-            if(!empty($settings['k3Device'])) {
-                $this->k3Device = $settings['k3Device'] ?? [];
-                $this->k3Id = $settings['k3Device']['id'] ?? '';
-            }
+            $this->k3Device = $settings['k3Device'] ?? [];
+            $this->k3Id = $settings['k3Device']['id'] ?? '';
         }
     }
 
@@ -523,6 +521,12 @@ class PetkitPuraMax implements ConfigurationInterface
     public function toArray(): array
     {
         return [
+            'k3Device' => [
+                'id' => $this->k3Device['id'] ?? '',
+                'mac' => $this->k3Device['mac'] ?? '',
+                'sn' => $this->k3Device['sn'] ?? '',
+                'secret' => $this->k3Device['secret'] ?? '',
+            ],
             'consumables' => [
                 'n50_durability' => $this->n50Durability,
                 'n50_next_change' => $this->n50NextChange,
@@ -571,62 +575,6 @@ class PetkitPuraMax implements ConfigurationInterface
             ]
         ];
     }
-
-    /**
-     * Save the configuration back to the device
-     */
-    public function saveToDevice(): void
-    {
-        // Update the device with the current configuration
-        $this->device->error = $this->error;
-        $this->device->working_state = $this->workingState;
-
-        // Prepare the configuration array
-        $config = $this->device->configuration ?? [];
-
-        $config['litter'] = [
-            'weight' => $this->litterWeight,
-            'usedTimes' => $this->litterUsedTimes,
-            'percent' => $this->litterPercent,
-        ];
-
-        $config['settings'] = [
-            'shareOpen' => $this->shareOpen,
-            'withK3' => $this->withK3,
-            'typeCode' => $this->typeCode,
-            'sandType' => $this->sandType,
-            'manualLock' => $this->manualLock,
-            'clickOkEnable' => $this->clickOkEnable,
-            'lightMode' => $this->lightMode,
-            'lightRange' => $this->lightRange,
-            'autoWork' => $this->autoWork,
-            'fixedTimeClear' => $this->fixedTimeClear,
-            'downpos' => $this->downpos,
-            'deepRefresh' => $this->deepRefresh,
-            'autoIntervalMin' => $this->autoIntervalMin,
-            'stillTime' => $this->stillTime,
-            'unit' => $this->unit,
-            'language' => $this->language,
-            'avoidRepeat' => $this->avoidRepeat,
-            'underweight' => $this->underweight,
-            'kitten' => $this->kitten,
-            'stopTime' => $this->stopTime,
-            'sandFullWeight' => $this->sandFullWeight,
-            'disturbMode' => $this->disturbMode,
-            'disturbRange' => $this->disturbRange,
-            'sandSetUseConfig' => $this->sandSetUseConfig,
-            'k3Config' => $this->k3Config,
-            'relateK3Switch' => $this->relateK3Switch,
-            'lightest' => $this->lightest,
-            'deepClean' => $this->deepClean,
-            'removeSand' => $this->removeSand,
-            'bury' => $this->bury,
-            'petInTipLimit' => $this->petInTipLimit
-        ];
-
-        $this->device->configuration = $config;
-    }
-
     // Getters and setters for all properties
 
     // States getters and setters
