@@ -511,7 +511,10 @@ class PetkitPuraMax implements ConfigurationInterface
             $this->bury = $settings['bury'] ?? 0;
             $this->petInTipLimit = $settings['petInTipLimit'] ?? 15;
             $this->k3Device = $settings['k3Device'] ?? [];
-            $this->k3Id = $settings['k3Device']['id'] ?? '';
+
+            if(isset($settings['k3Device']['id'])) {
+                $this->k3Id = (int)$settings['k3Device']['id'];
+            }
         }
     }
 
