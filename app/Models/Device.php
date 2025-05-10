@@ -23,9 +23,6 @@ class Device extends Model
         self::updated(function ($device) {
             try {
                 if (isset($device->getChanges()['configuration'])) {
-                    Log::info('Configuration changed', [
-                        'changes' => $device->getChanges()['configuration']
-                    ]);
                     $device->definition()->propertyChange($device);
                 }
             } catch (\Exception $e) {

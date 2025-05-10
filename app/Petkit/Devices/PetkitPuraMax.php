@@ -18,6 +18,7 @@ use App\Petkit\DeviceDefinition;
 use App\Petkit\Devices\Configuration\ConfigurationInterface;
 use App\Petkit\DeviceStates;
 use Carbon\Carbon;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use PhpMqtt\Client\Facades\MQTT;
 
@@ -360,8 +361,7 @@ class PetkitPuraMax implements DeviceDefinition
             $configuration->$methodName($value);
         }
 
-        $deviceConfig =  $configuration->toArray() + ($device->configuration ?? []);
-
+        $deviceConfig = Arr::mergeRecursiveDistinct($configuration->toArray(), $device->configuration ?? []);
         $this->getDevice()->update(['configuration' => $deviceConfig]);
     }
 

@@ -6,9 +6,25 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\DevSignupResource;
 use App\Models\Device;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 
 class DevSignupController extends Controller
 {
+
+    protected function array_merge_recursive_distinct(array $array1, array $array2)
+    {
+        $merged = $array1;
+
+        foreach ($array2 as $key => $value) {
+            if (is_array($value) && isset($merged[$key]) && is_array($merged[$key])) {
+                $merged[$key] = $this->array_merge_recursive_distinct($merged[$key], $value);
+            } else {
+                $merged[$key] = $value;
+            }
+        }
+
+        return $merged;
+    }
 
     public function __invoke(string $deviceType, Request $request)
     {
@@ -31,7 +47,7 @@ class DevSignupController extends Controller
         }
 
         $device->update([
-            'configuration' => $device->definition()->defaultConfiguration() + ($device->configuration ?? [])
+            'configuration' => Arr::mergeRecursiveDistinct($device->definition()->defaultConfiguration(), $device->configuration ?? [])
         ]);
 
         $device->refresh();
