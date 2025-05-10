@@ -28,7 +28,7 @@ class DevDeviceInfo extends JsonResource
                     'typeCode' => (int)$config['typeCode'],
                     'withK3' => (int)isset($k3['id']),
                     'k3Id' => (int)($k3['id'] ?? 0),
-                    'btMac' => $this->btMac,
+                    'btMac' => $this->bt_mac,
                     'settings' => [
                         'sandType' => (int)$config['sandType'],
                         'manualLock' => (int)$config['manualLock'],

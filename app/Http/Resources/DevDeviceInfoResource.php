@@ -20,16 +20,16 @@ class DevDeviceInfoResource extends PetkitHttpResource
         $config = $this->resource->configuration['settings'];
 
         return [
-            'id' => $this->petkitId,
+            'id' => $this->petkit_id,
             'mac' => $this->mac,
-            'sn' => $this->serialNumber,
+            'sn' => $this->serial_number,
             'secret' => '',
             'timezone' => $this->timezone,
             'locale' => $this->locale,
             'shareOpen' => (int)$config['shareOpen'],
             'typeCode' => (int)$config['typeCode'],
             'withK3' => (int)$config['withK3'],
-            'btMac' => $this->btMac,
+            'btMac' => $this->bt_mac,
             'settings' => [
                 'sandType' => (int)$config['sandType'],
                 'manualLock' => (int)$config['manualLock'],
