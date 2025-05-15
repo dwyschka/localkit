@@ -33,6 +33,7 @@ class PetkitPuraMax implements DeviceDefinition
         DeviceActions::CLEAN_LITTER,
         DeviceActions::START_ODOUR,
         DeviceActions::START_LIGHTNING,
+        DeviceActions::STOP_LIGHTNING,
         DeviceActions::RESET_N50,
     ];
     public static $workingStates = [
@@ -235,6 +236,7 @@ class PetkitPuraMax implements DeviceDefinition
 
             case DeviceActions::START_ODOUR:
             case DeviceActions::START_LIGHTNING:
+            case DeviceActions::STOP_LIGHTNING:
                 return $hasAction && $hasK3;
 
             case DeviceActions::STOP_MAINTENANCE:
@@ -280,6 +282,10 @@ class PetkitPuraMax implements DeviceDefinition
         ServiceStart::dispatchSync($record, 7);
     }
 
+    public function stopLightning(Device $record)
+    {
+        ServiceStart::dispatchSync($record, 7);
+    }
 
     public function resetN50(Device $record) {
         $consumables = $record->configuration['consumables'] ?? $record->definition()->defaultConfiguration()['consumables'];
@@ -396,6 +402,9 @@ class PetkitPuraMax implements DeviceDefinition
                 break;
             case 'stop_maintenance':
                 $this->stopMaintenance($this->getDevice());
+                break;
+            case 'stop_lightning':
+                $this->stopLightning($this->getDevice());
                 break;
             case 'clean_litter':
                 $this->cleanLitter($this->getDevice());
