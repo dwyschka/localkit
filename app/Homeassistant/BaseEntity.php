@@ -127,6 +127,10 @@ class BaseEntity
             $config['step'] = $this->step;
         }
 
+        if (isset($this->unitOfMeasurement)) {
+            $config['unit_of_measurement'] = $this->unitOfMeasurement;
+        }
+
         return $config;
     }
 

@@ -429,10 +429,31 @@ class PetkitPuraMax implements ConfigurationInterface
     private int $n50Durability = 30;
 
     private int $k3Id = 0;
+
+    #[Sensor(
+        technicalName: 'k3_battery',
+        name: 'K3 Battery',
+        icon: 'mdi:update',
+        stateClass: 'measurement',
+        deviceClass: 'battery',
+        unitOfMeasurement: '%',
+        valueTemplate: '{{ value_json.consumables.k3_battery }}',
+        entityCategory: 'diagnostic'
+    )]
     private $k3Battery = 100;
     /**
      * @var int|mixed
      */
+
+    #[Sensor(
+        technicalName: 'k3_liquid',
+        name: 'K3 Liquid',
+        icon: 'mdi:update',
+        stateClass: 'measurement',
+        unitOfMeasurement: '%',
+        valueTemplate: '{{ value_json.consumables.k3_liquid }}',
+        entityCategory: 'diagnostic'
+    )]
     private int $k3Liquid = 100;
 
     /**
