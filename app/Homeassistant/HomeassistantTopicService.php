@@ -4,6 +4,7 @@ namespace App\Homeassistant;
 
 use App\Helpers\HomeassistantHelper;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use ReflectionClass;
 
 class HomeassistantTopicService
@@ -32,6 +33,11 @@ class HomeassistantTopicService
                     /** @var HomeassistantTopic $instance */
                     $instance = $attribute->newInstance();
                     if ($instance->getTopic($device) == $topic) {
+                        Log::info('HomeassistantTopicService', [
+                            'device' => $device->deviceName(),
+                            'method' => $method->getName(),
+                            'message' => $message,
+                        ]);
                         $device->definition()->{$method->getName()}($message);
                     }
 
