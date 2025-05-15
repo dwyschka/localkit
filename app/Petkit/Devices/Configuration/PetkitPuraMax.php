@@ -304,6 +304,26 @@ class PetkitPuraMax implements ConfigurationInterface
     private $actionStopMaintenance = 9;
 
     #[Button(
+        technicalName: 'action_lightning_start',
+        name: 'Lightning Start',
+        commandTopic: 'action/start',
+        icon: 'mdi:information-outline',
+        commandTemplate: '{"action": "start_lightning"}',
+        availabilityTemplate: '{% if value_json.states.state == "IDLE" %}online{% else %}offline{% endif %}',
+    )]
+    private $actionStartLightning = 1;
+
+    #[Button(
+        technicalName: 'action_odour_start',
+        name: 'Odour Start',
+        commandTopic: 'action/start',
+        icon: 'mdi:information-outline',
+        commandTemplate: '{"action": "start_odour"}',
+        availabilityTemplate: '{% if value_json.states.state == "IDLE" %}online{% else %}offline{% endif %}',
+    )]
+    private $actionStartOdour = 1;
+
+    #[Button(
         technicalName: 'action_cleaning_start',
         name: 'Cleaning Start',
         commandTopic: 'action/start',

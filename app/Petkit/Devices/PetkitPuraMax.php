@@ -388,6 +388,12 @@ class PetkitPuraMax implements DeviceDefinition
             case 'start_cleaning':
                 $this->startCleaning($this->getDevice());
                 break;
+            case 'start_lightning':
+                $this->startLightning($this->getDevice());
+                break;
+            case 'start_odour':
+                $this->startOdour($this->getDevice());
+                break;
             case 'stop_maintenance':
                 $this->stopMaintenance($this->getDevice());
                 break;
