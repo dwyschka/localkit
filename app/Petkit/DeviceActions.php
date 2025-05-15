@@ -20,6 +20,7 @@ class DeviceActions
 
     public const RESET_N50 = 'reset_n50';
 
+
     public static function actions()
     {
         return [

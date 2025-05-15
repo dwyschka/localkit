@@ -33,7 +33,7 @@ class PetkitPuraMax implements DeviceDefinition
         DeviceActions::CLEAN_LITTER,
         DeviceActions::START_ODOUR,
         DeviceActions::START_LIGHTNING,
-        DeviceActions::RESET_N50
+        DeviceActions::RESET_N50,
     ];
     public static $workingStates = [
         DeviceStates::WORKING, DeviceStates::IDLE, DeviceStates::PET_IN, DeviceStates::CLEANING, DeviceStates::MAINTENANCE,
@@ -186,6 +186,18 @@ class PetkitPuraMax implements DeviceDefinition
                     $device->update(['configuration' => $configuration]);
                 }
 
+                if (!empty($message?->params?->battery)) {
+                    $configuration = $device->configuration;
+                    $configuration['consumables']['k3_battery'] = (int)$message->params->battery;
+                    $device->update(['configuration' => $configuration]);
+                }
+
+                if (!empty($message?->params?->liquid)) {
+                    $configuration = $device->configuration;
+                    $configuration['consumables']['k3_liquid'] = (int)$message->params->liquid;
+                    $device->update(['configuration' => $configuration]);
+                }
+
                 if (!isset($message?->params?->work_state)) {
                     $device->update(['working_state' => DeviceStates::IDLE->value]);
                 } else {
@@ -284,6 +296,7 @@ class PetkitPuraMax implements DeviceDefinition
             'configuration' => $configuration
         ]);
     }
+
 
     public static function deviceName()
     {

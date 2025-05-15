@@ -429,6 +429,12 @@ class PetkitPuraMax implements ConfigurationInterface
     private int $n50Durability = 30;
 
     private int $k3Id = 0;
+    private $k3Battery = 100;
+    /**
+     * @var int|mixed
+     */
+    private int $k3Liquid = 100;
+
     /**
      * Constructor that initializes the configuration from a Device object
      */
@@ -452,13 +458,15 @@ class PetkitPuraMax implements ConfigurationInterface
         $config = $this->device->configuration;
         if (isset($config['litter'])) {
             $this->litterWeight = $config['litter']['weight'] ?? 0;
-            $this->litterUsedTimes = $config['litter']['usedTimes'] ?? 0;
+            $this->litterUsedTimes = $this->device->histories()->whereDate('created_at', now()->toDateTime())->where('type', '=', 'IN_USE')->count();
             $this->litterPercent = $config['litter']['percent'] ?? 100;
         }
 
         if (isset($config['consumables'])) {
             $this->n50Durability = $config['consumables']['n50_durability'] ?? 30;
             $this->n50NextChange = $config['consumables']['n50_next_change'] ?? 0;
+            $this->k3Battery = $config['consumables']['k3_battery'] ?? 100;
+            $this->k3Liquid = $config['consumables']['k3_liquid'] ?? 100;
         }
 
         // Settings
@@ -533,6 +541,8 @@ class PetkitPuraMax implements ConfigurationInterface
             'consumables' => [
                 'n50_durability' => $this->n50Durability,
                 'n50_next_change' => $this->n50NextChange,
+                'k3_liquid' => $this->k3Liquid,
+                'k3_battery' => $this->k3Battery
             ],
             'states' => [
                 'error' => $this->error,
@@ -540,7 +550,7 @@ class PetkitPuraMax implements ConfigurationInterface
             ],
             'litter' => [
                 'weight' => $this->litterWeight,
-                'usedTimes' => $this->litterUsedTimes,
+                'usedTimes' => $this->device->histories()->whereDate('created_at', now()->toDateTime())->where('type', '=', 'IN_USE')->count(),
                 'percent' => $this->litterPercent,
             ],
             'settings' => [
@@ -1012,5 +1022,26 @@ class PetkitPuraMax implements ConfigurationInterface
     public function setK3Id(int $k3Id): void
     {
         $this->k3Id = $k3Id;
+    }
+
+
+    public function getK3Battery(): int
+    {
+        return $this->k3Battery;
+    }
+
+    public function setK3Battery(int $k3Battery): void
+    {
+        $this->k3Battery = $k3Battery;
+    }
+
+    public function getK3Liquid(): int
+    {
+        return $this->k3Liquid;
+    }
+
+    public function setK3Liquid(int $k3Liquid): void
+    {
+        $this->k3Liquid = $k3Liquid;
     }
 }

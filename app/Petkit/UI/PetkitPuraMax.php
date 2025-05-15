@@ -23,7 +23,7 @@ class PetkitPuraMax
         return [
             Forms\Components\Section::make('consumables')->columns(3)->schema([
                 Forms\Components\TextInput::make('configuration.consumables.n50_durability')->numeric(),
-                Forms\Components\TextInput::make('configuration.consumables.n50_next_change')->label('Next Reset in Days')->formatStateUsing(function ($state) {
+                Forms\Components\TextInput::make('configuration.consumables.n50_next_change')->label('Next Reset in Days (N50)')->formatStateUsing(function ($state) {
                     if($state <= 0) {
                         return 'Not set';
                     }
@@ -33,9 +33,14 @@ class PetkitPuraMax
                     return round($now->diffInDays($date));
 
                 })->readOnly()->disabled(true),
+                Forms\Components\TextInput::make('configuration.consumables.k3_battery')->numeric()->readOnly()->disabled(true),
+                Forms\Components\TextInput::make('configuration.consumables.k3_liquid')->numeric()->readOnly()->disabled(true),
+
             ]),
             Forms\Components\Section::make('Litter')->columns(3)->schema([
-                Forms\Components\TextInput::make('configuration.litter.usedTimes')->readOnly(),
+                Forms\Components\TextInput::make('history_count')->readOnly()->formatStateUsing(function ($record) {
+                    return $record->histories()->whereDate('created_at', now()->toDateTime())->where('type', '=', 'IN_USE')->count();
+                }),
                 Forms\Components\TextInput::make('configuration.litter.percent')->readOnly(),
                Forms\Components\TextInput::make('configuration.litter.weight')->readOnly(),
             ]),
