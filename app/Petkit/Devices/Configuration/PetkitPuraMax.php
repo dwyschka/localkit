@@ -507,6 +507,8 @@ class PetkitPuraMax implements ConfigurationInterface
 
         // Litter
         $config = $this->device->configuration;
+        $this->k3Device = $config['k3Device'] ?? [];
+
         if (isset($config['litter'])) {
             $this->litterWeight = $config['litter']['weight'] ?? 0;
             $this->litterUsedTimes = $this->device->histories()->whereDate('created_at', now()->toDateTime())->where('type', '=', 'IN_USE')->count();
@@ -569,7 +571,6 @@ class PetkitPuraMax implements ConfigurationInterface
             $this->removeSand = $settings['removeSand'] ?? 1;
             $this->bury = $settings['bury'] ?? 0;
             $this->petInTipLimit = $settings['petInTipLimit'] ?? 15;
-            $this->k3Device = $settings['k3Device'] ?? [];
 
             if(isset($settings['k3Device']['id'])) {
                 $this->k3Id = (int)$settings['k3Device']['id'];

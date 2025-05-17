@@ -380,7 +380,7 @@ class PetkitPuraMax implements DeviceDefinition
             $configuration->$methodName($value);
         }
 
-        $deviceConfig = Arr::mergeRecursiveDistinct($configuration->toArray(), $device->configuration ?? []);
+        $deviceConfig = Arr::mergeRecursiveDistinct($configuration->toArray(), $this->getDevice()->configuration ?? []);
         $this->getDevice()->update(['configuration' => $deviceConfig]);
     }
 
