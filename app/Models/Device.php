@@ -29,7 +29,10 @@ class Device extends Model
 
             }
 
-            MQTT::connection('homeassistant-publisher')->publish(HomeassistantHelper::deviceTopic($device), $device->definition()->toHomeassistant(), 0, true);
+            MQTT::connection('homeassistant-publisher')
+                ->publish(HomeassistantHelper::deviceTopic($device), $device->definition()->toHomeassistant(), 0, true);
+
+            MQTT::connection('homeassistant-publisher')->disconnect();
 
         });
     }
