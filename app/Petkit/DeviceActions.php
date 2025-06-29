@@ -17,9 +17,10 @@ class DeviceActions
     public const CLEAN_LITTER = 'clean_litter';
     public const START_ODOUR = 'start_odour';
     public const START_LIGHTNING = 'start_lightning';
-
     public const STOP_LIGHTNING = 'stop_lightning';
     public const RESET_N50 = 'reset_n50';
+    public const START_FEEDING = 'start_feeder';
+
 
 
     public static function actions()
@@ -80,6 +81,13 @@ class DeviceActions
                 })
                 ->action(function (Device $record) {
                     $record->definition()->stopLightning($record);
+                }),
+            Action::make('Start Feeding')
+                ->visible(function (Device $record) {
+                    return $record->definition()->hasAction(self::START_FEEDING);
+                })
+                ->action(function (Device $record) {
+                    $record->definition()->startFeeding($record);
                 })
         ];
     }

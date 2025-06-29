@@ -22,7 +22,7 @@ class DevOtaCheckController extends Controller
             $device->update([
                 'ota_state' => 0,
             ]);
-            return new DevOtaResource(null);
+            return new DevOtaResource($device);
         }
 
         if(is_null($device) || ($device?->proxy_mode ?? 1)) {
