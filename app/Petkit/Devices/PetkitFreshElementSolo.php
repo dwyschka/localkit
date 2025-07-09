@@ -199,32 +199,35 @@ class PetkitFreshElementSolo implements DeviceDefinition
         ];
     }
 
+    public function toDevSignup(): array {
+        return $this->toDeviceInfo();
+    }
 
     public function toDeviceInfo(): array {
         $config = $this->device->configuration['settings'];
 
         return [
-            'btMac' => $this->device->btMac,
+            'btMac' => $this->device->bt_mac,
             'id' => $this->device->petkit_id,
             'locale' => $this->device->locale,
             'mac' => $this->device->mac,
-            'multiConfig' => $config['multiConfig'],
-            'secret' => $this->device->secret,
+            'multiConfig' => (int)$config['multiConfig'],
+            'secret' => $this->device->secret ?? '',
             'settings' => [
-                'factor' => $config['factor'],
-                'feedSound' => $config['feedSound'],
-                'foodWarn' => $config['foodWarn'],
+                'factor' => (int)$config['factor'],
+                'feedSound' => (int)$config['feedSound'],
+                'foodWarn' => (int)$config['foodWarn'],
                 'foodWarnRange' => $config['foodWarnRange'],
-                'lightMode' => $config['lightMode'],
+                'lightMode' => (int)$config['lightMode'],
                 'lightRange' => $config['lightRange'],
-                'manualLock' => $config['manualLock'],
+                'manualLock' => (int)$config['manualLock'],
             ],
             'shareOpen' => $config['shareOpen'],
-            'signupAt' => '',
+            'signupAt' => Carbon::now()->format('Y-m-d\TH:i:s.v\Z'),
             'sn' => $this->device->serial_number,
-            'timezone' => $config['timezone'],
-            'typeCode' => $config['typeCode'],
-            'userId' => 1
+            'timezone' => $this->device->timezone,
+            'typeCode' => $config['typeCode'] ?? 1,
+            'userId' => "1"
         ];
     }
 

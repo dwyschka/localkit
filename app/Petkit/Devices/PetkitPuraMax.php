@@ -467,6 +467,19 @@ class PetkitPuraMax implements DeviceDefinition
         ];
     }
 
+    public function toDevSignup(): array {
+
+        return [
+            'id' => $this->device->petkit_id,
+            'mac' =>  $this->device->mac,
+            'sn' =>  $this->device->serial_number,
+            'secret' => $this->device->secret ?? '',
+            'timezone' =>  $this->device->timezone,
+            'locale' =>  $this->device->locale,
+            'shareOpen' =>  $this->device->configuration['settings']['shareOpen'],
+            'petInTipLimit' =>  $this->device->configuration['settings']['petInTipLimit']
+        ];
+    }
     public function toDeviceInfo(): array {
         $config = $this->device->configuration['settings'];
         $k3 = $this->device->configuration['k3Device'] ?? false;

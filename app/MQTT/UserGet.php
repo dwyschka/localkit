@@ -43,6 +43,9 @@ class UserGet
             case 'dev_serverinfo':
                 $message = self::toDevServerInfo($message);
                 break;
+            case 'dev_feed_get':
+                $message = self::toDevFeedGet($message);
+                break;
 
         }
         return new AnswerDTO(
@@ -103,5 +106,14 @@ class UserGet
         $device = Device::wherePetkitId($deviceId)->firstOrFail();
 
         return StateReport::make($device);
+    }
+
+    private static function toDevFeedGet($message)
+    {
+        $head = $message->params->XDevice;
+        $deviceId = PetkitHeader::petkitId($head);
+        $device = Device::wherePetkitId($deviceId)->firstOrFail();
+
+        return DevFeedGet::make($device);
     }
 }
