@@ -153,15 +153,8 @@ class PetkitFreshElementSolo implements DeviceDefinition
             SetProperty::dispatchSync($device, $difference);
         } else {
 
-            $latest = Time::calculateLatest($device->configuration['schedule']);
-
-            $nextTick = last($latest);
             SetProperty::dispatchSync($device, [
-                'feed' => json_encode([
-                    'schedule' => $device->configuration['schedule'],
-                    'nextTick' => $nextTick['t'],
-                    'latest' => $latest
-                ])
+                'feed' => $this->toFeed($device)
             ]);
         }
 
@@ -266,6 +259,20 @@ class PetkitFreshElementSolo implements DeviceDefinition
             'working_state' => $isFeeding ? DeviceStates::WORKING->value : DeviceStates::IDLE->value,
             'error' => $err,
         ]);
+
+    }
+
+    private function toFeed(Device $device): string
+    {
+        $latest = Time::calculateLatest($device->configuration['schedule']);
+        $nextTick = last($latest);
+
+        return json_encode([
+            'schedule' => $device->configuration['schedule'],
+            'nextTick' => $nextTick['t'],
+            'latest' => $latest
+        ]);
+
 
     }
 }
