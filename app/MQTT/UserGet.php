@@ -5,6 +5,7 @@ namespace App\MQTT;
 use App\Helpers\PetkitHeader;
 use App\Http\Resources\MQTT\DevBLEDevice;
 use App\Http\Resources\MQTT\DevDeviceInfo;
+use App\Http\Resources\MQTT\DevFeedGet;
 use App\Http\Resources\MQTT\DevMultiConfig;
 use App\Http\Resources\MQTT\DevScheduleGet;
 use App\Http\Resources\MQTT\DevServerInfo;

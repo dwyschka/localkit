@@ -3,6 +3,7 @@
 namespace App\Petkit\Devices;
 
 use App\Helpers\JsonHelper;
+use App\Helpers\Time;
 use App\Homeassistant\HomeassistantTopic;
 use App\Jobs\FeedRealtime;
 use App\Jobs\ServiceEnd;
@@ -122,6 +123,7 @@ class PetkitFreshElementSolo implements DeviceDefinition
     public function startFeeding(Device $record): void
     {
         FeedRealtime::dispatchSync($record, $this->device->configuration['settings']['amount'] ?? 10);
+//        ServiceStart::dispatchSync($record, $this->device->configuration['settings']['amount'] ?? 10);
     }
     public static function deviceName()
     {
@@ -135,15 +137,34 @@ class PetkitFreshElementSolo implements DeviceDefinition
 
     public function propertyChange(Device $device): void
     {
+        $scheduleChange = false;
         $difference = JsonHelper::difference($device->configuration['settings'], $device->getOriginal('configuration')['settings']);
-        foreach ($difference as $key => $value) {
-            if (is_numeric($value)) {
-                $difference[$key] = (int)$value;
-            } else if (is_bool($value)) {
-                $difference[$key] = (int)$value;
-            }
+        if(empty($difference)) {
+            $difference = JsonHelper::difference($device->configuration['schedule'], $device->getOriginal('configuration')['schedule']);
+            $scheduleChange = !empty($difference);
         }
-        SetProperty::dispatchSync($device, $difference);
+
+        if(!$scheduleChange) {
+            foreach ($difference as $key => $value) {
+                if (is_numeric($value) || is_bool($value) ) {
+                    $difference[$key] = (int)$value;
+                }
+            }
+            SetProperty::dispatchSync($device, $difference);
+        } else {
+
+            $latest = Time::calculateLatest($device->configuration['schedule']);
+
+            $nextTick = last($latest);
+            SetProperty::dispatchSync($device, [
+                'feed' => json_encode([
+                    'schedule' => $device->configuration['schedule'],
+                    'nextTick' => $nextTick['t'],
+                    'latest' => $latest
+                ])
+            ]);
+        }
+
     }
 
     public function toHomeassistant()

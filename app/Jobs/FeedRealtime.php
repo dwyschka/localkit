@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Device;
+use App\MQTT\FeedRealtimeMessage;
 use App\MQTT\PropertySetMessage;
 use App\MQTT\ServiceStartMessage;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -16,7 +17,7 @@ class FeedRealtime implements ShouldQueue
     /**
      * Create a new job instance.
      */
-    public function __construct(protected Device $device, protected int $startAction)
+    public function __construct(protected Device $device, protected int $amount)
     {
         //
     }
@@ -27,7 +28,7 @@ class FeedRealtime implements ShouldQueue
      */
     public function handle(): void
     {
-        $message = ServiceStartMessage::send($this->device, $this->startAction);
+        $message = FeedRealtimeMessage::send($this->device, $this->amount);
         MQTT::connection('publisher')->publish($message->getTopic(), $message->getMessage());
     }
 }
