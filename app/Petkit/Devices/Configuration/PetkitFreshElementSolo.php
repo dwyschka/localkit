@@ -279,4 +279,14 @@ class PetkitFreshElementSolo implements ConfigurationInterface
         $this->schedule = $schedule;
     }
 
+    public function getManualLock(): bool
+    {
+        return $this->manualLock;
+    }
+
+    public function setManualLock(bool $manualLock): void
+    {
+        $this->manualLock = $manualLock;
+    }
+
 }

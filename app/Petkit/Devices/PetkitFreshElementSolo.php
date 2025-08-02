@@ -57,6 +57,13 @@ class PetkitFreshElementSolo implements DeviceDefinition
                 $this->reply($topic, $message);
 
             },
+            sprintf('/sys/%s/%s/thing/event/feed_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+                $device->update([
+                    'working_state' => DeviceStates::IDLE->value
+                ]);
+                $this->reply($topic, $message);
+
+            },
             sprintf('/sys/%s/%s/thing/event/feed_start/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
 
                 $content = json_decode($message?->params?->content, false);
