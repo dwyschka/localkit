@@ -289,4 +289,24 @@ class PetkitFreshElementSolo implements ConfigurationInterface
         $this->manualLock = $manualLock;
     }
 
+    public function getFoodWarn(): bool
+    {
+        return $this->foodWarn;
+    }
+
+    public function setFoodWarn(bool $foodWarn): void
+    {
+        $this->foodWarn = $foodWarn;
+    }
+
+    public function getLightMode(): bool
+    {
+        return $this->lightMode;
+    }
+
+    public function setLightMode(bool $lightMode): void
+    {
+        $this->lightMode = $lightMode;
+    }
+
 }
