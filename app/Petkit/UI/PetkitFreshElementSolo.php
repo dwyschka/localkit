@@ -145,14 +145,14 @@ class PetkitFreshElementSolo
                         ->label('From')
                         ->seconds(false)
                         ->required()
-                        ->formatStateUsing(fn (string $state) => Time::toTimeFromMinutes((int)$state))
+                        ->formatStateUsing(fn (?string $state) => Time::toTimeFromMinutes((int)$state??0))
                         ->dehydrateStateUsing(fn ($state) => Time::toMinutes($state)),
                     TimePicker::make('configuration.settings.foodWarnRange.1')
                         ->label('Till')
                         ->required()
                         ->seconds(false)
                         ->after('time_from')
-                        ->formatStateUsing(fn (string $state) => Time::toTimeFromMinutes((int)$state))
+                        ->formatStateUsing(fn (?string $state) => Time::toTimeFromMinutes((int)$state ?? 0))
                         ->dehydrateStateUsing(fn ($state) => Time::toMinutes($state)),
                 ])
                     ->columns(2)
@@ -163,14 +163,14 @@ class PetkitFreshElementSolo
                         ->label('From')
                         ->seconds(false)
                         ->required()
-                        ->formatStateUsing(fn (string $state) => Time::toTimeFromMinutes((int)$state))
+                        ->formatStateUsing(fn (?string $state) => Time::toTimeFromMinutes((int)$state ?? 0))
                         ->dehydrateStateUsing(fn ($state) => Time::toMinutes($state)),
                     TimePicker::make('configuration.settings.lightRange.1')
                         ->label('Till')
                         ->required()
                         ->seconds(false)
                         ->after('time_from')
-                        ->formatStateUsing(fn (string $state) => Time::toTimeFromMinutes((int)$state))
+                        ->formatStateUsing(fn (?string $state) => Time::toTimeFromMinutes((int)$state ?? 0))
                         ->dehydrateStateUsing(fn ($state) => Time::toMinutes($state)),
                 ])
                 ->columns(2)
