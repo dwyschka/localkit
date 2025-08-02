@@ -53,7 +53,7 @@ class DeviceResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->poll('1s')
+            ->poll('10s')
             ->columns([
                 Tables\Columns\TextColumn::make('name')->searchable(),
                 Tables\Columns\TextColumn::make('working_state')->badge(),
