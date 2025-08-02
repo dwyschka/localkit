@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Models\User;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -21,6 +23,15 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
 
+        if(config('petkit.bypass_auth')) {
+            $user = User::all()->first();
+
+            if(is_null($user)) {
+                throw new \Exception('You need to create a User');
+            }
+
+            Auth::loginUsingId($user->id);
+        }
         Arr::macro('mergeRecursiveDistinct', function (array $array1, array $array2) {
             $merged = $array1;
 

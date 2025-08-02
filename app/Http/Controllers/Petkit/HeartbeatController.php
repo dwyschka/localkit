@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Petkit;
 
 use App\Helpers\PetkitHeader;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\HeartbeatOtaResource;
 use App\Http\Resources\HeartbeatResource;
 use App\Models\Device;
 use Illuminate\Http\Request;

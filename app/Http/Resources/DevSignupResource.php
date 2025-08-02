@@ -17,16 +17,6 @@ class DevSignupResource extends PetkitHttpResource
      */
     public function toArray(Request $request): array
     {
-
-        return [
-            'id' => $this->petkit_id,
-            'mac' => $this->mac,
-            'sn' => $this->serial_number,
-            'secret' => "",
-            'timezone' => $this->timezone,
-            'locale' => $this->locale,
-            'shareOpen' => $this->configuration['settings']['shareOpen'],
-            'petInTipLimit' => $this->configuration['settings']['petInTipLimit']
-        ];
+        return $this->resource->definition()->toDevSignup();
     }
 }

@@ -63,14 +63,15 @@ class Device extends Model
 
         return match ($this->device_type) {
             't4' => new Devices\PetkitPuraMax($this),
-            'd4' => new Devices\PetkitEversweetSolo2($this),
+            'd4' => new Devices\PetkitFreshElementSolo($this),
         };
     }
 
     public function ui() {
 
         return match ($this->device_type) {
-            't4' => new UI\PetkitPuraMax($this)
+            't4' => new UI\PetkitPuraMax($this),
+            'd4' => new UI\PetkitFreshElementSolo($this)
         };
     }
 

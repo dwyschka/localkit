@@ -5,6 +5,7 @@ namespace App\MQTT;
 use App\Helpers\PetkitHeader;
 use App\Http\Resources\MQTT\DevBLEDevice;
 use App\Http\Resources\MQTT\DevDeviceInfo;
+use App\Http\Resources\MQTT\DevFeedGet;
 use App\Http\Resources\MQTT\DevMultiConfig;
 use App\Http\Resources\MQTT\DevScheduleGet;
 use App\Http\Resources\MQTT\DevServerInfo;
@@ -42,6 +43,9 @@ class UserGet
                 break;
             case 'dev_serverinfo':
                 $message = self::toDevServerInfo($message);
+                break;
+            case 'dev_feed_get':
+                $message = self::toDevFeedGet($message);
                 break;
 
         }
@@ -103,5 +107,14 @@ class UserGet
         $device = Device::wherePetkitId($deviceId)->firstOrFail();
 
         return StateReport::make($device);
+    }
+
+    private static function toDevFeedGet($message)
+    {
+        $head = $message->params->XDevice;
+        $deviceId = PetkitHeader::petkitId($head);
+        $device = Device::wherePetkitId($deviceId)->firstOrFail();
+
+        return DevFeedGet::make($device);
     }
 }

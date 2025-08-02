@@ -7,7 +7,7 @@ use App\Filament\Resources\DeviceResource\RelationManagers;
 use App\Jobs\ServiceStart;
 use App\Models\Device;
 use App\Petkit\DeviceActions;
-use App\Petkit\Devices\PetkitEversweetSolo2;
+use App\Petkit\Devices\PetkitFreshElementSolo;
 use App\Petkit\Devices\PetkitPuraMax;
 use Filament\Actions\ActionGroup;
 use Filament\Forms;
@@ -35,7 +35,7 @@ class DeviceResource extends Resource
                 Forms\Components\TextInput::make('mac')->columnSpan('half')->readOnly(),
                 Forms\Components\Select::make('device_type')->options([
                     't4' => PetkitPuraMax::deviceName(),
-                    'd4' => PetkitEversweetSolo2::deviceName()
+                    'd4' => PetkitFreshElementSolo::deviceName()
                 ])
                     ->columnSpan('half')->disabled(),
                 Forms\Components\TextInput::make('secret')->columnSpan('half')->readOnly(),

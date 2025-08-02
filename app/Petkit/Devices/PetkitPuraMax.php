@@ -24,8 +24,6 @@ use PhpMqtt\Client\Facades\MQTT;
 
 class PetkitPuraMax implements DeviceDefinition
 {
-    public const ID = 10;
-
     protected array $actions = [
         DeviceActions::START_CLEAN,
         DeviceActions::START_MAINTENANCE,
@@ -429,4 +427,112 @@ class PetkitPuraMax implements DeviceDefinition
     }
 
 
+    public function toOTA(): array
+    {
+        return [
+            'firmwareId' => 33,
+            'version' => '1.625',
+            'details' => [
+                [
+                    'id' => 50,
+                    'module' => 'userbin',
+                    'version' => 2447004,
+                    'file' => [
+                        'url' => 'http://api.eu-pet.com/firmware/T4/1.625/63ab5fc6-38c0-4333-ad5b-24e202f52951.bin',
+                        'size' => 1494992,
+                        'digest' => '019598c95ebd6c9c2a0aafc8633edb1f'
+                    ]
+                ],
+                [
+                    'id' => 49,
+                    'module' => 'pics',
+                    'version' => 2442001,
+                    'file' => [
+                        'url' => 'http://api.eu-pet.com/firmware/T4/1.625/3b01a7e7-54b4-4fb1-981c-1d8a0d6af060.bin',
+                        'size' => 131072,
+                        'digest' => '238b72bd540037f4ee33bf5307684713'
+                    ]
+                ],
+                [
+                    'id' => 48,
+                    'module' => 'lans',
+                    'version' => 2444003,
+                    'file' => [
+                        'url' => 'http://api.eu-pet.com/firmware/T4/1.625/e19cef1a-f5a5-4ed2-8d44-4c2c78d11571.bin',
+                        'size' => 712704,
+                        'digest' => '36fb8f4ea82f5252d52ec73c9a10b319'
+                    ]
+                ]
+            ]
+        ];
+    }
+
+    public function toDevSignup(): array {
+
+        return [
+            'id' => $this->device->petkit_id,
+            'mac' =>  $this->device->mac,
+            'sn' =>  $this->device->serial_number,
+            'secret' => $this->device->secret ?? '',
+            'timezone' =>  $this->device->timezone,
+            'locale' =>  $this->device->locale,
+            'shareOpen' =>  $this->device->configuration['settings']['shareOpen'],
+            'petInTipLimit' =>  $this->device->configuration['settings']['petInTipLimit']
+        ];
+    }
+    public function toDeviceInfo(): array {
+        $config = $this->device->configuration['settings'];
+        $k3 = $this->device->configuration['k3Device'] ?? false;
+
+        return [
+            'id' => $this->device->petkit_id,
+            'mac' => $this->device->mac,
+            'sn' => $this->device->serial_number,
+            'secret' => $this->device->secret,
+            'timezone' => $this->device->timezone,
+            'locale' => $this->device->locale,
+            'shareOpen' => (int)$config['shareOpen'],
+            'typeCode' => (int)$config['typeCode'],
+            'withK3' => (int)isset($k3['id']),
+            'k3Id' => (int)($k3['id'] ?? 0),
+            'btMac' => $this->bt_mac,
+            'settings' => [
+                'sandType' => (int)$config['sandType'],
+                'manualLock' => (int)$config['manualLock'],
+                'lightMode' => (int)$config['lightMode'],
+                'clickOkEnable' => (int)$config['clickOkEnable'],
+                'lightRange' =>$config['lightRange'],
+                'autoWork' => (int)$config['autoWork'],
+                'fixedTimeClear' =>$config['fixedTimeClear'],
+                'downpos' => (int)$config['downpos'],
+                'deepRefresh' => (int)$config['deepRefresh'],
+                'autoIntervalMin' =>$config['autoIntervalMin'],
+                'stillTime' =>$config['stillTime'],
+                'unit' => (int)$config['unit'],
+                'language' =>$config['language'],
+                'avoidRepeat' => (int)$config['avoidRepeat'],
+                'underweight' => (int)$config['underweight'],
+                'kitten' => (int)$config['kitten'],
+                'stopTime' =>$config['stopTime'],
+                'sandFullWeight' => $config['sandFullWeight'],
+                'disturbMode' => (int)$config['disturbMode'],
+                'disturbRange' =>$config['disturbRange'],
+                'sandSetUseConfig' =>$config['sandSetUseConfig'],
+                'k3Config' => $config['k3Config'],
+                'relateK3Switch' => (int)$config['relateK3Switch'] ?? 0,
+                'lightest' =>$config['lightest'],
+                'deepClean' => (int)$config['deepClean'],
+                'removeSand' => (int)$config['removeSand'],
+                'bury' => (int)$config['bury'],
+            ],
+            'k3Device' => [
+                'id' => (int)($k3['id'] ?? 0),
+                'mac' => $k3['mac'] ?? '',
+                'sn' => $k3['sn'] ?? '',
+                'secret' => $k3['secret'] ?? '',
+            ],
+            'multiConfig' => (bool)($k3['id'] ?? 0) > 0,
+            'petInTipLimit' => (int)$config['petInTipLimit'],
+        ];
+    }
 }
