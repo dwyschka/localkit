@@ -123,7 +123,7 @@ class PetkitFreshElementSolo implements DeviceDefinition
     public function startFeeding(Device $record): void
     {
         FeedRealtime::dispatchSync($record, $this->device->configuration['settings']['amount'] ?? 10);
-//        ServiceStart::dispatchSync($record, $this->device->configuration['settings']['amount'] ?? 10);
+        ServiceStart::dispatchSync($record, $this->device->configuration['settings']['amount'] ?? 10);
     }
     public static function deviceName()
     {

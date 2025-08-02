@@ -47,7 +47,7 @@ class PetkitFreshElementSolo
                                 ])
                                 ->columns(4)
                                 ->required()
-                                ->formatStateUsing(fn (string $state) => explode(',', $state))
+                                ->formatStateUsing(fn (string|array $state) => is_array($state) ? $state : explode(',', $state))
                                 ->dehydrateStateUsing(fn ($state) => implode(',', $state)),
 
                             Repeater::make('it')
