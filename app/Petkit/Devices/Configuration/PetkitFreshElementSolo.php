@@ -77,8 +77,8 @@ class PetkitFreshElementSolo implements ConfigurationInterface
         icon: 'mdi:toggle-switch',
         valueTemplate: '{{ value_json.settings.manualLock | string }}',
         commandTemplate: '{"manualLock":{{ value }}}',
-        payloadOn: "True",
-        payloadOff: "False",
+        payloadOn: "true",
+        payloadOff: "false",
         deviceClass: 'switch'
     )]
     private bool $manualLock;
