@@ -11,12 +11,19 @@ class DeviceConnectedController
 
     public function __invoke(Request $request, string $serialNumber)
     {
-        Log::info('DeviceConnectedController', $request->all());
+        Log::info('DeviceConnectedController', [
+            'req' => $request->all(),
+            'serialNumber' => $serialNumber
+        ]);
         $device = Device::where('serial_number', $serialNumber)->firstOrFail();
 
         $connected = $request->json('connected') ?? 0;
-        Log::info('DeviceConnectedController', ['state' => $connected]);
 
+        Log::info('DeviceConnectedController', [
+            'req' => $request->all(),
+            'serialNumber' => $serialNumber,
+            'state' => $connected
+        ]);
 
         $device->update(['mqtt_connected' => (int)$connected]);
 
