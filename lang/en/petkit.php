@@ -11,7 +11,8 @@ return [
         'maintenance' => 'Maintenance for :duration seconds'
     ],
     'error' => [
-        'hallT' => "The lid is not closed",
-        'full' => "The bin is full"
+        'hallT' =>'The lid is not closed',
+        'full' =>'The bin is full',
+        'food_empty' => 'The food bin is empty',
     ]
 ];
