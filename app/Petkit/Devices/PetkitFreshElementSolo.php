@@ -179,15 +179,16 @@ class PetkitFreshElementSolo implements DeviceDefinition
             $configuration->$methodName($value);
         }
 
-        $deviceConfig = Arr::mergeRecursiveDistinct($configuration->toArray(), $this->getDevice()->configuration ?? []);
-        $this->getDevice()->update(['configuration' => $deviceConfig]);
+        $deviceConfig = $configuration->toArray();
+
+        $update = $this->getDevice()->update(['configuration' => $deviceConfig]);
     }
 
     #[HomeassistantTopic('action/start')]
     public function action(\stdClass $message): void {
         $action = $message->action;
         switch ($action) {
-            case 'start_feeding':
+            case 'feed':
                 $this->startFeeding($this->getDevice());
                 break;
         }

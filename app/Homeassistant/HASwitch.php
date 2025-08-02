@@ -14,11 +14,11 @@ class HASwitch extends BaseEntity
         public string $technicalName,
         public string $name,
         public string $commandTopic,
-        public string $icon = 'mdi:form-select',
+        public string $icon = 'mdi:toggle-switch',
         public ?string $valueTemplate = null,
         public ?string $commandTemplate = null,
-        public string|int $payloadOn = 'ON',
-        public string|int $payloadOff = 'OFF',
+        public string|int|bool $payloadOn = 'ON',
+        public string|int|bool $payloadOff = 'OFF',
         public ?string $payloadAvailable = null,
         public ?string $stateOn = null,
         public ?string $stateOff = null,
@@ -30,7 +30,8 @@ class HASwitch extends BaseEntity
         public bool $availabilityMode = true,
         public ?string $uniqueId = null,
         public int $qos = 0,
-        public bool $retain = false
+        public bool $retain = false,
+        public string $deviceClass = 'switch'
     ) {
 
     }
