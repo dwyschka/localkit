@@ -22,7 +22,7 @@ class PetkitFreshElementSolo implements ConfigurationInterface
         valueTemplate: '{{ value_json.states.error }}',
         entityCategory: 'diagnostic'
     )]
-    private ?string $error;
+    private ?string $error = null;
 
     #[Sensor(
         technicalName: 'device_status',
@@ -31,7 +31,7 @@ class PetkitFreshElementSolo implements ConfigurationInterface
         valueTemplate: '{{ value_json.states.state }}',
         entityCategory: 'diagnostic'
     )]
-    private ?string $workingState;
+    private ?string $workingState = null;
 
     #[HASwitch(
         technicalName: 'food_warn',
@@ -63,11 +63,11 @@ class PetkitFreshElementSolo implements ConfigurationInterface
     /**
      * @var int|mixed
      */
-    private bool $shareOpen;
+    private bool $shareOpen = false;
     /**
      * @var int|mixed
      */
-    private bool $lightMode;
+    private bool $lightMode = true;
 
 
     #[HASwitch(
