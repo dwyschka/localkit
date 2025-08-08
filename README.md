@@ -65,3 +65,13 @@ The configuration is handled via your `.env` file. You can use the following var
 **Controls:**
 - **Button:** Manual Feed
 - **Select:** Feed Amount (in grams)
+
+
+# Screenshots
+## Panel
+![Schedule](screenshots/feeder-schedule.png)
+![Devices](screenshots/devices.png)
+
+## Homeassistant
+![Pura Max Homeassistant](screenshots/homeassistant-pura-max.png)
+![Pura Max Homeassistant](screenshots/homeassistant-fresh-element-solo.png)
