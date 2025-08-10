@@ -53,5 +53,6 @@ if [ $# -gt 0 ]; then
     exec "$@"
 fi
 
+php artisan app:devices-offline
 # Start services with supervisor (needs to run as root)
 exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
