@@ -495,7 +495,7 @@ class PetkitPuraMax implements DeviceDefinition
             'typeCode' => (int)$config['typeCode'],
             'withK3' => (int)isset($k3['id']),
             'k3Id' => (int)($k3['id'] ?? 0),
-            'btMac' => $this->bt_mac,
+            'btMac' => $this->device->bt_mac,
             'settings' => [
                 'sandType' => (int)$config['sandType'],
                 'manualLock' => (int)$config['manualLock'],

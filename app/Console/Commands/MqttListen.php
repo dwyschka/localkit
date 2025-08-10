@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Http\Resources\MQTT\SuccessResource;
 use App\Models\Device;
 use App\MQTT\GenericReply;
+use App\MQTT\Localkit;
 use App\MQTT\OtaMessage;
 use App\MQTT\UserGet;
 use Illuminate\Console\Command;
@@ -47,9 +48,15 @@ class MqttListen extends Command
         $output = $this->output;
         $output->writeln('Listening for messages...');
         $mqtt->subscribe('#', function(string $topic, $message) use($mqtt, $definitions, $output) {
+
             $output->writeln(sprintf('Got Message on Topic %s', $topic));
 
             $message = json_decode($message, false);
+
+            if(Localkit::isLocalkitTopic($topic)) {
+                return Localkit::route($topic, $message);
+            }
+
             try {
                 $definitions->each(function ($definition) use ($topic, $message, $output) {
                     collect($definition->stateTopics())
