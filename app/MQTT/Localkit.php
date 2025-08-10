@@ -37,9 +37,12 @@ class Localkit
             $onlineDevices[] = $serialNumber;
         }
 
-        Device::where('serial_number', $onlineDevices)->update([
-            'mqtt_connected' => true
-        ]);
+        if(!empty($onlineDevices)) {
+            Device::where('serial_number', $onlineDevices)->update([
+                'mqtt_connected' => true
+            ]);
+        }
+
         Device::whereNot('serial_number', $onlineDevices)->update([
             'mqtt_connected' => false
         ]);
