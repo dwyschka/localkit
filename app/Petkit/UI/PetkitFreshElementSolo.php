@@ -19,6 +19,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use PhpMqtt\Client\Facades\MQTT;
@@ -48,7 +49,7 @@ class PetkitFreshElementSolo
                                 ->columns(4)
                                 ->required()
                                 ->formatStateUsing(fn (string|array $state) => is_array($state) ? $state : explode(',', $state))
-                                ->dehydrateStateUsing(fn ($state) => implode(',', $state)),
+                                ->dehydrateStateUsing(fn ($state) => implode(',', Arr::sort(array_filter($state)))),
 
                             Repeater::make('it')
                                 ->label('Schedule Items')
@@ -96,6 +97,24 @@ class PetkitFreshElementSolo
                                 ->addActionLabel('Add Schedule Item')
                                 ->minItems(1)
                                 ->collapsible()
+                                ->live(true)
+                                ->dehydrateStateUsing(function (array $state) {
+                                    if (!is_array($state)) return $state;
+
+                                    // Sort by time_display treating it as time
+                                    uasort($state, function ($a, $b) {
+                                        $timeA = $a['time_display'] ?? '00:00';
+                                        $timeB = $b['time_display'] ?? '00:00';
+
+                                        // Convert to comparable format (HHMM as integer)
+                                        $intA = (int) str_replace(':', '', $timeA);
+                                        $intB = (int) str_replace(':', '', $timeB);
+
+                                        return $intA <=> $intB;
+                                    });
+
+                                    return $state;
+                                })
                                 ->itemLabel(function (array $state): ?string {
                                     $time = '';
                                     if (!empty($state['t'])) {
@@ -183,4 +202,5 @@ class PetkitFreshElementSolo
 
         ];
     }
+
 }
