@@ -440,7 +440,7 @@ class PetkitPuraMax implements DeviceDefinition
                     'file' => [
                         'url' => 'http://api.eu-pet.com/firmware/T4/1.625/63ab5fc6-38c0-4333-ad5b-24e202f52951.bin',
                         'size' => 1494992,
-                        'digest' => '019598c95ebd6c9c2a0aafc8633edb1f'
+                        'digest' => 'f0eae5ff3654419a264e4d40072eac84'
                     ]
                 ],
                 [
