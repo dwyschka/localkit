@@ -67,7 +67,7 @@ class Time
 
         return collect($nextSchedule)
             ->filter(fn($item, $key) => $key > $current->timestamp)
-            ->take(5)
+            ->take(3)
             ->map(function (array $item, int $key) use ($current){
 
                 $date = Carbon::createFromTimestamp($key);
