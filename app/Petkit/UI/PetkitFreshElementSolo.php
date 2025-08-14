@@ -91,6 +91,8 @@ class PetkitFreshElementSolo
                                         ->label('Amount')
                                         ->numeric()
                                         ->required()
+                                        ->integer()
+                                        ->dehydrateStateUsing(fn ($state) => (int) $state)
                                         ->suffix('amount'),
                                 ])
                                 ->columns(2)
