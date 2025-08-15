@@ -29,7 +29,8 @@ use Filament\Forms\Form;
 class PetkitFreshElementSolo
 {
 
-    public function formFields(): array {
+    public function formFields(): array
+    {
         return [
             Section::make('Schedule Configuration')
                 ->schema([
@@ -48,8 +49,8 @@ class PetkitFreshElementSolo
                                 ])
                                 ->columns(4)
                                 ->required()
-                                ->formatStateUsing(fn (string|array $state) => is_array($state) ? $state : explode(',', $state))
-                                ->dehydrateStateUsing(fn ($state) => implode(',', Arr::sort(array_filter($state)))),
+                                ->formatStateUsing(fn(string|array $state) => is_array($state) ? $state : explode(',', $state))
+                                ->dehydrateStateUsing(fn($state) => implode(',', Arr::sort(array_filter($state)))),
 
                             Repeater::make('it')
                                 ->label('Schedule Items')
@@ -80,20 +81,18 @@ class PetkitFreshElementSolo
                                         ->numeric()
                                         ->hidden() // Hidden field to store the actual seconds value
                                         ->required(),
-
-                                    TextInput::make('t')
-                                        ->label('Time (seconds)')
-                                        ->numeric()
-                                        ->hidden() // Hidden field to store the actual seconds value
-                                        ->required(),
-
                                     TextInput::make('a')
                                         ->label('Amount')
                                         ->numeric()
                                         ->required()
                                         ->integer()
-                                        ->dehydrateStateUsing(fn ($state) => (int) $state)
+                                        ->dehydrateStateUsing(fn($state) => (int)$state)
                                         ->suffix('amount'),
+                                    TextInput::make('t')
+                                        ->label('Time (seconds)')
+                                        ->numeric()
+                                        ->hidden() // Hidden field to store the actual seconds value
+                                        ->required(),
                                 ])
                                 ->columns(2)
                                 ->addActionLabel('Add Schedule Item')
@@ -109,13 +108,18 @@ class PetkitFreshElementSolo
                                         $timeB = $b['time_display'] ?? '00:00';
 
                                         // Convert to comparable format (HHMM as integer)
-                                        $intA = (int) str_replace(':', '', $timeA);
-                                        $intB = (int) str_replace(':', '', $timeB);
+                                        $intA = (int)str_replace(':', '', $timeA);
+                                        $intB = (int)str_replace(':', '', $timeB);
 
                                         return $intA <=> $intB;
                                     });
 
-                                    return $state;
+                                    return collect($state)->map(fn($s) => [
+                                        'a' => $s['a'],
+                                        'id' => $s['id'],
+                                        't' => $s['t'] + 1,
+                                        'time_display' => $s['time_display']
+                                    ])->toArray();
                                 })
                                 ->itemLabel(function (array $state): ?string {
                                     $time = '';
@@ -166,15 +170,15 @@ class PetkitFreshElementSolo
                         ->label('From')
                         ->seconds(false)
                         ->required()
-                        ->formatStateUsing(fn (?string $state) => Time::toTimeFromMinutes((int)$state??0))
-                        ->dehydrateStateUsing(fn ($state) => Time::toMinutes($state)),
+                        ->formatStateUsing(fn(?string $state) => Time::toTimeFromMinutes((int)$state ?? 0))
+                        ->dehydrateStateUsing(fn($state) => Time::toMinutes($state)),
                     TimePicker::make('configuration.settings.foodWarnRange.1')
                         ->label('Till')
                         ->required()
                         ->seconds(false)
                         ->after('time_from')
-                        ->formatStateUsing(fn (?string $state) => Time::toTimeFromMinutes((int)$state ?? 0))
-                        ->dehydrateStateUsing(fn ($state) => Time::toMinutes($state)),
+                        ->formatStateUsing(fn(?string $state) => Time::toTimeFromMinutes((int)$state ?? 0))
+                        ->dehydrateStateUsing(fn($state) => Time::toMinutes($state)),
                 ])
                     ->columns(2)
                     ->columnSpanFull(),
@@ -184,18 +188,18 @@ class PetkitFreshElementSolo
                         ->label('From')
                         ->seconds(false)
                         ->required()
-                        ->formatStateUsing(fn (?string $state) => Time::toTimeFromMinutes((int)$state ?? 0))
-                        ->dehydrateStateUsing(fn ($state) => Time::toMinutes($state)),
+                        ->formatStateUsing(fn(?string $state) => Time::toTimeFromMinutes((int)$state ?? 0))
+                        ->dehydrateStateUsing(fn($state) => Time::toMinutes($state)),
                     TimePicker::make('configuration.settings.lightRange.1')
                         ->label('Till')
                         ->required()
                         ->seconds(false)
                         ->after('time_from')
-                        ->formatStateUsing(fn (?string $state) => Time::toTimeFromMinutes((int)$state ?? 0))
-                        ->dehydrateStateUsing(fn ($state) => Time::toMinutes($state)),
+                        ->formatStateUsing(fn(?string $state) => Time::toTimeFromMinutes((int)$state ?? 0))
+                        ->dehydrateStateUsing(fn($state) => Time::toMinutes($state)),
                 ])
-                ->columns(2)
-                ->columnSpanFull(),
+                    ->columns(2)
+                    ->columnSpanFull(),
 
                 Forms\Components\Toggle::make('configuration.settings.shareOpen')->label('Share Open'),
                 Forms\Components\Toggle::make('configuration.settings.multiConfig')->label('Multi Config'),
