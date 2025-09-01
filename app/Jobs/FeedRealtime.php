@@ -29,6 +29,9 @@ class FeedRealtime implements ShouldQueue
     public function handle(): void
     {
         $message = FeedRealtimeMessage::send($this->device, $this->amount);
-        MQTT::connection('publisher')->publish($message->getTopic(), $message->getMessage());
+
+        $connection = MQTT::connection('publisher');
+        $connection->publish($message->getTopic(), $message->getMessage());
+        $connection->disconnect();
     }
 }
