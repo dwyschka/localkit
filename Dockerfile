@@ -23,7 +23,8 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     libicu-dev \
     libxml2-dev \
-    gpg
+    gpg \
+    ffmpeg
 
 
 
@@ -52,6 +53,8 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Install Nginx
 RUN apt-get update && apt-get install -y nginx
 COPY docker/nginx/default.conf /etc/nginx/sites-available/default
+COPY docker/nginx/ssl/default.crt /etc/nginx/ssl/default.crt
+COPY docker/nginx/ssl/default.key /etc/nginx/ssl/default.key
 
 # Configure PHP-FPM
 COPY docker/php/www.conf /usr/local/etc/php-fpm.d/www.conf

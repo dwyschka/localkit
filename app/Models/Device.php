@@ -29,11 +29,12 @@ class Device extends Model
 
             }
 
-            MQTT::connection('homeassistant-publisher')
-                ->publish(HomeassistantHelper::deviceTopic($device), $device->definition()->toHomeassistant(), 0, true);
+            if(config('petkit.homeassistant.enabled')) {
+                MQTT::connection('homeassistant-publisher')
+                    ->publish(HomeassistantHelper::deviceTopic($device), $device->definition()->toHomeassistant(), 0, true);
 
-            MQTT::connection('homeassistant-publisher')->disconnect();
-
+                MQTT::connection('homeassistant-publisher')->disconnect();
+            }
         });
     }
     protected  $casts = [
@@ -64,6 +65,7 @@ class Device extends Model
         return match ($this->device_type) {
             't4' => new Devices\PetkitPuraMax($this),
             'd4' => new Devices\PetkitFreshElementSolo($this),
+            'd4h' => new Devices\PetkitYumshareSolo($this),
         };
     }
 
@@ -71,8 +73,13 @@ class Device extends Model
 
         return match ($this->device_type) {
             't4' => new UI\PetkitPuraMax($this),
-            'd4' => new UI\PetkitFreshElementSolo($this)
+            'd4' => new UI\PetkitFreshElementSolo($this),
+            'd4h' => new UI\PetkitYumshareSolo($this),
         };
+    }
+
+    public function isNextGen() {
+        return in_array($this->device_type, ['d4h']);
     }
 
 }

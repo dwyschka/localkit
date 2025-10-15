@@ -30,6 +30,11 @@ class Homeassistant extends Command
      */
     public function handle()
     {
+
+        while(config('petkit.homeassistant.enabled') === false) {
+            sleep(10);
+        }
+
         $mqtt = MQTT::connection('homeassistant');
 
         $devices = Device::whereProxyMode(0)->get();

@@ -535,4 +535,13 @@ class PetkitPuraMax implements DeviceDefinition
             'petInTipLimit' => (int)$config['petInTipLimit'],
         ];
     }
+
+    public function toDeviceMultiConfig(): array {
+        $setting = $this->getDevice()->configuration['settings'];
+
+        return [
+            'lightMultiRange' => $setting['lightRange'] ?? [],
+            'distrubMultiRange' => $setting['distrubRange'] ?? [],
+        ];
+    }
 }

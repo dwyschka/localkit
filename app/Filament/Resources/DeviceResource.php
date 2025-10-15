@@ -9,6 +9,7 @@ use App\Models\Device;
 use App\Petkit\DeviceActions;
 use App\Petkit\Devices\PetkitFreshElementSolo;
 use App\Petkit\Devices\PetkitPuraMax;
+use App\Petkit\Devices\PetkitYumshareSolo;
 use Filament\Actions\ActionGroup;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -30,12 +31,16 @@ class DeviceResource extends Resource
     {
         return $form
             ->schema([
+                Forms\Components\View::make('camera_stream')->viewData([
+                    'stream' => 'http://10.10.46.30:1984/stream.html?src=camera'
+                ])->columnSpan('full'),
                 Forms\Components\TextInput::make('name')->columnSpan('full'),
                 Forms\Components\TextInput::make('firmware')->columnSpan('half')->readOnly(),
                 Forms\Components\TextInput::make('mac')->columnSpan('half')->readOnly(),
                 Forms\Components\Select::make('device_type')->options([
                     't4' => PetkitPuraMax::deviceName(),
-                    'd4' => PetkitFreshElementSolo::deviceName()
+                    'd4' => PetkitFreshElementSolo::deviceName(),
+                    'd4h' => PetkitYumshareSolo::deviceName(),
                 ])
                     ->columnSpan('half')->disabled(),
                 Forms\Components\TextInput::make('secret')->columnSpan('half')->readOnly(),
@@ -55,6 +60,14 @@ class DeviceResource extends Resource
         return $table
             ->poll('10s')
             ->columns([
+                Tables\Columns\TextColumn::make('device_type')
+                    ->formatStateUsing(function (string $state) {
+                        return match($state) {
+                            't4' => PetkitPuraMax::deviceName(),
+                            'd4' => PetkitFreshElementSolo::deviceName(),
+                            'd4h' => PetkitYumshareSolo::deviceName(),
+                        };
+                    }),
                 Tables\Columns\TextColumn::make('name')->searchable(),
                 Tables\Columns\TextColumn::make('working_state')->badge(),
                 Tables\Columns\TextColumn::make('mqtt_connected')
@@ -73,7 +86,6 @@ class DeviceResource extends Resource
                     })
                     ->color(fn(string $state): string => 'danger'),
                 Tables\Columns\TextColumn::make('serial_number'),
-                Tables\Columns\TextColumn::make('last_heartbeat')->dateTime('Y-m-d H:i:s'),
                 Tables\Columns\ToggleColumn::make('proxy_mode')
             ])
             ->filters([
