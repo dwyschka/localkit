@@ -37,7 +37,8 @@ class TakeSnapshot implements ShouldQueue
         $mp4FileName = sprintf('snapshot_%s_%s.mp4', $this->device->name, Carbon::now()->format('YmdHis'));
         $jpegFileName = Str::of($mp4FileName)->replace('mp4', 'jpg');
         $settings = $this->device->configuration;
-        $ip = $settings['state']['ipAddress'];
+        $ip = $settings['states']['ipAddress'];
+
 
         if(is_null($ip)) {
             Log::error('No IP set');
@@ -61,7 +62,7 @@ class TakeSnapshot implements ShouldQueue
         Storage::disk('local')->delete($mp4FileName);
 
         /** @var \App\Petkit\Devices\Configuration\PetkitYumshareSolo $configuration */
-        $configuration = $this->device->configurationDefinition();
+        $configuration = $this->device->definition()->configurationDefinition();
 
         $lastSnapshot = $configuration->getLastSnapshot();
         if (!is_null($lastSnapshot)) {
