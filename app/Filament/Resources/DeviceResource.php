@@ -31,9 +31,6 @@ class DeviceResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\View::make('camera_stream')->viewData([
-                    'stream' => 'http://10.10.46.30:1984/stream.html?src=camera'
-                ])->columnSpan('full'),
                 Forms\Components\TextInput::make('name')->columnSpan('full'),
                 Forms\Components\TextInput::make('firmware')->columnSpan('half')->readOnly(),
                 Forms\Components\TextInput::make('mac')->columnSpan('half')->readOnly(),

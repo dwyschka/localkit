@@ -22,6 +22,7 @@ use Filament\Forms\Set;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\HtmlString;
 use PhpMqtt\Client\Facades\MQTT;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -32,6 +33,16 @@ class PetkitYumshareSolo
     public function formFields(): array
     {
         return [
+            Section::make('Stream')->schema([
+                Forms\Components\View::make('camera_stream')->viewData([
+                    'stream' => 'http://10.10.46.30:1984/stream.html?src=camera'
+                ])
+                    ->hidden(fn($record) => is_null($record->definition()->configurationDefinition()->getIpAddress()))
+                    ->columnSpan('full'),
+                Forms\Components\Placeholder::make('Snapshot')
+                ->content(fn($record): HtmlString => new HtmlString(sprintf('<img src="%s" />', $record->definition()->configurationDefinition()->getLastSnapshot())))
+                ->hidden(fn($record) => is_null($record->definition()->configurationDefinition()->getLastSnapshot()))
+            ]),
             Section::make('Schedule Configuration')
                 ->schema([
                     Repeater::make('configuration.schedule')

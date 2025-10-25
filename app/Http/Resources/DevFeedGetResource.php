@@ -16,18 +16,7 @@ class DevFeedGetResource extends PetkitHttpResource
      */
     public function toArray(Request $request): array
     {
-
-        return [
-            'schedule' => [
-                [
-                    're' => '1,2,3,4,5,6,7',
-                    'it' => [],
-                    'itemJsonString' => '[]'
-                ]
-            ],
-            'nextTick' => 86340,
-            'latest' => []
-        ];
+        return $this->resource->definition()->toFeedGet();
     }
 
 }

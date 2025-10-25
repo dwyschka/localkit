@@ -60,6 +60,7 @@ class PetkitYumshareSolo implements DeviceDefinition
                 $state = json_decode($message?->params?->state, false);
                 $device->update([
                     'working_state' => DeviceStates::IDLE->value,
+                    'error' => $this->prepareErrorReporting($state),
                     'configuration' => $this->updateConfiguration($state)
                 ]);
             },
@@ -67,6 +68,7 @@ class PetkitYumshareSolo implements DeviceDefinition
                 $state = json_decode($message?->params?->state, false);
                 $device->update([
                     'working_state' => DeviceStates::IDLE->value,
+                    'error' => $this->prepareErrorReporting($state),
                     'configuration' => $this->updateConfiguration($state)
                 ]);
             },
@@ -75,14 +77,15 @@ class PetkitYumshareSolo implements DeviceDefinition
                 $state = json_decode($message?->params?->state, false);
                 $device->update([
                     'working_state' => DeviceStates::IDLE->value,
+                    'error' => $this->prepareErrorReporting($state),
                     'configuration' => $this->updateConfiguration($state)
                 ]);
             },
             sprintf('/sys/%s/%s/thing/event/eat_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
-
                 $state = json_decode($message?->params?->state, false);
                 $device->update([
                     'working_state' => DeviceStates::IDLE->value,
+                    'error' => $this->prepareErrorReporting($state),
                     'configuration' => $this->updateConfiguration($state)
                 ]);
             },
@@ -91,6 +94,7 @@ class PetkitYumshareSolo implements DeviceDefinition
                 $state = json_decode($message?->params?->state, false);
                 $device->update([
                     'working_state' => DeviceStates::IDLE->value,
+                    'error' => $this->prepareErrorReporting($state),
                     'configuration' => $this->updateConfiguration($state)
                 ]);
             },
@@ -99,6 +103,7 @@ class PetkitYumshareSolo implements DeviceDefinition
                 $state = json_decode($message?->params?->state, false);
                 $device->update([
                     'working_state' => DeviceStates::IDLE->value,
+                    'error' => $this->prepareErrorReporting($state),
                     'configuration' => $this->updateConfiguration($state)
                 ]);
             },
@@ -107,6 +112,7 @@ class PetkitYumshareSolo implements DeviceDefinition
                 $state = json_decode($message?->params?->state, false);
                 $device->update([
                     'working_state' => DeviceStates::IDLE->value,
+                    'error' => $this->prepareErrorReporting($state),
                     'configuration' => $this->updateConfiguration($state)
                 ]);
             },
@@ -124,6 +130,7 @@ class PetkitYumshareSolo implements DeviceDefinition
 
                 $device->update([
                     'working_state' => DeviceStates::WORKING->value,
+                    'error' => $this->prepareErrorReporting($state),
                     'configuration' => $this->updateConfiguration($state)
                 ]);
             },
@@ -212,8 +219,9 @@ class PetkitYumshareSolo implements DeviceDefinition
 
     }
 
-    private function toFeed(Device $device): string
+    public function toFeed(Device $device): string
     {
+
         $latest = Time::calculateLatest($device->configuration['schedule']);
         $nextTick = last($latest);
 
@@ -369,10 +377,45 @@ class PetkitYumshareSolo implements DeviceDefinition
         ];
     }
 
+    public function toFeedGet(): array
+    {
+        $unusedDays = [1,2,3,4,5,6,7];
+        $latest = Time::calculateLatest($this->device->configuration['schedule']);
+        $nextTick = last($latest);
+        $schedules = $this->device->configuration['schedule'];
+
+        foreach($schedules as &$schedule) {
+            $schedule['itemJsonString'] = json_encode($schedule['it']);
+
+            foreach(explode(',', $schedule['re']) as $re) {
+                unset($unusedDays[intval($re) - 1]);
+            }
+
+        }
+
+        if(!empty($unusedDays)) {
+            $schedules[] = [
+                're' => implode(',', $unusedDays),
+                'it' => [],
+                'itemJsonString' => '[]',
+            ];
+        }
+
+
+        return [
+            'schedule' => $schedules,
+            'nextTick' => $nextTick['t'],
+            'latest' => $latest
+        ];
+    }
+
     private function updateConfiguration(mixed $content): array
     {
-        $settings = $this->device->settings;
+        $settings = $this->device->configuration;
 
+        if(!isset($settings['states'])) {
+            $settings['states'] = [];
+        }
         Log::info('update configuration', ['content' => $content]);
         //IP
         $pattern = '/Ip:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/';
@@ -380,7 +423,26 @@ class PetkitYumshareSolo implements DeviceDefinition
 
 
         $settings['states']['ipAddress'] = $match->value();
+        $settings['states']['infrared'] = $content->ir;
+        $settings['states']['bowl'] = $content->bowl;
+        $settings['states']['door'] = $content->door;
+        $settings['states']['eatDetected'] = $content->eating;
 
         return $settings;
+    }
+
+    private function prepareErrorReporting(mixed $state)
+    {
+        $error = null;
+
+        if ($state?->food == 0) {
+            $error = 'food_empty';
+        }
+
+        if ($state?->door == 0) {
+            $error = 'door_closed';
+        }
+
+        return $error;
     }
 }

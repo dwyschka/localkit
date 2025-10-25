@@ -82,6 +82,10 @@ class PetkitYumshareSolo implements ConfigurationInterface
     private bool $moveDetected = false;
     private bool $eatDetected = false;
     private bool $petDetected = false;
+    private bool $doorState = false;
+    private int $bowlState = -1;
+    private bool $infrared = false;
+    private ?string $stream = null;
 
     /**
      * Constructor that initializes the configuration from a Device object
@@ -113,6 +117,10 @@ class PetkitYumshareSolo implements ConfigurationInterface
             $this->moveDetected = $states['moveDetected'] ?? $this->moveDetected;
             $this->eatDetected = $states['eatDetected'] ?? $this->eatDetected;
             $this->petDetected = $states['petDetected'] ?? $this->petDetected;
+            $this->doorState = $states['doorState'] ?? $this->doorState;
+            $this->bowlState = $states['bowlState'] ?? $this->bowlState;
+            $this->infrared = $states['infrared'] ?? $this->infrared;
+            $this->stream = $states['stream'] ?? $this->stream;
         }
 
         // Load settings
@@ -176,13 +184,16 @@ class PetkitYumshareSolo implements ConfigurationInterface
     {
         return [
             'states' => [
-                'error' => $this->error,
                 'state' => $this->workingState,
                 'ipAddress' => $this->ipAddress,
+                'door' => $this->doorState,
+                'bowl' => $this->bowlState,
                 'lastSnapshot' => $this->lastSnapshot,
+                'stream' => $this->stream,
                 'moveDetected' => $this->moveDetected,
                 'eatDetected' => $this->eatDetected,
                 'petDetected' => $this->petDetected,
+                'infrared' => $this->infrared,
             ],
             'settings' => [
                 'shareOpen' => $this->shareOpen,
