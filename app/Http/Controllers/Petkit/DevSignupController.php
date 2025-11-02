@@ -40,6 +40,11 @@ class DevSignupController extends Controller
 
         $config = Arr::mergeRecursiveDistinct($device->definition()->defaultConfiguration(), $device->configuration ?? []);
 
+        dd(
+            $device->definition()->defaultConfiguration(),
+            $device->configuration,
+            $config
+        );
         $device->update([
             'configuration' => $config
         ]);

@@ -24,15 +24,15 @@ class AppServiceProvider extends ServiceProvider
     {
 
         if(config('petkit.bypass_auth')) {
-//            try {
-//                $user = User::all()->first();
-//
-//                if(is_null($user)) {
-//                    throw new \Exception('You need to create a User');
-//                }
-//
-//                Auth::loginUsingId($user->id);
-//            } catch (\Exception $e) {}
+            try {
+                $user = User::all()->first();
+
+                if(is_null($user)) {
+                    throw new \Exception('You need to create a User');
+                }
+
+                Auth::loginUsingId($user->id);
+            } catch (\Exception $e) {}
         }
         Arr::macro('mergeRecursiveDistinct', function (array $array1, array $array2) {
             $merged = $array1;

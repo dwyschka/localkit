@@ -29,6 +29,7 @@ use Filament\Forms\Form;
 
 class PetkitYumshareSolo
 {
+    use HiddenFields;
 
     public function formFields(): array
     {
@@ -40,9 +41,10 @@ class PetkitYumshareSolo
                     ->hidden(fn($record) => is_null($record->definition()->configurationDefinition()->getIpAddress()))
                     ->columnSpan('full'),
                 Forms\Components\Placeholder::make('Snapshot')
-                ->content(fn($record): HtmlString => new HtmlString(sprintf('<img src="%s" />', $record->definition()->configurationDefinition()->getLastSnapshot())))
-                ->hidden(fn($record) => is_null($record->definition()->configurationDefinition()->getLastSnapshot()))
-            ]),
+                    ->content(fn($record): HtmlString => new HtmlString(sprintf('<img src="%s" />', $record->definition()->configurationDefinition()->getLastSnapshot())))
+                    ->hidden(fn($record) => is_null($record->definition()->configurationDefinition()->getLastSnapshot()))
+            ])->collapsible(),
+
             Section::make('Schedule Configuration')
                 ->schema([
                     Repeater::make('configuration.schedule')
@@ -164,17 +166,81 @@ class PetkitYumshareSolo
                             }
                             return !empty($days) ? implode(', ', $days) : 'New Schedule';
                         }),
+                ])->collapsible(),
+            Forms\Components\Section::make('Camera/Microphone')->columns(3)->schema([
+                Forms\Components\Toggle::make('configuration.settings.camera')->label('Enable Camera'),
+                Forms\Components\Toggle::make('configuration.settings.microphone')->label('Enable Microphone'),
+                Forms\Components\Toggle::make('configuration.settings.timeDisplay')->label('Display Time in Video'),
+                Forms\Components\Toggle::make('configuration.settings.night')->label('Night'),
+                Forms\Components\Toggle::make('configuration.settings.smartFrame')->label('Display Border')->helperText('Display Border if Pet is detected'),
+            ]),
+            Forms\Components\Section::make('Audio')->columns(2)->schema([
+                Forms\Components\Toggle::make('configuration.settings.systemSoundEnable')->label('Device Audio enable?'),
+                Forms\Components\Toggle::make('configuration.settings.soundEnable')->label('Voice announcement after feeding?'),
+                Forms\Components\Select::make('configuration.settings.volume')->label('Volume')->options([
+                    1 => 1,
+                    2 => 2,
+                    3 => 3,
+                    4 => 4,
+                    5 => 5,
+                    6 => 6,
+                    7 => 7,
+                    8 => 8,
+                    9 => 9
+                ])
+
+            ]),
+            Forms\Components\Section::make('Detection')->columns(2)->schema([
+                Section::make('Move')->columns(2)->schema([
+                    Forms\Components\Toggle::make('configuration.settings.moveDetection')->label('Move Detection'),
+                    Forms\Components\Select::make('configuration.settings.moveSensitivity')->label('Move Sensitivity')->options([
+                        0 => 0,
+                        1 => 1,
+                        2 => 2,
+                        3 => 3,
+                        4 => 4
+                    ])
                 ]),
-            Forms\Components\Section::make('Section')->schema([
+                Section::make('Pet')->columns(2)->schema([
+                    Forms\Components\Toggle::make('configuration.settings.petDetection')->label('Move Detection'),
+                    Forms\Components\Select::make('configuration.settings.petSensitivity')->label('Pet Sensitivity')->options([
+                        0 => 0,
+                        1 => 1,
+                        2 => 2,
+                        3 => 3,
+                        4 => 4,
+                    ])
+                ]),
+                Section::make('Eat')->columns(2)->schema([
+
+                    Forms\Components\Toggle::make('configuration.settings.eatDetection')->label('Eat Detection'),
+                    Forms\Components\Select::make('configuration.settings.eatSensitivity')->label('Eat Sensitivity')->options([
+                        0 => 0,
+                        1 => 1,
+                        2 => 2,
+                        3 => 3,
+                        4 => 4
+                    ])
+                ])
+            ]),
+            Forms\Components\Section::make('AI LAB')->schema([
+                Forms\Components\Select::make('configuration.settings.surplusControl')->options([
+                    0 => 'off',
+
+                ])
+            ]),
+
+            Forms\Components\Section::make('Feed')->schema([
                 Forms\Components\TextInput::make('configuration.settings.factor')->numeric(),
-                Forms\Components\TextInput::make('configuration.settings.amount')->numeric(),
             ]),
             Forms\Components\Section::make('Options')->columns(3)->schema([
                 Forms\Components\Toggle::make('configuration.settings.feedSound')->label('Feeding chime'),
                 Forms\Components\Toggle::make('configuration.settings.manualLock')->label('Child Lock'),
                 Forms\Components\Toggle::make('configuration.settings.foodWarn')->label('Refill alarm'),
+                Forms\Components\Toggle::make('configuration.settings.autoUpgrade')->label('Auto-Upgrade')->disabled(true),
+
             ]),
-            Forms\Components\Section::make('Unknown')->schema([
+            Forms\Components\Section::make('Time')->columns(3)->schema([
 
                 Forms\Components\Section::make('foodWarnRange')->schema([
                     TimePicker::make('configuration.settings.foodWarnRange.0')
@@ -194,7 +260,7 @@ class PetkitYumshareSolo
                     ->columns(2)
                     ->columnSpanFull(),
 
-                Forms\Components\Section::make('lightRange')->schema([
+                Forms\Components\Section::make('lightMultiRange')->schema([
                     TimePicker::make('configuration.settings.lightRange.0')
                         ->label('From')
                         ->seconds(false)
@@ -212,9 +278,34 @@ class PetkitYumshareSolo
                     ->columns(2)
                     ->columnSpanFull(),
 
+                Forms\Components\Section::make('Do not Disturb')->schema([
+                    TimePicker::make('configuration.settings.lightRange.0')
+                        ->label('From')
+                        ->seconds(false)
+                        ->required()
+                        ->formatStateUsing(fn(?string $state) => Time::toTimeFromMinutes((int)$state ?? 0))
+                        ->dehydrateStateUsing(fn($state) => Time::toMinutes($state)),
+                    TimePicker::make('configuration.settings.lightRange.1')
+                        ->label('Till')
+                        ->required()
+                        ->seconds(false)
+                        ->after('time_from')
+                        ->formatStateUsing(fn(?string $state) => Time::toTimeFromMinutes((int)$state ?? 0))
+                        ->dehydrateStateUsing(fn($state) => Time::toMinutes($state)),
+                ])
+                    ->columns(2)
+                    ->columnSpanFull(),
+
+          ]),
+            Forms\Components\Section::make('Unknown')->columns(3)->schema([
                 Forms\Components\Toggle::make('configuration.settings.shareOpen')->label('Share Open'),
                 Forms\Components\Toggle::make('configuration.settings.multiConfig')->label('Multi Config'),
             ]),
+
+            Forms\Components\Hidden::make('configuration.capacity.0.name')->default('fullVideo'),
+            Forms\Components\Hidden::make('configuration.capacity.1.name')->default('eventImage'),
+            Forms\Components\Hidden::make('configuration.capacity.2.name')->default('highLight'),
+            Forms\Components\Hidden::make('configuration.capacity.3.name')->default('dynamicVideo'),
 
 
         ];

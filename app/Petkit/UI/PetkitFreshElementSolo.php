@@ -29,6 +29,7 @@ use Filament\Forms\Form;
 class PetkitFreshElementSolo
 {
 
+    use HiddenFields;
     public function formFields(): array
     {
         return [

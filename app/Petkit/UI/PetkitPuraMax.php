@@ -18,6 +18,7 @@ use Filament\Forms;
 use Filament\Forms\Form;
 class PetkitPuraMax
 {
+    use HiddenFields;
 
     public function formFields(): array {
         return [

@@ -416,7 +416,6 @@ class PetkitYumshareSolo implements DeviceDefinition
         if(!isset($settings['states'])) {
             $settings['states'] = [];
         }
-        Log::info('update configuration', ['content' => $content]);
         //IP
         $pattern = '/Ip:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/';
         $match = Str::of($content->other)->match($pattern);
