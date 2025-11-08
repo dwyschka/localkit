@@ -2,6 +2,9 @@
 
 namespace App\Management;
 
+
+use Illuminate\Support\Collection;
+
 class Supervisor
 {
 
@@ -43,5 +46,11 @@ class Supervisor
         $this->supervisor->startProcess($serviceName);
 
         return $this->running($serviceName);
+    }
+
+    public function allServices(): Collection {
+        return collect(
+            $this->supervisor->getAllProcessInfo()
+        );
     }
 }

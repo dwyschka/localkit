@@ -8,7 +8,8 @@ return [
         'cleaning' => 'Manual Cleaning',
         'cleaning_title' => 'Manual Cleaning',
         'maintenance_title' => 'Maintenance',
-        'maintenance' => 'Maintenance for :duration seconds'
+        'maintenance' => 'Maintenance for :duration seconds',
+        'working_title' => 'Feeding'
     ],
     'error' => [
         'hallT' =>'The lid is not closed',

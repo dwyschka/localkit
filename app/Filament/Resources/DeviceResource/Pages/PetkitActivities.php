@@ -66,8 +66,7 @@ class PetkitActivities extends Page
                                 'IN_USE' => 'heroicon-m-exclamation-triangle',
                                 'CLEANING' => 'heroicon-m-arrow-path-rounded-square',
                                 'MAINTENANCE' => 'heroicon-m-wrench-screwdriver',
-                                'ERROR' => 'heroicon-m-exclamation-circle',
-                                default => $state,
+                                default => 'heroicon-m-exclamation-circle',
                             })
                             /*
                                 You can animate icon with ->animation() method.
