@@ -34,8 +34,7 @@ class TakeSnapshot implements ShouldQueue
     public function handle(): void
     {
 
-        $mp4FileName = sprintf('snapshot_%s_%s.mp4', $this->device->name, Carbon::now()->format('YmdHis'));
-        $jpegFileName = Str::of($mp4FileName)->replace('mp4', 'jpg');
+        $jpegFileName = sprintf('snapshot_%s_%s.jpeg', $this->device->name, Carbon::now()->format('YmdHis'));
         $settings = $this->device->configuration;
         $ip = $settings['states']['ipAddress'];
 
@@ -47,19 +46,9 @@ class TakeSnapshot implements ShouldQueue
 
 
         Storage::disk('local')->writeStream(
-            $mp4FileName, Http::get(sprintf('http://%s:1984/api/frame.mp4?src=camera', $ip)
-            )->resource());
+            $jpegFileName, Http::get('http://localhost:1984/api/frame.jpeg?src='. $this->device->name)->resource());
 
-        $inputPath = Storage::disk('local')->path($mp4FileName);
-        $outputPath = Storage::disk('public')->path($jpegFileName);
 
-        $command = 'ffmpeg -i "%s"  -vframes 1 "%s"';
-
-        shell_exec(
-            sprintf($command, $inputPath, $outputPath)
-        );
-
-        Storage::disk('local')->delete($mp4FileName);
 
         /** @var \App\Petkit\Devices\Configuration\PetkitYumshareSolo $configuration */
         $configuration = $this->device->definition()->configurationDefinition();
