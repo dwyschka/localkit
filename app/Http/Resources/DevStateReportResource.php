@@ -27,7 +27,7 @@ class DevStateReportResource extends PetkitHttpResource
 
         return [
             "interval" => 3600,
-            "time" => $time->format('Y-m-d\TH:i:s.vP')
+            "time" => $time->format('Y-m-d\TH:i:s.vO')
         ];
     }
 }
