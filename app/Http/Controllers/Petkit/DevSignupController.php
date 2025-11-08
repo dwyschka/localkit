@@ -18,7 +18,7 @@ class DevSignupController extends Controller
         $update = [
             'firmware' => $request->get('firmware'),
             'mac' => $request->get('mac'),
-            'timezone' => $request->get('timezone'),
+            'timezone' => 1.0,
             'locale' => $request->get('locale'),
             'bt_mac' => $request->get('bt_mac'),
             'ap_mac' => $request->get('ap_mac'),
@@ -40,16 +40,13 @@ class DevSignupController extends Controller
 
         $config = Arr::mergeRecursiveDistinct($device->definition()->defaultConfiguration(), $device->configuration ?? []);
 
-        dd(
-            $device->definition()->defaultConfiguration(),
-            $device->configuration,
-            $config
-        );
+
         $device->update([
             'configuration' => $config
         ]);
 
         $device->refresh();
+
         return new DevSignupResource($device);
     }
 }

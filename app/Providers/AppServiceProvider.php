@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Clients\SupervisorClient;
+use App\Management\Go2RTC;
+use App\Management\Supervisor;
 use App\Models\User;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
@@ -46,6 +49,16 @@ class AppServiceProvider extends ServiceProvider
             }
 
             return $merged;
+        });
+
+        $this->app->bind(Supervisor::class, function () {
+            return new Supervisor();
+        });
+
+        $this->app->bind(Go2RTC::class, function () {
+            return new Go2RTC(
+                app(Supervisor::class)
+            );
         });
 
     }

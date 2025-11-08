@@ -5,6 +5,7 @@ namespace App\Petkit\UI;
 use App\Helpers\Time;
 use App\Jobs\ServiceEnd;
 use App\Jobs\ServiceStart;
+use App\Management\Go2RTC;
 use App\Models\Device;
 use App\MQTT\GenericReply;
 use App\MQTT\OtaMessage;
@@ -34,16 +35,17 @@ class PetkitYumshareSolo
     public function formFields(): array
     {
         return [
-            Section::make('Stream')->schema([
-                Forms\Components\View::make('camera_stream')->viewData([
-                    'stream' => 'http://10.10.46.30:1984/stream.html?src=camera'
+            Section::make('Media')->schema([
+                Forms\Components\View::make('camera_stream')->viewData(fn($record): array => [
+                    'stream' => app(Go2RTC::class)->streamUrl($record)
                 ])
                     ->hidden(fn($record) => is_null($record->definition()->configurationDefinition()->getIpAddress()))
                     ->columnSpan('full'),
                 Forms\Components\Placeholder::make('Snapshot')
                     ->content(fn($record): HtmlString => new HtmlString(sprintf('<img src="%s" />', $record->definition()->configurationDefinition()->getLastSnapshot())))
                     ->hidden(fn($record) => is_null($record->definition()->configurationDefinition()->getLastSnapshot()))
-            ])->collapsible(),
+            ])->collapsible()
+                ->hidden(fn($record) => is_null($record->definition()->configurationDefinition()->getIpAddress()) || !$record->mqtt_connected),
 
             Section::make('Schedule Configuration')
                 ->schema([
@@ -188,7 +190,6 @@ class PetkitYumshareSolo
                     8 => 8,
                     9 => 9
                 ])
-
             ]),
             Forms\Components\Section::make('Detection')->columns(2)->schema([
                 Section::make('Move')->columns(2)->schema([
@@ -232,6 +233,8 @@ class PetkitYumshareSolo
 
             Forms\Components\Section::make('Feed')->schema([
                 Forms\Components\TextInput::make('configuration.settings.factor')->numeric(),
+                Forms\Components\TextInput::make('configuration.settings.amount')->numeric(),
+
             ]),
             Forms\Components\Section::make('Options')->columns(3)->schema([
                 Forms\Components\Toggle::make('configuration.settings.feedSound')->label('Feeding chime'),

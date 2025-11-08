@@ -1,4 +1,4 @@
-GET http://10.10.48.85/6/d4h/dev_signup?mac=fc702ea6e880&sn=20250512D90150&id=300016346&bt_mac=a4c138f3fd25&hardware=1&firmware=810&locale=Europe/Berlin&timezone=1.0&p2pType=2
+POST http://10.10.48.85/6/d4h/dev_state_report
 User-Agent: PETKIT DEV
 Host: api.eu-pet.com
 Content-Type: application/x-www-form-urlencoded

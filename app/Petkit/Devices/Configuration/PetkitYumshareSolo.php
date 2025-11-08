@@ -20,6 +20,8 @@ class PetkitYumshareSolo implements ConfigurationInterface
     private int $manualLock = 0;
     private int $lightMode = 0;
     private int $factor = 10;
+    private int $amount = 10;
+
     private bool $camera = true;
     private bool $microphone = true;
     private bool $night = true;
@@ -528,6 +530,16 @@ class PetkitYumshareSolo implements ConfigurationInterface
     public function setFeedPicture(bool $feedPicture): void
     {
         $this->feedPicture = $feedPicture;
+    }
+
+    public function getAmount(): int
+    {
+        return $this->amount;
+    }
+
+    public function setAmount(int $amount): void
+    {
+        $this->amount = $amount;
     }
 
 

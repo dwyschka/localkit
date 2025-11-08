@@ -12,16 +12,10 @@ use App\Jobs\TakeSnapshot;
 use App\Models\Device;
 use App\Models\History;
 use App\MQTT\GenericReply;
-use App\MQTT\OtaMessage;
-use App\MQTT\UserGet;
 use App\Petkit\DeviceActions;
 use App\Petkit\DeviceDefinition;
 use App\Petkit\Devices\Configuration\ConfigurationInterface;
 use App\Petkit\DeviceStates;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use PhpMqtt\Client\Facades\MQTT;
 
@@ -283,12 +277,13 @@ class PetkitYumshareSolo implements DeviceDefinition
     {
         $config = $this->device->configuration['settings'];
 
+
         return [
             'id' => $this->device->petkit_id,
             'mac' => $this->device->mac,
             'sn' => $this->device->serial_number,
             'secret' => $this->device->secret ?? '',
-            'timezone' => $this->device->timezone,
+            'timezone' => 2.0,
             'locale' => $this->device->locale,
             'shareOpen' => (int)$config['shareOpen'],
             'typeCode' => (int)$config['typeCode'] ?? 0
@@ -305,7 +300,7 @@ class PetkitYumshareSolo implements DeviceDefinition
             'mac' => $this->device->mac,
             'sn' => $this->device->serial_number,
             'secret' => $this->device->secret ?? '',
-            'timezone' => $this->device->timezone,
+            'timezone' => 2.0,
             'signupAt' => $this->device->created_at->format('Y-m-d\TH:i:s.v\+0000'),
             'locale' => $this->device->locale,
             'shareOpen' => (int)$config['shareOpen'],
