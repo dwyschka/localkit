@@ -9,6 +9,9 @@ class Service extends Model
 {
     use Sushi;
 
+    protected array $readOnly = ['php-fpm', 'nginx'];
+    protected array $hiddenEntries = ['init'];
+
     protected $schema = [
         'name' => 'string',
         'statename' => 'string',
@@ -22,8 +25,10 @@ class Service extends Model
         return $services->map(function ($service) {
             return [
                 ...$service,
-                'readonly' => in_array($service['name'], ['php-fpm', 'nginx', 'init'])
+                'readonly' => in_array($service['name'], $this->readOnly),
+                'hidden' => in_array($service['name'], $this->hiddenEntries)
+
             ];
-        })->sortBy('readonly')->toArray();
+        })->filter(fn($item) => !$item['hidden'])->sortBy('readonly')->toArray();
     }
 }

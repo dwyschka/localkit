@@ -46,7 +46,7 @@ class Go2RTC
     public function streamUrl(Device $device): string
     {
 
-        return sprintf('http://%s:1984/stream.html?src=%s', Str::of(config('petkit.local_ip'))->replace(':80', ''), $device->name);
+        return sprintf('http://%s:1984/stream.html?src=%s',config('petkit.local_ip'), $device->name);
     }
 
 }

@@ -5,6 +5,7 @@ namespace App\Petkit\Devices;
 use App\Helpers\JsonHelper;
 use App\Helpers\Time;
 use App\Homeassistant\HomeassistantTopic;
+use App\Homeassistant\Interfaces\Snapshot;
 use App\Jobs\FeedRealtime;
 use App\Jobs\ServiceStart;
 use App\Jobs\SetProperty;
@@ -19,7 +20,7 @@ use App\Petkit\DeviceStates;
 use Illuminate\Support\Str;
 use PhpMqtt\Client\Facades\MQTT;
 
-class PetkitYumshareSolo implements DeviceDefinition
+class PetkitYumshareSolo implements DeviceDefinition, Snapshot
 {
     public static $workingStates = [
         DeviceStates::WORKING, DeviceStates::IDLE,
@@ -95,20 +96,35 @@ class PetkitYumshareSolo implements DeviceDefinition
             sprintf('/sys/%s/%s/thing/event/move_detect/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
 
                 $state = json_decode($message?->params?->state, false);
+                $state->moveDetected = 1;
+
                 $device->update([
                     'working_state' => DeviceStates::IDLE->value,
                     'error' => $this->prepareErrorReporting($state),
+                    'configuration' => $this->updateConfiguration($state)
+                ]);
+
+                $state->moveDetected = 0;
+                $device->update([
                     'configuration' => $this->updateConfiguration($state)
                 ]);
             },
             sprintf('/sys/%s/%s/thing/event/pet_detect/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
 
                 $state = json_decode($message?->params?->state, false);
+                $state->petDetected = 1;
+
                 $device->update([
                     'working_state' => DeviceStates::IDLE->value,
                     'error' => $this->prepareErrorReporting($state),
                     'configuration' => $this->updateConfiguration($state)
                 ]);
+
+                $state->petDetected = 0;
+                $device->update([
+                    'configuration' => $this->updateConfiguration($state)
+                ]);
+
             },
             sprintf('/sys/%s/%s/thing/event/feed_start/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
                 $content = json_decode($message?->params?->content, false);
@@ -233,6 +249,11 @@ class PetkitYumshareSolo implements DeviceDefinition
         return json_encode($this->configurationDefinition()->toArray());
     }
 
+    public function toSnapshot(): ?string
+    {
+        return $this->configurationDefinition()->toSnapshot();
+    }
+
     #[HomeassistantTopic(topic: 'setting/set')]
     public function settings(\stdClass $message)
     {
@@ -256,6 +277,9 @@ class PetkitYumshareSolo implements DeviceDefinition
         switch ($action) {
             case 'feed':
                 $this->startFeeding($this->getDevice());
+                break;
+            case 'snapshot':
+                $this->takeSnapshot($this->getDevice());
                 break;
         }
     }
@@ -283,7 +307,7 @@ class PetkitYumshareSolo implements DeviceDefinition
             'mac' => $this->device->mac,
             'sn' => $this->device->serial_number,
             'secret' => $this->device->secret ?? '',
-            'timezone' => 2.0,
+            'timezone' => $this->device->timezone,
             'locale' => $this->device->locale,
             'shareOpen' => (int)$config['shareOpen'],
             'typeCode' => (int)$config['typeCode'] ?? 0
@@ -300,7 +324,7 @@ class PetkitYumshareSolo implements DeviceDefinition
             'mac' => $this->device->mac,
             'sn' => $this->device->serial_number,
             'secret' => $this->device->secret ?? '',
-            'timezone' => 2.0,
+            'timezone' => $this->device->timezone,
             'signupAt' => $this->device->created_at->format('Y-m-d\TH:i:s.v\+0000'),
             'locale' => $this->device->locale,
             'shareOpen' => (int)$config['shareOpen'],
@@ -340,7 +364,7 @@ class PetkitYumshareSolo implements DeviceDefinition
                 'upload' => (int)$config['upload'],
                 'attire' => $config['attire'],
             ],
-            'userId' => '200066438',
+            'userId' => '1',
             'multiConfig' => $config['multiConfig'],
             'capacity' => $capacity,
             'cloudProduct' => [],

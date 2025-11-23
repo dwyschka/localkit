@@ -63,16 +63,7 @@ class ServicePage extends Page implements HasTable
                         default => 'gray',
                     })
                     ->sortable(),
-                TextColumn::make('readonly')
-                    ->label('StatuRs')
-                    ->badge()
-                    ->color(fn(string $state): string => match ($state) {
-                        'RUNNING' => 'success',
-                        'EXITED' => 'danger',
-                        'STOPPED' => 'warning',
-                        default => 'gray',
-                    })
-                    ->sortable(),
+
             ])
             ->actions([
                 Action::make('stop')

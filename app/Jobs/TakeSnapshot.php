@@ -45,8 +45,9 @@ class TakeSnapshot implements ShouldQueue
         }
 
 
-        Storage::disk('local')->writeStream(
-            $jpegFileName, Http::get('http://localhost:1984/api/frame.jpeg?src='. $this->device->name)->resource());
+        Storage::disk('snapshots')->writeStream(
+            $jpegFileName, Http::get('http://localhost:1984/api/frame.jpeg?src='. $this->device->name)->resource()
+        );
 
 
 
@@ -55,13 +56,13 @@ class TakeSnapshot implements ShouldQueue
 
         $lastSnapshot = $configuration->getLastSnapshot();
         if (!is_null($lastSnapshot)) {
-            Storage::disk('public')->delete(
+            Storage::disk('snapshots')->delete(
                 basename($lastSnapshot)
             );
         }
 
         $configuration->setLastSnapshot(
-            Storage::disk('public')->url($jpegFileName)
+            $jpegFileName
         );
 
         $this->device->update([

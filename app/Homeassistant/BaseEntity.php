@@ -131,6 +131,14 @@ class BaseEntity
             $config['unit_of_measurement'] = $this->unitOfMeasurement;
         }
 
+        if (isset($this->imageTopic)) {
+            $config['image_topic'] = HomeassistantHelper::deviceTopic($this->device).$this->imageTopic;
+        }
+
+        if (isset($this->imageEncoding)) {
+            $config['image_encoding'] = $this->imageEncoding;
+        }
+
         return $config;
     }
 

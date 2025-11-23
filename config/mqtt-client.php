@@ -132,7 +132,7 @@ return [
 
             // A specific client id to be used for the connection. If omitted,
             // a random client id will be generated for each new connection.
-            'client_id' => env('HOMEASSISTANT_CLIENT_ID'),
+            'client_id' => env('HOMEASSISTANT_CLIENT_ID').'_dev',
 
             // Whether a clean session shall be used and requested by the client.
             // A clean session will let the broker forget about subscriptions and
@@ -216,7 +216,7 @@ return [
 
             // A specific client id to be used for the connection. If omitted,
             // a random client id will be generated for each new connection.
-            'client_id' => env('HOMEASSISTANT_CLIENT_ID').'_publisher',
+            'client_id' => env('HOMEASSISTANT_CLIENT_ID').'_publisher_dev',
 
             // Whether a clean session shall be used and requested by the client.
             // A clean session will let the broker forget about subscriptions and

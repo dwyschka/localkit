@@ -2,24 +2,109 @@
 
 namespace App\Petkit\Devices\Configuration;
 
-use App\Helpers\HomeassistantHelper;
-use App\Homeassistant\BinarySensor;
 use App\Homeassistant\Button;
 use App\Homeassistant\HASwitch;
-use App\Homeassistant\Number;
+use App\Homeassistant\Image;
+use App\Homeassistant\Interfaces\Snapshot;
+use App\Homeassistant\Interfaces\Video;
 use App\Homeassistant\Select;
 use App\Homeassistant\Sensor;
 use App\Models\Device;
+use Illuminate\Support\Facades\Storage;
 
-class PetkitYumshareSolo implements ConfigurationInterface
+class PetkitYumshareSolo implements ConfigurationInterface, Video, Snapshot
 {
     private string $ipAddress = '';
     private array $schedule = [];
+
+    #[Button(
+        technicalName: 'action_feed',
+        name: 'Feed',
+        commandTopic: 'action/start',
+        icon: 'mdi:information-outline',
+        commandTemplate: '{"action": "feed"}',
+        availabilityTemplate: 'online',
+    )]
+    private $actionFeed = 1;
+
+    #[Button(
+        technicalName: 'action_snapshot',
+        name: 'Take Snapshot',
+        commandTopic: 'action/start',
+        icon: 'mdi:information-outline',
+        commandTemplate: '{"action": "snapshot"}',
+        availabilityTemplate: 'online',
+    )]
+    private $actionSnapshot = 1;
+
+    #[HASwitch(
+        technicalName: 'food_warn',
+        name: 'Refill alarm',
+        commandTopic: 'setting/set',
+        icon: 'mdi:toggle-switch',
+        valueTemplate: '{{ value_json.settings.foodWarn | string }}',
+        commandTemplate: '{"foodWarn":{{ value }}}',
+        payloadOn: "true",
+        payloadOff: "false",
+        deviceClass: 'switch'
+    )]
     private int $foodWarn = 0;
     private array $foodWarnRange = [480, 1200];
+
+    #[Sensor(
+        technicalName: 'device_status',
+        name: 'Device Status',
+        icon: 'mdi:information-outline',
+        valueTemplate: '{{ value_json.states.state }}',
+        entityCategory: 'diagnostic'
+    )]
+    private ?string $workingState = null;
+
+    #[Sensor(
+        technicalName: 'error',
+        name: 'Error',
+        icon: 'mdi:error',
+        valueTemplate: '{{ value_json.states.error }}',
+        entityCategory: 'diagnostic'
+    )]
+    private ?string $error = null;
+
+    #[HASwitch(
+        technicalName: 'manual_lock',
+        name: 'Child lock',
+        commandTopic: 'setting/set',
+        icon: 'mdi:toggle-switch',
+        valueTemplate: '{{ value_json.settings.manualLock | string }}',
+        commandTemplate: '{"manualLock":{{ value }}}',
+        payloadOn: "true",
+        payloadOff: "false",
+        deviceClass: 'switch'
+    )]
     private int $manualLock = 0;
     private int $lightMode = 0;
+
     private int $factor = 10;
+
+    #[Select(
+        technicalName: 'amount',
+        name: 'Feed Amount',
+        options: [
+            '10',
+            '15',
+            '20',
+            '25',
+            '30',
+            '35',
+            '40',
+            '45',
+            '50'
+        ],
+        commandTopic: 'setting/set',
+        icon: 'mdi:information-outline',
+        valueTemplate: '{{ value_json.settings.amount }}',
+        commandTemplate: ' {"amount": {{value}}}',
+        entityCategory: 'config'
+    )]
     private int $amount = 10;
 
     private bool $camera = true;
@@ -79,7 +164,13 @@ class PetkitYumshareSolo implements ConfigurationInterface
         'name' => 'dynamicVideo'
     ]];
 
+
     private int $hertz = 50;
+
+    #[Image(
+        technicalName: 'last_snapshot',
+        name: 'Snapshot',
+    )]
     private ?string $lastSnapshot = null;
     private bool $moveDetected = false;
     private bool $eatDetected = false;
@@ -131,6 +222,8 @@ class PetkitYumshareSolo implements ConfigurationInterface
 
             $this->shareOpen = $settings['shareOpen'] ?? $this->shareOpen;
             $this->factor = $settings['factor'] ?? $this->factor;
+            $this->amount = $settings['amount'] ?? $this->amount;
+
             $this->multiConfig = $settings['multiConfig'] ?? $this->multiConfig;
             $this->lightMode = $settings['lightMode'] ?? $this->lightMode;
             $this->manualLock = $settings['manualLock'] ?? $this->manualLock;
@@ -179,6 +272,14 @@ class PetkitYumshareSolo implements ConfigurationInterface
         }
     }
 
+    public function toSnapshot(): ?string
+    {
+        if(is_null($this->lastSnapshot)) {
+            return $this->lastSnapshot;
+        }
+        return base64_encode(Storage::disk('snapshots')->get($this->lastSnapshot));
+    }
+
     /**
      * Convert the configuration to an array
      */
@@ -187,6 +288,7 @@ class PetkitYumshareSolo implements ConfigurationInterface
         return [
             'states' => [
                 'state' => $this->workingState,
+                'error' => $this->error,
                 'ipAddress' => $this->ipAddress,
                 'door' => $this->doorState,
                 'bowl' => $this->bowlState,
@@ -200,6 +302,7 @@ class PetkitYumshareSolo implements ConfigurationInterface
             'settings' => [
                 'shareOpen' => $this->shareOpen,
                 'factor' => $this->factor,
+                'amount' => $this->amount,
                 'multiConfig' => $this->multiConfig,
                 'lightMode' => $this->lightMode,
                 'manualLock' => $this->manualLock,

@@ -23,6 +23,7 @@ use Filament\Forms\Set;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\HtmlString;
 use PhpMqtt\Client\Facades\MQTT;
 use Filament\Forms;
@@ -42,7 +43,18 @@ class PetkitYumshareSolo
                     ->hidden(fn($record) => is_null($record->definition()->configurationDefinition()->getIpAddress()))
                     ->columnSpan('full'),
                 Forms\Components\Placeholder::make('Snapshot')
-                    ->content(fn($record): HtmlString => new HtmlString(sprintf('<img src="%s" />', $record->definition()->configurationDefinition()->getLastSnapshot())))
+                    ->content(function($record){
+                        $image = $record->definition()->configurationDefinition()->getLastSnapshot();
+                        if(is_null($image)) {
+                            return '';
+                        }
+                        $blob = Storage::disk('snapshots')->get($image);
+                        if(is_null($blob)) {
+                            return '';
+                        }
+                        $base64Blob = base64_encode($blob);
+                        return new HtmlString(sprintf('<img src="data:image/jpeg;base64,%s" />', $base64Blob));
+                    })
                     ->hidden(fn($record) => is_null($record->definition()->configurationDefinition()->getLastSnapshot()))
             ])->collapsible()
                 ->hidden(fn($record) => is_null($record->definition()->configurationDefinition()->getIpAddress()) || !$record->mqtt_connected),
@@ -90,12 +102,11 @@ class PetkitYumshareSolo
                                                 $time = Time::toTimeFromSeconds($seconds);
                                                 $set('time_display', $time);
                                             }
-                                        }),
-                                    TextInput::make('id')
+                                    }),
+                                    Forms\Components\Hidden::make('id')
                                         ->label('id')
-                                        ->numeric()
-                                        ->hidden() // Hidden field to store the actual seconds value
                                         ->required(),
+
                                     TextInput::make('a')
                                         ->label('Amount')
                                         ->numeric()
@@ -103,10 +114,9 @@ class PetkitYumshareSolo
                                         ->integer()
                                         ->dehydrateStateUsing(fn($state) => (int)$state)
                                         ->suffix('amount'),
-                                    TextInput::make('t')
+
+                                    Forms\Components\Hidden::make('t')
                                         ->label('Time (seconds)')
-                                        ->numeric()
-                                        ->hidden() // Hidden field to store the actual seconds value
                                         ->required(),
                                 ])
                                 ->columns(2)
@@ -129,12 +139,14 @@ class PetkitYumshareSolo
                                         return $intA <=> $intB;
                                     });
 
-                                    return collect($state)->map(fn($s) => [
+                                    $data =  collect($state)->map(fn($s) => [
                                         'a' => $s['a'],
                                         'id' => $s['id'],
                                         't' => $s['t'] + 1,
                                         'time_display' => $s['time_display']
                                     ])->toArray();
+
+                                    return $data;
                                 })
                                 ->itemLabel(function (array $state): ?string {
                                     $time = '';

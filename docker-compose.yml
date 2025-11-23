@@ -23,7 +23,8 @@ services:
         networks:
             - sail
         depends_on:
-            - mysql
+            mysql:
+                condition: service_healthy
     mysql:
         image: 'mysql/mysql-server:8.0'
         ports:
