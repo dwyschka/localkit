@@ -2,11 +2,13 @@
 
 namespace App\Petkit\Devices\Configuration;
 
+use App\Homeassistant\BinarySensor;
 use App\Homeassistant\Button;
 use App\Homeassistant\HASwitch;
 use App\Homeassistant\Image;
 use App\Homeassistant\Interfaces\Snapshot;
 use App\Homeassistant\Interfaces\Video;
+use App\Homeassistant\Number;
 use App\Homeassistant\Select;
 use App\Homeassistant\Sensor;
 use App\Models\Device;
@@ -14,6 +16,14 @@ use Illuminate\Support\Facades\Storage;
 
 class PetkitYumshareSolo implements ConfigurationInterface, Video, Snapshot
 {
+
+    #[Sensor(
+        technicalName: 'ip_address',
+        name: 'IP Address',
+        icon: 'mdi:information-outline',
+        valueTemplate: '{{ value_json.states.ipAddress }}',
+        entityCategory: 'diagnostic'
+    )]
     private string $ipAddress = '';
     private array $schedule = [];
 
@@ -42,10 +52,10 @@ class PetkitYumshareSolo implements ConfigurationInterface, Video, Snapshot
         name: 'Refill alarm',
         commandTopic: 'setting/set',
         icon: 'mdi:toggle-switch',
-        valueTemplate: '{{ value_json.settings.foodWarn | string }}',
+        valueTemplate: '{{ value_json.settings.foodWarn }}',
         commandTemplate: '{"foodWarn":{{ value }}}',
-        payloadOn: "true",
-        payloadOff: "false",
+        payloadOn: "True",
+        payloadOff: "False",
         deviceClass: 'switch'
     )]
     private int $foodWarn = 0;
@@ -74,10 +84,10 @@ class PetkitYumshareSolo implements ConfigurationInterface, Video, Snapshot
         name: 'Child lock',
         commandTopic: 'setting/set',
         icon: 'mdi:toggle-switch',
-        valueTemplate: '{{ value_json.settings.manualLock | string }}',
+        valueTemplate: '{{ value_json.settings.manualLock }}',
         commandTemplate: '{"manualLock":{{ value }}}',
-        payloadOn: "true",
-        payloadOff: "false",
+        payloadOn: "True",
+        payloadOff: "False",
         deviceClass: 'switch'
     )]
     private int $manualLock = 0;
@@ -107,11 +117,49 @@ class PetkitYumshareSolo implements ConfigurationInterface, Video, Snapshot
     )]
     private int $amount = 10;
 
+    #[HASwitch(
+        technicalName: 'camera',
+        name: 'Camera',
+        commandTopic: 'setting/set',
+        icon: 'mdi:camera',
+        valueTemplate: '{{ value_json.settings.camera }}',
+        commandTemplate: '{"camera":{{ value }}}',
+        payloadOn: "True",
+        payloadOff: "False",
+        deviceClass: 'switch'
+    )]
     private bool $camera = true;
+
+    #[HASwitch(
+        technicalName: 'microphone',
+        name: 'Microphone',
+        commandTopic: 'setting/set',
+        icon: 'mdi:microphone',
+        valueTemplate: '{{ value_json.settings.microphone }}',
+        commandTemplate: '{"microphone":{{ value }}}',
+        payloadOn: "True",
+        payloadOff: "False",
+        deviceClass: 'switch'
+    )]
     private bool $microphone = true;
     private bool $night = true;
+
+    #[HASwitch(
+        technicalName: 'time_display',
+        name: 'Time Display',
+        commandTopic: 'setting/set',
+        icon: 'mdi:toggle-switch',
+        valueTemplate: '{{ value_json.settings.timeDisplay }}',
+        commandTemplate: '{"timeDisplay":{{ value }}}',
+        payloadOn: "True",
+        payloadOff: "False",
+        deviceClass: 'switch'
+    )]
+
     private bool $timeDisplay = true;
     private bool $eatVideo = true;
+
+
     private bool $moveDetection = true;
     private int $moveSensitivity = 1;
     private bool $petDetection = true;
@@ -124,6 +172,20 @@ class PetkitYumshareSolo implements ConfigurationInterface, Video, Snapshot
     private bool $soundEnable = false;
     private bool $systemSoundEnable = false;
 
+    #[Number(
+        technicalName: 'volume',
+        name: 'Volume',
+        commandTopic: 'setting/set',
+        icon: 'mdi:speaker',
+        valueTemplate: '{{ value_json.settings.volume }}',
+        commandTemplate: '{"volume":{{ value }}}',
+        payloadOn: 1,
+        payloadOff: 0,
+        entityCategory: 'config',
+        min: 1,
+        max: 9,
+        step: 1
+    )]
     private int $volume = 4;    //Volume is 0 - 9
 
 
@@ -134,6 +196,17 @@ class PetkitYumshareSolo implements ConfigurationInterface, Video, Snapshot
     private int $surplusControl = 60; //Some ai stuff ?
     private int $surplusStandard = 2; // Ai Stuff
 
+    #[HASwitch(
+        technicalName: 'smart_frame',
+        name: 'Smart Frame',
+        commandTopic: 'setting/set',
+        icon: 'mdi:border',
+        valueTemplate: '{{ value_json.settings.smartFrame }}',
+        commandTemplate: '{"smartFrame":{{ value }}}',
+        payloadOn: "True",
+        payloadOff: "False",
+        deviceClass: 'switch'
+    )]
     private bool $smartFrame = true; //renders border in stream
     private bool $upload = true;
 
@@ -172,11 +245,69 @@ class PetkitYumshareSolo implements ConfigurationInterface, Video, Snapshot
         name: 'Snapshot',
     )]
     private ?string $lastSnapshot = null;
+
+    #[BinarySensor(
+        technicalName: 'move_detected',
+        name: 'Move Detected',
+        icon: 'mdi:cursor-move',
+        deviceClass: 'motion',
+        valueTemplate: '{{ value_json.states.moveDetected }}',
+        entityCategory: 'diagnostic',
+        payloadOn: 'True',
+        payloadOff: 'False'
+    )]
     private bool $moveDetected = false;
+
+    #[BinarySensor(
+        technicalName: 'eat_detected',
+        name: 'Eat Detected',
+        icon: 'mdi:food',
+        valueTemplate: '{{ value_json.states.eatDetected }}',
+        entityCategory: 'diagnostic',
+        payloadOn: 'True',
+        payloadOff: 'False'
+    )]
     private bool $eatDetected = false;
+
+    #[BinarySensor(
+        technicalName: 'pet_detected',
+        name: 'Pet Detected',
+        icon: 'mdi:cat',
+        deviceClass: 'motion',
+        valueTemplate: '{{ value_json.states.petDetected }}',
+        entityCategory: 'diagnostic',
+        payloadOn: 'True',
+        payloadOff: 'False'
+    )]
     private bool $petDetected = false;
+
+    #[BinarySensor(
+        technicalName: 'door',
+        name: 'Door',
+        icon: 'mdi:door',
+        valueTemplate: '{{ value_json.states.door }}',
+        entityCategory: 'diagnostic',
+        payloadOn: 'True',
+        payloadOff: 'False'
+    )]
     private bool $doorState = false;
+
+    #[Sensor(
+        technicalName: 'bowl',
+        name: 'Bowl',
+        icon: 'mdi:information-outline',
+        valueTemplate: '{{ value_json.states.bowl }}',
+        entityCategory: 'diagnostic'
+    )]
     private int $bowlState = -1;
+
+    #[BinarySensor(
+        technicalName: 'infrared',
+        name: 'Infrared',
+        valueTemplate: '{{ value_json.states.infrared ? "on": "off" }}',
+        payloadOn: 'True',
+        payloadOff: 'False'
+    )]
     private bool $infrared = false;
     private ?string $stream = null;
 
@@ -203,7 +334,7 @@ class PetkitYumshareSolo implements ConfigurationInterface, Video, Snapshot
         // Load schedule
         $this->schedule = $config['schedule'] ?? [];
 
-        if(isset($config['states'])) {
+        if (isset($config['states'])) {
             $states = $config['states'];
             $this->lastSnapshot = $states['lastSnapshot'] ?? $this->lastSnapshot;
             $this->ipAddress = $states['ipAddress'] ?? $this->ipAddress;
@@ -274,7 +405,7 @@ class PetkitYumshareSolo implements ConfigurationInterface, Video, Snapshot
 
     public function toSnapshot(): ?string
     {
-        if(is_null($this->lastSnapshot)) {
+        if (is_null($this->lastSnapshot)) {
             return $this->lastSnapshot;
         }
         return base64_encode(Storage::disk('snapshots')->get($this->lastSnapshot));

@@ -38,14 +38,11 @@ class Homeassistant extends Command
 
         $devices->each(function(Device $device) use ($mqtt) {
             $definition = $device->definition();
-
             $mqtt->publish(HomeassistantHelper::deviceTopic($device), $definition->toHomeassistant(), 0, true);
 
             if($definition instanceof Snapshot) {
                 $mqtt->publish(HomeassistantHelper::snapshotTopic($device), $definition->toSnapshot(), 0, true);
             }
-
-
 
             $configuration = $device->definition()->configurationDefinition();
             $service = new AutoDiscoveryService($mqtt);
@@ -53,6 +50,7 @@ class Homeassistant extends Command
             $service->discover($configuration);
         });
 
+        die();
         $service = new HomeassistantTopicService($devices);
         $mqtt->subscribe('localkit/#', function($topic, $message) use($service){
             $service->resolve($topic, json_decode($message, false));
