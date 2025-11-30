@@ -84,7 +84,7 @@ class PetkitYumshareSolo implements ConfigurationInterface, Video, Snapshot
         name: 'Child lock',
         commandTopic: 'setting/set',
         icon: 'mdi:toggle-switch',
-        valueTemplate: '{{ value_json.settings.manualLock }}',
+        valueTemplate: '{{ value_json.settings.manualLock | string }}',
         commandTemplate: '{"manualLock":{{ value }}}',
         payloadOn: "True",
         payloadOff: "False",
@@ -142,6 +142,18 @@ class PetkitYumshareSolo implements ConfigurationInterface, Video, Snapshot
         deviceClass: 'switch'
     )]
     private bool $microphone = true;
+
+    #[HASwitch(
+        technicalName: 'night',
+        name: 'Night Vision',
+        commandTopic: 'setting/set',
+        icon: 'mdi:moon-new',
+        valueTemplate: '{{ value_json.settings.night }}',
+        commandTemplate: '{"night":{{ value }}}',
+        payloadOn: "True",
+        payloadOff: "False",
+        deviceClass: 'switch'
+    )]
     private bool $night = true;
 
     #[HASwitch(
@@ -159,17 +171,119 @@ class PetkitYumshareSolo implements ConfigurationInterface, Video, Snapshot
     private bool $timeDisplay = true;
     private bool $eatVideo = true;
 
-
+    #[HASwitch(
+        technicalName: 'move_detection',
+        name: 'Move Detection',
+        commandTopic: 'setting/set',
+        icon: 'mdi:eye-arrow-left-outline',
+        valueTemplate: '{{ value_json.settings.moveDetection }}',
+        commandTemplate: '{"moveDetection":{{ value }}}',
+        payloadOn: "True",
+        payloadOff: "False",
+        deviceClass: 'switch'
+    )]
     private bool $moveDetection = true;
+
+    #[Number(
+        technicalName: 'move_sensitivity',
+        name: 'Move Sensitivity',
+        commandTopic: 'setting/set',
+        icon: 'mdi:speaker',
+        valueTemplate: '{{ value_json.settings.moveSensitivity }}',
+        commandTemplate: '{"moveSensitivity":{{ value }}}',
+        payloadOn: 1,
+        payloadOff: 0,
+        entityCategory: 'config',
+        min: 1,
+        max: 9,
+        step: 1
+    )]
     private int $moveSensitivity = 1;
+
+    #[HASwitch(
+        technicalName: 'pet_detection',
+        name: 'Pet Detection',
+        commandTopic: 'setting/set',
+        icon: 'mdi:cat',
+        valueTemplate: '{{ value_json.settings.petDetection }}',
+        commandTemplate: '{"petDetection":{{ value }}}',
+        payloadOn: "True",
+        payloadOff: "False",
+        deviceClass: 'switch'
+    )]
     private bool $petDetection = true;
 
+    #[Number(
+        technicalName: 'pet_sensitivity',
+        name: 'Pet Sensitivity',
+        commandTopic: 'setting/set',
+        icon: 'mdi:speaker',
+        valueTemplate: '{{ value_json.settings.petSensitivity }}',
+        commandTemplate: '{"petSensitivity":{{ value }}}',
+        payloadOn: 1,
+        payloadOff: 0,
+        entityCategory: 'config',
+        min: 1,
+        max: 9,
+        step: 1
+    )]
     private int $petSensitivity = 3;
+
+    #[HASwitch(
+        technicalName: 'eat_detection',
+        name: 'Eat Detection',
+        commandTopic: 'setting/set',
+        icon: 'mdi:bowl',
+        valueTemplate: '{{ value_json.settings.eatDetection }}',
+        commandTemplate: '{"eatDetection":{{ value }}}',
+        payloadOn: "True",
+        payloadOff: "False",
+        deviceClass: 'switch'
+    )]
     private bool $eatDetection = true;
+
+    #[Number(
+        technicalName: 'eat_sensitivity',
+        name: 'Eat Sensitivity',
+        commandTopic: 'setting/set',
+        icon: 'mdi:speaker',
+        valueTemplate: '{{ value_json.settings.eatSensitivity }}',
+        commandTemplate: '{"eatSensitivity":{{ value }}}',
+        payloadOn: 1,
+        payloadOff: 0,
+        entityCategory: 'config',
+        min: 1,
+        max: 9,
+        step: 1
+    )]
     private int $eatSensitivity = 3;
     private int $detectInterval = 0;
     private int $toneMode = 1;
+
+    #[HASwitch(
+        technicalName: 'sound_enable',
+        name: 'Sound Enabled',
+        commandTopic: 'setting/set',
+        icon: 'mdi:volume-low',
+        valueTemplate: '{{ value_json.settings.soundEnable }}',
+        commandTemplate: '{"soundEnable":{{ value }}}',
+        payloadOn: "True",
+        payloadOff: "False",
+        deviceClass: 'switch'
+    )]
     private bool $soundEnable = false;
+
+    #[HASwitch(
+        technicalName: 'system_sound_enable',
+        name: 'System Sound Enabled',
+        commandTopic: 'setting/set',
+        icon: 'mdi:desktop-classic',
+        valueTemplate: '{{ value_json.settings.systemSoundEnable }}',
+        commandTemplate: '{"systemSoundEnable":{{ value }}}',
+        payloadOn: "True",
+        payloadOff: "False",
+        deviceClass: 'switch'
+    )]
     private bool $systemSoundEnable = false;
 
     #[Number(
@@ -238,6 +352,13 @@ class PetkitYumshareSolo implements ConfigurationInterface, Video, Snapshot
     ]];
 
 
+    #[Sensor(
+        technicalName: 'hertz',
+        name: 'Hertz',
+        icon: 'mdi:repeat',
+        valueTemplate: '{{ value_json.settings.hertz }}',
+        entityCategory: 'diagnostic'
+    )]
     private int $hertz = 50;
 
     #[Image(
