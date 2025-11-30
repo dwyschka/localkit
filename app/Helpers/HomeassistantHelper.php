@@ -20,4 +20,8 @@ class HomeassistantHelper
     public static function deviceTopic(Device $device): string{
         return sprintf('localkit/%s/%s', $device->productKey(), $device->deviceName());
     }
+
+    public static function snapshotTopic(Device $device): string{
+        return sprintf('localkit/%s/%s/snapshot', $device->productKey(), $device->deviceName());
+    }
 }

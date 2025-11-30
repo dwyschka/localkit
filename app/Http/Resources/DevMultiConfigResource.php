@@ -17,11 +17,7 @@ class DevMultiConfigResource extends PetkitHttpResource
      */
     public function toArray(Request $request): array
     {
-        $setting = $this->resource->configuration['settings'];
+        return $this->resource->definition()->toDeviceMultiConfig();
 
-        return [
-            'lightMultiRange' => $setting['lightRange'] ?? [],
-            'distrubMultiRange' => $setting['distrubRange'] ?? [],
-        ];
     }
 }

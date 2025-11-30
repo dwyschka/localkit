@@ -1,16 +1,17 @@
 services:
     laravel.test:
         build:
-            context: ./docker/8.4
             dockerfile: Dockerfile
             args:
                 WWWGROUP: '${WWWGROUP}'
-        image: sail-8.4/app
         extra_hosts:
             - 'host.docker.internal:host-gateway'
         ports:
             - '${APP_PORT:-8080}:80'
+            - '${APP_HTTPS_PORT:-8443}:443'
             - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
+            - '1984:1984'
+
         environment:
             WWWUSER: '${WWWUSER}'
             LARAVEL_SAIL: 1
@@ -22,7 +23,8 @@ services:
         networks:
             - sail
         depends_on:
-            - mysql
+            mysql:
+                condition: service_healthy
     mysql:
         image: 'mysql/mysql-server:8.0'
         ports:

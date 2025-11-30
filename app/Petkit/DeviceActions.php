@@ -21,6 +21,8 @@ class DeviceActions
     public const RESET_N50 = 'reset_n50';
     public const START_FEEDING = 'start_feeder';
 
+    public const TAKE_SNAPSHOT = 'take_snapshot';
+
 
 
     public static function actions()
@@ -88,7 +90,14 @@ class DeviceActions
                 })
                 ->action(function (Device $record) {
                     $record->definition()->startFeeding($record);
+                }),
+            Action::make('Take Snapshot')
+                ->visible(function (Device $record) {
+                    return $record->definition()->hasAction(self::TAKE_SNAPSHOT);
                 })
+                ->action(function (Device $record) {
+                    $record->definition()->takeSnapshot($record);
+                }),
         ];
     }
 }

@@ -2,9 +2,15 @@
 
 namespace App\Console\Commands;
 
+use App\Http\Clients\PetKitClient;
 use App\Models\Device;
+use DateTime;
+use DateTimeZone;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use PhpMqtt\Client\Facades\MQTT;
+use Symfony\Component\Yaml\Yaml;
 
 class Playground extends Command
 {
@@ -28,18 +34,23 @@ class Playground extends Command
     public function handle()
     {
 
-
-//        $topic = '/sys/a54dw3gx0nb/d_t4_20240413L12893/thing/service/start';
-//        $json = '{"method":"thing.service.start","id":"386251703","params":{"start_action":0},"version":"1.0.0"}';
+//        $date = new DateTime('now', new DateTimeZone('Europe/Berlin'));
 //
-//        MQTT::publish($topic, $json);
+//        echo $date->format('I');
+//
+//        if ($date->format('I') == 1) {
+//            echo "Sommerzeit (MESZ)";
+//        } else {
+//            echo "Winterzeit (MEZ)";
+//        }
+
+        $data = file_get_contents(public_path('petkit/D4H/go2rtc.yml'));
+
+        dd(Yaml::parse($data));
 
 
-        $topic = '/sys/a54dw3gx0nb/d_t4_20240413L12893/thing/service/property/set';
-        $json = '{"method":"thing.service.property.set","id":"677220430","params":{"language":"en_US"},"version":"1.0.0"}';
-
-        MQTT::publish($topic, $json);
 
 
     }
+
 }

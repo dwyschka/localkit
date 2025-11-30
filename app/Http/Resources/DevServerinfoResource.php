@@ -17,11 +17,19 @@ class DevServerinfoResource extends PetkitHttpResource
      */
     public function toArray(Request $request): array
     {
+
+        $apiServer = 'http://api.eu-pet.com/6/';
+        if($this->resource->isNextGen()) {
+            $apiServer = 'https://api-eu.petkt.com/6/';
+        }
+
         return [
             'ipServers' => [
+                sprintf('http://%s/6/', config('petkit.local_ip'))
             ],
+            'dns' => [],
             'apiServers' => [
-                'http://api.eu-pet.com/6/'
+                $apiServer
             ],
             'nextTick' => 3600,
             'linked' => 1

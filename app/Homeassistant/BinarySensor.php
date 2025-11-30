@@ -7,19 +7,25 @@ use Attribute;
 #[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_PROPERTY)]
 class BinarySensor extends BaseEntity
 {
+    protected $entity = 'binary_sensor';
+
     public function __construct(
+        public string $technicalName,
         public string $name,
-        public string $deviceClass = '',
-        public string $stateClass = '',
-        public string $icon = '',
+        public string $icon = 'mdi:text',
+        public ?string $stateClass = null,
+        public ?string $deviceClass = null,
+        public ?string $unitOfMeasurement = null,
         public ?string $valueTemplate = null,
-        public string $payloadOn = 'ON',
-        public string $payloadOff = 'OFF',
+        public ?string $entityCategory = null,
+        public ?string $payloadOn = 'ON',
+        public ?string $payloadOff = 'OFF',
         public bool $availabilityMode = true,
         public ?string $uniqueId = null,
         public int $qos = 0,
         public bool $retain = false,
-        public ?string $entityCategory = null,
+        public ?string $encoding = 'utf-8',
+        public int $expiryAfter = 0
     ) {
     }
 }

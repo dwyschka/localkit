@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Helpers\HomeassistantHelper;
 use App\Helpers\JsonHelper;
+use App\Homeassistant\Interfaces\Snapshot;
 use App\Jobs\SetProperty;
 use App\Petkit\Devices;
 Use App\Petkit\UI;
@@ -29,11 +30,19 @@ class Device extends Model
 
             }
 
-            MQTT::connection('homeassistant-publisher')
-                ->publish(HomeassistantHelper::deviceTopic($device), $device->definition()->toHomeassistant(), 0, true);
+//            if(config('petkit.homeassistant.enabled')) {
+                $definition = $device->definition();
 
-            MQTT::connection('homeassistant-publisher')->disconnect();
+                MQTT::connection('homeassistant-publisher')
+                    ->publish(HomeassistantHelper::deviceTopic($device), $definition->toHomeassistant(), 0, true);
 
+                if($definition instanceof Snapshot) {
+                    MQTT::connection('homeassistant-publisher')
+                        ->publish(HomeassistantHelper::snapshotTopic($device), $definition->toSnapshot(), 0, true);
+                }
+
+                MQTT::connection('homeassistant-publisher')->disconnect();
+//            }
         });
     }
     protected  $casts = [
@@ -64,6 +73,7 @@ class Device extends Model
         return match ($this->device_type) {
             't4' => new Devices\PetkitPuraMax($this),
             'd4' => new Devices\PetkitFreshElementSolo($this),
+            'd4h' => new Devices\PetkitYumshareSolo($this),
         };
     }
 
@@ -71,8 +81,13 @@ class Device extends Model
 
         return match ($this->device_type) {
             't4' => new UI\PetkitPuraMax($this),
-            'd4' => new UI\PetkitFreshElementSolo($this)
+            'd4' => new UI\PetkitFreshElementSolo($this),
+            'd4h' => new UI\PetkitYumshareSolo($this),
         };
+    }
+
+    public function isNextGen() {
+        return in_array($this->device_type, ['d4h']);
     }
 
 }

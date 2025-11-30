@@ -270,7 +270,7 @@ class PetkitFreshElementSolo implements DeviceDefinition
 
     }
 
-    private function toFeed(Device $device): string
+    public function toFeed(Device $device): string
     {
         $latest = Time::calculateLatest($device->configuration['schedule']);
         $nextTick = last($latest);

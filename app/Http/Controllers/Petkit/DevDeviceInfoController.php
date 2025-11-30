@@ -10,9 +10,8 @@ use Illuminate\Http\Request;
 
 class DevDeviceInfoController extends Controller
 {
-    public function __invoke(string $deviceType, Request $request)
+    public function __invoke(Request $request)
     {
-
         $deviceId = PetkitHeader::petkitId($request->header('X-Device'));
         $device = Device::wherePetkitId($deviceId)->firstOrFail();
 

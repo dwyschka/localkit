@@ -1,0 +1,16 @@
+streams:
+  camera:
+    - http://localhost/main.ts?audio=1
+
+api:
+  listen: ":1984"
+  cors:
+    allow_origin: "*"
+    allow_methods: "GET, POST, OPTIONS"
+    allow_headers: "Content-Type"
+
+webrtc:
+  listen: ":8555"
+
+log:
+  level: info

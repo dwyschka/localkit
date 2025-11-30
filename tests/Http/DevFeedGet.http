@@ -1,0 +1,5 @@
+GET http://localhost/6/d4h/dev_feed_get
+User-Agent: PETKIT DEV
+Host: api.eu-pet.com
+Content-Type: application/x-www-form-urlencoded
+X-Device: id=300016346&nonce=kkdfe0D248Il&timestamp=1759650648&type=D4H&sign=47c58807c4687570609b2230f34a86da

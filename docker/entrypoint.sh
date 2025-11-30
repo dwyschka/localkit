@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 
+chmod +x /var/www/html/bin/go2rtc
 # Function to run Laravel setup tasks
 setup_laravel() {
     echo "Setting up Laravel application..."
@@ -56,3 +57,4 @@ fi
 php artisan app:devices-offline
 # Start services with supervisor (needs to run as root)
 exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
+

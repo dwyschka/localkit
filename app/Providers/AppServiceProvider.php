@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Clients\SupervisorClient;
+use App\Management\Go2RTC;
+use App\Management\Supervisor;
 use App\Models\User;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
@@ -24,13 +27,15 @@ class AppServiceProvider extends ServiceProvider
     {
 
         if(config('petkit.bypass_auth')) {
-            $user = User::all()->first();
+            try {
+                $user = User::all()->first();
 
-            if(is_null($user)) {
-                throw new \Exception('You need to create a User');
-            }
+                if(is_null($user)) {
+                    throw new \Exception('You need to create a User');
+                }
 
-            Auth::loginUsingId($user->id);
+                Auth::loginUsingId($user->id);
+            } catch (\Exception $e) {}
         }
         Arr::macro('mergeRecursiveDistinct', function (array $array1, array $array2) {
             $merged = $array1;
@@ -44,6 +49,16 @@ class AppServiceProvider extends ServiceProvider
             }
 
             return $merged;
+        });
+
+        $this->app->bind(Supervisor::class, function () {
+            return new Supervisor();
+        });
+
+        $this->app->bind(Go2RTC::class, function () {
+            return new Go2RTC(
+                app(Supervisor::class)
+            );
         });
 
     }

@@ -9,6 +9,7 @@ use App\Models\Device;
 use App\Petkit\DeviceActions;
 use App\Petkit\Devices\PetkitFreshElementSolo;
 use App\Petkit\Devices\PetkitPuraMax;
+use App\Petkit\Devices\PetkitYumshareSolo;
 use Filament\Actions\ActionGroup;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -35,7 +36,8 @@ class DeviceResource extends Resource
                 Forms\Components\TextInput::make('mac')->columnSpan('half')->readOnly(),
                 Forms\Components\Select::make('device_type')->options([
                     't4' => PetkitPuraMax::deviceName(),
-                    'd4' => PetkitFreshElementSolo::deviceName()
+                    'd4' => PetkitFreshElementSolo::deviceName(),
+                    'd4h' => PetkitYumshareSolo::deviceName(),
                 ])
                     ->columnSpan('half')->disabled(),
                 Forms\Components\TextInput::make('secret')->columnSpan('half')->readOnly(),
@@ -43,9 +45,13 @@ class DeviceResource extends Resource
                 Forms\Components\TextInput::make('mqtt_subdomain')->columnSpan('full'),
                 Forms\Components\Checkbox::make('ota_state')->columnSpan('full'),
 
-                Forms\Components\Fieldset::make('Device Configuration')->schema(
-                    $form->getModelInstance()->ui()->formFields()
-                )
+                Forms\Components\Fieldset::make('Device Configuration')->schema([
+                    ...$form->getModelInstance()->ui()->formFields(),
+                    //states are always hidden, but we need to add them to the form to make sure they are saved
+                    ...$form->getModelInstance()->ui()->hiddenFields(
+                        $form->getModelInstance()
+                    )
+                ])
 
             ]);
     }
@@ -55,6 +61,14 @@ class DeviceResource extends Resource
         return $table
             ->poll('10s')
             ->columns([
+                Tables\Columns\TextColumn::make('device_type')
+                    ->formatStateUsing(function (string $state) {
+                        return match($state) {
+                            't4' => PetkitPuraMax::deviceName(),
+                            'd4' => PetkitFreshElementSolo::deviceName(),
+                            'd4h' => PetkitYumshareSolo::deviceName(),
+                        };
+                    }),
                 Tables\Columns\TextColumn::make('name')->searchable(),
                 Tables\Columns\TextColumn::make('working_state')->badge(),
                 Tables\Columns\TextColumn::make('mqtt_connected')
@@ -73,7 +87,6 @@ class DeviceResource extends Resource
                     })
                     ->color(fn(string $state): string => 'danger'),
                 Tables\Columns\TextColumn::make('serial_number'),
-                Tables\Columns\TextColumn::make('last_heartbeat')->dateTime('Y-m-d H:i:s'),
                 Tables\Columns\ToggleColumn::make('proxy_mode')
             ])
             ->filters([

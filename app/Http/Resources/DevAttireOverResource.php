@@ -4,12 +4,11 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
-class DevEventReportResource extends PetkitHttpResource
+class DevAttireOverResource extends PetkitHttpResource
 {
-    public static $wrap = 'result';
-
     /**
      * Transform the resource into an array.
      *
@@ -17,6 +16,8 @@ class DevEventReportResource extends PetkitHttpResource
      */
     public function toArray(Request $request): array
     {
-        return ["success"];
+
+        return [0];
     }
+
 }
