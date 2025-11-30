@@ -37,8 +37,11 @@ class Device extends Model
                     ->publish(HomeassistantHelper::deviceTopic($device), $definition->toHomeassistant(), 0, true);
 
                 if($definition instanceof Snapshot) {
-                    MQTT::connection('homeassistant-publisher')
-                        ->publish(HomeassistantHelper::snapshotTopic($device), $definition->toSnapshot(), 0, true);
+                    $snapshotMessage = $definition->toSnapshot();
+                    if(!is_null($snapshotMessage)) {
+                        MQTT::connection('homeassistant-publisher')
+                            ->publish(HomeassistantHelper::snapshotTopic($device), $snapshotMessage, 0, true);
+                    }
                 }
 
                 MQTT::connection('homeassistant-publisher')->disconnect();

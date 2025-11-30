@@ -6,9 +6,9 @@ use App\Helpers\HomeassistantHelper;
 use App\Homeassistant\AutoDiscoveryService;
 use App\Homeassistant\HomeassistantTopicService;
 use App\Homeassistant\Interfaces\Snapshot;
-use App\Homeassistant\Interfaces\Video;
 use App\Models\Device;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 use PhpMqtt\Client\Facades\MQTT;
 
 class Homeassistant extends Command
@@ -36,12 +36,19 @@ class Homeassistant extends Command
 
         $devices = Device::whereProxyMode(0)->get();
 
-        $devices->each(function(Device $device) use ($mqtt) {
+        $devices->each(function (Device $device) use ($mqtt) {
             $definition = $device->definition();
             $mqtt->publish(HomeassistantHelper::deviceTopic($device), $definition->toHomeassistant(), 0, true);
 
-            if($definition instanceof Snapshot) {
-                $mqtt->publish(HomeassistantHelper::snapshotTopic($device), $definition->toSnapshot(), 0, true);
+            if ($definition instanceof Snapshot) {
+                try {
+                    $snapshotMessage = $definition->toSnapshot();
+                    if (!is_null($snapshotMessage)) {
+                        $mqtt->publish(HomeassistantHelper::snapshotTopic($device), $snapshotMessage, 0, true);
+                    }
+                } catch (\Exception $e) {
+                    Log::error($e->getMessage());
+                }
             }
 
             $configuration = $device->definition()->configurationDefinition();
@@ -50,9 +57,8 @@ class Homeassistant extends Command
             $service->discover($configuration);
         });
 
-        die();
         $service = new HomeassistantTopicService($devices);
-        $mqtt->subscribe('localkit/#', function($topic, $message) use($service){
+        $mqtt->subscribe('localkit/#', function ($topic, $message) use ($service) {
             $service->resolve($topic, json_decode($message, false));
         });
 
