@@ -44,6 +44,9 @@ if [ "$FIX_PERMISSIONS" = "true" ]; then
     chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 fi
 
+chmod -R 777 /var/www/html/storage/logs
+
+
 # Execute Laravel setup as www user
 if [ "$SKIP_LARAVEL_SETUP" != "true" ]; then
     setup_laravel;
