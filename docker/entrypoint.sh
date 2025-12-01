@@ -1,7 +1,6 @@
 #!/bin/bash
 set -e
 
-chmod +x /var/www/html/bin/go2rtc
 # Function to run Laravel setup tasks
 setup_laravel() {
     echo "Setting up Laravel application..."
