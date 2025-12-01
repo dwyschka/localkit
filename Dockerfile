@@ -1,5 +1,7 @@
 FROM php:8.3-fpm
 ARG NODE_VERSION=22
+ARG TARGETPLATFORM
+
 
 LABEL maintainer="Your Name <your.email@example.com>"
 
@@ -82,6 +84,20 @@ RUN cd /var/www/html && cp /var/www/html/.env.example /var/www/html/.env \
 
 RUN cd /var/www/html && npm install && npm run build
 
+# Install Go2RTC
+
+RUN set -ex; \
+    case "$TARGETPLATFORM" in \
+        "linux/amd64")  ARCH="amd64" ;; \
+        "linux/arm64")  ARCH="arm64" ;; \
+        "linux/arm/v7") ARCH="armv7" ;; \
+        *) echo "Unsupported platform: $TARGETPLATFORM" && exit 1 ;; \
+    esac; \
+    wget -O /usr/local/bin/go2rtc \
+        "https://github.com/AlexxIT/go2rtc/releases/latest/download/go2rtc_linux_${ARCH}"; \
+    chmod +x /usr/local/bin/go2rtc
+
+#
 
 # Copy entrypoint script
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
