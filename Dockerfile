@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y \
     libjpeg62-turbo-dev \
     libfreetype6-dev \
     locales \
+    wget \
     zip \
     jpegoptim optipng pngquant gifsicle \
     vim \
