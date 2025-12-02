@@ -411,7 +411,7 @@ class PetkitYumshareSolo implements ConfigurationInterface, Video, Snapshot
         payloadOn: 'True',
         payloadOff: 'False'
     )]
-    private bool $doorState = false;
+    private bool $door = false;
 
     #[Sensor(
         technicalName: 'bowl',
@@ -420,7 +420,7 @@ class PetkitYumshareSolo implements ConfigurationInterface, Video, Snapshot
         valueTemplate: '{{ value_json.states.bowl }}',
         entityCategory: 'diagnostic'
     )]
-    private int $bowlState = -1;
+    private int $bowl = -1;
 
     #[BinarySensor(
         technicalName: 'infrared',
@@ -462,8 +462,8 @@ class PetkitYumshareSolo implements ConfigurationInterface, Video, Snapshot
             $this->moveDetected = $states['moveDetected'] ?? $this->moveDetected;
             $this->eatDetected = $states['eatDetected'] ?? $this->eatDetected;
             $this->petDetected = $states['petDetected'] ?? $this->petDetected;
-            $this->doorState = $states['doorState'] ?? $this->doorState;
-            $this->bowlState = $states['bowlState'] ?? $this->bowlState;
+            $this->door = $states['door'] ?? $this->door;
+            $this->bowl = $states['bowl'] ?? $this->bowl;
             $this->infrared = $states['infrared'] ?? $this->infrared;
             $this->stream = $states['stream'] ?? $this->stream;
         }
@@ -542,8 +542,8 @@ class PetkitYumshareSolo implements ConfigurationInterface, Video, Snapshot
                 'state' => $this->workingState,
                 'error' => $this->error,
                 'ipAddress' => $this->ipAddress,
-                'door' => $this->doorState,
-                'bowl' => $this->bowlState,
+                'door' => $this->door,
+                'bowl' => $this->bowl,
                 'lastSnapshot' => $this->lastSnapshot,
                 'stream' => $this->stream,
                 'moveDetected' => $this->moveDetected,
