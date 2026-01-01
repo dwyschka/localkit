@@ -73,7 +73,6 @@ RUN useradd -u 1000 -ms /bin/bash -g www www
 COPY --chown=www:www . /var/www/html
 
 USER root
-
 RUN cd /var/www/html && cp /var/www/html/.env.example /var/www/html/.env \
     && composer install --no-interaction --optimize-autoloader
 
@@ -99,16 +98,17 @@ RUN set -ex; \
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# Expose port 80
-EXPOSE 80
 
 # Set permissions
 RUN chown -R www:www /var/www/html \
-    && chown -R www:www /var/www/html/.env \
     && chmod -R 755 /var/www/html \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache \
 
-user www
+# Expose port 80
+EXPOSE 80
+
+USER www
+
 # Set entrypoint
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
