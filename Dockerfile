@@ -34,5 +34,6 @@ COPY --chown=www-data:www-data . /var/www/html
 RUN mv /var/www/html/.env.example /var/www/html/.env
 RUN chown www-data:www-data /var/www/html/storage/logs
 RUN chown www-data:www-data /var/www/html/storage/app
+RUN chown www-data:www-data /var/www/html/storage/database
 
 USER www-data
