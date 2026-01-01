@@ -15,7 +15,6 @@
         "laravel/tinker": "^2.9",
         "php-mqtt/laravel-client": "^1.5",
         "saade/filament-laravel-log": "^3.2",
-        "supervisorphp/supervisor": "^5.1",
         "symfony/yaml": "^7.3"
     },
     "require-dev": {
