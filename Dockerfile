@@ -99,7 +99,6 @@ RUN set -ex; \
     chmod +x /usr/local/bin/go2rtc
 
 #
-USER www
 
 # Copy entrypoint script
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
