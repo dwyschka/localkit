@@ -12,7 +12,7 @@ use Symfony\Component\Yaml\Yaml;
 class Go2RTC
 {
 
-    public function __construct(protected Supervisor $supervisor)
+    public function __construct(protected S6 $s6)
     {
     }
 
