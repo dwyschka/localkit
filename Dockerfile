@@ -72,6 +72,7 @@ RUN useradd -u 1000 -ms /bin/bash -g www www
 # Copy application files
 COPY --chown=www:www . /var/www/html
 
+USER root
 
 RUN cd /var/www/html && cp /var/www/html/.env.example /var/www/html/.env \
     && composer install --no-interaction --optimize-autoloader
@@ -80,7 +81,6 @@ RUN cd /var/www/html && cp /var/www/html/.env.example /var/www/html/.env \
 RUN cd /var/www/html && npm install && npm run build
 
 # Install Go2RTC
-USER root
 
 RUN set -ex; \
     case "$TARGETPLATFORM" in \
@@ -104,6 +104,7 @@ EXPOSE 80
 
 # Set permissions
 RUN chown -R www:www /var/www/html \
+    && chown -R www:www /var/www/html/.env \
     && chmod -R 755 /var/www/html \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache \
 
