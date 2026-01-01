@@ -1,5 +1,8 @@
 FROM serversideup/php:8.3-fpm-nginx
 
+ENV AUTORUN_ENABLED=true
+ENV NGINX_HTTP_PORT=80
+
 ARG TARGETARCH
 ARG TARGETPLATFORM
 
@@ -28,7 +31,6 @@ COPY --chmod=755 s6/user/contents.d/ /etc/s6-overlay/s6-rc.d/user/contents.d/
 
 USER www-data
 
-ENV AUTORUN_ENABLED=true
 COPY --chown=www-data:www-data . /var/www/html
 RUN mv /var/www/html/.env.example /var/www/html/.env
 RUN chown www-data:www-data /var/www/html/storage/logs
