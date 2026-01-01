@@ -72,6 +72,12 @@ RUN useradd -u 1000 -ms /bin/bash -g www www
 # Copy application files
 COPY --chown=www:www . /var/www/html
 
+
+# Set permissions
+RUN chown -R www:www /var/www/html \
+    && chmod -R 755 /var/www/html \
+    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+
 USER root
 RUN cd /var/www/html && cp /var/www/html/.env.example /var/www/html/.env \
     && composer install --no-interaction --optimize-autoloader
@@ -93,21 +99,15 @@ RUN set -ex; \
     chmod +x /usr/local/bin/go2rtc
 
 #
+USER www
 
 # Copy entrypoint script
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-
-# Set permissions
-RUN chown -R www:www /var/www/html \
-    && chmod -R 755 /var/www/html \
-    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache \
-
 # Expose port 80
 EXPOSE 80
 
-USER www
 
 # Set entrypoint
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
