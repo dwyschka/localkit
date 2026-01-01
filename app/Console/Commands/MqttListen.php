@@ -73,7 +73,7 @@ class MqttListen extends Command
             }
         }, MqttClient::QOS_AT_MOST_ONCE);
 
-        $mqtt->loop(false, false);
+        $mqtt->loop(true, false);
     }
 
 }

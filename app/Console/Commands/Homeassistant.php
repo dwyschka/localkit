@@ -62,6 +62,6 @@ class Homeassistant extends Command
             $service->resolve($topic, json_decode($message, false));
         });
 
-        $mqtt->loop(false);
+        $mqtt->loop(true);
     }
 }
