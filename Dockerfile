@@ -107,7 +107,7 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 # Expose port 80
 EXPOSE 80
 
-
+user www
 # Set entrypoint
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 

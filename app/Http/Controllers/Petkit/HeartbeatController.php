@@ -19,7 +19,7 @@ class HeartbeatController extends Controller
         $deviceId = PetkitHeader::petkitId($request->header('X-Device'));
         $device = Device::wherePetkitId($deviceId)->firstOrFail();
 
-        if($device->ota_state) {
+        if($device?->ota_state) {
             return new HeartbeatOtaResource($device);
         }
 

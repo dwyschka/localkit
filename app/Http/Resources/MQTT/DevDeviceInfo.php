@@ -10,7 +10,8 @@ class DevDeviceInfo extends JsonResource
 
     public function toArray(Request $request)
     {
-        return $this->resource->toDeviceInfo();
+        /** @var \App\Models\Device $this->resource */
+        return $this->resource->definition()->toDeviceInfo();
     }
 
 }
