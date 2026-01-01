@@ -1,0 +1,6 @@
+#!/command/with-contenv bash
+echo "Localkit: Listen for Devices";
+exec 2>&1
+cd /var/www/html
+exec php artisan localkit:listen
+

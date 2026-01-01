@@ -3,15 +3,19 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 use Sushi\Sushi;
+use function PHPSTORM_META\map;
 
 class Service extends Model
 {
     use Sushi;
 
-    protected array $readOnly = ['php-fpm', 'nginx'];
-    protected array $hiddenEntries = ['init'];
-
+    protected $services = [
+        'localkit-homeassistant',
+        'localkit-go2rtc',
+        'localkit-listen'
+    ];
     protected $schema = [
         'name' => 'string',
         'statename' => 'string',
@@ -20,15 +24,14 @@ class Service extends Model
 
     public function getRows()
     {
-        $services = app(\App\Management\Supervisor::class)->allServices();
-
-        return $services->map(function ($service) {
+        $runningServices = app(\App\Management\S6::class)->listRunningServices();
+        $services = collect($this->services)->map(function ($service) use($runningServices) {
             return [
-                ...$service,
-                'readonly' => in_array($service['name'], $this->readOnly),
-                'hidden' => in_array($service['name'], $this->hiddenEntries)
-
+                'name' => $service,
+                'statename' => in_array($service, $runningServices) ? 'RUNNING' : 'STOPPED'
             ];
-        })->filter(fn($item) => !$item['hidden'])->sortBy('readonly')->toArray();
+        })->values()->sortBy('statename')->toArray();
+
+        return $services;
     }
 }

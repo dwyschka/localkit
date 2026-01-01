@@ -2,7 +2,7 @@
 
 namespace App\Filament\Pages;
 
-use App\Management\Supervisor;
+use App\Management\S6;
 
 use App\Models\Service;
 use Filament\Notifications\Notification;
@@ -30,12 +30,12 @@ class ServicePage extends Page implements HasTable
 
     public function mount()
     {
-        $services = app(Supervisor::class)->allServices();
+        $services = app(S6::class)->allServices();
         $this->services = [
             'services' => $services->map(function ($service) {
                 return [
-                    ...$service,
-                    'readonly' => in_array($service['name'], ['php-fpm', 'nginx', 'init'])
+                    'name'  => $service,
+                    'readonly' => in_array($service, ['php-fpm', 'nginx', 'init'])
                 ];
             })->sortBy('readonly')->toArray()
         ];
@@ -70,9 +70,9 @@ class ServicePage extends Page implements HasTable
                     ->icon('heroicon-o-stop')
                     ->color('danger')
                     ->requiresConfirmation()
-                    ->visible(fn(Service $record) => $record['statename'] === 'RUNNING' && !$record['readonly'])
+                    ->visible(fn(Service $record) => $record['statename'] === 'RUNNING' )
                     ->action(function (Service $record) {
-                        app(Supervisor::class)->stop($record['name']);
+                        app(S6::class)->stop($record['name']);
 
                         Notification::make()
                             ->success()
@@ -85,9 +85,9 @@ class ServicePage extends Page implements HasTable
                     ->icon('heroicon-o-play')
                     ->color('success')
                     ->requiresConfirmation()
-                    ->visible(fn(Service $record) => $record['statename'] !== 'RUNNING' && !$record['readonly'])
+                    ->visible(fn(Service $record) => $record['statename'] !== 'RUNNING' )
                     ->action(function (Service $record) {
-                        app(Supervisor::class)->start($record['name']);
+                        app(S6::class)->start($record['name']);
 
                         Notification::make()
                             ->success()
@@ -99,9 +99,9 @@ class ServicePage extends Page implements HasTable
                     ->icon('heroicon-o-arrow-path')
                     ->color('warning')
                     ->requiresConfirmation()
-                    ->visible(fn(Service $record) => $record['statename'] === 'RUNNING' && !$record['readonly'])
+                    ->visible(fn(Service $record) => $record['statename'] === 'RUNNING' )
                     ->action(function (Service $record) {
-                        app(Supervisor::class)->restart($record['name']);
+                        app(S6::class)->restart($record['name']);
 
                         Notification::make()
                             ->success()

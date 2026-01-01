@@ -1,57 +1,43 @@
 services:
-    laravel.test:
+    localkit:
+        container_name: Localkit
+        ports:
+            - 8080:8080
         build:
+            context: .
             dockerfile: Dockerfile
-            args:
-                WWWGROUP: '${WWWGROUP}'
-        extra_hosts:
-            - 'host.docker.internal:host-gateway'
-        ports:
-            - '${APP_PORT:-8080}:80'
-            - '${APP_HTTPS_PORT:-8443}:443'
-            - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
-            - '1984:1984'
+        networks:
+            localkit:
 
-        environment:
-            WWWUSER: '${WWWUSER}'
-            LARAVEL_SAIL: 1
-            XDEBUG_MODE: '${SAIL_XDEBUG_MODE:-off}'
-            XDEBUG_CONFIG: '${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal}'
-            IGNITION_LOCAL_SITES_PATH: '${PWD}'
         volumes:
-            - '.:/var/www/html'
-        networks:
-            - sail
-        depends_on:
-            mysql:
-                condition: service_healthy
-    mysql:
-        image: 'mysql/mysql-server:8.0'
-        ports:
-            - '${FORWARD_DB_PORT:-3306}:3306'
+            - ./:/var/www/html/
         environment:
-            MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
-            MYSQL_ROOT_HOST: '%'
-            MYSQL_DATABASE: '${DB_DATABASE}'
-            MYSQL_USER: '${DB_USERNAME}'
-            MYSQL_PASSWORD: '${DB_PASSWORD}'
-            MYSQL_ALLOW_EMPTY_PASSWORD: 1
-        volumes:
-            - 'sail-mysql:/var/lib/mysql'
-            - './docker/mysql/create-testing-database.sh:/docker-entrypoint-initdb.d/10-create-testing-database.sh'
+            - APP_TIMEZONE=Europe/Berlin
+            - DB_CONNECTION=sqlite
+            - DB_DATABASE=/var/www/html/storage/localkit.sqlite
+            - LOCALKIT_GO2RTC_ENABLE=true
+            - PETKIT_LOCAL_IP=10.10.46.105
+            - LOCALKIT_BROKER_HOST=10.10.46.101
+            - LOCALKIT_BROKER_PORT=443
+            - HOMEASSISTANT_PORT=1883
+            - HOMEASSISTANT_HOST=10.10.50.10
+            - HOMEASSISTANT_CLIENT_ID=localkit
+            - BYPASS_AUTH=true #Recommended to disable on first "install"
+            - BYPASS_AUTH_ID=true
+        restart: always
+
+    localkit-broker:
+        image: ghcr.io/dwyschka/localkit-broker:main
+        container_name: localkit-broker
         networks:
-            - sail
-        healthcheck:
-            test:
-                - CMD
-                - mysqladmin
-                - ping
-                - '-p${DB_PASSWORD}'
-            retries: 3
-            timeout: 5s
-networks:
-    sail:
-        driver: bridge
+            localkit:
+        restart: always
+        environment:
+            - LOCALKIT=http://localkit
+
 volumes:
-    sail-mysql:
-        driver: local
+    localkit-storage:
+    localkit-logs:
+
+networks:
+    localkit:

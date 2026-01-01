@@ -29,12 +29,12 @@ class EnableServicesOnBoot extends Command
     public function handle()
     {
         $this->validateGo2RTC();
-        $this->startSupervisorProcesses();
+        $this->startProcesses();
     }
 
-    private function startSupervisorProcesses()
+    private function startProcesses()
     {
-        $names = ['homeassistant', 'go2rtc'];
+        $names = ['localkit-homeassistant', 'localkit-go2rtc'];
 
         foreach($names as $name) {
             if(!config(sprintf('app.enable.%s', $name))) {
