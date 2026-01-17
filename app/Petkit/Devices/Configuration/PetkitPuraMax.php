@@ -550,7 +550,7 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
     {
         return [
             'error' => null,
-            'workingState' => null,
+            'workingState' => 'IDLE',
             'litterWeight' => 0,
             'litterUsedTimes' => 0,
             'litterPercent' => 100,
@@ -668,6 +668,9 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
         $config = $device->configuration;
 
         $data = [];
+
+        $data['workingState'] = $device->working_state;
+        $data['error'] = $device->error;
 
         // Load k3Device
         $data['k3Id'] = $config['k3Device']['id'] ?? null;
