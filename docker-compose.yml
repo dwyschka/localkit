@@ -17,7 +17,7 @@ services:
             - DB_DATABASE=/var/www/html/storage/localkit.sqlite
             - LOCALKIT_GO2RTC_ENABLE=true
             - PETKIT_LOCAL_IP=10.10.46.105
-            - LOCALKIT_BROKER_HOST=10.10.46.101
+            - LOCALKIT_BROKER_HOST=localkit-broker
             - LOCALKIT_BROKER_PORT=443
             - HOMEASSISTANT_PORT=1883
             - HOMEASSISTANT_HOST=10.10.50.10
@@ -28,6 +28,8 @@ services:
 
     localkit-broker:
         image: ghcr.io/dwyschka/localkit-broker:main
+        ports:
+            - 8443:443
         container_name: localkit-broker
         networks:
             localkit:

@@ -42,7 +42,7 @@ class DeviceResource extends Resource
                     ->columnSpan('half')->disabled(),
                 Forms\Components\TextInput::make('secret')->columnSpan('half')->readOnly(),
                 Forms\Components\TextInput::make('petkit_id')->columnSpan('half')->readOnly(),
-                Forms\Components\TextInput::make('mqtt_subdomain')->columnSpan('full'),
+                Forms\Components\TextInput::make('mqtt_subdomain')->columnSpan('half'),
                 Forms\Components\Checkbox::make('ota_state')->columnSpan('full'),
 
                 Forms\Components\Fieldset::make('Device Configuration')->schema([

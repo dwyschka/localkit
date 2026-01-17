@@ -4,11 +4,8 @@ namespace App\Petkit\Devices\Configuration;
 
 use App\DTOs\DeviceConfigurationDTO;
 use App\DTOs\K3ConfigDTO;
-use App\DTOs\K3DeviceDTO;
 use App\DTOs\MultiRangeDTO;
-use App\DTOs\RangeDTO;
 use App\DTOs\SandFullWeightDTO;
-use App\DTOs\SandSetUseConfigDTO;
 use App\Models\Device;
 use WendellAdriel\ValidatedDTO\Casting\BooleanCast;
 use WendellAdriel\ValidatedDTO\Casting\DTOCast;
@@ -32,7 +29,6 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
     public bool $manualLock;
     public bool $clickOkEnable;
     public bool $lightMode;
-    public RangeDTO $lightRange;
     public bool $autoWork;
     public int $fixedTimeClear;
     public bool $downpos;
@@ -47,9 +43,10 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
     public int $stopTime;
     public SandFullWeightDTO $sandFullWeight;
     public bool $disturbMode;
-    public RangeDTO $disturbRange;
 
     public MultiRangeDTO $disturbMultiRange;
+    public MultiRangeDTO $lightMultiRange;
+
 
     public array $sandSetUseConfig;
     public K3ConfigDTO $k3Config;
@@ -98,8 +95,8 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
             'sandFullWeight' => ['array', 'size:5'],
             'sandFullWeight.*' => ['integer', 'min:0'],
             'disturbMode' => ['bool'],
-            'disturbRange' => [],
-            'disturbRange.*' => ['integer', 'min:0'],
+            'disturbMultiRange' => ['array'],
+            'lightMultiRange' => ['array'],
             'sandSetUseConfig' => ['array'],
             'relateK3Switch' => ['bool'],
             'lightest' => ['integer', 'min:0'],
@@ -133,7 +130,6 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
             'manualLock' => false,
             'clickOkEnable' => true,
             'lightMode' => false,
-            'lightRange' => [],
             'autoWork' => true,
             'fixedTimeClear' => 0,
             'downpos' => false,
@@ -148,10 +144,17 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
             'stopTime' => 600,
             'sandFullWeight' => [],
             'disturbMode' => false,
-            'disturbRange' => [],
             'disturbMultiRange' => [
                 'name' => 'disturbMultiRange',
-                'ranges' => [['from' => 0, 'till' => 1440]]
+                'ranges' => [
+                    ['from' => 0, 'till' => 1440]
+                ]
+            ],
+            'lightMultiRange' => [
+                'name' => 'lightMultiRange',
+                'ranges' => [
+                   ['from' => 0, 'till' => 1440]
+                ]
             ],
             'sandSetUseConfig' => [
                 [40, 60, 85],
@@ -192,7 +195,6 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
             'manualLock' => new BooleanCast(),
             'clickOkEnable' => new BooleanCast(),
             'lightMode' => new BooleanCast(),
-            'lightRange' => new DTOCast(RangeDTO::class),
             'autoWork' => new BooleanCast(),
             'fixedTimeClear' => new IntegerCast(),
             'downpos' => new BooleanCast(),
@@ -211,8 +213,8 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
             'k3Mac' => new StringCast(),
             'k3Secret' => new StringCast(),
             'disturbMode' => new BooleanCast(),
-            'disturbRange' => new DTOCast(RangeDTO::class),
             'disturbMultiRange' => new DTOCast(MultiRangeDTO::class),
+            'lightMultiRange' => new DTOCast(MultiRangeDTO::class),
             'sandSetUseConfig' => new ArrayCast(),
             'k3Config' => new DTOCast(K3ConfigDTO::class),
             'relateK3Switch' => new BooleanCast(),
@@ -265,7 +267,6 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
         $data['manualLock'] = $config['settings']['manualLock'] ?? null;
         $data['clickOkEnable'] = $config['settings']['clickOkEnable'] ?? null;
         $data['lightMode'] = $config['settings']['lightMode'] ?? null;
-        $data['lightRange'] = $config['settings']['lightRange'] ?? null;
         $data['autoWork'] = $config['settings']['autoWork'] ?? null;
         $data['fixedTimeClear'] = $config['settings']['fixedTimeClear'] ?? null;
         $data['downpos'] = $config['settings']['downpos'] ?? null;
@@ -280,8 +281,8 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
         $data['stopTime'] = $config['settings']['stopTime'] ?? null;
         $data['sandFullWeight'] = $config['settings']['sandFullWeight'] ?? null;
         $data['disturbMode'] = $config['settings']['disturbMode'] ?? null;
-        $data['disturbRange'] = $config['settings']['disturbRange'] ?? null;
         $data['disturbMultiRange'] = $config['settings']['disturbMultiRange'] ?? null;
+        $data['lightMultiRange'] = $config['settings']['lightMultiRange'] ?? null;
         $data['sandSetUseConfig'] = $config['settings']['sandSetUseConfig'] ?? null;
         $data['k3Config'] = $config['settings']['k3Config'] ?? null;
         $data['relateK3Switch'] = $config['settings']['relateK3Switch'] ?? null;
@@ -331,7 +332,6 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
                 'manualLock' => $this->manualLock,
                 'clickOkEnable' => $this->clickOkEnable,
                 'lightMode' => $this->lightMode,
-                'lightRange' => $this->lightRange,
                 'autoWork' => $this->autoWork,
                 'fixedTimeClear' => $this->fixedTimeClear,
                 'downpos' => $this->downpos,
@@ -346,8 +346,8 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
                 'stopTime' => $this->stopTime,
                 'sandFullWeight' => $this->sandFullWeight,
                 'disturbMode' => $this->disturbMode,
-                'disturbRange' => $this->disturbRange,
                 'disturbMultiRange' => $this->disturbMultiRange,
+                'lightMultiRange' => $this->lightMultiRange,
                 'sandSetUseConfig' => $this->sandSetUseConfig,
                 'k3Config' => $this->k3Config,
                 'relateK3Switch' => $this->relateK3Switch,

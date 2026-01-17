@@ -28,6 +28,7 @@ class Device extends Model
                 }
             } catch (\Exception $e) {
 
+
             }
 
 //            if(config('petkit.homeassistant.enabled')) {
@@ -46,6 +47,11 @@ class Device extends Model
 
                 MQTT::connection('homeassistant-publisher')->disconnect();
 //            }
+        });
+
+        self::updating(function ($device) {
+
+            $device->configuration = $device->configuration()->toArray();
         });
     }
     protected  $casts = [

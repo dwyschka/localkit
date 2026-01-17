@@ -20,7 +20,10 @@ class Time
 
     public static function toTimeFromMinutes(int $minutes)
     {
-        if ($minutes < 0 || $minutes >= 1440) {
+        if($minutes === 1440) {
+            $minutes = 1439;
+        }
+        if ($minutes < 0 || $minutes >= 1441) {
             throw new InvalidArgumentException('Minutes must be between 0 and 1439 (24 hours)');
         }
 

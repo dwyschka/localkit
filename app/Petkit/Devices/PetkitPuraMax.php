@@ -2,6 +2,8 @@
 
 namespace App\Petkit\Devices;
 
+use App\DTOs\MultiRangeDTO;
+use App\DTOs\PetkitDTOInterface;
 use App\Helpers\JsonHelper;
 use App\Homeassistant\HomeassistantTopic;
 use App\Jobs\ServiceEnd;
@@ -21,6 +23,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use PhpMqtt\Client\Facades\MQTT;
+use WendellAdriel\ValidatedDTO\SimpleDTO;
 
 class PetkitPuraMax implements DeviceDefinition
 {
@@ -40,6 +43,7 @@ class PetkitPuraMax implements DeviceDefinition
 
     public function __construct(protected Device $device)
     {
+
 
     }
 
@@ -287,13 +291,13 @@ class PetkitPuraMax implements DeviceDefinition
 
     public function resetN50(Device $record) {
         $consumables = $record->configuration['consumables'] ?? $record->definition()->configuration()['consumables'];
-        $durability = $consumables['n50_durability'];
+        $durability = $consumables['n50Durability'];
         $nextChange = Carbon::now()->addDays((int)$durability);
 
         $configuration = $record->configuration;
         $configuration['consumables'] = [
-            'n50_durability' => $durability,
-            'n50_next_change' => $nextChange->timestamp
+            'n50Durability' => $durability,
+            'n50NextChange' => $nextChange->timestamp
         ];
 
         $record->update([
@@ -315,13 +319,24 @@ class PetkitPuraMax implements DeviceDefinition
     public function propertyChange(Device $device): void
     {
         $difference = JsonHelper::difference($device->configuration['settings'], $device->getOriginal('configuration')['settings']);
-        foreach ($difference as $key => $value) {
-            if (is_numeric($value)) {
+
+        $dto = $this->configurationDefinition();
+
+        foreach ($difference as $key => $val) {
+
+            $value = $dto->$key;
+
+
+            if($value instanceof PetkitDTOInterface) {
+                $difference[$key] = $value->toPetkitConfiguration();
+            } else if (is_numeric($value)) {
                 $difference[$key] = (int)$value;
             } else if (is_bool($value)) {
                 $difference[$key] = (int)$value;
             }
         }
+
+
         SetProperty::dispatchSync($device, $difference);
     }
 

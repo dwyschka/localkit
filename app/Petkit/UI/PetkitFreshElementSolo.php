@@ -97,7 +97,7 @@ class PetkitFreshElementSolo
                                 ])
                                 ->columns(2)
                                 ->addActionLabel('Add Schedule Item')
-                                ->minItems(1)
+                                ->minItems(0)
                                 ->collapsible()
                                 ->live(true)
                                 ->dehydrateStateUsing(function (array $state) {

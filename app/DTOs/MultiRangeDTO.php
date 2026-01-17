@@ -15,21 +15,21 @@ class MultiRangeDTO extends ValidatedDTO implements PetkitDTOInterface
 
     public string $name;
 
-    /** @var RangeDTO[] */
     public array $ranges;
 
     protected function rules(): array
     {
         return [
             'name' => 'string',
-            'ranges' => 'array',
+            'ranges' => 'required|array',
+            'ranges.*.from' => 'required|integer|min:0|max:1440',
+            'ranges.*.till' => 'required|integer|min:0|max:1440',
         ];
     }
 
     protected function defaults(): array
     {
         return [
-            'ranges' => [['from' => 0, 'till' => 1440]]
         ];
     }
 
@@ -37,12 +37,17 @@ class MultiRangeDTO extends ValidatedDTO implements PetkitDTOInterface
     {
         return [
             'name' => new StringCast(),
-            'ranges' => new ArrayCast(new DTOCast(RangeDTO::class))
+            'ranges' => new ArrayCast()
         ];
     }
 
     public function toPetkitConfiguration(): string
     {
+        if($this->name === 'disturbMultiRange') {
+            //Petkit failed at naming.. -_-
+            $this->name = 'distrubMultiRange';
+        }
+
         return json_encode([
             $this->name => $this->ranges
         ]);
