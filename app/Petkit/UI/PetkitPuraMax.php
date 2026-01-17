@@ -23,8 +23,8 @@ class PetkitPuraMax
     public function formFields(): array {
         return [
             Forms\Components\Section::make('consumables')->columns(3)->schema([
-                Forms\Components\TextInput::make('configuration.consumables.n50_durability')->numeric(),
-                Forms\Components\TextInput::make('configuration.consumables.n50_next_change')->label('Next Reset in Days (N50)')->formatStateUsing(function ($state) {
+                Forms\Components\TextInput::make('configuration.consumables.n50Durability')->numeric(),
+                Forms\Components\TextInput::make('configuration.consumables.n50NextChange')->label('Next Reset in Days (N50)')->formatStateUsing(function ($state) {
                     if($state <= 0) {
                         return 'Not set';
                     }

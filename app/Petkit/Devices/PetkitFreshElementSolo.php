@@ -137,7 +137,7 @@ class PetkitFreshElementSolo implements DeviceDefinition
         return 'Petkit FreshElement Solo';
     }
 
-    public function defaultConfiguration()
+    public function configuration()
     {
         return $this->configurationDefinition()->toArray();
     }

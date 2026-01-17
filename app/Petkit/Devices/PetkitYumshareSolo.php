@@ -199,7 +199,7 @@ class PetkitYumshareSolo implements DeviceDefinition, Snapshot
         return new Configuration\PetkitYumshareSolo($this->getDevice());
     }
 
-    public function defaultConfiguration()
+    public function configuration()
     {
         return $this->configurationDefinition()->toArray();
     }

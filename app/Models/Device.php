@@ -80,6 +80,15 @@ class Device extends Model
         };
     }
 
+    public function configuration() {
+
+        return match ($this->device_type) {
+            't4' => Devices\Configuration\PetkitPuraMax::fromDevice($this),
+            'd4' => new Devices\PetkitFreshElementSolo($this),
+            'd4h' => new Devices\PetkitYumshareSolo($this),
+        };
+    }
+
     public function ui() {
 
         return match ($this->device_type) {

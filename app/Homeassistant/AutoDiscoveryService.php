@@ -30,7 +30,7 @@ class AutoDiscoveryService
                     continue;
                 }
 
-                    $instance->setDevice($configuration->getDevice());
+                $instance->setDevice($configuration->getDevice());
 
                 $this->mqttClient->publish($instance->toTopic(), $instance->toPayload(), 0, true);
             }

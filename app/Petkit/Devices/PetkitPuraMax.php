@@ -286,7 +286,7 @@ class PetkitPuraMax implements DeviceDefinition
     }
 
     public function resetN50(Device $record) {
-        $consumables = $record->configuration['consumables'] ?? $record->definition()->defaultConfiguration()['consumables'];
+        $consumables = $record->configuration['consumables'] ?? $record->definition()->configuration()['consumables'];
         $durability = $consumables['n50_durability'];
         $nextChange = Carbon::now()->addDays((int)$durability);
 
@@ -307,7 +307,7 @@ class PetkitPuraMax implements DeviceDefinition
         return 'Petkit Pura Max';
     }
 
-    public function defaultConfiguration()
+    public function configuration()
     {
         return $this->configurationDefinition()->toArray();
     }
@@ -365,7 +365,7 @@ class PetkitPuraMax implements DeviceDefinition
     }
 
     public function configurationDefinition(): ConfigurationInterface {
-        return new Configuration\PetkitPuraMax($this->getDevice());
+        return \App\Petkit\Devices\Configuration\PetkitPuraMax::fromDevice($this->getDevice());
     }
 
     #[HomeassistantTopic(topic: 'setting/set')]

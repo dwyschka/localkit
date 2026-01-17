@@ -15,7 +15,8 @@
         "laravel/tinker": "^2.9",
         "php-mqtt/laravel-client": "^1.5",
         "saade/filament-laravel-log": "^3.2",
-        "symfony/yaml": "^7.3"
+        "symfony/yaml": "^7.3",
+        "wendelladriel/laravel-validated-dto": "^4.4"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
