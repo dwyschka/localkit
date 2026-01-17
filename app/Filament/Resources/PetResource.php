@@ -33,9 +33,9 @@ class PetResource extends Resource
                     0 => 'Male',
                     1 => 'Female',
                 ])->required(),
-                Forms\Components\Select::make('Sterilised')->options([
-                    0 => 'no',
-                    1 => 'yes',
+                Forms\Components\Select::make('sterilised')->options([
+                    false => 'no',
+                    true => 'yes',
                 ])->required()
             ]);
     }
