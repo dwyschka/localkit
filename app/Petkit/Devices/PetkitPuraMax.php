@@ -389,12 +389,9 @@ class PetkitPuraMax implements DeviceDefinition
         $keys = get_object_vars($message);
 
         foreach($keys as $attributeName => $value) {
-            $methodName = 'set' . ucfirst($attributeName);
-            $configuration->$methodName($value);
+            $configuration->$attributeName = $value;
         }
-
-        $deviceConfig = Arr::mergeRecursiveDistinct($configuration->toArray(), $this->getDevice()->configuration ?? []);
-        $this->getDevice()->update(['configuration' => $deviceConfig]);
+        $this->getDevice()->update(['configuration' => $configuration]);
     }
 
     #[HomeassistantTopic('action/start')]

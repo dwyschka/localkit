@@ -6,6 +6,11 @@ use App\DTOs\DeviceConfigurationDTO;
 use App\DTOs\K3ConfigDTO;
 use App\DTOs\MultiRangeDTO;
 use App\DTOs\SandFullWeightDTO;
+use App\Homeassistant\Button;
+use App\Homeassistant\HASwitch;
+use App\Homeassistant\Number;
+use App\Homeassistant\Select;
+use App\Homeassistant\Sensor;
 use App\Models\Device;
 use WendellAdriel\ValidatedDTO\Casting\BooleanCast;
 use WendellAdriel\ValidatedDTO\Casting\DTOCast;
@@ -16,32 +21,306 @@ use WendellAdriel\ValidatedDTO\Casting\ArrayCast;
 class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInterface
 {
 
+    #[Sensor(
+        technicalName: 'error',
+        name: 'Error',
+        icon: 'mdi:error',
+        valueTemplate: '{{ value_json.states.error }}',
+        entityCategory: 'diagnostic'
+    )]
     public ?string $error;
+
+    #[Sensor(
+        technicalName: 'device_status',
+        name: 'Device Status',
+        icon: 'mdi:information-outline',
+        valueTemplate: '{{ value_json.states.state }}',
+        entityCategory: 'diagnostic'
+    )]
     public ?string $workingState;
+
+    #[Sensor(
+        technicalName: 'litter_weight',
+        name: 'Litter Weight',
+        icon: 'mdi:information-outline',
+        valueTemplate: '{{ value_json.litter.weight }}',
+        entityCategory: 'diagnostic'
+    )]
     public int $litterWeight;
+
+    #[Sensor(
+        technicalName: 'used_times',
+        name: 'Used Times',
+        icon: 'mdi:counter',
+        valueTemplate: '{{ value_json.litter.usedTimes }}',
+        entityCategory: 'diagnostic'
+    )]
     public int $litterUsedTimes;
+
+    #[Sensor(
+        technicalName: 'litter_percent',
+        name: 'Litter Percentage',
+        icon: 'mdi:information-outline',
+        valueTemplate: '{{ value_json.litter.percent }}',
+        entityCategory: 'diagnostic'
+    )]
     public int $litterPercent;
 
     public bool $shareOpen;
     public bool $withK3;
     public int $typeCode;
+
+    #[Select(
+        technicalName: 'sand_type',
+        name: 'Litter Type',
+        options: [
+            'Betonit/Mineral',
+            'Tofu',
+            'Sand'
+        ],
+        commandTopic: 'setting/set',
+        icon: 'mdi:information-outline',
+        valueTemplate: '
+                {% if value_json.settings.sandType == 1 %}
+                  Betonit/Mineral
+                {% elif value_json.settings.sandType == 2 %}
+                  Tofu
+                {% else %}
+                  Sand
+                {% endif %}
+        ',
+        commandTemplate: '
+                {% if value == "Betonit/Mineral" %}
+                  {"sandType": 1}
+                {% elif value == "Tofu" %}
+                  {"sandType": 2}
+                {% else %}
+                  {"sandType": 3}
+                {% endif %}
+        ',
+        entityCategory: 'config'
+    )]
     public int $sandType;
+
+    #[HASwitch(
+        technicalName: 'manual_lock',
+        name: 'Child lock',
+        commandTopic: 'setting/set',
+        icon: 'mdi:lock',
+        valueTemplate: '{{ value_json.settings.manualLock }}',
+        commandTemplate: '{"manualLock":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
     public bool $manualLock;
     public bool $clickOkEnable;
+
+    #[HASwitch(
+        technicalName: 'display',
+        name: 'Set Screen Display',
+        commandTopic: 'setting/set',
+        icon: 'mdi:monitor',
+        valueTemplate: '{{ value_json.settings.lightMode }}',
+        commandTemplate: '{"lightMode":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
     public bool $lightMode;
+
+    #[HASwitch(
+        technicalName: 'auto_work',
+        name: 'Auto Cleaning',
+        commandTopic: 'setting/set',
+        icon: 'mdi:broom',
+        valueTemplate: '{{ value_json.settings.autoWork }}',
+        commandTemplate: '{"autoWork":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
     public bool $autoWork;
     public int $fixedTimeClear;
+
+    #[HASwitch(
+        technicalName: 'downpos',
+        name: 'Uninterrupted Rotation',
+        commandTopic: 'setting/set',
+        icon: 'mdi:cached',
+        valueTemplate: '{{ value_json.settings.downpos }}',
+        commandTemplate: '{"downpos":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
     public bool $downpos;
     public bool $deepRefresh;
     public int $autoIntervalMin;
     public int $stillTime;
+
+    #[Select(
+        technicalName: 'unit',
+        name: 'Unit',
+        options: [
+            'Kilogram',
+            'Pound',
+        ],
+        commandTopic: 'setting/set',
+        icon: 'mdi:weight',
+        valueTemplate: '
+                {% if value_json.settings.unit == 0 %}
+                  Kilogram
+                {% else %}
+                  Pound
+                {% endif %}
+        ',
+        commandTemplate: '
+                {% if value == "Pound" %}
+                  {"unit": 0}
+                {% else %}
+                  {"unit": 1}
+                {% endif %}
+        ',
+        entityCategory: 'config'
+    )]
     public int $unit;
+
+    #[Select(
+        technicalName: 'language',
+        name: 'Language',
+        options: [
+            'English',
+            'German',
+            'Spanish',
+            'Chinese',
+            'Italiano',
+            'Japanese',
+            'Portuguese',
+            'Turkish',
+            'Russian',
+            'French',
+        ],
+        commandTopic: 'setting/set',
+        icon: 'mdi:information-outline',
+        valueTemplate: '
+                {% if value_json.settings.language == "en_US" %}
+                    English
+                {% elif value_json.settings.language == "de_DE" %}
+                    German
+                {% elif value_json.settings.language == "es_ES" %}
+                    Spanish
+                {% elif value_json.settings.language == "zh_CN" %}
+                    Chinese
+                {% elif value_json.settings.language == "ja_JP" %}
+                    Japanese
+                {% elif value_json.settings.language == "it_IT" %}
+                    Italiano
+                {% elif value_json.settings.language == "pt_PT" %}
+                    Portuguese
+                {% elif value_json.settings.language == "tr_TR" %}
+                    Turkish
+                {% elif value_json.settings.language == "ru_RU" %}
+                    Russian
+                {% else %}
+                    French
+                {% endif %}
+        ',
+        commandTemplate: '
+{% if value == "English" %}
+    {"language": "en_US"}
+{% elif value == "German" %}
+    {"language": "de_DE"}
+{% elif value == "Spanish" %}
+    {"language": "es_ES"}
+{% elif value == "Chinese" %}
+    {"language": "zh_CN"}
+{% elif value == "Japanese" %}
+    {"language": "js_JP"}
+{% elif value == "Italiano" %}
+    {"language": "it_IT"}
+{% elif value == "Portuguese" %}
+    {"language": "pt_PT"}
+{% elif value == "Turkish" %}
+    {"language": "tr_TR"}
+{% elif value == "Russian" %}
+    {"language": "ru_RU"}
+{% else %}
+    {"language": "fr_FR"}
+{% endif %}
+        ',
+        entityCategory: 'config'
+    )]
     public string $language;
+
+    #[HASwitch(
+        technicalName: 'avoid_repeat',
+        name: 'Avoid Repeated Cleaning',
+        commandTopic: 'setting/set',
+        icon: 'mdi:repeat',
+        valueTemplate: '{{ value_json.settings.avoidRepeat }}',
+        commandTemplate: '{"avoidRepeat":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
     public bool $avoidRepeat;
+
+    #[HASwitch(
+        technicalName: 'underweight',
+        name: 'Disable auto cleaning for light weight',
+        commandTopic: 'setting/set',
+        icon: 'mdi:feather',
+        valueTemplate: '{{ value_json.settings.underweight }}',
+        commandTemplate: '{"underweight":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
     public bool $underweight;
+
+    #[HASwitch(
+        technicalName: 'kitten',
+        name: 'Kitten Protection',
+        commandTopic: 'setting/set',
+        icon: 'mdi:cat',
+        valueTemplate: '{{ value_json.settings.kitten }}',
+        commandTemplate: '{"kitten":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
     public bool $kitten;
     public int $stopTime;
     public SandFullWeightDTO $sandFullWeight;
+
+    #[HASwitch(
+        technicalName: 'disturb_mode',
+        name: 'Do not disturb',
+        commandTopic: 'setting/set',
+        icon: 'mdi:bell',
+        valueTemplate: '{{ value_json.settings.disturbMode }}',
+        commandTemplate: '{"disturbMode":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
     public bool $disturbMode;
 
     public MultiRangeDTO $disturbMultiRange;
@@ -52,18 +331,170 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
     public K3ConfigDTO $k3Config;
     public bool $relateK3Switch;
     public int $lightest;
+
+    #[HASwitch(
+        technicalName: 'deep_clean',
+        name: 'Deep Cleaning',
+        commandTopic: 'setting/set',
+        icon: 'mdi:broom',
+        valueTemplate: '{{ value_json.settings.deepClean }}',
+        commandTemplate: '{"deepClean":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
     public bool $deepClean;
     public bool $removeSand;
+
+    #[HASwitch(
+        technicalName: 'bury',
+        name: 'Waste Covering',
+        commandTopic: 'setting/set',
+        icon: 'mdi:broom',
+        valueTemplate: '{{ value_json.settings.bury }}',
+        commandTemplate: '{"bury":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
     public bool $bury;
     public int $petInTipLimit;
+
+    #[Number(
+        technicalName: 'n50Durability',
+        name: 'N50 Durability',
+        commandTopic: 'setting/set',
+        icon: 'mdi:diamond-stone',
+        valueTemplate: '{{ value_json.consumables.n50Durability }}',
+        commandTemplate: '{"n50Durability":{{ value }}}',
+        payloadOn: 1,
+        payloadOff: 0,
+        entityCategory: 'config',
+        min: 0,
+        max: 90,
+        step: 1
+    )]
     public int $n50Durability;
+
+    #[Sensor(
+        technicalName: 'durabilityInDays',
+        name: 'Next N50 Change in Days',
+        icon: 'mdi:update',
+        valueTemplate: '{{ ((value_json.consumables.n50NextChange - as_timestamp(now())) / 86400) | round(1) }}',
+        entityCategory: 'diagnostic'
+    )]
     public mixed $n50NextChange;
+
+    #[Sensor(
+        technicalName: 'k3Battery',
+        name: 'K3 Battery',
+        icon: 'mdi:update',
+        stateClass: 'measurement',
+        deviceClass: 'battery',
+        unitOfMeasurement: '%',
+        valueTemplate: '{{ value_json.consumables.k3Battery }}',
+        entityCategory: 'diagnostic'
+    )]
     public int $k3Battery;
+
+    #[Sensor(
+        technicalName: 'k3Liquid',
+        name: 'K3 Liquid',
+        icon: 'mdi:update',
+        stateClass: 'measurement',
+        unitOfMeasurement: '%',
+        valueTemplate: '{{ value_json.consumables.k3Liquid }}',
+        entityCategory: 'diagnostic'
+    )]
     public int $k3Liquid;
     public ?string $k3Secret;
     public ?int $k3Id;
     public ?string $k3SerialNumber;
     public ?string $k3Mac;
+
+    #[Button(
+        technicalName: 'action_reset_n50',
+        name: 'Reset N50',
+        commandTopic: 'action/start',
+        icon: 'mdi:information-outline',
+        commandTemplate: '{"action": "reset_n50"}',
+        availabilityTemplate: 'online',
+    )]
+    private $actionResetN50 = 9;
+
+    #[Button(
+        technicalName: 'action_maintenance_start',
+        name: 'Maintenance Start',
+        commandTopic: 'action/start',
+        icon: 'mdi:information-outline',
+        commandTemplate: '{"action": "start_maintenance"}',
+        availabilityTemplate: '{% if value_json.states.state == "IDLE" %}online{% else %}offline{% endif %}',
+    )]
+    private $actionMaintenance = 9;
+
+    #[Button(
+        technicalName: 'action_maintenance_stop',
+        name: 'Maintenance Stop',
+        commandTopic: 'action/start',
+        icon: 'mdi:information-outline',
+        commandTemplate: '{"action": "stop_maintenance"}',
+        availabilityTemplate: '{% if value_json.states.state == "MAINTENANCE" %}online{% else %}offline{% endif %}',
+    )]
+    private $actionStopMaintenance = 9;
+
+    #[Button(
+        technicalName: 'action_lightning_start',
+        name: 'Lightning Start',
+        commandTopic: 'action/start',
+        icon: 'mdi:information-outline',
+        commandTemplate: '{"action": "start_lightning"}',
+        availabilityTemplate: '{% if value_json.states.state == "IDLE" %}online{% else %}offline{% endif %}',
+    )]
+    private $actionStartLightning = 1;
+
+    #[Button(
+        technicalName: 'action_lightning_stop',
+        name: 'Lightning Stop',
+        commandTopic: 'action/start',
+        icon: 'mdi:information-outline',
+        commandTemplate: '{"action": "stop_lightning"}',
+        availabilityTemplate: '{% if value_json.states.state == "IDLE" %}online{% else %}offline{% endif %}',
+    )]
+    private $actionStopLightning = 1;
+
+    #[Button(
+        technicalName: 'action_odour_start',
+        name: 'Odour Start',
+        commandTopic: 'action/start',
+        icon: 'mdi:information-outline',
+        commandTemplate: '{"action": "start_odour"}',
+        availabilityTemplate: '{% if value_json.states.state == "IDLE" %}online{% else %}offline{% endif %}',
+    )]
+    private $actionStartOdour = 1;
+
+    #[Button(
+        technicalName: 'action_cleaning_start',
+        name: 'Cleaning Start',
+        commandTopic: 'action/start',
+        icon: 'mdi:information-outline',
+        commandTemplate: '{"action": "start_cleaning"}',
+        availabilityTemplate: '{% if value_json.states.state == "IDLE" %}online{% else %}offline{% endif %}',
+    )]
+    private $actionCleaning = 1;
+
+    #[Button(
+        technicalName: 'action_dump_litter',
+        name: 'Dump Litter',
+        commandTopic: 'action/start',
+        icon: 'mdi:information-outline',
+        commandTemplate: '{"action": "dump_litter"}',
+        availabilityTemplate: '{% if value_json.states.state == "IDLE" %}online{% else %}offline{% endif %}',
+    )]
+    private $actionDumpLitter = 1;
 
     protected function rules(): array
     {
@@ -83,11 +514,11 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
             'autoWork' => ['bool'],
             'fixedTimeClear' => ['integer'],
             'downpos' => ['bool'],
+            'language' => ['string', 'min:5', 'max:5'],
             'deepRefresh' => ['bool'],
             'autoIntervalMin' => ['integer', 'min:0'],
             'stillTime' => ['integer', 'min:0'],
             'unit' => ['bool'],
-            'language' => ['string', 'in:en_US,de_DE,es_ES,zh_CN,ja_JP,it_IT,pt_PT,tr_TR,ru_RU,fr_FR'],
             'avoidRepeat' => ['bool'],
             'underweight' => ['bool'],
             'kitten' => ['bool'],
@@ -256,7 +687,7 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
 
         // Load litter
         $data['litterWeight'] = $config['litter']['weight'] ?? null;
-        $data['litterUsedTimes'] = $config['litter']['usedTimes'] ?? null;
+        $data['litterUsedTimes'] = $device->histories()->whereDate('created_at', now()->toDateTime())->where('type', '=', 'IN_USE')->count();
         $data['litterPercent'] = $config['litter']['percent'] ?? null;
 
         // Load settings

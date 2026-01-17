@@ -12,25 +12,25 @@ class AutoDiscoveryService
     {
     }
 
-    public function discover(ConfigurationInterface $configuration)
+    public function discover(ConfigurationInterface $configuration, \App\Models\Device $device)
     {
         $reflectionClass = new \ReflectionClass($configuration);
 
         $properties = $reflectionClass->getProperties();
         foreach ($properties as $property) {
             $propertyAttributes = $property->getAttributes();
-            if(empty($propertyAttributes)) {
+            if (empty($propertyAttributes)) {
                 continue;
             }
             /** @var \ReflectionAttribute $attr */
-            foreach($propertyAttributes as $attr) {
+            foreach ($propertyAttributes as $attr) {
                 $instance = $attr->newInstance();
 
-                if(!($instance instanceof BaseEntity)) {
+                if (!($instance instanceof BaseEntity)) {
                     continue;
                 }
 
-                $instance->setDevice($configuration->getDevice());
+                $instance->setDevice($device);
 
                 $this->mqttClient->publish($instance->toTopic(), $instance->toPayload(), 0, true);
             }

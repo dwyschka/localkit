@@ -21,7 +21,7 @@ services:
             - LOCALKIT_BROKER_PORT=443
             - HOMEASSISTANT_PORT=1883
             - HOMEASSISTANT_HOST=10.10.50.10
-            - HOMEASSISTANT_CLIENT_ID=localkit
+            - HOMEASSISTANT_CLIENT_ID=localkit_dev
             - BYPASS_AUTH=true
             - BYPASS_AUTH_ID=true
         restart: always
