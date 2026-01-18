@@ -2,6 +2,7 @@
 
 namespace App\Petkit\Devices;
 
+use App\DTOs\PetkitDTOInterface;
 use App\Helpers\JsonHelper;
 use App\Helpers\Time;
 use App\Homeassistant\HomeassistantTopic;
@@ -151,9 +152,19 @@ class PetkitFreshElementSolo implements DeviceDefinition
             $scheduleChange = !empty($difference);
         }
 
+        $dto = $this->configurationDefinition();
+
         if(!$scheduleChange) {
-            foreach ($difference as $key => $value) {
-                if (is_numeric($value) || is_bool($value) ) {
+            foreach ($difference as $key => $val) {
+
+                $value = $dto->$key;
+
+
+                if($value instanceof PetkitDTOInterface) {
+                    $difference[$key] = $value->toPetkitConfiguration();
+                } else if (is_numeric($value)) {
+                    $difference[$key] = (int)$value;
+                } else if (is_bool($value)) {
                     $difference[$key] = (int)$value;
                 }
             }

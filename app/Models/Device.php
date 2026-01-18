@@ -90,7 +90,7 @@ class Device extends Model
         return match ($this->device_type) {
             't4' => Devices\Configuration\PetkitPuraMax::fromDevice($this),
             'd4' => Devices\Configuration\PetkitFreshElementSolo::fromDevice($this),
-            'd4h' => new Devices\PetkitYumshareSolo($this),
+            'd4h' => Devices\Configuration\PetkitYumshareSolo::fromDevice($this),
         };
     }
 

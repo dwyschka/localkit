@@ -57,7 +57,7 @@ class PetkitFreshElementSolo
                     ->label('Refill Alarm'),
 
                 Forms\Components\Section::make('Alarm Period')->schema([
-                    TimePicker::make('from')
+                    TimePicker::make('configuration.settings.foodWarnRange.from')
                         ->formatStateUsing(function ($state) {
                             return Time::toTimeFromMinutes((int)$state);
                         })
@@ -66,7 +66,7 @@ class PetkitFreshElementSolo
                         })
                         ->seconds(false),
 
-                    TimePicker::make('till')
+                    TimePicker::make('configuration.settings.foodWarnRange.till')
                         ->formatStateUsing(function ($state) {
                             return Time::toTimeFromMinutes((int)$state);
                         })
@@ -89,23 +89,34 @@ class PetkitFreshElementSolo
                     ->helperText('Indicator light work within the following period')
                     ->label('Indicator Light'),
 
-                Forms\Components\Section::make('Lighting Time')->schema([
-                    TimePicker::make('configuration.settings.foodWarnRange.from')
-                        ->label('From')
-                        ->seconds(false)
-                        ->required()
-                        ->formatStateUsing(fn(?string $state) => Time::toTimeFromMinutes((int)$state ?? 0))
-                        ->dehydrateStateUsing(fn($state) => Time::toMinutes($state)),
-                    TimePicker::make('configuration.settings.foodWarnRange.till')
-                        ->label('Till')
-                        ->required()
-                        ->seconds(false)
-                        ->after('time_from')
-                        ->formatStateUsing(fn(?string $state) => Time::toTimeFromMinutes((int)$state ?? 0))
-                        ->dehydrateStateUsing(fn($state) => Time::toMinutes($state)),
-                ])
+                Repeater::make('configuration.settings.lightMultiRange.ranges')
                     ->columns(2)
-                    ->columnSpanFull(),
+                    ->label('Screen Period')
+                    ->schema(
+                        [
+                            TimePicker::make('from')
+                                ->label('From')
+                                ->seconds(false)
+                                ->required()
+                                ->formatStateUsing(
+                                    fn (?string $state) => Time::toTimeFromMinutes((int) $state)
+                                )
+                                ->dehydrateStateUsing(
+                                    fn ($state) => Time::toMinutes($state)
+                                ),
+
+                            TimePicker::make('till')
+                                ->label('Till')
+                                ->seconds(false)
+                                ->required()
+                                ->formatStateUsing(
+                                    fn (?string $state) => Time::toTimeFromMinutes((int) $state)
+                                )
+                                ->dehydrateStateUsing(
+                                    fn ($state) => Time::toMinutes($state)
+                                ),
+                        ]
+                    ),
 
                 Forms\Components\Toggle::make('configuration.settings.feedSound')
                     ->helperText('Turn on the prompt tone, it will ring when the food is dispensing')

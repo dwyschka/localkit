@@ -2,6 +2,8 @@
 
 namespace App\Petkit\Devices\Configuration;
 
+use App\DTOs\DeviceConfigurationDTO;
+use App\DTOs\RangeDTO;
 use App\Homeassistant\BinarySensor;
 use App\Homeassistant\Button;
 use App\Homeassistant\HASwitch;
@@ -13,10 +15,20 @@ use App\Homeassistant\Select;
 use App\Homeassistant\Sensor;
 use App\Models\Device;
 use Illuminate\Support\Facades\Storage;
+use WendellAdriel\ValidatedDTO\Casting\ArrayCast;
+use WendellAdriel\ValidatedDTO\Casting\BooleanCast;
+use WendellAdriel\ValidatedDTO\Casting\DTOCast;
+use WendellAdriel\ValidatedDTO\Casting\IntegerCast;
+use WendellAdriel\ValidatedDTO\Casting\StringCast;
 
-class PetkitYumshareSolo implements ConfigurationInterface, Video, Snapshot
+class PetkitYumshareSolo extends DeviceConfigurationDTO implements ConfigurationInterface, Video, Snapshot
 {
+    // Basic settings
+    public int $factor;
+    public int $amount;
+    public array $schedule;
 
+    // States
     #[Sensor(
         technicalName: 'ip_address',
         name: 'IP Address',
@@ -24,9 +36,388 @@ class PetkitYumshareSolo implements ConfigurationInterface, Video, Snapshot
         valueTemplate: '{{ value_json.states.ipAddress }}',
         entityCategory: 'diagnostic'
     )]
-    private string $ipAddress = '';
-    private array $schedule = [];
+    public string $ipAddress;
 
+    #[Sensor(
+        technicalName: 'device_status',
+        name: 'Device Status',
+        icon: 'mdi:information-outline',
+        valueTemplate: '{{ value_json.states.state }}',
+        entityCategory: 'diagnostic'
+    )]
+    public ?string $workingState;
+
+    #[Sensor(
+        technicalName: 'error',
+        name: 'Error',
+        icon: 'mdi:error',
+        valueTemplate: '{{ value_json.states.error }}',
+        entityCategory: 'diagnostic'
+    )]
+    public ?string $error;
+
+    #[BinarySensor(
+        technicalName: 'move_detected',
+        name: 'Move Detected',
+        icon: 'mdi:cursor-move',
+        deviceClass: 'motion',
+        valueTemplate: '{{ value_json.states.moveDetected }}',
+        entityCategory: 'diagnostic',
+        payloadOn: true,
+        payloadOff: false
+    )]
+    public bool $moveDetected;
+
+    #[BinarySensor(
+        technicalName: 'eat_detected',
+        name: 'Eat Detected',
+        icon: 'mdi:food',
+        valueTemplate: '{{ value_json.states.eatDetected }}',
+        entityCategory: 'diagnostic',
+        payloadOn: true,
+        payloadOff: false
+    )]
+    public bool $eatDetected;
+
+    #[BinarySensor(
+        technicalName: 'pet_detected',
+        name: 'Pet Detected',
+        icon: 'mdi:cat',
+        deviceClass: 'motion',
+        valueTemplate: '{{ value_json.states.petDetected }}',
+        entityCategory: 'diagnostic',
+        payloadOn: true,
+        payloadOff: false
+    )]
+    public bool $petDetected;
+
+    #[BinarySensor(
+        technicalName: 'door',
+        name: 'Door',
+        icon: 'mdi:door',
+        valueTemplate: '{{ value_json.states.door }}',
+        entityCategory: 'diagnostic',
+        payloadOn: true,
+        payloadOff: false
+    )]
+    public bool $door;
+
+    #[Sensor(
+        technicalName: 'bowl',
+        name: 'Bowl',
+        icon: 'mdi:information-outline',
+        valueTemplate: '{{ value_json.states.bowl }}',
+        entityCategory: 'diagnostic'
+    )]
+    public int $bowl;
+
+    #[BinarySensor(
+        technicalName: 'infrared',
+        name: 'Infrared',
+        valueTemplate: '{{ value_json.states.infrared ? "on": "off" }}',
+        payloadOn: true,
+        payloadOff: false
+    )]
+    public bool $infrared;
+
+    #[Image(
+        technicalName: 'last_snapshot',
+        name: 'Snapshot',
+    )]
+    public ?string $lastSnapshot;
+
+    public ?string $stream;
+
+    // Switches
+    #[HASwitch(
+        technicalName: 'food_warn',
+        name: 'Refill alarm',
+        commandTopic: 'setting/set',
+        icon: 'mdi:toggle-switch',
+        valueTemplate: '{{ value_json.settings.foodWarn }}',
+        commandTemplate: '{"foodWarn":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
+    public bool $foodWarn;
+
+    public RangeDTO $foodWarnRange;
+
+    #[HASwitch(
+        technicalName: 'manual_lock',
+        name: 'Child lock',
+        commandTopic: 'setting/set',
+        icon: 'mdi:toggle-switch',
+        valueTemplate: '{{ value_json.settings.manualLock }}',
+        commandTemplate: '{"manualLock":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
+    public bool $manualLock;
+
+    public bool $lightMode;
+    public bool $multiConfig;
+    public bool $shareOpen;
+
+    // Camera settings
+    #[HASwitch(
+        technicalName: 'camera',
+        name: 'Camera',
+        commandTopic: 'setting/set',
+        icon: 'mdi:camera',
+        valueTemplate: '{{ value_json.settings.camera }}',
+        commandTemplate: '{"camera":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
+    public bool $camera;
+
+    #[HASwitch(
+        technicalName: 'microphone',
+        name: 'Microphone',
+        commandTopic: 'setting/set',
+        icon: 'mdi:microphone',
+        valueTemplate: '{{ value_json.settings.microphone }}',
+        commandTemplate: '{"microphone":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
+    public bool $microphone;
+
+    #[HASwitch(
+        technicalName: 'night',
+        name: 'Night Vision',
+        commandTopic: 'setting/set',
+        icon: 'mdi:moon-new',
+        valueTemplate: '{{ value_json.settings.night }}',
+        commandTemplate: '{"night":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
+    public bool $night;
+
+    #[HASwitch(
+        technicalName: 'time_display',
+        name: 'Time Display',
+        commandTopic: 'setting/set',
+        icon: 'mdi:toggle-switch',
+        valueTemplate: '{{ value_json.settings.timeDisplay }}',
+        commandTemplate: '{"timeDisplay":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
+    public bool $timeDisplay;
+
+    public bool $eatVideo;
+
+    // Detection settings
+    #[HASwitch(
+        technicalName: 'move_detection',
+        name: 'Move Detection',
+        commandTopic: 'setting/set',
+        icon: 'mdi:eye-arrow-left-outline',
+        valueTemplate: '{{ value_json.settings.moveDetection }}',
+        commandTemplate: '{"moveDetection":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
+    public bool $moveDetection;
+
+    #[Number(
+        technicalName: 'move_sensitivity',
+        name: 'Move Sensitivity',
+        commandTopic: 'setting/set',
+        icon: 'mdi:speaker',
+        valueTemplate: '{{ value_json.settings.moveSensitivity }}',
+        commandTemplate: '{"moveSensitivity":{{ value }}}',
+        entityCategory: 'config',
+        min: 1,
+        max: 9,
+        step: 1
+    )]
+    public int $moveSensitivity;
+
+    #[HASwitch(
+        technicalName: 'pet_detection',
+        name: 'Pet Detection',
+        commandTopic: 'setting/set',
+        icon: 'mdi:cat',
+        valueTemplate: '{{ value_json.settings.petDetection }}',
+        commandTemplate: '{"petDetection":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
+    public bool $petDetection;
+
+    #[Number(
+        technicalName: 'pet_sensitivity',
+        name: 'Pet Sensitivity',
+        commandTopic: 'setting/set',
+        icon: 'mdi:speaker',
+        valueTemplate: '{{ value_json.settings.petSensitivity }}',
+        commandTemplate: '{"petSensitivity":{{ value }}}',
+        entityCategory: 'config',
+        min: 1,
+        max: 9,
+        step: 1
+    )]
+    public int $petSensitivity;
+
+    #[HASwitch(
+        technicalName: 'eat_detection',
+        name: 'Eat Detection',
+        commandTopic: 'setting/set',
+        icon: 'mdi:bowl',
+        valueTemplate: '{{ value_json.settings.eatDetection }}',
+        commandTemplate: '{"eatDetection":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
+    public bool $eatDetection;
+
+    #[Number(
+        technicalName: 'eat_sensitivity',
+        name: 'Eat Sensitivity',
+        commandTopic: 'setting/set',
+        icon: 'mdi:speaker',
+        valueTemplate: '{{ value_json.settings.eatSensitivity }}',
+        commandTemplate: '{"eatSensitivity":{{ value }}}',
+        entityCategory: 'config',
+        min: 1,
+        max: 9,
+        step: 1
+    )]
+    public int $eatSensitivity;
+
+    public int $detectInterval;
+
+    // Sound settings
+    public bool $toneMode;
+
+    #[HASwitch(
+        technicalName: 'sound_enable',
+        name: 'Sound Enabled',
+        commandTopic: 'setting/set',
+        icon: 'mdi:volume-low',
+        valueTemplate: '{{ value_json.settings.soundEnable }}',
+        commandTemplate: '{"soundEnable":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
+    public bool $soundEnable;
+
+    #[HASwitch(
+        technicalName: 'system_sound_enable',
+        name: 'System Sound Enabled',
+        commandTopic: 'setting/set',
+        icon: 'mdi:desktop-classic',
+        valueTemplate: '{{ value_json.settings.systemSoundEnable }}',
+        commandTemplate: '{"systemSoundEnable":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
+    public bool $systemSoundEnable;
+
+    #[Number(
+        technicalName: 'volume',
+        name: 'Volume',
+        commandTopic: 'setting/set',
+        icon: 'mdi:speaker',
+        valueTemplate: '{{ value_json.settings.volume }}',
+        commandTemplate: '{"volume":{{ value }}}',
+        entityCategory: 'config',
+        min: 0,
+        max: 9,
+        step: 1
+    )]
+    public int $volume;
+
+    public int $selectedSound;
+
+    // Feed amount
+    #[Select(
+        technicalName: 'amount',
+        name: 'Feed Amount',
+        options: ['10', '15', '20', '25', '30', '35', '40', '45', '50'],
+        commandTopic: 'setting/set',
+        icon: 'mdi:information-outline',
+        valueTemplate: '{{ value_json.settings.amount }}',
+        commandTemplate: '{"amount": {{value}}}',
+        entityCategory: 'config'
+    )]
+    // Defined above as public int $amount;
+
+        // AI and other settings
+    public int $numLimit;
+    public int $surplusControl;
+    public int $surplusStandard;
+
+    #[HASwitch(
+        technicalName: 'smart_frame',
+        name: 'Smart Frame',
+        commandTopic: 'setting/set',
+        icon: 'mdi:border',
+        valueTemplate: '{{ value_json.settings.smartFrame }}',
+        commandTemplate: '{"smartFrame":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
+    public bool $smartFrame;
+
+    public bool $upload;
+    public int $serviceStatus;
+    public bool $feedPicture;
+    public array $attire;
+    public bool $autoUpgrade;
+    public array $capacity;
+    public int $typeCode;
+
+    #[Sensor(
+        technicalName: 'hertz',
+        name: 'Hertz',
+        icon: 'mdi:repeat',
+        valueTemplate: '{{ value_json.settings.hertz }}',
+        entityCategory: 'diagnostic'
+    )]
+    public int $hertz;
+
+    // Buttons
     #[Button(
         technicalName: 'action_feed',
         name: 'Feed',
@@ -47,497 +438,343 @@ class PetkitYumshareSolo implements ConfigurationInterface, Video, Snapshot
     )]
     private $actionSnapshot = 1;
 
-    #[HASwitch(
-        technicalName: 'food_warn',
-        name: 'Refill alarm',
-        commandTopic: 'setting/set',
-        icon: 'mdi:toggle-switch',
-        valueTemplate: '{{ value_json.settings.foodWarn }}',
-        commandTemplate: '{"foodWarn":{{ value }}}',
-        payloadOn: "True",
-        payloadOff: "False",
-        deviceClass: 'switch'
-    )]
-    private int $foodWarn = 0;
-    private array $foodWarnRange = [480, 1200];
-
-    #[Sensor(
-        technicalName: 'device_status',
-        name: 'Device Status',
-        icon: 'mdi:information-outline',
-        valueTemplate: '{{ value_json.states.state }}',
-        entityCategory: 'diagnostic'
-    )]
-    private ?string $workingState = null;
-
-    #[Sensor(
-        technicalName: 'error',
-        name: 'Error',
-        icon: 'mdi:error',
-        valueTemplate: '{{ value_json.states.error }}',
-        entityCategory: 'diagnostic'
-    )]
-    private ?string $error = null;
-
-    #[HASwitch(
-        technicalName: 'manual_lock',
-        name: 'Child lock',
-        commandTopic: 'setting/set',
-        icon: 'mdi:toggle-switch',
-        valueTemplate: '{{ value_json.settings.manualLock | string }}',
-        commandTemplate: '{"manualLock":{{ value }}}',
-        payloadOn: "True",
-        payloadOff: "False",
-        deviceClass: 'switch'
-    )]
-    private int $manualLock = 0;
-    private int $lightMode = 0;
-
-    private int $factor = 10;
-
-    #[Select(
-        technicalName: 'amount',
-        name: 'Feed Amount',
-        options: [
-            '10',
-            '15',
-            '20',
-            '25',
-            '30',
-            '35',
-            '40',
-            '45',
-            '50'
-        ],
-        commandTopic: 'setting/set',
-        icon: 'mdi:information-outline',
-        valueTemplate: '{{ value_json.settings.amount }}',
-        commandTemplate: ' {"amount": {{value}}}',
-        entityCategory: 'config'
-    )]
-    private int $amount = 10;
-
-    #[HASwitch(
-        technicalName: 'camera',
-        name: 'Camera',
-        commandTopic: 'setting/set',
-        icon: 'mdi:camera',
-        valueTemplate: '{{ value_json.settings.camera }}',
-        commandTemplate: '{"camera":{{ value }}}',
-        payloadOn: "True",
-        payloadOff: "False",
-        deviceClass: 'switch'
-    )]
-    private bool $camera = true;
-
-    #[HASwitch(
-        technicalName: 'microphone',
-        name: 'Microphone',
-        commandTopic: 'setting/set',
-        icon: 'mdi:microphone',
-        valueTemplate: '{{ value_json.settings.microphone }}',
-        commandTemplate: '{"microphone":{{ value }}}',
-        payloadOn: "True",
-        payloadOff: "False",
-        deviceClass: 'switch'
-    )]
-    private bool $microphone = true;
-
-    #[HASwitch(
-        technicalName: 'night',
-        name: 'Night Vision',
-        commandTopic: 'setting/set',
-        icon: 'mdi:moon-new',
-        valueTemplate: '{{ value_json.settings.night }}',
-        commandTemplate: '{"night":{{ value }}}',
-        payloadOn: "True",
-        payloadOff: "False",
-        deviceClass: 'switch'
-    )]
-    private bool $night = true;
-
-    #[HASwitch(
-        technicalName: 'time_display',
-        name: 'Time Display',
-        commandTopic: 'setting/set',
-        icon: 'mdi:toggle-switch',
-        valueTemplate: '{{ value_json.settings.timeDisplay }}',
-        commandTemplate: '{"timeDisplay":{{ value }}}',
-        payloadOn: "True",
-        payloadOff: "False",
-        deviceClass: 'switch'
-    )]
-
-    private bool $timeDisplay = true;
-    private bool $eatVideo = true;
-
-    #[HASwitch(
-        technicalName: 'move_detection',
-        name: 'Move Detection',
-        commandTopic: 'setting/set',
-        icon: 'mdi:eye-arrow-left-outline',
-        valueTemplate: '{{ value_json.settings.moveDetection }}',
-        commandTemplate: '{"moveDetection":{{ value }}}',
-        payloadOn: "True",
-        payloadOff: "False",
-        deviceClass: 'switch'
-    )]
-    private bool $moveDetection = true;
-
     #[Number(
-        technicalName: 'move_sensitivity',
-        name: 'Move Sensitivity',
+        technicalName: 'desiccant_durability',
+        name: 'N50 Durability',
         commandTopic: 'setting/set',
-        icon: 'mdi:speaker',
-        valueTemplate: '{{ value_json.settings.moveSensitivity }}',
-        commandTemplate: '{"moveSensitivity":{{ value }}}',
-        payloadOn: 1,
-        payloadOff: 0,
+        icon: 'mdi:diamond-stone',
+        valueTemplate: '{{ value_json.consumables.desiccantDurability }}',
+        commandTemplate: '{"desiccantDurability":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
         entityCategory: 'config',
-        min: 1,
-        max: 9,
+        min: 0,
+        max: 90,
         step: 1
     )]
-    private int $moveSensitivity = 1;
-
-    #[HASwitch(
-        technicalName: 'pet_detection',
-        name: 'Pet Detection',
-        commandTopic: 'setting/set',
-        icon: 'mdi:cat',
-        valueTemplate: '{{ value_json.settings.petDetection }}',
-        commandTemplate: '{"petDetection":{{ value }}}',
-        payloadOn: "True",
-        payloadOff: "False",
-        deviceClass: 'switch'
-    )]
-    private bool $petDetection = true;
-
-    #[Number(
-        technicalName: 'pet_sensitivity',
-        name: 'Pet Sensitivity',
-        commandTopic: 'setting/set',
-        icon: 'mdi:speaker',
-        valueTemplate: '{{ value_json.settings.petSensitivity }}',
-        commandTemplate: '{"petSensitivity":{{ value }}}',
-        payloadOn: 1,
-        payloadOff: 0,
-        entityCategory: 'config',
-        min: 1,
-        max: 9,
-        step: 1
-    )]
-    private int $petSensitivity = 3;
-
-    #[HASwitch(
-        technicalName: 'eat_detection',
-        name: 'Eat Detection',
-        commandTopic: 'setting/set',
-        icon: 'mdi:bowl',
-        valueTemplate: '{{ value_json.settings.eatDetection }}',
-        commandTemplate: '{"eatDetection":{{ value }}}',
-        payloadOn: "True",
-        payloadOff: "False",
-        deviceClass: 'switch'
-    )]
-    private bool $eatDetection = true;
-
-    #[Number(
-        technicalName: 'eat_sensitivity',
-        name: 'Eat Sensitivity',
-        commandTopic: 'setting/set',
-        icon: 'mdi:speaker',
-        valueTemplate: '{{ value_json.settings.eatSensitivity }}',
-        commandTemplate: '{"eatSensitivity":{{ value }}}',
-        payloadOn: 1,
-        payloadOff: 0,
-        entityCategory: 'config',
-        min: 1,
-        max: 9,
-        step: 1
-    )]
-    private int $eatSensitivity = 3;
-    private int $detectInterval = 0;
-    private int $toneMode = 1;
-
-    #[HASwitch(
-        technicalName: 'sound_enable',
-        name: 'Sound Enabled',
-        commandTopic: 'setting/set',
-        icon: 'mdi:volume-low',
-        valueTemplate: '{{ value_json.settings.soundEnable }}',
-        commandTemplate: '{"soundEnable":{{ value }}}',
-        payloadOn: "True",
-        payloadOff: "False",
-        deviceClass: 'switch'
-    )]
-    private bool $soundEnable = false;
-
-    #[HASwitch(
-        technicalName: 'system_sound_enable',
-        name: 'System Sound Enabled',
-        commandTopic: 'setting/set',
-        icon: 'mdi:desktop-classic',
-        valueTemplate: '{{ value_json.settings.systemSoundEnable }}',
-        commandTemplate: '{"systemSoundEnable":{{ value }}}',
-        payloadOn: "True",
-        payloadOff: "False",
-        deviceClass: 'switch'
-    )]
-    private bool $systemSoundEnable = false;
-
-    #[Number(
-        technicalName: 'volume',
-        name: 'Volume',
-        commandTopic: 'setting/set',
-        icon: 'mdi:speaker',
-        valueTemplate: '{{ value_json.settings.volume }}',
-        commandTemplate: '{"volume":{{ value }}}',
-        payloadOn: 1,
-        payloadOff: 0,
-        entityCategory: 'config',
-        min: 1,
-        max: 9,
-        step: 1
-    )]
-    private int $volume = 4;    //Volume is 0 - 9
-
-
-    private int $selectedSound = -1;    // -1 for system-sound */
-
-
-    private int $numLimit = 5; //dunno
-    private int $surplusControl = 60; //Some ai stuff ?
-    private int $surplusStandard = 2; // Ai Stuff
-
-    #[HASwitch(
-        technicalName: 'smart_frame',
-        name: 'Smart Frame',
-        commandTopic: 'setting/set',
-        icon: 'mdi:border',
-        valueTemplate: '{{ value_json.settings.smartFrame }}',
-        commandTemplate: '{"smartFrame":{{ value }}}',
-        payloadOn: "True",
-        payloadOff: "False",
-        deviceClass: 'switch'
-    )]
-    private bool $smartFrame = true; //renders border in stream
-    private bool $upload = true;
-
-    private int $serviceStatus = 2;
-    private bool $feedPicture = false;
-
-    //No fcking idea what this is
-    private array $attire = [
-        'id' => -1,
-        'binFile' => '',
-        'binEncrypt' => '',
-        'indate' => 4102415999,
-        'binFile2' => '',
-        'binEncrypt2' => ''
-    ];
-
-    private bool $multiConfig = true;
-    private bool $shareOpen = false;
-    private int $typeCode = 0;
-    private bool $autoUpgrade = false;
-    private array $capacity = [[
-        'name' => 'fullVideo'
-    ], [
-        'name' => 'eventImage'
-    ], [
-        'name' => 'highLight'
-    ], [
-        'name' => 'dynamicVideo'
-    ]];
+    public int $desiccantDurability;
 
 
     #[Sensor(
-        technicalName: 'hertz',
-        name: 'Hertz',
-        icon: 'mdi:repeat',
-        valueTemplate: '{{ value_json.settings.hertz }}',
+        technicalName: 'durability_in_days',
+        name: 'Next Desiccant Change in Days',
+        icon: 'mdi:update',
+        valueTemplate: '{{ ((value_json.consumables.desiccantNextChange - as_timestamp(now())) / 86400) | round(1) }}',
         entityCategory: 'diagnostic'
     )]
-    private int $hertz = 50;
+    public int $desiccantNextChange;
 
-    #[Image(
-        technicalName: 'last_snapshot',
-        name: 'Snapshot',
-    )]
-    private ?string $lastSnapshot = null;
-
-    #[BinarySensor(
-        technicalName: 'move_detected',
-        name: 'Move Detected',
-        icon: 'mdi:cursor-move',
-        deviceClass: 'motion',
-        valueTemplate: '{{ value_json.states.moveDetected }}',
-        entityCategory: 'diagnostic',
-        payloadOn: 'True',
-        payloadOff: 'False'
-    )]
-    private bool $moveDetected = false;
-
-    #[BinarySensor(
-        technicalName: 'eat_detected',
-        name: 'Eat Detected',
-        icon: 'mdi:food',
-        valueTemplate: '{{ value_json.states.eatDetected }}',
-        entityCategory: 'diagnostic',
-        payloadOn: 'True',
-        payloadOff: 'False'
-    )]
-    private bool $eatDetected = false;
-
-    #[BinarySensor(
-        technicalName: 'pet_detected',
-        name: 'Pet Detected',
-        icon: 'mdi:cat',
-        deviceClass: 'motion',
-        valueTemplate: '{{ value_json.states.petDetected }}',
-        entityCategory: 'diagnostic',
-        payloadOn: 'True',
-        payloadOff: 'False'
-    )]
-    private bool $petDetected = false;
-
-    #[BinarySensor(
-        technicalName: 'door',
-        name: 'Door',
-        icon: 'mdi:door',
-        valueTemplate: '{{ value_json.states.door }}',
-        entityCategory: 'diagnostic',
-        payloadOn: 'True',
-        payloadOff: 'False'
-    )]
-    private bool $door = false;
-
-    #[Sensor(
-        technicalName: 'bowl',
-        name: 'Bowl',
-        icon: 'mdi:information-outline',
-        valueTemplate: '{{ value_json.states.bowl }}',
-        entityCategory: 'diagnostic'
-    )]
-    private int $bowl = -1;
-
-    #[BinarySensor(
-        technicalName: 'infrared',
-        name: 'Infrared',
-        valueTemplate: '{{ value_json.states.infrared ? "on": "off" }}',
-        payloadOn: 'True',
-        payloadOff: 'False'
-    )]
-    private bool $infrared = false;
-    private ?string $stream = null;
-
-    /**
-     * Constructor that initializes the configuration from a Device object
-     */
-    public function __construct(private ?Device $device)
+    protected function rules(): array
     {
-        if (!is_null($device)) {
-            $this->loadFromDevice();
-        }
+        return [
+            'factor' => ['integer', 'min:1', 'max:100'],
+            'amount' => ['integer', 'in:10,15,20,25,30,35,40,45,50'],
+            'schedule' => ['array'],
+
+
+            'desiccantDurability' => ['integer', 'min:0', 'max:90'],
+            'desiccantNextChange' => [ 'integer', 'min:0'],
+
+            // States
+            'ipAddress' => ['string'],
+            'workingState' => ['nullable', 'string'],
+            'error' => ['nullable', 'string'],
+            'moveDetected' => ['bool'],
+            'eatDetected' => ['bool'],
+            'petDetected' => ['bool'],
+            'door' => ['bool'],
+            'bowl' => ['integer'],
+            'infrared' => ['bool'],
+            'lastSnapshot' => ['nullable', 'string'],
+            'stream' => ['nullable', 'string'],
+
+            // Settings
+            'foodWarn' => ['bool'],
+            'foodWarnRange' => [],
+            'manualLock' => ['bool'],
+            'lightMode' => ['bool'],
+            'multiConfig' => ['bool'],
+            'shareOpen' => ['bool'],
+
+            // Camera
+            'camera' => ['bool'],
+            'microphone' => ['bool'],
+            'night' => ['bool'],
+            'timeDisplay' => ['bool'],
+            'eatVideo' => ['bool'],
+
+            // Detection
+            'moveDetection' => ['bool'],
+            'moveSensitivity' => ['integer', 'min:1', 'max:9'],
+            'petDetection' => ['bool'],
+            'petSensitivity' => ['integer', 'min:1', 'max:9'],
+            'eatDetection' => ['bool'],
+            'eatSensitivity' => ['integer', 'min:1', 'max:9'],
+            'detectInterval' => ['integer', 'min:0'],
+
+            // Sound
+            'toneMode' => ['bool'],
+            'soundEnable' => ['bool'],
+            'systemSoundEnable' => ['bool'],
+            'volume' => ['integer', 'min:0', 'max:9'],
+            'selectedSound' => ['integer'],
+
+            // AI and other
+            'numLimit' => ['integer'],
+            'surplusControl' => ['integer'],
+            'surplusStandard' => ['integer'],
+            'smartFrame' => ['bool'],
+            'upload' => ['bool'],
+            'serviceStatus' => ['integer'],
+            'feedPicture' => ['bool'],
+            'attire' => ['array'],
+            'autoUpgrade' => ['bool'],
+            'capacity' => ['array'],
+            'typeCode' => ['integer'],
+            'hertz' => ['integer', 'min:50', 'max:60'],
+        ];
     }
 
-    /**
-     * Load configuration from the device
-     */
-    private function loadFromDevice(): void
+    protected function defaults(): array
     {
-        // States
-        $this->error = $this->device->error;
-        $this->workingState = $this->device->working_state;
+        return [
+            'factor' => 10,
+            'amount' => 10,
+            'schedule' => [],
 
-        $config = $this->device->configuration;
-        // Load schedule
-        $this->schedule = $config['schedule'] ?? [];
+            'desiccantDurability' => 30,
+            'desiccantNextChange' => 0,
+
+            // States
+            'ipAddress' => '',
+            'workingState' => null,
+            'error' => null,
+            'moveDetected' => false,
+            'eatDetected' => false,
+            'petDetected' => false,
+            'door' => false,
+            'bowl' => -1,
+            'infrared' => false,
+            'lastSnapshot' => null,
+            'stream' => null,
+
+            // Settings
+            'foodWarn' => false,
+            'foodWarnRange' => ['from' => 480, 'till' => 1200],
+            'manualLock' => false,
+            'lightMode' => false,
+            'multiConfig' => true,
+            'shareOpen' => false,
+
+            // Camera
+            'camera' => true,
+            'microphone' => true,
+            'night' => true,
+            'timeDisplay' => true,
+            'eatVideo' => false,
+
+            // Detection
+            'moveDetection' => true,
+            'moveSensitivity' => 1,
+            'petDetection' => true,
+            'petSensitivity' => 3,
+            'eatDetection' => true,
+            'eatSensitivity' => 3,
+            'detectInterval' => 0,
+
+            // Sound
+            'toneMode' => false,
+            'soundEnable' => false,
+            'systemSoundEnable' => false,
+            'volume' => 4,
+            'selectedSound' => -1,
+
+            // AI and other
+            'numLimit' => 5,
+            'surplusControl' => 60,
+            'surplusStandard' => 2,
+            'smartFrame' => true,
+            'upload' => false,
+            'serviceStatus' => 2,
+            'feedPicture' => false,
+            'attire' => [
+                'id' => -1,
+                'binFile' => '',
+                'binEncrypt' => '',
+                'indate' => 4102415999,
+                'binFile2' => '',
+                'binEncrypt2' => ''
+            ],
+            'autoUpgrade' => false,
+            'capacity' => [
+                ['name' => 'fullVideo'],
+                ['name' => 'eventImage'],
+                ['name' => 'highLight'],
+                ['name' => 'dynamicVideo']
+            ],
+            'typeCode' => 0,
+            'hertz' => 50,
+        ];
+    }
+
+    protected function casts(): array
+    {
+        return [
+            // Basic types
+            'factor' => new IntegerCast(),
+            'amount' => new IntegerCast(),
+            'schedule' => new ArrayCast(),
+
+            // States
+            'ipAddress' => new StringCast(),
+            'workingState' => new StringCast(),
+            'error' => new StringCast(),
+            'moveDetected' => new BooleanCast(),
+            'eatDetected' => new BooleanCast(),
+            'petDetected' => new BooleanCast(),
+            'door' => new BooleanCast(),
+            'bowl' => new IntegerCast(),
+            'infrared' => new BooleanCast(),
+            'lastSnapshot' => new StringCast(),
+            'stream' => new StringCast(),
+
+            // Settings
+            'foodWarn' => new BooleanCast(),
+            'foodWarnRange' => new DTOCast(RangeDTO::class),
+            'manualLock' => new BooleanCast(),
+            'lightMode' => new BooleanCast(),
+            'multiConfig' => new BooleanCast(),
+            'shareOpen' => new BooleanCast(),
+
+            // Camera
+            'camera' => new BooleanCast(),
+            'microphone' => new BooleanCast(),
+            'night' => new BooleanCast(),
+            'timeDisplay' => new BooleanCast(),
+            'eatVideo' => new BooleanCast(),
+
+            // Detection
+            'moveDetection' => new BooleanCast(),
+            'moveSensitivity' => new IntegerCast(),
+            'petDetection' => new BooleanCast(),
+            'petSensitivity' => new IntegerCast(),
+            'eatDetection' => new BooleanCast(),
+            'eatSensitivity' => new IntegerCast(),
+            'detectInterval' => new IntegerCast(),
+
+            // Sound
+            'toneMode' => new BooleanCast(),
+            'soundEnable' => new BooleanCast(),
+            'systemSoundEnable' => new BooleanCast(),
+            'volume' => new IntegerCast(),
+            'selectedSound' => new IntegerCast(),
+
+            // AI and other
+            'numLimit' => new IntegerCast(),
+            'surplusControl' => new IntegerCast(),
+            'surplusStandard' => new IntegerCast(),
+            'smartFrame' => new BooleanCast(),
+            'upload' => new BooleanCast(),
+            'serviceStatus' => new IntegerCast(),
+            'feedPicture' => new BooleanCast(),
+            'attire' => new ArrayCast(),
+            'autoUpgrade' => new BooleanCast(),
+            'capacity' => new ArrayCast(),
+            'typeCode' => new IntegerCast(),
+            'hertz' => new IntegerCast(),
+        ];
+    }
+
+    public static function fromDevice(Device $device): self
+    {
+        $config = $device->configuration;
+        $data = [];
+        // Load consumables
+        $data['desiccantDurability'] = $config['consumables']['desiccantDurability'] ?? null;
+        $data['desiccantNextChange'] = $config['consumables']['desiccantNextChange'] ?? null;
+
+        // Load states
+        $data['workingState'] = $device->working_state ?? null;
+        $data['error'] = $device->error ?? null;
 
         if (isset($config['states'])) {
             $states = $config['states'];
-            $this->lastSnapshot = $states['lastSnapshot'] ?? $this->lastSnapshot;
-            $this->ipAddress = $states['ipAddress'] ?? $this->ipAddress;
-            $this->moveDetected = $states['moveDetected'] ?? $this->moveDetected;
-            $this->eatDetected = $states['eatDetected'] ?? $this->eatDetected;
-            $this->petDetected = $states['petDetected'] ?? $this->petDetected;
-            $this->door = $states['door'] ?? $this->door;
-            $this->bowl = $states['bowl'] ?? $this->bowl;
-            $this->infrared = $states['infrared'] ?? $this->infrared;
-            $this->stream = $states['stream'] ?? $this->stream;
+            $data['ipAddress'] = $states['ipAddress'] ?? null;
+            $data['moveDetected'] = $states['moveDetected'] ?? null;
+            $data['eatDetected'] = $states['eatDetected'] ?? null;
+            $data['petDetected'] = $states['petDetected'] ?? null;
+            $data['door'] = $states['door'] ?? null;
+            $data['bowl'] = $states['bowl'] ?? null;
+            $data['infrared'] = $states['infrared'] ?? null;
+            $data['lastSnapshot'] = $states['lastSnapshot'] ?? null;
+            $data['stream'] = $states['stream'] ?? null;
         }
 
         // Load settings
         if (isset($config['settings'])) {
             $settings = $config['settings'];
 
-            $this->shareOpen = $settings['shareOpen'] ?? $this->shareOpen;
-            $this->factor = $settings['factor'] ?? $this->factor;
-            $this->amount = $settings['amount'] ?? $this->amount;
+            $data['shareOpen'] = $settings['shareOpen'] ?? null;
+            $data['factor'] = $settings['factor'] ?? null;
+            $data['amount'] = $settings['amount'] ?? null;
+            $data['multiConfig'] = $settings['multiConfig'] ?? null;
+            $data['lightMode'] = $settings['lightMode'] ?? null;
+            $data['manualLock'] = $settings['manualLock'] ?? null;
+            $data['foodWarnRange'] = $settings['foodWarnRange'] ?? null;
+            $data['foodWarn'] = $settings['foodWarn'] ?? null;
+            $data['typeCode'] = $settings['typeCode'] ?? null;
+            $data['autoUpgrade'] = $settings['autoUpgrade'] ?? null;
+            $data['hertz'] = $settings['hertz'] ?? null;
 
-            $this->multiConfig = $settings['multiConfig'] ?? $this->multiConfig;
-            $this->lightMode = $settings['lightMode'] ?? $this->lightMode;
-            $this->manualLock = $settings['manualLock'] ?? $this->manualLock;
-            $this->foodWarnRange = $settings['foodWarnRange'] ?? $this->foodWarnRange;
-            $this->foodWarn = $settings['foodWarn'] ?? $this->foodWarn;
-            $this->typeCode = $settings['typeCode'] ?? $this->typeCode;
-            $this->autoUpgrade = $settings['autoUpgrade'] ?? $this->autoUpgrade;
-            $this->hertz = $settings['hertz'] ?? $this->hertz;
+            // Camera settings
+            $data['camera'] = $settings['camera'] ?? null;
+            $data['microphone'] = $settings['microphone'] ?? null;
+            $data['night'] = $settings['night'] ?? null;
+            $data['timeDisplay'] = $settings['timeDisplay'] ?? null;
+            $data['eatVideo'] = $settings['eatVideo'] ?? null;
 
-            // Camera and detection settings
-            $this->camera = $settings['camera'] ?? $this->camera;
-            $this->microphone = $settings['microphone'] ?? $this->microphone;
-            $this->night = $settings['night'] ?? $this->night;
-            $this->timeDisplay = $settings['timeDisplay'] ?? $this->timeDisplay;
-            $this->eatVideo = $settings['eatVideo'] ?? $this->eatVideo;
-            $this->moveDetection = $settings['moveDetection'] ?? $this->moveDetection;
-            $this->moveSensitivity = $settings['moveSensitivity'] ?? $this->moveSensitivity;
-            $this->petDetection = $settings['petDetection'] ?? $this->petDetection;
-            $this->petSensitivity = $settings['petSensitivity'] ?? $this->petSensitivity;
-            $this->eatDetection = $settings['eatDetection'] ?? $this->eatDetection;
-            $this->eatSensitivity = $settings['eatSensitivity'] ?? $this->eatSensitivity;
-            $this->detectInterval = $settings['detectInterval'] ?? $this->detectInterval;
+            // Detection settings
+            $data['moveDetection'] = $settings['moveDetection'] ?? null;
+            $data['moveSensitivity'] = $settings['moveSensitivity'] ?? null;
+            $data['petDetection'] = $settings['petDetection'] ?? null;
+            $data['petSensitivity'] = $settings['petSensitivity'] ?? null;
+            $data['eatDetection'] = $settings['eatDetection'] ?? null;
+            $data['eatSensitivity'] = $settings['eatSensitivity'] ?? null;
+            $data['detectInterval'] = $settings['detectInterval'] ?? null;
 
             // Sound settings
-            $this->toneMode = $settings['toneMode'] ?? $this->toneMode;
-            $this->soundEnable = $settings['soundEnable'] ?? $this->soundEnable;
-            $this->systemSoundEnable = $settings['systemSoundEnable'] ?? $this->systemSoundEnable;
-            $this->volume = $settings['volume'] ?? $this->volume;
-            $this->selectedSound = $settings['selectedSound'] ?? $this->selectedSound;
+            $data['toneMode'] = $settings['toneMode'] ?? null;
+            $data['soundEnable'] = $settings['soundEnable'] ?? null;
+            $data['systemSoundEnable'] = $settings['systemSoundEnable'] ?? null;
+            $data['volume'] = $settings['volume'] ?? null;
+            $data['selectedSound'] = $settings['selectedSound'] ?? null;
 
-            // AI and upload settings
-            $this->numLimit = $settings['numLimit'] ?? $this->numLimit;
-            $this->surplusControl = $settings['surplusControl'] ?? $this->surplusControl;
-            $this->surplusStandard = $settings['surplusStandard'] ?? $this->surplusStandard;
-            $this->smartFrame = $settings['smartFrame'] ?? $this->smartFrame;
-            $this->upload = $settings['upload'] ?? $this->upload;
-
-            // Attire settings
-            $this->attire = $settings['attire'] ?? $this->attire;
-
-            // Capacity settings
-            $this->capacity = $settings['capacity'] ?? $this->capacity;
-            $this->feedPicture = $settings['feedPicture'] ?? $this->feedPicture;
-            $this->serviceStatus = $settings['serviceStatus'] ?? $this->serviceStatus;
-
+            // AI and other settings
+            $data['numLimit'] = $settings['numLimit'] ?? null;
+            $data['surplusControl'] = $settings['surplusControl'] ?? null;
+            $data['surplusStandard'] = $settings['surplusStandard'] ?? null;
+            $data['smartFrame'] = $settings['smartFrame'] ?? null;
+            $data['upload'] = $settings['upload'] ?? null;
+            $data['attire'] = $settings['attire'] ?? null;
+            $data['feedPicture'] = $settings['feedPicture'] ?? null;
+            $data['serviceStatus'] = $settings['serviceStatus'] ?? null;
         }
+
+        // Load schedule and capacity
+        $data['schedule'] = $config['schedule'] ?? null;
+        $data['capacity'] = $config['capacity'] ?? null;
+
+        // Filter out null values to let defaults() handle missing data
+        return new self(array_filter($data, fn($value) => $value !== null));
     }
 
-    public function toSnapshot(): ?string
-    {
-        if (is_null($this->lastSnapshot)) {
-            return $this->lastSnapshot;
-        }
-        return base64_encode(Storage::disk('snapshots')->get($this->lastSnapshot));
-    }
-
-    /**
-     * Convert the configuration to an array
-     */
     public function toArray(): array
     {
         return [
+            'consumables' => [
+                'desiccantDurability' => $this->desiccantDurability,
+                'desiccantNextChange' => $this->desiccantNextChange,
+            ],
             'states' => [
                 'state' => $this->workingState,
                 'error' => $this->error,
@@ -558,18 +795,20 @@ class PetkitYumshareSolo implements ConfigurationInterface, Video, Snapshot
                 'multiConfig' => $this->multiConfig,
                 'lightMode' => $this->lightMode,
                 'manualLock' => $this->manualLock,
-                'foodWarnRange' => $this->foodWarnRange,
+                'foodWarnRange' => $this->foodWarnRange->toArray(),
                 'foodWarn' => $this->foodWarn,
                 'typeCode' => $this->typeCode,
                 'autoUpgrade' => $this->autoUpgrade,
                 'hertz' => $this->hertz,
 
-                // Camera and detection settings
+                // Camera settings
                 'camera' => $this->camera,
                 'microphone' => $this->microphone,
                 'night' => $this->night,
                 'timeDisplay' => $this->timeDisplay,
                 'eatVideo' => $this->eatVideo,
+
+                // Detection settings
                 'moveDetection' => $this->moveDetection,
                 'moveSensitivity' => $this->moveSensitivity,
                 'petDetection' => $this->petDetection,
@@ -585,14 +824,12 @@ class PetkitYumshareSolo implements ConfigurationInterface, Video, Snapshot
                 'volume' => $this->volume,
                 'selectedSound' => $this->selectedSound,
 
-                // AI and upload settings
+                // AI and other settings
                 'numLimit' => $this->numLimit,
                 'surplusControl' => $this->surplusControl,
                 'surplusStandard' => $this->surplusStandard,
                 'smartFrame' => $this->smartFrame,
                 'upload' => $this->upload,
-
-                // Attire and capacity settings
                 'attire' => $this->attire,
                 'feedPicture' => $this->feedPicture,
                 'serviceStatus' => $this->serviceStatus,
@@ -602,300 +839,11 @@ class PetkitYumshareSolo implements ConfigurationInterface, Video, Snapshot
         ];
     }
 
-    public function getDevice()
+    public function toSnapshot(): ?string
     {
-        return $this->device;
+        if (is_null($this->lastSnapshot)) {
+            return null;
+        }
+        return base64_encode(Storage::disk('snapshots')->get($this->lastSnapshot));
     }
-
-    public function getCamera(): bool
-    {
-        return $this->camera;
-    }
-
-    public function setCamera(bool $camera): void
-    {
-        $this->camera = $camera;
-    }
-
-    public function getMicrophone(): bool
-    {
-        return $this->microphone;
-    }
-
-    public function setMicrophone(bool $microphone): void
-    {
-        $this->microphone = $microphone;
-    }
-
-    public function getNight(): bool
-    {
-        return $this->night;
-    }
-
-    public function setNight(bool $night): void
-    {
-        $this->night = $night;
-    }
-
-    public function getTimeDisplay(): bool
-    {
-        return $this->timeDisplay;
-    }
-
-    public function setTimeDisplay(bool $timeDisplay): void
-    {
-        $this->timeDisplay = $timeDisplay;
-    }
-
-    public function getEatVideo(): bool
-    {
-        return $this->eatVideo;
-    }
-
-    public function setEatVideo(bool $eatVideo): void
-    {
-        $this->eatVideo = $eatVideo;
-    }
-
-    public function getMoveDetection(): bool
-    {
-        return $this->moveDetection;
-    }
-
-    public function setMoveDetection(bool $moveDetection): void
-    {
-        $this->moveDetection = $moveDetection;
-    }
-
-    public function getMoveSensitivity(): int
-    {
-        return $this->moveSensitivity;
-    }
-
-    public function setMoveSensitivity(int $moveSensitivity): void
-    {
-        $this->moveSensitivity = $moveSensitivity;
-    }
-
-    public function getPetDetection(): bool
-    {
-        return $this->petDetection;
-    }
-
-    public function setPetDetection(bool $petDetection): void
-    {
-        $this->petDetection = $petDetection;
-    }
-
-    public function getPetSensitivity(): int
-    {
-        return $this->petSensitivity;
-    }
-
-    public function setPetSensitivity(int $petSensitivity): void
-    {
-        $this->petSensitivity = $petSensitivity;
-    }
-
-    public function getUpload(): bool
-    {
-        return $this->upload;
-    }
-
-    public function setUpload(bool $upload): void
-    {
-        $this->upload = $upload;
-    }
-
-    public function getSmartFrame(): bool
-    {
-        return $this->smartFrame;
-    }
-
-    public function setSmartFrame(bool $smartFrame): void
-    {
-        $this->smartFrame = $smartFrame;
-    }
-
-    public function getSelectedSound(): int
-    {
-        return $this->selectedSound;
-    }
-
-    public function setSelectedSound(int $selectedSound): void
-    {
-        $this->selectedSound = $selectedSound;
-    }
-
-    public function getCapacity(): array
-    {
-        return $this->capacity;
-    }
-
-    public function getTypeCode(): int
-    {
-        return $this->typeCode;
-    }
-
-    public function getEatDetection(): bool
-    {
-        return $this->eatDetection;
-    }
-
-    public function setEatDetection(bool $eatDetection): void
-    {
-        $this->eatDetection = $eatDetection;
-    }
-
-    public function getEatSensitivity(): int
-    {
-        return $this->eatSensitivity;
-    }
-
-    public function setEatSensitivity(int $eatSensitivity): void
-    {
-        $this->eatSensitivity = $eatSensitivity;
-    }
-
-    public function getDetectInterval(): int
-    {
-        return $this->detectInterval;
-    }
-
-    public function setDetectInterval(int $detectInterval): void
-    {
-        $this->detectInterval = $detectInterval;
-    }
-
-    public function getToneMode(): int
-    {
-        return $this->toneMode;
-    }
-
-    public function setToneMode(int $toneMode): void
-    {
-        $this->toneMode = $toneMode;
-    }
-
-    public function getAutoUpgrade(): bool
-    {
-        return $this->autoUpgrade;
-    }
-
-    public function setAutoUpgrade(bool $autoUpgrade): void
-    {
-        $this->autoUpgrade = $autoUpgrade;
-    }
-
-    public function getSurplusStandard(): int
-    {
-        return $this->surplusStandard;
-    }
-
-    public function setSurplusStandard(int $surplusStandard): void
-    {
-        $this->surplusStandard = $surplusStandard;
-    }
-
-    public function getVolume(): int
-    {
-        return $this->volume;
-    }
-
-    public function setVolume(int $volume): void
-    {
-        $this->volume = $volume;
-    }
-
-    public function getHertz(): int
-    {
-        return $this->hertz;
-    }
-
-    public function setHertz(int $hertz): void
-    {
-        $this->hertz = $hertz;
-    }
-
-    public function getSystemSoundEnable(): bool
-    {
-        return $this->systemSoundEnable;
-    }
-
-    public function setSystemSoundEnable(bool $systemSoundEnable): void
-    {
-        $this->systemSoundEnable = $systemSoundEnable;
-    }
-
-    public function getAttire(): array
-    {
-        return $this->attire;
-    }
-
-    public function getSoundEnable(): bool
-    {
-        return $this->soundEnable;
-    }
-
-    public function setSoundEnable(bool $soundEnable): void
-    {
-        $this->soundEnable = $soundEnable;
-    }
-
-    public function getNumLimit(): int
-    {
-        return $this->numLimit;
-    }
-
-    public function getSurplusControl(): int
-    {
-        return $this->surplusControl;
-    }
-
-    public function setSurplusControl(int $surplusControl): void
-    {
-        $this->surplusControl = $surplusControl;
-    }
-
-    public function getIpAddress(): string
-    {
-        return $this->ipAddress;
-    }
-
-    public function setIpAddress(string $ipAddress): void
-    {
-        $this->ipAddress = $ipAddress;
-    }
-
-    public function getLastSnapshot(): ?string
-    {
-        return $this->lastSnapshot;
-    }
-
-    public function setLastSnapshot(?string $lastSnapshot): void
-    {
-        $this->lastSnapshot = $lastSnapshot;
-    }
-
-    public function getFeedPicture(): bool
-    {
-        return $this->feedPicture;
-    }
-
-    public function setFeedPicture(bool $feedPicture): void
-    {
-        $this->feedPicture = $feedPicture;
-    }
-
-    public function getAmount(): int
-    {
-        return $this->amount;
-    }
-
-    public function setAmount(int $amount): void
-    {
-        $this->amount = $amount;
-    }
-
-
 }
