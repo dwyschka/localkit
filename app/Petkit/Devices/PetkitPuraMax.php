@@ -525,10 +525,12 @@ class PetkitPuraMax implements DeviceDefinition
                 'underweight' => (int)$config['underweight'],
                 'kitten' => (int)$config['kitten'],
                 'stopTime' =>$config['stopTime'],
-                'sandFullWeight' => $config['sandFullWeight'],
+                'sandFullWeight' => array_values($config['sandFullWeight']),
                 'disturbMode' => (int)$config['disturbMode'],
                 'sandSetUseConfig' =>$config['sandSetUseConfig'],
-                'k3Config' => $config['k3Config'],
+                'k3Config' => [
+                    'config' => $config['k3Config']
+                ],
                 'relateK3Switch' => (int)$config['relateK3Switch'] ?? 0,
                 'lightest' =>$config['lightest'],
                 'deepClean' => (int)$config['deepClean'],
