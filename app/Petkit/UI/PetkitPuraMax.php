@@ -205,7 +205,7 @@ class PetkitPuraMax
                 Forms\Components\Fieldset::make('Device')->schema([
                     Forms\Components\TextInput::make('configuration.k3Device.id')->label('K3 ID'),
                     Forms\Components\TextInput::make('configuration.k3Device.mac')->label('K3 MAC'),
-                    Forms\Components\TextInput::make('configuration.k3Device.sn')->label('K3 Serial Number'),
+                    Forms\Components\TextInput::make('configuration.k3Device.serialNumber')->label('K3 Serial Number'),
                     Forms\Components\TextInput::make('configuration.k3Device.secret')->label('K3 Secret'),
                 ]),
                 Forms\Components\Fieldset::make('Settings')->schema([
