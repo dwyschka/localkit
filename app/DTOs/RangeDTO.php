@@ -40,9 +40,4 @@ class RangeDTO extends ValidatedDTO implements PetkitDTOInterface
         return [$this->from, $this->till];
     }
 
-
-    public static function fromDevice(Device $device): PetkitDTOInterface
-    {
-        // TODO: Implement fromDevice() method.
-    }
 }

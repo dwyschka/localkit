@@ -57,20 +57,27 @@ class PetkitFreshElementSolo
                     ->label('Refill Alarm'),
 
                 Forms\Components\Section::make('Alarm Period')->schema([
-                    TimePicker::make('configuration.settings.foodWarnRange.from')
-                        ->label('From')
+                    TimePicker::make('from')
+                        ->formatStateUsing(function ($state) {
+                            return Time::toTimeFromMinutes((int)$state);
+                        })
+                        ->dehydrateStateUsing(function ($state) {
+                            return Time::toMinutes($state);
+                        })
+                        ->seconds(false),
+
+                    TimePicker::make('till')
+                        ->formatStateUsing(function ($state) {
+                            return Time::toTimeFromMinutes((int)$state);
+                        })
+                        ->dehydrateStateUsing(function ($state) {
+                            return Time::toMinutes($state);
+                        })
                         ->seconds(false)
-                        ->required()
-                        ->formatStateUsing(fn(?string $state) => Time::toTimeFromMinutes((int)$state ?? 0))
-                        ->dehydrateStateUsing(fn($state) => Time::toMinutes($state)),
-                    TimePicker::make('configuration.settings.foodWarnRange.till')
-                        ->label('Till')
-                        ->required()
-                        ->seconds(false)
-                        ->after('time_from')
-                        ->formatStateUsing(fn(?string $state) => Time::toTimeFromMinutes((int)$state ?? 0))
-                        ->dehydrateStateUsing(fn($state) => Time::toMinutes($state)),
                 ])
+                    ->dehydrateStateUsing(function ($state) {
+                        return $state;
+                    })
                     ->columns(2)
                     ->columnSpanFull(),
 
