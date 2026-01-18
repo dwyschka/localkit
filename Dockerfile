@@ -2,6 +2,8 @@ FROM serversideup/php:8.3-fpm-nginx
 
 ENV AUTORUN_ENABLED=true
 ENV NGINX_HTTP_PORT=80
+ENV NGINX_HTTPS_PORT=443
+ENV SSL_MODE=mixed
 
 ARG TARGETARCH
 ARG TARGETPLATFORM
@@ -23,6 +25,9 @@ RUN set -ex; \
 # Endinstall Go2rtc
 # Entrypoint Scripts
 COPY --chmod=755 ./entrypoint.d/ /etc/entrypoint.d/
+COPY --chmod=644 ./certs/server.crt /etc/ssl/private/self-signed-web.crt
+COPY --chmod=644 ./certs/server.key /etc/ssl/private/self-signed-web.key
+
 RUN docker-php-serversideup-s6-init
 
 # If you have your own long running services, copy them to the s6 directory
