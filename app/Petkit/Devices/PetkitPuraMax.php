@@ -494,7 +494,7 @@ class PetkitPuraMax implements DeviceDefinition
     }
     public function toDeviceInfo(): array {
         $config = $this->device->configuration['settings'];
-        $k3 = $this->device->configuration['k3Device']['serialNumber'] ?? false;
+        $k3 = $this->device->configuration['k3Device'] ?? false;
 
         return [
             'id' => $this->device->petkit_id,
