@@ -114,6 +114,7 @@ class PetkitFreshElementSolo
             Section::make('Feeding Plan')
                 ->schema([
                     Repeater::make('configuration.schedule')
+
                         ->schema([
                             CheckboxList::make('re')
                                 ->label('Days of Week')
@@ -156,9 +157,9 @@ class PetkitFreshElementSolo
                                             }
                                         }),
                                     TextInput::make('id')
+                                        ->hidden(true)
+                                        ->dehydratedWhenHidden(true)
                                         ->label('id')
-                                        ->numeric()
-                                        ->hidden() // Hidden field to store the actual seconds value
                                         ->required(),
                                     TextInput::make('a')
                                         ->label('Amount')
@@ -168,9 +169,10 @@ class PetkitFreshElementSolo
                                         ->dehydrateStateUsing(fn($state) => (int)$state)
                                         ->suffix('amount'),
                                     TextInput::make('t')
+                                        ->hidden(true)
                                         ->label('Time (seconds)')
                                         ->numeric()
-                                        ->hidden() // Hidden field to store the actual seconds value
+                                        ->dehydratedWhenHidden(true)
                                         ->required(),
                                 ])
                                 ->columns(2)
