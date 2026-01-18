@@ -168,7 +168,7 @@ class PetkitYumshareSolo extends DeviceConfigurationDTO implements Configuration
     // Camera settings
     #[HASwitch(
         technicalName: 'camera',
-        name: 'Camera',
+        name: 'Camera Switch',
         commandTopic: 'setting/set',
         icon: 'mdi:camera',
         valueTemplate: '{{ value_json.settings.camera }}',
@@ -213,7 +213,7 @@ class PetkitYumshareSolo extends DeviceConfigurationDTO implements Configuration
 
     #[HASwitch(
         technicalName: 'time_display',
-        name: 'Time Display',
+        name: 'Timestamp Display',
         commandTopic: 'setting/set',
         icon: 'mdi:toggle-switch',
         valueTemplate: '{{ value_json.settings.timeDisplay }}',
@@ -260,7 +260,7 @@ class PetkitYumshareSolo extends DeviceConfigurationDTO implements Configuration
 
     #[HASwitch(
         technicalName: 'pet_detection',
-        name: 'Pet Detection',
+        name: 'Pet Visit Detection',
         commandTopic: 'setting/set',
         icon: 'mdi:cat',
         valueTemplate: '{{ value_json.settings.petDetection }}',
@@ -275,7 +275,7 @@ class PetkitYumshareSolo extends DeviceConfigurationDTO implements Configuration
 
     #[Number(
         technicalName: 'pet_sensitivity',
-        name: 'Pet Sensitivity',
+        name: 'Pet Visit Sensitivity',
         commandTopic: 'setting/set',
         icon: 'mdi:speaker',
         valueTemplate: '{{ value_json.settings.petSensitivity }}',
@@ -289,7 +289,7 @@ class PetkitYumshareSolo extends DeviceConfigurationDTO implements Configuration
 
     #[HASwitch(
         technicalName: 'eat_detection',
-        name: 'Eat Detection',
+        name: 'Pet Eat Detection',
         commandTopic: 'setting/set',
         icon: 'mdi:bowl',
         valueTemplate: '{{ value_json.settings.eatDetection }}',
@@ -304,7 +304,7 @@ class PetkitYumshareSolo extends DeviceConfigurationDTO implements Configuration
 
     #[Number(
         technicalName: 'eat_sensitivity',
-        name: 'Eat Sensitivity',
+        name: 'Pet Eat Sensitivity',
         commandTopic: 'setting/set',
         icon: 'mdi:speaker',
         valueTemplate: '{{ value_json.settings.eatSensitivity }}',
@@ -323,7 +323,7 @@ class PetkitYumshareSolo extends DeviceConfigurationDTO implements Configuration
 
     #[HASwitch(
         technicalName: 'sound_enable',
-        name: 'Sound Enabled',
+        name: 'Voice for Food Dispensing',
         commandTopic: 'setting/set',
         icon: 'mdi:volume-low',
         valueTemplate: '{{ value_json.settings.soundEnable }}',
@@ -338,7 +338,7 @@ class PetkitYumshareSolo extends DeviceConfigurationDTO implements Configuration
 
     #[HASwitch(
         technicalName: 'system_sound_enable',
-        name: 'System Sound Enabled',
+        name: 'Voice Prompt',
         commandTopic: 'setting/set',
         icon: 'mdi:desktop-classic',
         valueTemplate: '{{ value_json.settings.systemSoundEnable }}',
@@ -387,7 +387,7 @@ class PetkitYumshareSolo extends DeviceConfigurationDTO implements Configuration
 
     #[HASwitch(
         technicalName: 'smart_frame',
-        name: 'Smart Frame',
+        name: 'Pet Tracking',
         commandTopic: 'setting/set',
         icon: 'mdi:border',
         valueTemplate: '{{ value_json.settings.smartFrame }}',
@@ -440,7 +440,7 @@ class PetkitYumshareSolo extends DeviceConfigurationDTO implements Configuration
 
     #[Number(
         technicalName: 'desiccant_durability',
-        name: 'N50 Durability',
+        name: 'Desiccant Durability',
         commandTopic: 'setting/set',
         icon: 'mdi:diamond-stone',
         valueTemplate: '{{ value_json.consumables.desiccantDurability }}',

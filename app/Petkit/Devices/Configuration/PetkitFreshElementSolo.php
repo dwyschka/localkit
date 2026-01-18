@@ -146,7 +146,7 @@ class PetkitFreshElementSolo extends DeviceConfigurationDTO implements Configura
 
     #[Number(
         technicalName: 'desiccant_durability',
-        name: 'N50 Durability',
+        name: 'Desiccant Durability',
         commandTopic: 'setting/set',
         icon: 'mdi:diamond-stone',
         valueTemplate: '{{ value_json.consumables.desiccantDurability }}',
