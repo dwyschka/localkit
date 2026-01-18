@@ -54,7 +54,7 @@ class PetkitYumshareSolo
 
                 Forms\Components\Placeholder::make('Snapshot')
                     ->content(function ($record) {
-                        $image = $record->definition()->configurationDefinition()->getLastSnapshot();
+                        $image = $record->configuration()->lastSnapshot;
                         if (is_null($image)) {
                             return '';
                         }
@@ -65,9 +65,9 @@ class PetkitYumshareSolo
                         $base64Blob = base64_encode($blob);
                         return new HtmlString(sprintf('<img src="data:image/jpeg;base64,%s" />', $base64Blob));
                     })
-                    ->hidden(fn($record) => is_null($record->definition()->configurationDefinition()->getLastSnapshot()))
+                    ->hidden(fn($record) => is_null($record->configuration()->lastSnapshot))
             ])->collapsible()
-                ->hidden(fn($record) => is_null($record->definition()->configurationDefinition()->ipAddress) || !$record->mqtt_connected),
+                ->hidden(fn($record) => is_null($record->configuration()->ipAddress) || !$record->mqtt_connected),
 
             Forms\Components\Section::make('Camera Settings')->columns(2)->schema([
                 Forms\Components\Toggle::make('configuration.settings.camera')
