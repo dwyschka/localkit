@@ -22,7 +22,6 @@ use Filament\Forms\Form;
 
 class PetkitYumshareSolo
 {
-    use HiddenFields;
 
     public function formFields(): array
     {

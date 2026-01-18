@@ -47,10 +47,7 @@ class DeviceResource extends Resource
 
                 Forms\Components\Fieldset::make('Device Configuration')->schema([
                     ...$form->getModelInstance()->ui()->formFields(),
-                    //states are always hidden, but we need to add them to the form to make sure they are saved
-                    ...$form->getModelInstance()->ui()->hiddenFields(
-                        $form->getModelInstance()
-                    )
+
                 ])
 
             ]);

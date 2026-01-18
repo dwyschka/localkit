@@ -2,6 +2,7 @@
 
 namespace App\DTOs;
 
+use App\Models\Device;
 use WendellAdriel\ValidatedDTO\Casting\IntegerCast;
 use WendellAdriel\ValidatedDTO\ValidatedDTO;
 
@@ -40,4 +41,8 @@ class RangeDTO extends ValidatedDTO implements PetkitDTOInterface
     }
 
 
+    public static function fromDevice(Device $device): PetkitDTOInterface
+    {
+        // TODO: Implement fromDevice() method.
+    }
 }

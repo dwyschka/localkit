@@ -794,8 +794,4 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
         ];
     }
 
-    public function getDevice()
-    {
-        // TODO: Implement getDevice() method.
-    }
 }

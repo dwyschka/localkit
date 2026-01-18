@@ -2,18 +2,27 @@
 
 namespace App\Petkit\Devices\Configuration;
 
-use App\Helpers\HomeassistantHelper;
-use App\Homeassistant\BinarySensor;
+use App\DTOs\DeviceConfigurationDTO;
+use App\DTOs\K3ConfigDTO;
+use App\DTOs\MultiRangeDTO;
+use App\DTOs\RangeDTO;
+use App\DTOs\SandFullWeightDTO;
 use App\Homeassistant\Button;
 use App\Homeassistant\HASwitch;
 use App\Homeassistant\Number;
 use App\Homeassistant\Select;
 use App\Homeassistant\Sensor;
 use App\Models\Device;
+use WendellAdriel\ValidatedDTO\Casting\BooleanCast;
+use WendellAdriel\ValidatedDTO\Casting\DTOCast;
+use WendellAdriel\ValidatedDTO\Casting\IntegerCast;
+use WendellAdriel\ValidatedDTO\Casting\StringCast;
+use WendellAdriel\ValidatedDTO\Casting\ArrayCast;
 
-class PetkitFreshElementSolo implements ConfigurationInterface
+class PetkitFreshElementSolo extends DeviceConfigurationDTO implements ConfigurationInterface
 {
-    private int $factor = 10;
+
+    public int $factor;
 
     #[Sensor(
         technicalName: 'error',
@@ -22,7 +31,7 @@ class PetkitFreshElementSolo implements ConfigurationInterface
         valueTemplate: '{{ value_json.states.error }}',
         entityCategory: 'diagnostic'
     )]
-    private ?string $error = null;
+    public ?string $error;
 
     #[Sensor(
         technicalName: 'device_status',
@@ -31,7 +40,7 @@ class PetkitFreshElementSolo implements ConfigurationInterface
         valueTemplate: '{{ value_json.states.state }}',
         entityCategory: 'diagnostic'
     )]
-    private ?string $workingState = null;
+    public ?string $workingState;
 
     #[HASwitch(
         technicalName: 'food_warn',
@@ -40,52 +49,70 @@ class PetkitFreshElementSolo implements ConfigurationInterface
         icon: 'mdi:toggle-switch',
         valueTemplate: '{{ value_json.settings.foodWarn | string }}',
         commandTemplate: '{"foodWarn":{{ value }}}',
-        payloadOn: "true",
-        payloadOff: "false",
-        deviceClass: 'switch'
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
     )]
-    private bool $foodWarn = false;
+    public bool $foodWarn;
+
     #[HASwitch(
         technicalName: 'feed_sound',
-        name: 'Feeding chime',
+        name: 'Food dispense prompt tone',
         commandTopic: 'setting/set',
         icon: 'mdi:toggle-switch',
-        valueTemplate: '{{ value_json.settings.feedSound | string }}',
+        valueTemplate: '{{ value_json.settings.feedSound }}',
         commandTemplate: '{"feedSound":{{ value }}}',
-        payloadOn: "true",
-        payloadOff: "false",
-        deviceClass: 'switch'
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
     )]
-    private bool $feedSound = false;
-    private bool $multiConfig = true;
-    private array $foodWarnRange = [480,1200];
-    private array $lightRange = [0, 1440];
-    /**
-     * @var int|mixed
-     */
-    private bool $shareOpen = false;
-    /**
-     * @var int|mixed
-     */
-    private bool $lightMode = true;
+    public bool $feedSound;
 
+    public bool $multiConfig;
+
+    public RangeDTO $foodWarnRange;
+
+    public RangeDTO $lightRange;
+
+    public bool $shareOpen;
+
+    #[HASwitch(
+        technicalName: 'light_mode',
+        name: 'Indicator Light',
+        commandTopic: 'setting/set',
+        icon: 'mdi:toggle-switch',
+        valueTemplate: '{{ value_json.settings.lightMode }}',
+        commandTemplate: '{"lightMode":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
+    public bool $lightMode;
 
     #[HASwitch(
         technicalName: 'manual_lock',
         name: 'Child lock',
         commandTopic: 'setting/set',
         icon: 'mdi:toggle-switch',
-        valueTemplate: '{{ value_json.settings.manualLock | string }}',
+        valueTemplate: '{{ value_json.settings.manualLock }}',
         commandTemplate: '{"manualLock":{{ value }}}',
-        payloadOn: "true",
-        payloadOff: "false",
-        deviceClass: 'switch'
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
     )]
-    private bool $manualLock;
+    public bool $manualLock;
 
     #[Select(
         technicalName: 'amount',
-        name: 'Feed Amount',
+        name: 'Amount',
         options: [
             '10',
             '15',
@@ -100,12 +127,12 @@ class PetkitFreshElementSolo implements ConfigurationInterface
         commandTopic: 'setting/set',
         icon: 'mdi:information-outline',
         valueTemplate: '{{ value_json.settings.amount }}',
-        commandTemplate: ' {"amount": {{value}}}',
+        commandTemplate: ' {"amount": "{{value}}"}',
         entityCategory: 'config'
     )]
-    private int $amount = 10;
+    public int $amount;
+    public array $schedule;
 
-    private array $schedule = [];
 
     #[Button(
         technicalName: 'action_feed',
@@ -117,196 +144,151 @@ class PetkitFreshElementSolo implements ConfigurationInterface
     )]
     private $actionFeed = 1;
 
-    /**
-     * Constructor that initializes the configuration from a Device object
-     */
-    public function __construct(private ?Device $device)
+    #[Number(
+        technicalName: 'desiccant_durability',
+        name: 'N50 Durability',
+        commandTopic: 'setting/set',
+        icon: 'mdi:diamond-stone',
+        valueTemplate: '{{ value_json.consumables.desiccantDurability }}',
+        commandTemplate: '{"desiccantDurability":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        entityCategory: 'config',
+        min: 0,
+        max: 90,
+        step: 1
+    )]
+    public int $desiccantDurability;
+
+
+    #[Sensor(
+        technicalName: 'durability_in_days',
+        name: 'Next Desiccant Change in Days',
+        icon: 'mdi:update',
+        valueTemplate: '{{ ((value_json.consumables.desiccantNextChange - as_timestamp(now())) / 86400) | round(1) }}',
+        entityCategory: 'diagnostic'
+    )]
+    public int $desiccantNextChange;
+
+    protected function rules(): array
     {
-        if (!is_null($device)) {
-            $this->loadFromDevice();
-        }
+        return [
+            'factor' => ['integer', 'min:1', 'max:100'],
+            'error' => ['nullable', 'string'],
+            'workingState' => ['nullable', 'string'],
+            'foodWarn' => ['bool'],
+            'feedSound' => ['bool'],
+            'multiConfig' => ['bool'],
+            'desiccantDurability' => ['integer', 'min:0', 'max:90'],
+            'desiccantNextChange' => [ 'integer', 'min:0'],
+            'foodWarnRange' => [],
+            'lightRange' => [],
+            'shareOpen' => ['bool'],
+            'lightMode' => ['bool'],
+            'manualLock' => ['bool'],
+            'amount' => ['integer', 'min:1', 'max:100'],
+            'schedule' => ['array']
+        ];
     }
 
-    /**
-     * Load configuration from the device
-     */
-    private function loadFromDevice(): void
+    protected function defaults(): array
     {
-        // States
-        $this->error = $this->device->error;
-        $this->workingState = $this->device->working_state;
-
-        $config = $this->device->configuration;
-
-        $this->schedule = $config['schedule'] ?? [];
-
-        if (isset($config['settings'])) {
-            $settings = $config['settings'];
-
-            $this->shareOpen = $settings['shareOpen'] ?? 0;
-            $this->factor = $settings['factor'] ?? 10;
-            $this->multiConfig = $settings['multiConfig'] ?? 1;
-            $this->feedSound = $settings['feedSound'] ?? 0;
-            $this->lightMode = $settings['lightMode'] ?? 0;
-            $this->lightRange = $settings['lightRange'] ?? [0, 1440];
-            $this->manualLock = $settings['manualLock'] ?? 0;
-            $this->foodWarnRange = $settings['foodWarnRange'] ?? [480,1200];
-            $this->foodWarn = $settings['foodWarn'] ?? 0;
-            $this->amount = $settings['amount'] ?? 10;
-
-        }
+        return [
+            'factor' => 10,
+            'error' => null,
+            'workingState' => 'IDLE',
+            'foodWarn' => true,
+            'feedSound' => false,
+            'multiConfig' => true,
+            'shareOpen' => false,
+            'lightMode' => false,
+            'manualLock' => false,
+            'desiccantDurability' => 30,
+            'desiccantNextChange' => 0,
+            'amount' => 10,
+            'schedule' => [],
+            'foodWarnRange' => ['from' => 0, 'till' => 1440],
+            'lightRange' => ['from' => 0, 'till' => 1440],
+        ];
     }
 
-    /**
-     * Convert the configuration to an array
-     */
+    protected function casts(): array
+    {
+        return [
+            'factor' => new IntegerCast(),
+            'amount' => new IntegerCast(),
+            'schedule' => new ArrayCast(),
+            'multiConfig' => new BooleanCast(),
+            'shareOpen' => new BooleanCast(),
+            'lightMode' => new BooleanCast(),
+            'manualLock' => new BooleanCast(),
+            'foodWarn' => new BooleanCast(),
+            'feedSound' => new BooleanCast(),
+            'error' => new StringCast(),
+            'workingState' => new StringCast(),
+            'foodWarnRange' => new DTOCast(RangeDTO::class),
+            'lightRange' => new DTOCast(RangeDTO::class),
+        ];
+    }
+
+    public static function fromDevice(Device $device): self
+    {
+        $config = $device->configuration;
+
+        $data = [];
+
+        // Load consumables
+        $data['desiccantDurability'] = $config['consumables']['desiccantDurability'] ?? null;
+        $data['desiccantNextChange'] = $config['consumables']['desiccantNextChange'] ?? null;
+
+        // Load states
+        $data['workingState'] = $config['states']['state'] ?? null;
+        $data['error'] = $config['states']['error'] ?? null;
+
+        // Load settings
+        $data['factor'] = $config['settings']['factor'] ?? null;
+        $data['shareOpen'] = $config['settings']['shareOpen'] ?? null;
+        $data['multiConfig'] = $config['settings']['multiConfig'] ?? null;
+        $data['lightMode'] = $config['settings']['lightMode'] ?? null;
+        $data['manualLock'] = $config['settings']['manualLock'] ?? null;
+        $data['foodWarn'] = $config['settings']['foodWarn'] ?? null;
+        $data['feedSound'] = $config['settings']['feedSound'] ?? null;
+        $data['amount'] = $config['settings']['amount'] ?? null;
+        $data['lightRange'] = $config['settings']['lightRange'] ?? null;
+        $data['foodWarnRange'] = $config['settings']['foodWarnRange'] ?? null;
+
+        // Load schedule
+        $data['schedule'] = $config['schedule'] ?? null;
+
+        // Filter out null values to let defaults() handle missing data
+        return new self(array_filter($data, fn($value) => $value !== null));
+    }
+
     public function toArray(): array
     {
         return [
+            'consumables' => [
+                'desiccantDurability' => $this->desiccantDurability,
+                'desiccantNextChange' => $this->desiccantNextChange,
+            ],
             'states' => [
-                'error' => $this->error,
                 'state' => $this->workingState,
+                'error' => $this->error,
             ],
             'settings' => [
-                'shareOpen' => $this->shareOpen,
                 'factor' => $this->factor,
-                'feedSound' => $this->feedSound,
+                'shareOpen' => $this->shareOpen,
                 'multiConfig' => $this->multiConfig,
                 'lightMode' => $this->lightMode,
-                'lightRange' => $this->lightRange,
                 'manualLock' => $this->manualLock,
-                'foodWarnRange' => $this->foodWarnRange,
                 'foodWarn' => $this->foodWarn,
+                'feedSound' => $this->feedSound,
                 'amount' => $this->amount,
+                'lightRange' => $this->lightRange->toArray(),
+                'foodWarnRange' => $this->foodWarnRange->toArray(),
             ],
-            'schedule' => $this->schedule,
+            'schedule' => $this->schedule
         ];
-    }
-    public function getDevice()
-    {
-        return $this->device;
-    }
-
-    public function getFeedSound(): bool
-    {
-        return $this->feedSound;
-    }
-
-    public function setFeedSound(bool $feedSound): void
-    {
-        $this->feedSound = $feedSound;
-    }
-
-    public function getMultiConfig(): bool
-    {
-        return $this->multiConfig;
-    }
-
-    public function setMultiConfig(bool $multiConfig): void
-    {
-        $this->multiConfig = $multiConfig;
-    }
-
-    /**
-     * @return int[]
-     */
-    public function getFoodWarnRange(): array
-    {
-        return $this->foodWarnRange;
-    }
-
-    /**
-     * @param int[] $foodWarnRange
-     */
-    public function setFoodWarnRange(array $foodWarnRange): void
-    {
-        $this->foodWarnRange = $foodWarnRange;
-    }
-
-    /**
-     * @return int[]
-     */
-    public function getLightRange(): array
-    {
-        return $this->lightRange;
-    }
-
-    /**
-     * @param int[] $lightRange
-     */
-    public function setLightRange(array $lightRange): void
-    {
-        $this->lightRange = $lightRange;
-    }
-
-    public function getShareOpen(): bool
-    {
-        return $this->shareOpen;
-    }
-
-    public function setShareOpen(bool $shareOpen): void
-    {
-        $this->shareOpen = $shareOpen;
-    }
-
-    public function getFactor(): int
-    {
-        return $this->factor;
-    }
-
-    public function setFactor(int $factor): void
-    {
-        $this->factor = $factor;
-    }
-
-    public function getAmount(): int
-    {
-        return $this->amount;
-    }
-
-    public function setAmount(int $amount): void
-    {
-        $this->amount = $amount;
-    }
-
-    public function getSchedule(): array
-    {
-        return $this->schedule;
-    }
-
-    public function setSchedule(array $schedule): void
-    {
-        $this->schedule = $schedule;
-    }
-
-    public function getManualLock(): bool
-    {
-        return $this->manualLock;
-    }
-
-    public function setManualLock(bool $manualLock): void
-    {
-        $this->manualLock = $manualLock;
-    }
-
-    public function getFoodWarn(): bool
-    {
-        return $this->foodWarn;
-    }
-
-    public function setFoodWarn(bool $foodWarn): void
-    {
-        $this->foodWarn = $foodWarn;
-    }
-
-    public function getLightMode(): bool
-    {
-        return $this->lightMode;
-    }
-
-    public function setLightMode(bool $lightMode): void
-    {
-        $this->lightMode = $lightMode;
     }
 
 }

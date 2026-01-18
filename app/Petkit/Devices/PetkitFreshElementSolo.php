@@ -173,7 +173,7 @@ class PetkitFreshElementSolo implements DeviceDefinition
     }
 
     public function configurationDefinition(): ConfigurationInterface {
-        return new Configuration\PetkitFreshElementSolo($this->getDevice());
+        return \App\Petkit\Devices\Configuration\PetkitFreshElementSolo::fromDevice($this->getDevice());
     }
 
     #[HomeassistantTopic(topic: 'setting/set')]
@@ -182,13 +182,9 @@ class PetkitFreshElementSolo implements DeviceDefinition
         $keys = get_object_vars($message);
 
         foreach($keys as $attributeName => $value) {
-            $methodName = 'set' . ucfirst($attributeName);
-            $configuration->$methodName($value);
+            $configuration->$attributeName = $value;
         }
-
-        $deviceConfig = $configuration->toArray();
-
-        $update = $this->getDevice()->update(['configuration' => $deviceConfig]);
+        $this->getDevice()->update(['configuration' => $configuration]);
     }
 
     #[HomeassistantTopic('action/start')]

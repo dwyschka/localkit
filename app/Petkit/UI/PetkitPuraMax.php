@@ -10,7 +10,6 @@ use Filament\Forms;
 
 class PetkitPuraMax
 {
-    use HiddenFields;
 
     public function formFields(): array
     {
@@ -229,7 +228,7 @@ class PetkitPuraMax
             ]),
 
             Forms\Components\Section::make('Unknown')->schema([
-                Forms\Components\ViewField::make('k3Warning')
+                Forms\Components\ViewField::make('warning')
                     ->columnSpanFull()
                     ->view('filament.forms.warning')
                     ->viewData(['message' => 'Its Unknown, because the changes are not verified']),

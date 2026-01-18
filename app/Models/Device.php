@@ -50,7 +50,6 @@ class Device extends Model
         });
 
         self::updating(function ($device) {
-
             $device->configuration = $device->configuration()->toArray();
         });
     }
@@ -90,7 +89,7 @@ class Device extends Model
 
         return match ($this->device_type) {
             't4' => Devices\Configuration\PetkitPuraMax::fromDevice($this),
-            'd4' => new Devices\PetkitFreshElementSolo($this),
+            'd4' => Devices\Configuration\PetkitFreshElementSolo::fromDevice($this),
             'd4h' => new Devices\PetkitYumshareSolo($this),
         };
     }
