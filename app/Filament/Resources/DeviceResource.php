@@ -40,7 +40,7 @@ class DeviceResource extends Resource
                     'd4h' => PetkitYumshareSolo::deviceName(),
                 ])
                     ->columnSpan('half')->disabled(),
-                Forms\Components\TextInput::make('secret')->columnSpan('half')->readOnly(),
+                Forms\Components\TextInput::make('secret')->columnSpan('half'),
                 Forms\Components\TextInput::make('petkit_id')->columnSpan('half')->readOnly(),
                 Forms\Components\TextInput::make('mqtt_subdomain')->columnSpan('half'),
                 Forms\Components\Checkbox::make('ota_state')->columnSpan('full'),
