@@ -2,6 +2,7 @@
 
 namespace App\Petkit\Devices;
 
+use App\DTOs\PetkitDTOInterface;
 use App\Helpers\JsonHelper;
 use App\Helpers\Time;
 use App\Homeassistant\HomeassistantTopic;
@@ -196,10 +197,10 @@ class PetkitYumshareSolo implements DeviceDefinition, Snapshot
 
     public function configurationDefinition(): ConfigurationInterface
     {
-        return new Configuration\PetkitYumshareSolo($this->getDevice());
+        return Configuration\PetkitYumshareSolo::fromDevice($this->getDevice());
     }
 
-    public function defaultConfiguration()
+    public function configuration()
     {
         return $this->configurationDefinition()->toArray();
     }
@@ -213,9 +214,18 @@ class PetkitYumshareSolo implements DeviceDefinition, Snapshot
             $scheduleChange = !empty($difference);
         }
 
+        $dto = $this->configurationDefinition();
+
+
         if (!$scheduleChange) {
-            foreach ($difference as $key => $value) {
-                if (is_numeric($value) || is_bool($value)) {
+            foreach ($difference as $key => $val) {
+                $value = $dto->$key;
+
+                if($value instanceof PetkitDTOInterface) {
+                    $difference[$key] = $value->toPetkitConfiguration();
+                } else if (is_numeric($value)) {
+                    $difference[$key] = (int)$value;
+                } else if (is_bool($value)) {
                     $difference[$key] = (int)$value;
                 }
             }
@@ -260,14 +270,10 @@ class PetkitYumshareSolo implements DeviceDefinition, Snapshot
         $configuration = $this->configurationDefinition();
         $keys = get_object_vars($message);
 
-        foreach ($keys as $attributeName => $value) {
-            $methodName = 'set' . ucfirst($attributeName);
-            $configuration->$methodName($value);
+        foreach($keys as $attributeName => $value) {
+            $configuration->$attributeName = $value;
         }
-
-        $deviceConfig = $configuration->toArray();
-
-        $update = $this->getDevice()->update(['configuration' => $deviceConfig]);
+        $this->getDevice()->update(['configuration' => $configuration]);
     }
 
     #[HomeassistantTopic('action/start')]

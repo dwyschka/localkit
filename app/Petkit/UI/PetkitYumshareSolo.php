@@ -3,16 +3,7 @@
 namespace App\Petkit\UI;
 
 use App\Helpers\Time;
-use App\Jobs\ServiceEnd;
-use App\Jobs\ServiceStart;
 use App\Management\Go2RTC;
-use App\Models\Device;
-use App\MQTT\GenericReply;
-use App\MQTT\OtaMessage;
-use App\MQTT\UserGet;
-use App\Petkit\DeviceActions;
-use App\Petkit\DeviceDefinition;
-use App\Petkit\DeviceStates;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Section;
@@ -31,25 +22,44 @@ use Filament\Forms\Form;
 
 class PetkitYumshareSolo
 {
-    use HiddenFields;
 
     public function formFields(): array
     {
         return [
+            Forms\Components\Section::make('Consumables')->columns(2)->schema([
+                Forms\Components\TextInput::make('configuration.consumables.desiccantDurability')->numeric(),
+                Forms\Components\TextInput::make('configuration.consumables.desiccantNextChange')->label('Next Reset in Days (Desiccant)')->formatStateUsing(function ($state) {
+                    if ($state <= 0) {
+                        return 'Not set';
+                    }
+                    $date = Carbon::parse($state);
+                    $now = Carbon::now();
+
+                    return round($now->diffInDays($date));
+
+                })->readOnly()->disabled(true),
+            ]),
+            Forms\Components\Section::make('Feeding')->schema([
+                Forms\Components\TextInput::make('configuration.settings.amount')
+                    ->label('Feeding Amount')
+                    ->helperText('Default amount for manual feeding')
+                    ->numeric(),
+            ]),
             Section::make('Media')->schema([
                 Forms\Components\View::make('camera_stream')->viewData(fn($record): array => [
                     'stream' => app(Go2RTC::class)->streamUrl($record)
                 ])
-                    ->hidden(fn($record) => is_null($record->definition()->configurationDefinition()->getIpAddress()))
+                    ->hidden(fn($record) => is_null($record->definition()->configurationDefinition()->ipAddress))
                     ->columnSpan('full'),
+
                 Forms\Components\Placeholder::make('Snapshot')
-                    ->content(function($record){
+                    ->content(function ($record) {
                         $image = $record->definition()->configurationDefinition()->getLastSnapshot();
-                        if(is_null($image)) {
+                        if (is_null($image)) {
                             return '';
                         }
                         $blob = Storage::disk('snapshots')->get($image);
-                        if(is_null($blob)) {
+                        if (is_null($blob)) {
                             return '';
                         }
                         $base64Blob = base64_encode($blob);
@@ -57,9 +67,77 @@ class PetkitYumshareSolo
                     })
                     ->hidden(fn($record) => is_null($record->definition()->configurationDefinition()->getLastSnapshot()))
             ])->collapsible()
-                ->hidden(fn($record) => is_null($record->definition()->configurationDefinition()->getIpAddress()) || !$record->mqtt_connected),
+                ->hidden(fn($record) => is_null($record->definition()->configurationDefinition()->ipAddress) || !$record->mqtt_connected),
 
-            Section::make('Schedule Configuration')
+            Forms\Components\Section::make('Camera Settings')->columns(2)->schema([
+                Forms\Components\Toggle::make('configuration.settings.camera')
+                    ->helperText('Turning off the camera will not affect food dispensing, bit it will disable live streaming, playback, remaining food detection in the bowl, and other video releated functions')
+                    ->label('Camera Switch'),
+
+                Forms\Components\Toggle::make('configuration.settings.microphone')
+                    ->helperText('Enable/Disable sound collection')
+                    ->label('Microphone'),
+
+                Forms\Components\Toggle::make('configuration.settings.night')
+                    ->helperText('Enable infrared night vision in dark environment')
+                    ->label('Night Vision'),
+
+                Forms\Components\Toggle::make('configuration.settings.timeDisplay')
+                    ->label('Timestamp Display'),
+
+                Forms\Components\Toggle::make('configuration.settings.eatVideo')
+                    ->helperText('Feature not Available: YUMSHARE video/photo will not be uploaded to the cloud after turning off')
+                    ->label('YUMSHARE Video/Photo Upload'),
+
+                Forms\Components\Toggle::make('configuration.settings.smartFrame')
+                    ->label('Pet Tracking')
+                    ->helperText('Highlight the pet when it is detected'),
+
+                Forms\Components\Fieldset::make('Detection')->schema([
+                    Forms\Components\Toggle::make('configuration.settings.petDetection')
+                        ->helperText('For events of pet visiting the feeder')
+                        ->label('Pet Visit Detection'),
+                    Forms\Components\Select::make('configuration.settings.petSensitivity')
+                        ->label('Pet Visit Sensitivity')
+                        ->helperText('Sensitivity events of pet visiting the feeder')
+                        ->options([
+                            0 => 0,
+                            1 => 1,
+                            2 => 2,
+                            3 => 3,
+                            4 => 4,
+                        ]),
+
+                    Forms\Components\Toggle::make('configuration.settings.eatDetection')
+                        ->helperText('For events of pet eating before the camera')
+                        ->label('Pet Eat Detection'),
+                    Forms\Components\Select::make('configuration.settings.eatSensitivity')
+                        ->label('Pet Eat Sensitivity')
+                        ->helperText('Sensitivity events of pet eating before the camera')
+                        ->options([
+                            0 => 0,
+                            1 => 1,
+                            2 => 2,
+                            3 => 3,
+                            4 => 4
+                        ]),
+
+                    Forms\Components\Toggle::make('configuration.settings.moveDetection')
+                        ->helperText('For events of pet moving before the camera')
+                        ->label('Pet Move Detection'),
+                    Forms\Components\Select::make('configuration.settings.moveSensitivity')
+                        ->helperText('Sensitivity events of pet moving before the camera')
+                        ->label('Pet Move Sensitivity')->options([
+                            0 => 0,
+                            1 => 1,
+                            2 => 2,
+                            3 => 3,
+                            4 => 4
+                        ])
+                ])
+            ]),
+
+            Section::make('Feeding Plan')
                 ->schema([
                     Repeater::make('configuration.schedule')
                         ->schema([
@@ -102,7 +180,7 @@ class PetkitYumshareSolo
                                                 $time = Time::toTimeFromSeconds($seconds);
                                                 $set('time_display', $time);
                                             }
-                                    }),
+                                        }),
                                     Forms\Components\Hidden::make('id')
                                         ->label('id')
                                         ->required(),
@@ -139,7 +217,7 @@ class PetkitYumshareSolo
                                         return $intA <=> $intB;
                                     });
 
-                                    $data =  collect($state)->map(fn($s) => [
+                                    $data = collect($state)->map(fn($s) => [
                                         'a' => $s['a'],
                                         'id' => $s['id'],
                                         't' => $s['t'] + 1,
@@ -162,7 +240,7 @@ class PetkitYumshareSolo
                         ])
                         ->columns(1)
                         ->addActionLabel('Add Day Schedule')
-                        ->minItems(1)
+                        ->minItems(0)
                         ->collapsible()
                         ->itemLabel(function (array $state): ?string {
                             $days = [];
@@ -181,17 +259,9 @@ class PetkitYumshareSolo
                             return !empty($days) ? implode(', ', $days) : 'New Schedule';
                         }),
                 ])->collapsible(),
-            Forms\Components\Section::make('Camera/Microphone')->columns(3)->schema([
-                Forms\Components\Toggle::make('configuration.settings.camera')->label('Enable Camera'),
-                Forms\Components\Toggle::make('configuration.settings.microphone')->label('Enable Microphone'),
-                Forms\Components\Toggle::make('configuration.settings.timeDisplay')->label('Display Time in Video'),
-                Forms\Components\Toggle::make('configuration.settings.night')->label('Night'),
-                Forms\Components\Toggle::make('configuration.settings.smartFrame')->label('Display Border')->helperText('Display Border if Pet is detected'),
-            ]),
-            Forms\Components\Section::make('Audio')->columns(2)->schema([
-                Forms\Components\Toggle::make('configuration.settings.systemSoundEnable')->label('Device Audio enable?'),
-                Forms\Components\Toggle::make('configuration.settings.soundEnable')->label('Voice announcement after feeding?'),
-                Forms\Components\Select::make('configuration.settings.volume')->label('Volume')->options([
+
+            Forms\Components\Section::make('Voice Settings')->columns(2)->schema([
+                Forms\Components\Select::make('configuration.settings.volume')->columnSpanFull()->label('Volume')->options([
                     1 => 1,
                     2 => 2,
                     3 => 3,
@@ -201,126 +271,123 @@ class PetkitYumshareSolo
                     7 => 7,
                     8 => 8,
                     9 => 9
+                ]),
+                Forms\Components\Toggle::make('configuration.settings.systemSoundEnable')->label('Voice Prompt'),
+                Forms\Components\Toggle::make('configuration.settings.soundEnable')->label('Voice for Food Dispensing'),
+
+                Forms\Components\Fieldset::make('Do not Disturb')->columns(1)->schema([
+                    Forms\Components\Toggle::make('configuration.settings.toneMode')->label('Do not disturb'),
+                    Forms\Components\Hidden::make('configuration.settings.toneMultiRange.name')->default('toneMultiRange'),
+                    Repeater::make('configuration.settings.toneMultiRange.ranges')
+                        ->columns(2)
+                        ->label('Undisturbed Period')
+                        ->reorderableWithButtons()
+                        ->schema([
+                            TimePicker::make('from')
+                                ->formatStateUsing(function ($state) {
+                                    return Time::toTimeFromMinutes((int)$state);
+                                })
+                                ->dehydrateStateUsing(function ($state) {
+                                    return Time::toMinutes($state);
+                                })
+                                ->seconds(false),
+
+                            TimePicker::make('till')
+                                ->formatStateUsing(function ($state) {
+                                    return Time::toTimeFromMinutes((int)$state);
+                                })
+                                ->dehydrateStateUsing(function ($state) {
+                                    return Time::toMinutes($state);
+                                })
+                                ->seconds(false)
+                        ])
+                        ->dehydrateStateUsing(function ($state) {
+                            return $state;
+                        })
                 ])
             ]),
-            Forms\Components\Section::make('Detection')->columns(2)->schema([
-                Section::make('Move')->columns(2)->schema([
-                    Forms\Components\Toggle::make('configuration.settings.moveDetection')->label('Move Detection'),
-                    Forms\Components\Select::make('configuration.settings.moveSensitivity')->label('Move Sensitivity')->options([
-                        0 => 0,
-                        1 => 1,
-                        2 => 2,
-                        3 => 3,
-                        4 => 4
-                    ])
-                ]),
-                Section::make('Pet')->columns(2)->schema([
-                    Forms\Components\Toggle::make('configuration.settings.petDetection')->label('Move Detection'),
-                    Forms\Components\Select::make('configuration.settings.petSensitivity')->label('Pet Sensitivity')->options([
-                        0 => 0,
-                        1 => 1,
-                        2 => 2,
-                        3 => 3,
-                        4 => 4,
-                    ])
-                ]),
-                Section::make('Eat')->columns(2)->schema([
+            Forms\Components\Section::make('Settings')->columns(2)->schema([
+                Forms\Components\Toggle::make('configuration.settings.foodWarn')
+                    ->helperText('Activate the sound alarm when the food container runs empty. To end the alarm press the dispense button')
+                    ->label('Refill Alarm'),
 
-                    Forms\Components\Toggle::make('configuration.settings.eatDetection')->label('Eat Detection'),
-                    Forms\Components\Select::make('configuration.settings.eatSensitivity')->label('Eat Sensitivity')->options([
-                        0 => 0,
-                        1 => 1,
-                        2 => 2,
-                        3 => 3,
-                        4 => 4
-                    ])
+                Forms\Components\Section::make('Alarm Period')->schema([
+                    TimePicker::make('from')
+                        ->formatStateUsing(function ($state) {
+                            return Time::toTimeFromMinutes((int)$state);
+                        })
+                        ->dehydrateStateUsing(function ($state) {
+                            return Time::toMinutes($state);
+                        })
+                        ->seconds(false),
+
+                    TimePicker::make('till')
+                        ->formatStateUsing(function ($state) {
+                            return Time::toTimeFromMinutes((int)$state);
+                        })
+                        ->dehydrateStateUsing(function ($state) {
+                            return Time::toMinutes($state);
+                        })
+                        ->seconds(false)
                 ])
+                    ->dehydrateStateUsing(function ($state) {
+                        return $state;
+                    })
+                    ->columns(2)
+                    ->columnSpanFull(),
+                Forms\Components\Toggle::make('configuration.settings.manualLock')
+                    ->helperText('Activate Child Lock to disable the control panel')
+                    ->label('Child Lock'),
+
+                Forms\Components\Toggle::make('configuration.settings.lightMode')
+                    ->helperText('Indicator light work within the following period')
+                    ->label('Indicator Light'),
+
+                Repeater::make('configuration.settings.lightMultiRange.ranges')
+                    ->columns(2)
+                    ->label('Screen Period')
+                    ->schema(
+                        [
+                            TimePicker::make('from')
+                                ->label('From')
+                                ->seconds(false)
+                                ->required()
+                                ->formatStateUsing(
+                                    fn (?string $state) => Time::toTimeFromMinutes((int) $state)
+                                )
+                                ->dehydrateStateUsing(
+                                    fn ($state) => Time::toMinutes($state)
+                                ),
+
+                            TimePicker::make('till')
+                                ->label('Till')
+                                ->seconds(false)
+                                ->required()
+                                ->formatStateUsing(
+                                    fn (?string $state) => Time::toTimeFromMinutes((int) $state)
+                                )
+                                ->dehydrateStateUsing(
+                                    fn ($state) => Time::toMinutes($state)
+                                ),
+                        ]
+                    ),
+
             ]),
             Forms\Components\Section::make('AI LAB')->schema([
                 Forms\Components\Select::make('configuration.settings.surplusControl')->options([
                     0 => 'off',
-
                 ])
             ]),
 
-            Forms\Components\Section::make('Feed')->schema([
-                Forms\Components\TextInput::make('configuration.settings.factor')->numeric(),
-                Forms\Components\TextInput::make('configuration.settings.amount')->numeric(),
-
-            ]),
-            Forms\Components\Section::make('Options')->columns(3)->schema([
-                Forms\Components\Toggle::make('configuration.settings.feedSound')->label('Feeding chime'),
-                Forms\Components\Toggle::make('configuration.settings.manualLock')->label('Child Lock'),
-                Forms\Components\Toggle::make('configuration.settings.foodWarn')->label('Refill alarm'),
-                Forms\Components\Toggle::make('configuration.settings.autoUpgrade')->label('Auto-Upgrade')->disabled(true),
-
-            ]),
-            Forms\Components\Section::make('Time')->columns(3)->schema([
-
-                Forms\Components\Section::make('foodWarnRange')->schema([
-                    TimePicker::make('configuration.settings.foodWarnRange.0')
-                        ->label('From')
-                        ->seconds(false)
-                        ->required()
-                        ->formatStateUsing(fn(?string $state) => Time::toTimeFromMinutes((int)$state ?? 0))
-                        ->dehydrateStateUsing(fn($state) => Time::toMinutes($state)),
-                    TimePicker::make('configuration.settings.foodWarnRange.1')
-                        ->label('Till')
-                        ->required()
-                        ->seconds(false)
-                        ->after('time_from')
-                        ->formatStateUsing(fn(?string $state) => Time::toTimeFromMinutes((int)$state ?? 0))
-                        ->dehydrateStateUsing(fn($state) => Time::toMinutes($state)),
-                ])
-                    ->columns(2)
-                    ->columnSpanFull(),
-
-                Forms\Components\Section::make('lightMultiRange')->schema([
-                    TimePicker::make('configuration.settings.lightRange.0')
-                        ->label('From')
-                        ->seconds(false)
-                        ->required()
-                        ->formatStateUsing(fn(?string $state) => Time::toTimeFromMinutes((int)$state ?? 0))
-                        ->dehydrateStateUsing(fn($state) => Time::toMinutes($state)),
-                    TimePicker::make('configuration.settings.lightRange.1')
-                        ->label('Till')
-                        ->required()
-                        ->seconds(false)
-                        ->after('time_from')
-                        ->formatStateUsing(fn(?string $state) => Time::toTimeFromMinutes((int)$state ?? 0))
-                        ->dehydrateStateUsing(fn($state) => Time::toMinutes($state)),
-                ])
-                    ->columns(2)
-                    ->columnSpanFull(),
-
-                Forms\Components\Section::make('Do not Disturb')->schema([
-                    TimePicker::make('configuration.settings.lightRange.0')
-                        ->label('From')
-                        ->seconds(false)
-                        ->required()
-                        ->formatStateUsing(fn(?string $state) => Time::toTimeFromMinutes((int)$state ?? 0))
-                        ->dehydrateStateUsing(fn($state) => Time::toMinutes($state)),
-                    TimePicker::make('configuration.settings.lightRange.1')
-                        ->label('Till')
-                        ->required()
-                        ->seconds(false)
-                        ->after('time_from')
-                        ->formatStateUsing(fn(?string $state) => Time::toTimeFromMinutes((int)$state ?? 0))
-                        ->dehydrateStateUsing(fn($state) => Time::toMinutes($state)),
-                ])
-                    ->columns(2)
-                    ->columnSpanFull(),
-
-          ]),
             Forms\Components\Section::make('Unknown')->columns(3)->schema([
+                Forms\Components\ViewField::make('UnknownWarning')
+                    ->columnSpanFull()
+                    ->view('filament.forms.warning')
+                    ->viewData(['message' => 'Its Unknown, because the changes are not verified']),
                 Forms\Components\Toggle::make('configuration.settings.shareOpen')->label('Share Open'),
                 Forms\Components\Toggle::make('configuration.settings.multiConfig')->label('Multi Config'),
             ]),
 
-            Forms\Components\Hidden::make('configuration.capacity.0.name')->default('fullVideo'),
-            Forms\Components\Hidden::make('configuration.capacity.1.name')->default('eventImage'),
-            Forms\Components\Hidden::make('configuration.capacity.2.name')->default('highLight'),
-            Forms\Components\Hidden::make('configuration.capacity.3.name')->default('dynamicVideo'),
 
 
         ];

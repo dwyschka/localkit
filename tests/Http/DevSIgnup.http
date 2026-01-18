@@ -1,6 +1,7 @@
-GET http://10.10.48.85/6/d4h/dev_signup?mac=fc702ea6e880&sn=20250512D90150&id=300016346&bt_mac=a4c138f3fd25&hardware=1&firmware=810&locale=Europe/Berlin&timezone=1.0&p2pType=2
+# @no-redirect
+POST http://localhost:8080/6/d4/dev_signup
 User-Agent: PETKIT DEV
 Host: api.eu-pet.com
 Content-Type: application/x-www-form-urlencoded
 
-X-Device: id=300016346&nonce=D8ea5O6BGK9l&timestamp=1739098321&type=D4H&sign=3e4ee0dc2dece5350ccdffcaf06b4909
+hardware=1&firmware=1.625&mac=0cb8155bd6c8&timezone=1.0&locale=Europe/Berlin&id=400661044&sn=20260413L12893&bt_mac=1cb8155bd6ca&ap_mac=0cb8155bd6c9&chipid=6018760

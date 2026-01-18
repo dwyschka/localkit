@@ -49,7 +49,7 @@ class LocalkitListen extends Command
         $output->writeln('Listening for messages...');
         $mqtt->subscribe('#', function(string $topic, $message) use($mqtt, $definitions, $output) {
 
-            $output->writeln(sprintf('Got Message on Topic %s', $topic));
+            $output->writeln(sprintf('Got Message on Topic %s, %s', $topic, json_encode($message)));
 
             $message = json_decode($message, false);
 

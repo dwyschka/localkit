@@ -28,6 +28,7 @@ class Device extends Model
                 }
             } catch (\Exception $e) {
 
+
             }
 
 //            if(config('petkit.homeassistant.enabled')) {
@@ -46,6 +47,10 @@ class Device extends Model
 
                 MQTT::connection('homeassistant-publisher')->disconnect();
 //            }
+        });
+
+        self::updating(function ($device) {
+            $device->configuration = $device->configuration()->toArray();
         });
     }
     protected  $casts = [
@@ -77,6 +82,15 @@ class Device extends Model
             't4' => new Devices\PetkitPuraMax($this),
             'd4' => new Devices\PetkitFreshElementSolo($this),
             'd4h' => new Devices\PetkitYumshareSolo($this),
+        };
+    }
+
+    public function configuration() {
+
+        return match ($this->device_type) {
+            't4' => Devices\Configuration\PetkitPuraMax::fromDevice($this),
+            'd4' => Devices\Configuration\PetkitFreshElementSolo::fromDevice($this),
+            'd4h' => Devices\Configuration\PetkitYumshareSolo::fromDevice($this),
         };
     }
 

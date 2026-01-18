@@ -2,6 +2,8 @@
 
 namespace App\Petkit\Devices;
 
+use App\DTOs\MultiRangeDTO;
+use App\DTOs\PetkitDTOInterface;
 use App\Helpers\JsonHelper;
 use App\Homeassistant\HomeassistantTopic;
 use App\Jobs\ServiceEnd;
@@ -21,6 +23,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use PhpMqtt\Client\Facades\MQTT;
+use WendellAdriel\ValidatedDTO\SimpleDTO;
 
 class PetkitPuraMax implements DeviceDefinition
 {
@@ -40,6 +43,7 @@ class PetkitPuraMax implements DeviceDefinition
 
     public function __construct(protected Device $device)
     {
+
 
     }
 
@@ -286,14 +290,14 @@ class PetkitPuraMax implements DeviceDefinition
     }
 
     public function resetN50(Device $record) {
-        $consumables = $record->configuration['consumables'] ?? $record->definition()->defaultConfiguration()['consumables'];
-        $durability = $consumables['n50_durability'];
+        $consumables = $record->configuration['consumables'] ?? $record->definition()->configuration()['consumables'];
+        $durability = $consumables['n50Durability'];
         $nextChange = Carbon::now()->addDays((int)$durability);
 
         $configuration = $record->configuration;
         $configuration['consumables'] = [
-            'n50_durability' => $durability,
-            'n50_next_change' => $nextChange->timestamp
+            'n50Durability' => $durability,
+            'n50NextChange' => $nextChange->timestamp
         ];
 
         $record->update([
@@ -307,7 +311,7 @@ class PetkitPuraMax implements DeviceDefinition
         return 'Petkit Pura Max';
     }
 
-    public function defaultConfiguration()
+    public function configuration()
     {
         return $this->configurationDefinition()->toArray();
     }
@@ -315,13 +319,24 @@ class PetkitPuraMax implements DeviceDefinition
     public function propertyChange(Device $device): void
     {
         $difference = JsonHelper::difference($device->configuration['settings'], $device->getOriginal('configuration')['settings']);
-        foreach ($difference as $key => $value) {
-            if (is_numeric($value)) {
+
+        $dto = $this->configurationDefinition();
+
+        foreach ($difference as $key => $val) {
+
+            $value = $dto->$key;
+
+
+            if($value instanceof PetkitDTOInterface) {
+                $difference[$key] = $value->toPetkitConfiguration();
+            } else if (is_numeric($value)) {
                 $difference[$key] = (int)$value;
             } else if (is_bool($value)) {
                 $difference[$key] = (int)$value;
             }
         }
+
+
         SetProperty::dispatchSync($device, $difference);
     }
 
@@ -365,7 +380,7 @@ class PetkitPuraMax implements DeviceDefinition
     }
 
     public function configurationDefinition(): ConfigurationInterface {
-        return new Configuration\PetkitPuraMax($this->getDevice());
+        return \App\Petkit\Devices\Configuration\PetkitPuraMax::fromDevice($this->getDevice());
     }
 
     #[HomeassistantTopic(topic: 'setting/set')]
@@ -374,12 +389,9 @@ class PetkitPuraMax implements DeviceDefinition
         $keys = get_object_vars($message);
 
         foreach($keys as $attributeName => $value) {
-            $methodName = 'set' . ucfirst($attributeName);
-            $configuration->$methodName($value);
+            $configuration->$attributeName = $value;
         }
-
-        $deviceConfig = Arr::mergeRecursiveDistinct($configuration->toArray(), $this->getDevice()->configuration ?? []);
-        $this->getDevice()->update(['configuration' => $deviceConfig]);
+        $this->getDevice()->update(['configuration' => $configuration]);
     }
 
     #[HomeassistantTopic('action/start')]
@@ -501,7 +513,6 @@ class PetkitPuraMax implements DeviceDefinition
                 'manualLock' => (int)$config['manualLock'],
                 'lightMode' => (int)$config['lightMode'],
                 'clickOkEnable' => (int)$config['clickOkEnable'],
-                'lightRange' =>$config['lightRange'],
                 'autoWork' => (int)$config['autoWork'],
                 'fixedTimeClear' =>$config['fixedTimeClear'],
                 'downpos' => (int)$config['downpos'],
@@ -516,7 +527,6 @@ class PetkitPuraMax implements DeviceDefinition
                 'stopTime' =>$config['stopTime'],
                 'sandFullWeight' => $config['sandFullWeight'],
                 'disturbMode' => (int)$config['disturbMode'],
-                'disturbRange' =>$config['disturbRange'],
                 'sandSetUseConfig' =>$config['sandSetUseConfig'],
                 'k3Config' => $config['k3Config'],
                 'relateK3Switch' => (int)$config['relateK3Switch'] ?? 0,

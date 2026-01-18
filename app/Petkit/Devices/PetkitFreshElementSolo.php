@@ -2,6 +2,7 @@
 
 namespace App\Petkit\Devices;
 
+use App\DTOs\PetkitDTOInterface;
 use App\Helpers\JsonHelper;
 use App\Helpers\Time;
 use App\Homeassistant\HomeassistantTopic;
@@ -137,7 +138,7 @@ class PetkitFreshElementSolo implements DeviceDefinition
         return 'Petkit FreshElement Solo';
     }
 
-    public function defaultConfiguration()
+    public function configuration()
     {
         return $this->configurationDefinition()->toArray();
     }
@@ -151,9 +152,19 @@ class PetkitFreshElementSolo implements DeviceDefinition
             $scheduleChange = !empty($difference);
         }
 
+        $dto = $this->configurationDefinition();
+
         if(!$scheduleChange) {
-            foreach ($difference as $key => $value) {
-                if (is_numeric($value) || is_bool($value) ) {
+            foreach ($difference as $key => $val) {
+
+                $value = $dto->$key;
+
+
+                if($value instanceof PetkitDTOInterface) {
+                    $difference[$key] = $value->toPetkitConfiguration();
+                } else if (is_numeric($value)) {
+                    $difference[$key] = (int)$value;
+                } else if (is_bool($value)) {
                     $difference[$key] = (int)$value;
                 }
             }
@@ -173,7 +184,7 @@ class PetkitFreshElementSolo implements DeviceDefinition
     }
 
     public function configurationDefinition(): ConfigurationInterface {
-        return new Configuration\PetkitFreshElementSolo($this->getDevice());
+        return \App\Petkit\Devices\Configuration\PetkitFreshElementSolo::fromDevice($this->getDevice());
     }
 
     #[HomeassistantTopic(topic: 'setting/set')]
@@ -182,13 +193,9 @@ class PetkitFreshElementSolo implements DeviceDefinition
         $keys = get_object_vars($message);
 
         foreach($keys as $attributeName => $value) {
-            $methodName = 'set' . ucfirst($attributeName);
-            $configuration->$methodName($value);
+            $configuration->$attributeName = $value;
         }
-
-        $deviceConfig = $configuration->toArray();
-
-        $update = $this->getDevice()->update(['configuration' => $deviceConfig]);
+        $this->getDevice()->update(['configuration' => $configuration]);
     }
 
     #[HomeassistantTopic('action/start')]
@@ -239,9 +246,9 @@ class PetkitFreshElementSolo implements DeviceDefinition
                 'factor' => (int)$config['factor'],
                 'feedSound' => (int)$config['feedSound'],
                 'foodWarn' => (int)$config['foodWarn'],
-                'foodWarnRange' => $config['foodWarnRange'],
+                'foodWarnRange' => [$config['foodWarnRange']['from'], $config['foodWarnRange']['till']],
                 'lightMode' => (int)$config['lightMode'],
-                'lightRange' => $config['lightRange'],
+                'lightRange' => [$config['lightRange']['from'], $config['lightRange']['till']],
                 'manualLock' => (int)$config['manualLock'],
             ],
             'shareOpen' => $config['shareOpen'],

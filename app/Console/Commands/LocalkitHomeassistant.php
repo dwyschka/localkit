@@ -54,11 +54,13 @@ class LocalkitHomeassistant extends Command
             $configuration = $device->definition()->configurationDefinition();
             $service = new AutoDiscoveryService($mqtt);
 
-            $service->discover($configuration);
+            $service->discover($configuration, $device);
         });
 
         $service = new HomeassistantTopicService($devices);
+
         $mqtt->subscribe('localkit/#', function ($topic, $message) use ($service) {
+            $message = str_replace(['True', 'False'], ['true', 'false'], $message);
             $service->resolve($topic, json_decode($message, false));
         });
 

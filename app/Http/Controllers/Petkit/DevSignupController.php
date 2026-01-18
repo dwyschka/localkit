@@ -30,6 +30,7 @@ class DevSignupController extends Controller
             $update['petkit_id'] = $request->get('id');
         }
 
+        /** @var Device $device */
         $device = Device::updateOrCreate([
             'serial_number' => $request->get('sn'),
         ], $update);
@@ -38,12 +39,13 @@ class DevSignupController extends Controller
             return $this->proxy($request);
         }
 
-        $config = Arr::mergeRecursiveDistinct($device->definition()->defaultConfiguration(), $device->configuration ?? []);
-
-
-        $device->update([
-            'configuration' => $config
-        ]);
+        try {
+            $device->update([
+                'configuration' => $device->configuration()->toArray(),
+            ]);
+        } catch (\Exception $e) {
+            return new JsonResponse(['result' => 'error', 'message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+        }
 
         $device->refresh();
 
