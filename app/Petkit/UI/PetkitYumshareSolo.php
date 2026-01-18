@@ -49,7 +49,7 @@ class PetkitYumshareSolo
                 Forms\Components\View::make('camera_stream')->viewData(fn($record): array => [
                     'stream' => app(Go2RTC::class)->streamUrl($record)
                 ])
-                    ->hidden(fn($record) => is_null($record->definition()->configurationDefinition()->ipAddress))
+                    ->hidden(fn($record) => is_null($record->configuration()->ipAddress))
                     ->columnSpan('full'),
 
                 Forms\Components\Placeholder::make('Snapshot')

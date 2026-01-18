@@ -436,23 +436,20 @@ class PetkitYumshareSolo implements DeviceDefinition, Snapshot
 
     private function updateConfiguration(mixed $content): array
     {
-        $settings = $this->device->configuration;
+        $settings = $this->getDevice()->configuration();
 
-        if(!isset($settings['states'])) {
-            $settings['states'] = [];
-        }
         //IP
         $pattern = '/Ip:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/';
         $match = Str::of($content->other)->match($pattern);
 
 
-        $settings['states']['ipAddress'] = $match->value();
-        $settings['states']['infrared'] = $content->ir;
-        $settings['states']['bowl'] = $content->bowl;
-        $settings['states']['door'] = $content->door;
-        $settings['states']['eatDetected'] = $content->eating;
+        $settings->ipAddress = $match->value();
+        $settings->infrared = $content->ir;
+        $settings->bowl = $content->bowl;
+        $settings->door = $content->door;
+        $settings->eatDetected = $content->eating;
 
-        return $settings;
+        return $settings->toArray();
     }
 
     private function prepareErrorReporting(mixed $state)
