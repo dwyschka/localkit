@@ -191,13 +191,13 @@ class PetkitPuraMax implements DeviceDefinition
 
                 if (!empty($message?->params?->battery)) {
                     $configuration = $device->configuration;
-                    $configuration['consumables']['k3_battery'] = (int)$message->params->battery;
+                    $configuration['consumables']['k3Battery'] = (int)$message->params->battery;
                     $device->update(['configuration' => $configuration]);
                 }
 
                 if (!empty($message?->params?->liquid)) {
                     $configuration = $device->configuration;
-                    $configuration['consumables']['k3_liquid'] = (int)$message->params->liquid;
+                    $configuration['consumables']['k3Liquid'] = (int)$message->params->liquid;
                     $device->update(['configuration' => $configuration]);
                 }
 
