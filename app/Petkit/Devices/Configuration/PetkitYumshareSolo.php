@@ -51,7 +51,7 @@ class PetkitYumshareSolo extends DeviceConfigurationDTO implements Configuration
         technicalName: 'error',
         name: 'Error',
         icon: 'mdi:error',
-        valueTemplate: '{{ value_json.states.error | default(\'ok\') }}',
+        valueTemplate: "{{ 'Ok' if value_json.states.error is none else value_json.states.error }}",
         entityCategory: 'diagnostic'
     )]
     public ?string $error;
