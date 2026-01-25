@@ -22,9 +22,7 @@ class Device extends Model
     protected static function booted()
     {
         self::updated(function ($device) {
-            Log::info('Updated Device', [
-                'config' => $device->configuration()
-            ]);
+
             try {
                 if (isset($device->getChanges()['configuration'])) {
                     $device->definition()->propertyChange($device);
@@ -54,9 +52,6 @@ class Device extends Model
 
         self::updating(function ($device) {
 
-            Log::info('Updating Device', [
-                'config' => $device->configuration()
-            ]);
             $configuration = $device->configuration();
 
             $configuration->workingState = $device->working_state;
