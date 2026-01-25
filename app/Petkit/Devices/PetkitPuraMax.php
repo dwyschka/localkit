@@ -61,7 +61,7 @@ class PetkitPuraMax implements DeviceDefinition
     {
         return [
             sprintf('/sys/%s/%s/thing/event/work_continue/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
-
+                $device->refresh();
                 $content = json_decode($message?->params?->content, false);
                 $deviceStatus = $this->deviceStatus($content?->action);
 
@@ -72,6 +72,7 @@ class PetkitPuraMax implements DeviceDefinition
                 $this->reply($topic, $message);
             },
             sprintf('/sys/%s/%s/thing/event/work_suspend/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+                $device->refresh();
                 $device->update([
                     'working_state' => DeviceStates::IDLE->value
                 ]);
@@ -79,6 +80,7 @@ class PetkitPuraMax implements DeviceDefinition
 
             },
             sprintf('/sys/%s/%s/thing/event/work_start/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+                $device->refresh();
 
                 $content = json_decode($message?->params?->content, false);
                 $deviceStatus = $this->deviceStatus($content?->action);
@@ -101,6 +103,7 @@ class PetkitPuraMax implements DeviceDefinition
 
             },
             sprintf('/sys/%s/%s/thing/event/clean_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+                $device->refresh();
                 $device->update([
                     'working_state' => DeviceStates::IDLE->value
                 ]);
@@ -108,6 +111,7 @@ class PetkitPuraMax implements DeviceDefinition
 
             },
             sprintf('/sys/%s/%s/thing/event/dump_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+                $device->refresh();
                 $device->update([
                     'working_state' => DeviceStates::IDLE->value
                 ]);
@@ -115,6 +119,7 @@ class PetkitPuraMax implements DeviceDefinition
 
             },
             sprintf('/sys/%s/%s/thing/event/reset_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+                $device->refresh();
                 $device->update([
                     'working_state' => DeviceStates::IDLE->value
                 ]);
@@ -124,12 +129,14 @@ class PetkitPuraMax implements DeviceDefinition
 
             },
             sprintf('/sys/%s/%s/thing/event/pet_in/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+                $device->refresh();
                 $device->update([
                     'working_state' => DeviceStates::PET_IN->value
                 ]);
                 $this->reply($topic, $message);
             },
             sprintf('/sys/%s/%s/thing/event/pet_out/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+                $device->refresh();
                 $device->update([
                     'working_state' => DeviceStates::IDLE->value
                 ]);
@@ -145,7 +152,7 @@ class PetkitPuraMax implements DeviceDefinition
                 ]);
             },
             sprintf('/sys/%s/%s/thing/event/error_start/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
-
+                $device->refresh();
                 $msg = $message->params->content;
                 $msg = json_decode($msg, false);
 
@@ -165,6 +172,7 @@ class PetkitPuraMax implements DeviceDefinition
                 $this->reply($topic, $message);
             },
             sprintf('/sys/%s/%s/thing/event/error_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+                $device->refresh();
                 $device->update([
                     'working_state' => DeviceStates::IDLE->value,
                     'error' => null
@@ -181,6 +189,8 @@ class PetkitPuraMax implements DeviceDefinition
                 MQTT::connection('publisher')->publish($msg->getTopic(), $msg->getMessage());
             },
             sprintf('/sys/%s/%s/thing/event/property/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+                $device->refresh();
+
                 $this->reply($topic, $message);
 
                 /** @var \App\Petkit\Devices\Configuration\PetkitPuraMax $configuration */
