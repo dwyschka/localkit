@@ -290,18 +290,14 @@ class PetkitPuraMax implements DeviceDefinition
     }
 
     public function resetN50(Device $record) {
-        $consumables = $record->configuration['consumables'] ?? $record->definition()->configuration()['consumables'];
-        $durability = $consumables['n50Durability'];
+        $configuration = $this->configurationDefinition();
+        $durability = $configuration->n50Durability;
         $nextChange = Carbon::now()->addDays((int)$durability);
 
-        $configuration = $record->configuration;
-        $configuration['consumables'] = [
-            'n50Durability' => $durability,
-            'n50NextChange' => $nextChange->timestamp
-        ];
+        $configuration->n50NextChange = $nextChange->timestamp;
 
         $record->update([
-            'configuration' => $configuration
+            'configuration' => $configuration->toArray()
         ]);
     }
 

@@ -50,7 +50,12 @@ class Device extends Model
         });
 
         self::updating(function ($device) {
-            $device->configuration = $device->configuration()->toArray();
+            $configuration = $device->configuration();
+
+            $configuration->workingState = $device->working_state;
+            $configuration->error = $device->error;
+
+            $device->configuration = $configuration->toArray();
         });
     }
     protected  $casts = [
