@@ -25,7 +25,7 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
         technicalName: 'error',
         name: 'Error',
         icon: 'mdi:error',
-        valueTemplate: '{{ value_json.states.error }}',
+        valueTemplate: '{{ value_json.states.error | default("ok") }}',
         entityCategory: 'diagnostic'
     )]
     public ?string $error;
@@ -683,10 +683,6 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
         $data['n50NextChange'] = $config['consumables']['n50NextChange'] ?? null;
         $data['k3Battery'] = $config['consumables']['k3Battery'] ?? null;
         $data['k3Liquid'] = $config['consumables']['k3Liquid'] ?? null;
-
-        // Load states
-        $data['error'] = $config['states']['error'] ?? null;
-        $data['workingState'] = $config['states']['state'] ?? null;
 
         // Load litter
         $data['litterWeight'] = $config['litter']['weight'] ?? null;
