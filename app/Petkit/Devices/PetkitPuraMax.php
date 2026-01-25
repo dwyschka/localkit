@@ -183,30 +183,31 @@ class PetkitPuraMax implements DeviceDefinition
             sprintf('/sys/%s/%s/thing/event/property/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
                 $this->reply($topic, $message);
 
+                /** @var \App\Petkit\Devices\Configuration\PetkitPuraMax $configuration */
+                $configuration = $device->configuration();
+                $workingState = $device->working_state;
+
                 if (!empty($message?->params?->litter)) {
-                    $configuration = $device->configuration;
-                    $configuration['litter'] = (array)$message->params->litter;
-                    $device->update(['configuration' => $configuration]);
+                    $configuration->litterPercent = (int)$message->params->litter?->percent;
+                    $configuration->litterWeight = (int)$message->params->litter?->weight;
                 }
 
                 if (!empty($message?->params?->battery)) {
-                    $configuration = $device->configuration;
-                    $configuration['consumables']['k3Battery'] = (int)$message->params->battery;
-                    $device->update(['configuration' => $configuration]);
+                    $configuration->k3Battery = (int)$message->params->battery;
                 }
 
                 if (!empty($message?->params?->liquid)) {
-                    $configuration = $device->configuration;
-                    $configuration['consumables']['k3Liquid'] = (int)$message->params->liquid;
-                    $device->update(['configuration' => $configuration]);
+                    $configuration->k3Liquid = (int)$message->params->liquid;
                 }
 
-                if (!isset($message?->params?->work_state)) {
-                    $device->update(['working_state' => DeviceStates::IDLE->value]);
-                } else {
-                    $deviceStatus = $this->deviceStatus($message->params->work_state->work_mode);
-                    $device->update(['working_state' => $deviceStatus]);
+                if (isset($message?->params?->work_state)) {
+                    $workingState = $this->deviceStatus($message->params->work_state->work_mode);
                 }
+
+                $device->update([
+                    'configuration' => $configuration->toArray(),
+                    'working_state' => $workingState
+                ]);
 
                 $msg = UserGet::replyToState($device->productKey(), $device->deviceName(), $message);
                 MQTT::connection('publisher')->publish($msg->getTopic(), $msg->getMessage());
