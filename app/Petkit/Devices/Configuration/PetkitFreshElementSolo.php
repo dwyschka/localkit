@@ -27,7 +27,7 @@ class PetkitFreshElementSolo extends DeviceConfigurationDTO implements Configura
     #[Sensor(
         technicalName: 'error',
         name: 'Error',
-        icon: 'mdi:error',
+        icon: 'mdi:alert-circle',
         valueTemplate: "{{ 'Ok' if value_json.states.error is none else value_json.states.error }}",
         entityCategory: 'diagnostic'
     )]
