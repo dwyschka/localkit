@@ -43,6 +43,8 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
         technicalName: 'litter_weight',
         name: 'Litter Weight',
         icon: 'mdi:information-outline',
+        deviceClass: 'weight',
+        unitOfMeasurement: 'g',
         valueTemplate: '{{ value_json.litter.weight }}',
         entityCategory: 'diagnostic'
     )]
