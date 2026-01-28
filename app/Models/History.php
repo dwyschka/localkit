@@ -50,7 +50,7 @@ class History extends Model
 
         return __('petkit.history.in_use', [
             'name' => $this->pet?->name ?? __('petkit.unknown'),
-	    'weight' => round($params['pet_weight'] / 1000, 2),
+            'weight' => round($params['pet_weight'] / 1000, 2),
             'duration' => $duration,
         ]);
     }
