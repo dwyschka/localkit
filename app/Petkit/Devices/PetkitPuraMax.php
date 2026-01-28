@@ -144,23 +144,23 @@ class PetkitPuraMax implements DeviceDefinition
 
                 $content = json_decode($message->params->content, true);
 
-		$rawWeight = $content['pet_weight'] ?? null;
-
-		$weightKg = is_numeric($rawWeight)
-		    ? round($rawWeight / 1000, 2)
-		    : null;
-
-		$pet = $weightKg !== null
-		    ? Pet::nearestWeight($weightKg)
-		    : null;
-
-		History::create([
-		    'messageId' => $message->params->event_id,
-		    'pet_id' => $pet?->id,
-		    'parameters' => $content,
-		    'type' => 'IN_USE',
-		    'device_id' => $device->id
-		]);
+        		$rawWeight = $content['pet_weight'] ?? null;
+    
+        		$weightKg = is_numeric($rawWeight)
+        		    ? round($rawWeight / 1000, 2)
+        		    : null;
+        
+        		$pet = $weightKg !== null
+        		    ? Pet::nearestWeight($weightKg)
+        		    : null;
+        
+        		History::create([
+        		    'messageId' => $message->params->event_id,
+        		    'pet_id' => $pet?->id,
+        		    'parameters' => $content,
+        		    'type' => 'IN_USE',
+        		    'device_id' => $device->id
+        		]);
 
             },
             sprintf('/sys/%s/%s/thing/event/error_start/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
