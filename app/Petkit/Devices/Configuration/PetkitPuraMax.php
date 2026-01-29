@@ -25,7 +25,19 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
         technicalName: 'error',
         name: 'Error',
         icon: 'mdi:alert-circle',
-        valueTemplate: "{{ 'Ok' if value_json.states.error is none else value_json.states.error }}",
+        valueTemplate: <<<'JINJA'
+                {% if value_json.states.error %}
+                Error
+                {% else %}
+                Ok
+                {% endif %}
+                JINJA,
+        jsonAttributesTemplate: <<<'JINJA'
+                {{ {
+                  "Error code": value_json.states.error,
+                  "Description": value_json.states.error_description
+                } | tojson }}
+                JINJA,
         entityCategory: 'diagnostic'
     )]
     public ?string $error;
@@ -750,6 +762,9 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
             ],
             'states' => [
                 'error' => $this->error,
+                'error_description' => $this->error
+                    ? __('petkit.error.' . $this->error)
+                    : __('petkit.unknown'),
                 'state' => $this->workingState,
             ],
             'litter' => [

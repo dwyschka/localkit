@@ -17,6 +17,7 @@ class Sensor extends BaseEntity
         public ?string $deviceClass = null,
         public ?string $unitOfMeasurement = null,
         public ?string $valueTemplate = null,
+        public ?string $jsonAttributesTemplate = null,
         public ?string $entityCategory = null,
         public bool $availabilityMode = true,
         public ?string $uniqueId = null,
