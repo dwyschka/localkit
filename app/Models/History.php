@@ -39,9 +39,16 @@ class History extends Model
         return '';
     }
 
-    public function title(): string {
+    public function title(): string
+    {
+        if ($this->type === 'ERROR') {
+            return __('petkit.history.error');
+        }
 
-        return __(sprintf('petkit.history.%s_title', Str::lower($this->type)));
+        return __(sprintf(
+            'petkit.history.%s_title',
+            Str::lower($this->type)
+        ));
     }
 
     private function createInUseMessage()

@@ -10,8 +10,7 @@ return [
         'maintenance_title' => 'Maintenance',
         'maintenance' => 'Maintenance for :duration seconds',
         'working_title' => 'Feeding',
-        'error_title' => 'Error',
-        'error_description' => 'Error: :description'
+        'error' => 'Error'
     ],
     'error' => [
         'hallT' =>'The lid is not closed',

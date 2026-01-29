@@ -25,21 +25,13 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
         technicalName: 'error',
         name: 'Error',
         icon: 'mdi:alert-circle',
-        valueTemplate: <<<'JINJA'
-                {% if value_json.states.error %}
-                Error
-                {% else %}
-                Ok
-                {% endif %}
-                JINJA,
-        jsonAttributesTemplate: <<<'JINJA'
-                {{ {
-                  "Error code": value_json.states.error,
-                  "Description": value_json.states.error_description
-                } | tojson }}
-                JINJA,
-        entityCategory: 'diagnostic'
-    )]
+        valueTemplate: "{{ 'Error' if value_json.states.error else 'Ok' }}",
+        jsonAttributesTemplate: "{{ {
+                'error_code': value_json.states.error,
+                'description': value_json.states.error_description
+                } | tojson }}",
+            entityCategory: 'diagnostic'
+        )]
     public ?string $error;
 
     #[Sensor(
