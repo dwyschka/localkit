@@ -9,7 +9,9 @@ return [
         'cleaning_title' => 'Manual Cleaning',
         'maintenance_title' => 'Maintenance',
         'maintenance' => 'Maintenance for :duration seconds',
-        'working_title' => 'Feeding'
+        'working_title' => 'Feeding',
+        'error_title' => 'Error',
+        'error_description' => 'Error: :description'
     ],
     'error' => [
         'hallT' =>'The lid is not closed',

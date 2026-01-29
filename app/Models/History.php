@@ -33,6 +33,8 @@ class History extends Model
                 return $this->createCleaningMessage();
             case 'MAINTENANCE':
                 return $this->createMaintenanceMessage();
+            case 'ERROR':
+                return $this->createErrorMessage();
         }
         return '';
     }
@@ -76,4 +78,21 @@ class History extends Model
             'duration' => $duration
         ]);
     }
+
+    private function createErrorMessage(): string
+    {
+        $errorCode = $this->parameters['error'] ?? null;
+
+        if (!$errorCode) {
+            return __('petkit.unknown');
+        }
+
+        return sprintf(
+            '%s: %s',
+            $errorCode,
+            __('petkit.error.' . $errorCode)
+        );
+
+    }
+
 }
