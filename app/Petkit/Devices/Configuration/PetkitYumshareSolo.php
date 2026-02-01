@@ -13,6 +13,7 @@ use App\Homeassistant\Interfaces\Video;
 use App\Homeassistant\Number;
 use App\Homeassistant\Select;
 use App\Homeassistant\Sensor;
+use App\Models\BluetoothDevice;
 use App\Models\Device;
 use Illuminate\Support\Facades\Storage;
 use WendellAdriel\ValidatedDTO\Casting\ArrayCast;
@@ -685,7 +686,7 @@ class PetkitYumshareSolo extends DeviceConfigurationDTO implements Configuration
         ];
     }
 
-    public static function fromDevice(Device $device): self
+    public static function fromDevice(Device|BluetoothDevice $device): self
     {
         $config = $device->configuration;
         $data = [];

@@ -2,6 +2,7 @@
 
 namespace App\DTOs;
 
+use App\Models\BluetoothDevice;
 use App\Models\Device;
 use WendellAdriel\ValidatedDTO\ValidatedDTO;
 
@@ -26,7 +27,7 @@ abstract class DeviceConfigurationDTO extends ValidatedDTO implements PetkitDTOI
         return [];
     }
 
-    public static function fromDevice(Device $device): PetkitDTOInterface
+    public static function fromDevice(Device|BluetoothDevice $device): PetkitDTOInterface
     {
         // TODO: Implement fromDevice() method.
     }

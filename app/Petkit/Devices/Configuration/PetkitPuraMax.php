@@ -10,6 +10,7 @@ use App\Homeassistant\HASwitch;
 use App\Homeassistant\Number;
 use App\Homeassistant\Select;
 use App\Homeassistant\Sensor;
+use App\Models\BluetoothDevice;
 use App\Models\Device;
 use WendellAdriel\ValidatedDTO\Casting\BooleanCast;
 use WendellAdriel\ValidatedDTO\Casting\DTOCast;
@@ -608,7 +609,7 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
     /**
      * Create DTO from Device model
      */
-    public static function fromDevice(Device $device): self
+    public static function fromDevice(Device|BluetoothDevice $device): self
     {
         $config = $device->configuration;
 

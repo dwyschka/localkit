@@ -12,6 +12,7 @@ use App\Homeassistant\HASwitch;
 use App\Homeassistant\Number;
 use App\Homeassistant\Select;
 use App\Homeassistant\Sensor;
+use App\Models\BluetoothDevice;
 use App\Models\Device;
 use WendellAdriel\ValidatedDTO\Casting\BooleanCast;
 use WendellAdriel\ValidatedDTO\Casting\DTOCast;
@@ -231,7 +232,7 @@ class PetkitFreshElementSolo extends DeviceConfigurationDTO implements Configura
         ];
     }
 
-    public static function fromDevice(Device $device): self
+    public static function fromDevice(Device|BluetoothDevice $device): self
     {
         $config = $device->configuration;
 

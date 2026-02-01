@@ -105,7 +105,7 @@ class DeviceActions
                 }),
             Action::make('Link K3')
                 ->visible(function (Device $record) {
-                    return $record->definition()->hasAction(self::LINK_WITH_K3);
+                    return $record->definition()->hasAction(self::LINK_WITH_K3) && !$record->link_with;
                 })
                 ->form([
                     Select::make('btDevice')
@@ -116,32 +116,16 @@ class DeviceActions
                     )
                 ])
                 ->action(function (array $data, Device $record) {
-                    $record->linked_with = $data['btDevice'] ?? null;
-                    $record->save();
-
                     $record->definition()->link(
                         BluetoothDevice::find($data['btDevice'])
                     );
                 }),
             Action::make('Unlink K3')
                 ->visible(function (Device $record) {
-                    return $record->definition()->hasAction(self::LINK_WITH_K3);
+                    return $record->definition()->hasAction(self::LINK_WITH_K3) && $record->link_with;
                 })
-                ->form([
-                    Select::make('btDevice')
-                        ->options(
-                            BluetoothDevice::query()
-                                ->where('type', '=', 'k3')
-                                ->pluck('name', 'id')
-                        )
-                ])
                 ->action(function (array $data, Device $record) {
-                    $record->link_with = $data['btDevice'] ?? null;
-                    $record->save();
-
-                    $record->definition()->link(
-                        BluetoothDevice::find($data['btDevice'])
-                    );
+                    $record->definition()->unlink();
                 }),
         ];
     }

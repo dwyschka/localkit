@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\DeviceResource\Pages;
 use App\Filament\Resources\DeviceResource\RelationManagers;
 use App\Jobs\ServiceStart;
+use App\Models\BluetoothDevice;
 use App\Models\Device;
 use App\Petkit\DeviceActions;
 use App\Petkit\Devices\PetkitFreshElementSolo;
@@ -42,14 +43,21 @@ class DeviceResource extends Resource
                     'd4h' => PetkitYumshareSolo::deviceName(),
                 ])
                     ->columnSpan('half')->disabled(),
+
                 Forms\Components\TextInput::make('secret')->columnSpan('half'),
                 Forms\Components\TextInput::make('petkit_id')->columnSpan('half')->readOnly(),
                 Forms\Components\TextInput::make('mqtt_subdomain')->columnSpan('half'),
-                Forms\Components\Checkbox::make('ota_state')->columnSpan('full'),
-
+                Forms\Components\Toggle::make('ota_state')
+                    ->helperText('If enabled, the MQTT Connection to Aliyun needs to be disabled')
+                    ->columnSpan('half'),
+                Forms\Components\Toggle::make('proxy_mode')
+                    ->columnSpan('half')
+                    ->helperText('If the field is disabled, please set a secret and the MQTT subdomain')
+                    ->disabled(function ($record) {
+                        return (empty($record->secret) || empty($record->mqtt_subdomain));
+                    }),
                 Forms\Components\Fieldset::make('Device Configuration')->schema([
                     ...$form->getModelInstance()->ui()->formFields(),
-
                 ])
 
             ]);
@@ -86,11 +94,16 @@ class DeviceResource extends Resource
                     })
                     ->color(fn(string $state): string => 'danger'),
                 Tables\Columns\TextColumn::make('serial_number'),
-                Tables\Columns\ToggleColumn::make('proxy_mode')
-                    ->tooltip('If the field is disabled, please set a secret and the MQTT subdomain')
-                    ->disabled(function ($record) {
-                        return (empty($record->secret) || empty($record->mqtt_subdomain));
+                Tables\Columns\TextColumn::make('link_with')
+                    ->badge()
+                    ->formatStateUsing(function (?int $state) {
+                        if(empty($state)) {
+                            return 'None';
+                        }
+                        return BluetoothDevice::find($state)->name ?? 'None';
+
                     })
+                    ->color('info')
 
             ])
             ->filters([
