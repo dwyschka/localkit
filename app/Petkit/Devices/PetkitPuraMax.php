@@ -548,7 +548,7 @@ class PetkitPuraMax implements DeviceDefinition
                 'k3Config' => [
                     'config' => $k3?->configuration()?->toArray()['settings'] ?? [],
                 ],
-                'relateK3Switch' => 0,
+                'relateK3Switch' => !$hasK3,
                 'lightest' =>$config->lightest,
                 'deepClean' => (int)$config->deepClean,
                 'removeSand' => (int)$config->removeSand,
