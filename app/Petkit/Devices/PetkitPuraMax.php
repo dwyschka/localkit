@@ -540,7 +540,7 @@ class PetkitPuraMax implements DeviceDefinition
                 'disturbMode' => (int)$config['disturbMode'],
                 'sandSetUseConfig' =>$config['sandSetUseConfig'],
                 'k3Config' => [
-                    'config' => $config['k3Config']
+                    'config' => $k3->configuration()->toArray()['settings'] ?? [],
                 ],
                 'relateK3Switch' => 0,
                 'lightest' =>$config['lightest'],
