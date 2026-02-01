@@ -510,9 +510,9 @@ class PetkitPuraMax implements DeviceDefinition
         ];
     }
     public function toDeviceInfo(): array {
-        $config = $this->device->configuration['settings'];
+        $config = $this->getDevice()->configuration();
         $k3 = $this->getK3();
-
+        $hasK3 = !is_null($k3);
         return [
             'id' => $this->device->petkit_id,
             'mac' => $this->device->mac,
@@ -520,39 +520,39 @@ class PetkitPuraMax implements DeviceDefinition
             'secret' => $this->device->secret,
             'timezone' => $this->device->timezone,
             'locale' => $this->device->locale,
-            'shareOpen' => (int)$config['shareOpen'],
-            'typeCode' => (int)$config['typeCode'],
-            'withK3' => (int)isset($k3['id']),
+            'shareOpen' => (int)$config->shareOpen,
+            'typeCode' => (int)$config->typeCode,
+            'withK3' => (int)$hasK3,
             'k3Id' => (int)($k3?->petkit_id ?? 0),
             'btMac' => $this->device->bt_mac,
             'settings' => [
-                'sandType' => (int)$config['sandType'],
-                'manualLock' => (int)$config['manualLock'],
-                'lightMode' => (int)$config['lightMode'],
-                'clickOkEnable' => (int)$config['clickOkEnable'],
-                'autoWork' => (int)$config['autoWork'],
-                'fixedTimeClear' =>$config['fixedTimeClear'],
-                'downpos' => (int)$config['downpos'],
-                'deepRefresh' => (int)$config['deepRefresh'],
-                'autoIntervalMin' =>$config['autoIntervalMin'],
-                'stillTime' =>$config['stillTime'],
-                'unit' => (int)$config['unit'],
-                'language' =>$config['language'],
-                'avoidRepeat' => (int)$config['avoidRepeat'],
-                'underweight' => (int)$config['underweight'],
-                'kitten' => (int)$config['kitten'],
-                'stopTime' =>$config['stopTime'],
-                'sandFullWeight' => array_values($config['sandFullWeight']),
-                'disturbMode' => (int)$config['disturbMode'],
-                'sandSetUseConfig' =>$config['sandSetUseConfig'],
+                'sandType' => (int)$config->sandType,
+                'manualLock' => (int)$config->manualLock,
+                'lightMode' => (int)$config->lightMode,
+                'clickOkEnable' => (int)$config->clickOkEnable,
+                'autoWork' => (int)$config->autoWork,
+                'fixedTimeClear' =>$config->fixedTimeClear,
+                'downpos' => (int)$config->downpos,
+                'deepRefresh' => (int)$config->deepRefresh,
+                'autoIntervalMin' =>$config->autoIntervalMin,
+                'stillTime' =>$config->stillTime,
+                'unit' => (int)$config->unit,
+                'language' =>$config->language,
+                'avoidRepeat' => (int)$config->avoidRepeat,
+                'underweight' => (int)$config->underweight,
+                'kitten' => (int)$config->kitten,
+                'stopTime' =>$config->stopTime,
+                'sandFullWeight' => $config->sandFullWeight,
+                'disturbMode' => (int)$config->disturbMode,
+                'sandSetUseConfig' =>$config->sandSetUseConfig,
                 'k3Config' => [
-                    'config' => $k3->configuration()->toArray()['settings'] ?? [],
+                    'config' => $k3?->configuration()?->toArray()['settings'] ?? [],
                 ],
                 'relateK3Switch' => 0,
-                'lightest' =>$config['lightest'],
-                'deepClean' => (int)$config['deepClean'],
-                'removeSand' => (int)$config['removeSand'],
-                'bury' => (int)$config['bury'],
+                'lightest' =>$config->lightest,
+                'deepClean' => (int)$config->deepClean,
+                'removeSand' => (int)$config->removeSand,
+                'bury' => (int)$config->bury,
             ],
             'k3Device' => [
                 'id' => (int)($k3?->petkit_id ?? 0),
@@ -561,16 +561,16 @@ class PetkitPuraMax implements DeviceDefinition
                 'secret' => $k3?->secret ?? '',
             ],
             'multiConfig' => true,
-            'petInTipLimit' => (int)$config['petInTipLimit'],
+            'petInTipLimit' => (int)$config->petInTipLimit,
         ];
     }
 
     public function toDeviceMultiConfig(): array {
-        $setting = $this->getDevice()->configuration['settings'];
+        $setting = $this->getDevice()->configuration();
 
         return [
-            'lightMultiRange' => $setting['lightRange'] ?? [],
-            'distrubMultiRange' => $setting['distrubRange'] ?? [],
+            'lightMultiRange' =>$setting->lightMultiRange ?? [],
+            'distrubMultiRange' => $setting->disturbMultiRange ?? [],
         ];
     }
 
