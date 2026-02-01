@@ -36,7 +36,9 @@ class BluetoothDevice extends Model
 
     public function ui()
     {
-
+        if($this->type === null) {
+            return null;
+        }
         return match ($this->type) {
             'k3' => new K3\UI($this)
         };

@@ -34,9 +34,10 @@ class BluetoothDeviceResource extends Resource
                 Forms\Components\TextInput::make('secret')->columnSpan('half'),
                 Forms\Components\TextInput::make('petkit_id')->columnSpan('half'),
                 Forms\Components\TextInput::make('serial_number')->columnSpan('half'),
+
                 Forms\Components\Fieldset::make('Device Configuration')->schema([
-                    ...$form->getModelInstance()->ui()->formFields(),
-                ])
+                    ...$form->getModelInstance()->ui()?->formFields() ?? [],
+                ])->hiddenOn('create')
             ]);
     }
 
