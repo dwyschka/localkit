@@ -36,6 +36,8 @@ class PetkitPuraMax implements DeviceDefinition
         DeviceActions::START_LIGHTNING,
         DeviceActions::STOP_LIGHTNING,
         DeviceActions::RESET_N50,
+        DeviceActions::LINK_WITH_K3,
+        DeviceActions::UNLINK_WITH_K3
     ];
     public static $workingStates = [
         DeviceStates::WORKING, DeviceStates::IDLE, DeviceStates::PET_IN, DeviceStates::CLEANING, DeviceStates::MAINTENANCE,

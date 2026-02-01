@@ -3,7 +3,6 @@
 namespace App\Petkit\Devices\Configuration;
 
 use App\DTOs\DeviceConfigurationDTO;
-use App\DTOs\K3ConfigDTO;
 use App\DTOs\MultiRangeDTO;
 use App\DTOs\SandFullWeightDTO;
 use App\Homeassistant\Button;
@@ -69,7 +68,6 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
     public int $litterPercent;
 
     public bool $shareOpen;
-    public bool $withK3;
     public int $typeCode;
 
     #[Select(
@@ -330,8 +328,6 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
 
 
     public array $sandSetUseConfig;
-    public K3ConfigDTO $k3Config;
-    public bool $relateK3Switch;
     public int $lightest;
 
     #[HASwitch(
@@ -390,34 +386,6 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
         entityCategory: 'diagnostic'
     )]
     public mixed $n50NextChange;
-
-    #[Sensor(
-        technicalName: 'k3Battery',
-        name: 'K3 Battery',
-        icon: 'mdi:update',
-        stateClass: 'measurement',
-        deviceClass: 'battery',
-        unitOfMeasurement: '%',
-        valueTemplate: '{{ value_json.consumables.k3Battery }}',
-        entityCategory: 'diagnostic'
-    )]
-    public int $k3Battery;
-
-    #[Sensor(
-        technicalName: 'k3Liquid',
-        name: 'K3 Liquid',
-        icon: 'mdi:update',
-        stateClass: 'measurement',
-        unitOfMeasurement: '%',
-        valueTemplate: '{{ value_json.consumables.k3Liquid }}',
-        entityCategory: 'diagnostic'
-    )]
-    public int $k3Liquid;
-    public ?string $k3Secret;
-    public ?int $k3Id;
-    public ?string $k3SerialNumber;
-    public ?string $k3Mac;
-
     #[Button(
         technicalName: 'action_reset_n50',
         name: 'Reset N50',
@@ -507,7 +475,6 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
             'litterUsedTimes' => ['integer', 'min:0'],
             'litterPercent' => ['integer', 'min:0', 'max:100'],
             'shareOpen' => ['bool'],
-            'withK3' => ['bool'],
             'typeCode' => ['integer'],
             'sandType' => ['integer', 'in:0,1,2,3'],
             'manualLock' => ['bool'],
@@ -531,20 +498,13 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
             'disturbMultiRange' => ['array'],
             'lightMultiRange' => ['array'],
             'sandSetUseConfig' => ['array'],
-            'relateK3Switch' => ['bool'],
             'lightest' => ['integer', 'min:0'],
             'deepClean' => ['bool'],
             'removeSand' => ['bool'],
             'bury' => ['bool'],
             'petInTipLimit' => ['integer', 'min:0'],
             'n50Durability' => ['integer', 'min:0', 'max:90'],
-            'n50NextChange' => ['nullable'],
-            'k3Battery' => ['integer', 'min:0', 'max:100'],
-            'k3Liquid' => ['integer', 'min:0', 'max:100'],
-            'k3Id' => ['nullable', 'integer'],
-            'k3SerialNumber' => ['nullable', 'string'],
-            'k3Mac' => ['nullable', 'string'],
-            'k3Secret' => ['nullable', 'string'],
+            'n50NextChange' => ['nullable']
         ];
     }
 
@@ -557,7 +517,6 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
             'litterUsedTimes' => 0,
             'litterPercent' => 100,
             'shareOpen' => false,
-            'withK3' => false,
             'typeCode' => 0,
             'sandType' => 0,
             'manualLock' => false,
@@ -595,21 +554,13 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
                 [40, 60, 85],
                 [40, 60, 85]
             ],
-            'k3Config' => [],
-            'k3Id' => null,
-            'k3SerialNumber' => null,
-            'k3Mac' => null,
-            'k3Secret' => null,
-            'relateK3Switch' => false,
             'lightest' => 1840,
             'deepClean' => false,
             'removeSand' => true,
             'bury' => false,
             'petInTipLimit' => 15,
             'n50Durability' => 30,
-            'n50NextChange' => 0,
-            'k3Battery' => 100,
-            'k3Liquid' => 100
+            'n50NextChange' => 0
         ];
     }
 
@@ -622,7 +573,6 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
             'litterUsedTimes' => new IntegerCast(),
             'litterPercent' => new IntegerCast(),
             'shareOpen' => new BooleanCast(),
-            'withK3' => new BooleanCast(),
             'typeCode' => new IntegerCast(),
             'sandType' => new IntegerCast(),
             'manualLock' => new BooleanCast(),
@@ -641,24 +591,17 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
             'kitten' => new BooleanCast(),
             'stopTime' => new IntegerCast(),
             'sandFullWeight' => new DTOCast(SandFullWeightDTO::class),
-            'k3Id' => new IntegerCast(),
-            'k3SerialNumber' => new StringCast(),
-            'k3Mac' => new StringCast(),
-            'k3Secret' => new StringCast(),
             'disturbMode' => new BooleanCast(),
             'disturbMultiRange' => new DTOCast(MultiRangeDTO::class),
             'lightMultiRange' => new DTOCast(MultiRangeDTO::class),
             'sandSetUseConfig' => new ArrayCast(),
-            'k3Config' => new DTOCast(K3ConfigDTO::class),
-            'relateK3Switch' => new BooleanCast(),
             'lightest' => new IntegerCast(),
             'deepClean' => new BooleanCast(),
             'removeSand' => new BooleanCast(),
             'bury' => new BooleanCast(),
             'petInTipLimit' => new IntegerCast(),
             'n50Durability' => new IntegerCast(),
-            'k3Battery' => new IntegerCast(),
-            'k3Liquid' => new IntegerCast()
+
         ];
     }
 
@@ -674,17 +617,9 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
         $data['workingState'] = $device->working_state;
         $data['error'] = $device->error;
 
-        // Load k3Device
-        $data['k3Id'] = $config['k3Device']['id'] ?? null;
-        $data['k3SerialNumber'] = $config['k3Device']['serialNumber'] ?? null;
-        $data['k3Mac'] = $config['k3Device']['mac'] ?? null;
-        $data['k3Secret'] = $config['k3Device']['secret'] ?? null;
-
         // Load consumables
         $data['n50Durability'] = $config['consumables']['n50Durability'] ?? null;
         $data['n50NextChange'] = $config['consumables']['n50NextChange'] ?? null;
-        $data['k3Battery'] = $config['consumables']['k3Battery'] ?? null;
-        $data['k3Liquid'] = $config['consumables']['k3Liquid'] ?? null;
 
         // Load litter
         $data['litterWeight'] = $config['litter']['weight'] ?? null;
@@ -693,7 +628,6 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
 
         // Load settings
         $data['shareOpen'] = $config['settings']['shareOpen'] ?? null;
-        $data['withK3'] = $config['settings']['withK3'] ?? null;
         $data['typeCode'] = $config['settings']['typeCode'] ?? null;
         $data['sandType'] = $config['settings']['sandType'] ?? null;
         $data['manualLock'] = $config['settings']['manualLock'] ?? null;
@@ -716,8 +650,6 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
         $data['disturbMultiRange'] = $config['settings']['disturbMultiRange'] ?? null;
         $data['lightMultiRange'] = $config['settings']['lightMultiRange'] ?? null;
         $data['sandSetUseConfig'] = $config['settings']['sandSetUseConfig'] ?? null;
-        $data['k3Config'] = $config['settings']['k3Config'] ?? null;
-        $data['relateK3Switch'] = $config['settings']['relateK3Switch'] ?? null;
         $data['lightest'] = $config['settings']['lightest'] ?? null;
         $data['deepClean'] = $config['settings']['deepClean'] ?? null;
         $data['removeSand'] = $config['settings']['removeSand'] ?? null;
@@ -735,17 +667,9 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
     public function toArray(): array
     {
         return [
-            'k3Device' => [
-                'id' => $this->k3Id,
-                'serialNumber' => $this->k3SerialNumber,
-                'mac' => $this->k3Mac,
-                'secret' => $this->k3Secret,
-            ],
             'consumables' => [
                 'n50Durability' => $this->n50Durability,
-                'n50NextChange' => $this->n50NextChange,
-                'k3Liquid' => $this->k3Liquid,
-                'k3Battery' => $this->k3Battery
+                'n50NextChange' => $this->n50NextChange
             ],
             'states' => [
                 'error' => $this->error,
@@ -758,7 +682,6 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
             ],
             'settings' => [
                 'shareOpen' => $this->shareOpen,
-                'withK3' => $this->withK3,
                 'typeCode' => $this->typeCode,
                 'sandType' => $this->sandType,
                 'manualLock' => $this->manualLock,
@@ -781,8 +704,6 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
                 'disturbMultiRange' => $this->disturbMultiRange,
                 'lightMultiRange' => $this->lightMultiRange,
                 'sandSetUseConfig' => $this->sandSetUseConfig,
-                'k3Config' => $this->k3Config,
-                'relateK3Switch' => $this->relateK3Switch,
                 'lightest' => $this->lightest,
                 'deepClean' => $this->deepClean,
                 'removeSand' => $this->removeSand,

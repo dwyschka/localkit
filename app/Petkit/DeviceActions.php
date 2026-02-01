@@ -4,8 +4,10 @@ namespace App\Petkit;
 
 use App\Jobs\ServiceEnd;
 use App\Jobs\ServiceStart;
+use App\Models\BluetoothDevice;
 use App\Models\Device;
 use Filament\Actions\ActionGroup;
+use Filament\Forms\Components\Select;
 use Filament\Tables\Actions\Action;
 use Illuminate\Database\Eloquent\Model;
 
@@ -22,6 +24,9 @@ class DeviceActions
     public const START_FEEDING = 'start_feeder';
 
     public const TAKE_SNAPSHOT = 'take_snapshot';
+
+    public const LINK_WITH_K3 = 'link_with_k3';
+    public const UNLINK_WITH_K3 = 'unlink_with_k3';
 
 
 
@@ -97,6 +102,46 @@ class DeviceActions
                 })
                 ->action(function (Device $record) {
                     $record->definition()->takeSnapshot($record);
+                }),
+            Action::make('Link K3')
+                ->visible(function (Device $record) {
+                    return $record->definition()->hasAction(self::LINK_WITH_K3);
+                })
+                ->form([
+                    Select::make('btDevice')
+                    ->options(
+                        BluetoothDevice::query()
+                            ->where('type', '=', 'k3')
+                            ->pluck('name', 'id')
+                    )
+                ])
+                ->action(function (array $data, Device $record) {
+                    $record->linked_with = $data['btDevice'] ?? null;
+                    $record->save();
+
+                    $record->definition()->link(
+                        BluetoothDevice::find($data['btDevice'])
+                    );
+                }),
+            Action::make('Unlink K3')
+                ->visible(function (Device $record) {
+                    return $record->definition()->hasAction(self::LINK_WITH_K3);
+                })
+                ->form([
+                    Select::make('btDevice')
+                        ->options(
+                            BluetoothDevice::query()
+                                ->where('type', '=', 'k3')
+                                ->pluck('name', 'id')
+                        )
+                ])
+                ->action(function (array $data, Device $record) {
+                    $record->link_with = $data['btDevice'] ?? null;
+                    $record->save();
+
+                    $record->definition()->link(
+                        BluetoothDevice::find($data['btDevice'])
+                    );
                 }),
         ];
     }

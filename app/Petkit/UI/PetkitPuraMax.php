@@ -25,10 +25,7 @@ class PetkitPuraMax
 
                     return round($now->diffInDays($date));
 
-                })->readOnly()->disabled(true),
-                Forms\Components\TextInput::make('configuration.consumables.k3Battery')->numeric()->readOnly()->disabled(true),
-                Forms\Components\TextInput::make('configuration.consumables.k3Liquid')->numeric()->readOnly()->disabled(true),
-
+                })->readOnly()->disabled(true)
             ]),
             Forms\Components\Section::make('Litter')->columns(3)->schema([
                 Forms\Components\TextInput::make('history_count')->readOnly()->formatStateUsing(function ($record) {
@@ -199,33 +196,6 @@ class PetkitPuraMax
                             return $state;
                         })
                 ]),
-
-
-            Forms\Components\Section::make('K3')->schema([
-                Forms\Components\Fieldset::make('Device')->schema([
-                    Forms\Components\TextInput::make('configuration.k3Device.id')->label('K3 ID'),
-                    Forms\Components\TextInput::make('configuration.k3Device.mac')->label('K3 MAC'),
-                    Forms\Components\TextInput::make('configuration.k3Device.serialNumber')->label('K3 Serial Number'),
-                    Forms\Components\TextInput::make('configuration.k3Device.secret')->label('K3 Secret'),
-                ]),
-                Forms\Components\Fieldset::make('Settings')->schema([
-                    Forms\Components\ViewField::make('k3Warning')
-                        ->columnSpanFull()
-                        ->view('filament.forms.warning')
-                        ->viewData(['message' => 'Its possible to manipulate the values, but its not verified']),
-
-                    Forms\Components\KeyValue::make('configuration.settings.k3Config.standard')->label('Standard'),
-                    Forms\Components\TextInput::make('configuration.settings.k3Config.lightness')->label('Lightness'),
-                    Forms\Components\TextInput::make('configuration.settings.k3Config.lowVoltage')->label('Low Voltage'),
-                    Forms\Components\TextInput::make('configuration.settings.k3Config.refreshTotalTime')->label('Refresh Total Time'),
-                    Forms\Components\TextInput::make('configuration.settings.k3Config.singleRefreshTime')->label('Single Refresh Time'),
-                    Forms\Components\TextInput::make('configuration.settings.k3Config.singleLightTime')->label('Single Light Time'),
-
-                ])
-
-
-
-            ]),
 
             Forms\Components\Section::make('Unknown')->schema([
                 Forms\Components\ViewField::make('warning')
