@@ -188,7 +188,13 @@ class PetkitPuraMax implements DeviceDefinition
             },
             sprintf('/sys/%s/%s/thing/event/data_get/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
                 $this->reply($topic, $message);
-                $msg = UserGet::reply($device->productKey(), $device->deviceName(), $message);
+                try {
+                    $msg = UserGet::reply($device->productKey(), $device->deviceName(), $message);
+                } catch (\Exception $e) {
+                    Log::error('UserGet', [
+                        'e' => $e->getMessage()
+                    ]);
+                }
                 MQTT::connection('publisher')->publish($msg->getTopic(), $msg->getMessage());
             },
             sprintf('/sys/%s/%s/thing/event/property/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
