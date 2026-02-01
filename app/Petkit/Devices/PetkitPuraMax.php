@@ -518,7 +518,7 @@ class PetkitPuraMax implements DeviceDefinition
             'mac' => $this->device->mac,
             'sn' => $this->device->serial_number,
             'secret' => $this->device->secret,
-            'timezone' => $this->device->timezone,
+            'timezone' => (float)$this->device->timezone,
             'locale' => $this->device->locale,
             'shareOpen' => (int)$config->shareOpen,
             'typeCode' => (int)$config->typeCode,
