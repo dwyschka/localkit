@@ -117,7 +117,8 @@ class DeviceActions
                 ])
                 ->action(function (array $data, Device $record) {
                     $record->definition()->link(
-                        BluetoothDevice::find($data['btDevice'])
+                        BluetoothDevice::find($data['btDevice']),
+                        $record
                     );
                 }),
             Action::make('Unlink K3')
@@ -125,7 +126,7 @@ class DeviceActions
                     return $record->definition()->hasAction(self::LINK_WITH_K3) && $record->link_with;
                 })
                 ->action(function (array $data, Device $record) {
-                    $record->definition()->unlink();
+                    $record->definition()->unlink($record);
                 }),
         ];
     }

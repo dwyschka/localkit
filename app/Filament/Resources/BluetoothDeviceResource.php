@@ -46,7 +46,12 @@ class BluetoothDeviceResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')->searchable(),
-                Tables\Columns\TextColumn::make('type')->searchable(),
+                Tables\Columns\TextColumn::make('type')->searchable()->formatStateUsing(function(string $state) {
+                    if($state === 'k3') {
+                        return 'K3 Spray';
+                    }
+                    return $state;
+                }),
                 Tables\Columns\TextColumn::make('mac')->searchable(),
             ])
             ->filters([
