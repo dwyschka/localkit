@@ -513,7 +513,7 @@ class PetkitPuraMax implements DeviceDefinition
         $config = $this->getDevice()->configuration();
         $k3 = $this->getK3();
         $hasK3 = !is_null($k3);
-        return [
+        $result = [
             'id' => $this->device->petkit_id,
             'mac' => $this->device->mac,
             'sn' => $this->device->serial_number,
@@ -548,7 +548,7 @@ class PetkitPuraMax implements DeviceDefinition
                 'k3Config' => [
                     'config' => $k3?->configuration()?->toArray()['settings'] ?? [],
                 ],
-                'relateK3Switch' => !$hasK3,
+                'relateK3Switch' => (int)!$hasK3,
                 'lightest' =>$config->lightest,
                 'deepClean' => (int)$config->deepClean,
                 'removeSand' => (int)$config->removeSand,
@@ -563,6 +563,11 @@ class PetkitPuraMax implements DeviceDefinition
             'multiConfig' => true,
             'petInTipLimit' => (int)$config->petInTipLimit,
         ];
+
+        if(!$hasK3) {
+            unset($result['k3Id']);
+        }
+        return $result;
     }
 
     public function toDeviceMultiConfig(): array {
