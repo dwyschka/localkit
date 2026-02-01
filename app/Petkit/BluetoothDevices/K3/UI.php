@@ -1,14 +1,27 @@
 <?php
 
 namespace App\Petkit\BluetoothDevices\K3;
+
 use Filament\Forms;
 
 class UI
 {
 
-    public function formFields(): array {
+    public function formFields(): array
+    {
         return [
+            Forms\Components\Section::make('Consumables')->columns(2)->schema([
+                Forms\Components\TextInput::make('configuration.consumables.liquid')
+                    ->label('Liquid')
+                    ->disabled()
+                    ->columnSpan('half'),
+                Forms\Components\TextInput::make('configuration.consumables.battery')
+                    ->label('Battery')
+                    ->disabled()
+                    ->columnSpan('half'),
+            ]),
             Forms\Components\Section::make('K3 Settings')->schema([
+
                 Forms\Components\ViewField::make('k3Warning')
                     ->columnSpanFull()
                     ->view('filament.forms.warning')
