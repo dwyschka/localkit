@@ -20,6 +20,6 @@ class AnswerDTO
     }
 
     public function getMessage(): string {
-        return $this->message->toJson(JSON_UNESCAPED_SLASHES);
+        return $this->message->toJson(JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
     }
 }
