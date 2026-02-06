@@ -3,6 +3,7 @@
 namespace App\MQTT;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Str;
 
 class AnswerDTO
 {
@@ -20,6 +21,6 @@ class AnswerDTO
     }
 
     public function getMessage(): string {
-        return $this->message->toJson(JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+        return Str::replace(PHP_EOL, '', $this->message->toJson(JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
     }
 }
