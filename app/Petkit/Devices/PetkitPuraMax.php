@@ -526,6 +526,11 @@ class PetkitPuraMax implements DeviceDefinition
             'k3Id' => (int)($k3?->petkit_id ?? 0),
             'btMac' => $this->device->bt_mac,
             'settings' => [
+                //test
+                'disturbRage' => [40,520],
+                'lightRange' => [0,1440],
+                'sandSaving' => 0,
+                'fixedTimeRefresh' => '1',
                 'sandType' => (int)$config->sandType,
                 'manualLock' => (int)$config->manualLock,
                 'lightMode' => (int)$config->lightMode,
