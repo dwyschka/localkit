@@ -571,6 +571,7 @@ class PetkitPuraMax implements DeviceDefinition
 
         if(!$hasK3) {
             unset($result['k3Id']);
+            unset($result['k3Device']);
         }
         return $result;
     }
