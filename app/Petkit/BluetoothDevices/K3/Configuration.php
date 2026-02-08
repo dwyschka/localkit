@@ -6,6 +6,7 @@ use App\DTOs\DeviceConfigurationDTO;
 use App\Models\BluetoothDevice;
 use App\Models\Device;
 use App\Petkit\Devices\Configuration\ConfigurationInterface;
+use Illuminate\Support\Facades\Log;
 use WendellAdriel\ValidatedDTO\Casting\ArrayCast;
 use WendellAdriel\ValidatedDTO\Casting\IntegerCast;
 
@@ -35,6 +36,20 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         ];
     }
 
+    protected function rules(): array
+    {
+        return [
+            'liquid' => ['integer', 'min:0', 'max:100'],
+            'battery' => ['integer', 'min:0', 'max:100'],
+            'standard' => ['array'],
+            'lightness' => ['integer', 'min:0', 'max:100'],
+            'lowVoltage' => ['integer', 'min:0'],
+            'refreshTotalTime' => ['integer', 'min:0'],
+            'singleRefreshTime' => ['integer', 'min:0'],
+            'singleLightTime' => ['integer', 'min:0'],
+        ];
+    }
+
     public function casts(): array {
         return [
             'liquid' => new IntegerCast(),
@@ -53,25 +68,22 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         $config = $device->configuration;
         $data = [];
 
+        $settings = $config['settings'];
+        $consumables = $config['consumables'];
+
         // Load consumables
-        if (isset($config['consumables'])) {
-            $consumables = $config['consumables'];
-            $data['liquid'] = $consumables['liquid'] ?? null;
-            $data['battery'] = $consumables['battery'] ?? null;
-        }
+        $data['liquid'] = $consumables['liquid'] ?? null;
+        $data['battery'] = $consumables['battery'] ?? null;
 
-        // Load settings
-        if (isset($config['settings'])) {
-            $settings = $config['settings'];
-            $data['standard'] = $settings['standard'] ?? null;
-            $data['lightness'] = $settings['lightness'] ?? null;
-            $data['lowVoltage'] = $settings['lowVoltage'] ?? null;
-            $data['refreshTotalTime'] = $settings['refreshTotalTime'] ?? null;
-            $data['singleRefreshTime'] = $settings['singleRefreshTime'] ?? null;
-            $data['singleLightTime'] = $settings['singleLightTime'] ?? null;
-        }
+        $data['standard'] = $settings['standard'] ?? null;
+        $data['lightness'] = $settings['lightness'] ?? null;
+        $data['lowVoltage'] = $settings['lowVoltage'] ?? null;
+        $data['refreshTotalTime'] = $settings['refreshTotalTime'] ?? null;
+        $data['singleRefreshTime'] = $settings['singleRefreshTime'] ?? null;
+        $data['singleLightTime'] = $settings['singleLightTime'] ?? null;
 
-        return new self($data);
+
+        return new self(array_filter($data, fn($value) => $value !== null));
     }
 
     public function toArray(): array
