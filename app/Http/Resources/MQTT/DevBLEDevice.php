@@ -18,10 +18,10 @@ class DevBLEDevice extends JsonResource
                 "list" => [
                     [
                         "interval" => 240,
-                        "id" => 400044053,
-                        "secret" => "50fed972f45f",
+                        "id" => 400062319,
+                        "secret" => "38091608fb65",
                         "type" => 14,
-                        "mac" => "a4c138a66d88"
+                        "mac" => "a4c138bc947e"
                     ]
                 ]
             ],
