@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\MQTT;
 
+use App\Models\BluetoothDevice;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -10,20 +11,21 @@ class DevBLEDevice extends JsonResource
 
     public function toArray(Request $request)
     {
+        $devices = BluetoothDevice::whereNot('type', 'k3')->all();
         return [
             "msgType" => 0,
             "payload" => [
                 "nextTick" => 3600,
                 "dataType" => "dev_ble_device",
-                "list" => [
-                    [
+                "list" => $devices->map(function ($device) {
+                    return [
                         "interval" => 240,
-                        "id" => 400062319,
-                        "secret" => "38091608fb65",
-                        "type" => 14,
-                        "mac" => "a4c138bc947e"
-                    ]
-                ]
+                        "id" => $device->petkit_id,
+                        "secret" => $device->secret,
+                        "type" => $device->bluetoothDeviceType(),
+                        "mac" => $device->mac
+                    ];
+                })->toArray()
             ],
             "type" => "t4_data_get",
             'timestamp' => time()

@@ -27,12 +27,13 @@ class BluetoothDeviceResource extends Resource
         return $form
             ->schema([
                 Forms\Components\TextInput::make('name')->columnSpan('half'),
-                Forms\Components\Select::make('type')->options([
-                    'k3' => 'K3 Spray'
+                Forms\Components\Select::make('type')->required()->options([
+                    'k3' => 'K3 Spray',
+                    'w5' => 'Eversweet Fountain'
                 ]),
-                Forms\Components\TextInput::make('mac')->columnSpan('half'),
-                Forms\Components\TextInput::make('secret')->columnSpan('half'),
-                Forms\Components\TextInput::make('petkit_id')->columnSpan('half'),
+                Forms\Components\TextInput::make('mac')->required()->columnSpan('half'),
+                Forms\Components\TextInput::make('secret')->required()->columnSpan('half'),
+                Forms\Components\TextInput::make('petkit_id')->required()->columnSpan('half'),
                 Forms\Components\TextInput::make('serial_number')->columnSpan('half'),
 
                 Forms\Components\Fieldset::make('Device Configuration')->schema([

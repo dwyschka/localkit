@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Petkit\BluetoothDevices\K3;
+use App\Petkit\BluetoothDevices\W5;
+
 use Illuminate\Database\Eloquent\Model;
 
 class BluetoothDevice extends Model
@@ -31,6 +33,7 @@ class BluetoothDevice extends Model
 
         return match ($this->type) {
             'k3' => K3\Configuration::fromDevice($this),
+            'w5' => W5\Configuration::fromDevice($this)
         };
     }
 
@@ -40,7 +43,8 @@ class BluetoothDevice extends Model
             return null;
         }
         return match ($this->type) {
-            'k3' => new K3\UI($this)
+            'k3' => new K3\UI($this),
+            'w5' => new W5\UI($this)
         };
     }
 
@@ -48,7 +52,15 @@ class BluetoothDevice extends Model
     {
 
         return match ($this->type) {
-            'k3' => new K3\Device($this)
+            'k3' => new K3\Device($this),
+            'w5' => new W5\Device($this)
+        };
+    }
+
+    public function bluetoothDeviceType(): int {
+        return match($this->type) {
+            'w5' => 14,
+            default => throw new \Exception('No valid device')
         };
     }
 }
