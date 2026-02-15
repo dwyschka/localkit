@@ -11,7 +11,15 @@ class DevDeviceInfo extends JsonResource
     public function toArray(Request $request)
     {
         /** @var \App\Models\Device $this->resource */
-        return $this->resource->definition()->toDeviceInfo();
+        return [
+            'msgType' => 0,
+            'payload' => [
+                'dataType' => 'dev_device_info',
+                'device' => $this->resource->definition()->toDeviceInfo(),
+            ],
+            'type' => 't4_data_get',
+            'timestamp' => time()
+        ];
     }
 
 }

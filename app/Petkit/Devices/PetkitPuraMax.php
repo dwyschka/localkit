@@ -9,6 +9,7 @@ use App\Homeassistant\HomeassistantTopic;
 use App\Jobs\ServiceEnd;
 use App\Jobs\ServiceStart;
 use App\Jobs\SetProperty;
+use App\Models\BluetoothDevice;
 use App\Models\Device;
 use App\Models\History;
 use App\Models\Pet;
@@ -36,6 +37,8 @@ class PetkitPuraMax implements DeviceDefinition
         DeviceActions::START_LIGHTNING,
         DeviceActions::STOP_LIGHTNING,
         DeviceActions::RESET_N50,
+        DeviceActions::LINK_WITH_K3,
+        DeviceActions::UNLINK_WITH_K3
     ];
     public static $workingStates = [
         DeviceStates::WORKING, DeviceStates::IDLE, DeviceStates::PET_IN, DeviceStates::CLEANING, DeviceStates::MAINTENANCE,
@@ -54,6 +57,8 @@ class PetkitPuraMax implements DeviceDefinition
             sprintf('/sys/%s/%s/thing/service/end', $this->device->productKey(), $this->device->deviceName()),
             sprintf('/sys/%s/%s/thing/service/property/set', $this->device->productKey(), $this->device->deviceName()),
             sprintf('/sys/%s/%s/thing/service/start', $this->device->productKey(), $this->device->deviceName()),
+            sprintf('/sys/%s/%s/thing/service/connect', $this->device->productKey(), $this->device->deviceName()),
+            sprintf('/sys/%s/%s/thing/service/ble', $this->device->productKey(), $this->device->deviceName()),
         ];
     }
 
@@ -185,7 +190,13 @@ class PetkitPuraMax implements DeviceDefinition
             },
             sprintf('/sys/%s/%s/thing/event/data_get/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
                 $this->reply($topic, $message);
-                $msg = UserGet::reply($device->productKey(), $device->deviceName(), $message);
+                try {
+                    $msg = UserGet::reply($device->productKey(), $device->deviceName(), $message);
+                } catch (\Exception $e) {
+                    Log::error('UserGet', [
+                        'e' => $e->getMessage()
+                    ]);
+                }
                 MQTT::connection('publisher')->publish($msg->getTopic(), $msg->getMessage());
             },
             sprintf('/sys/%s/%s/thing/event/property/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
@@ -202,13 +213,7 @@ class PetkitPuraMax implements DeviceDefinition
                     $configuration->litterWeight = (int)$message->params->litter?->weight;
                 }
 
-                if (!empty($message?->params?->battery)) {
-                    $configuration->k3Battery = (int)$message->params->battery;
-                }
-
-                if (!empty($message?->params?->liquid)) {
-                    $configuration->k3Liquid = (int)$message->params->liquid;
-                }
+                $this->updateK3($message);
 
                 if (isset($message?->params?->work_state)) {
                     $workingState = $this->deviceStatus($message->params->work_state->work_mode);
@@ -230,11 +235,18 @@ class PetkitPuraMax implements DeviceDefinition
         return $this->device;
     }
 
-
+    public function getK3(): ?BluetoothDevice {
+        $id = $this->getDevice()?->link_with;
+        if(is_null($id)) {
+            return null;
+        }
+        return BluetoothDevice::find($id);
+    }
     public function hasAction(string $action): bool
     {
         $hasAction = in_array($action, $this->actions);
-        $hasK3 = !empty($this->device->configuration['k3Device']);
+        $hasK3 = !empty($this->getK3());
+
         if ($this->device->proxy_mode == 1) {
             return false;
         }
@@ -500,67 +512,123 @@ class PetkitPuraMax implements DeviceDefinition
         ];
     }
     public function toDeviceInfo(): array {
-        $config = $this->device->configuration['settings'];
-        $k3 = $this->device->configuration['k3Device'] ?? false;
-
-        return [
+        $config = $this->getDevice()->configuration();
+        $k3 = $this->getK3();
+        $hasK3 = !is_null($k3);
+        $result = [
             'id' => $this->device->petkit_id,
             'mac' => $this->device->mac,
             'sn' => $this->device->serial_number,
             'secret' => $this->device->secret,
-            'timezone' => $this->device->timezone,
+            'timezone' => (float)$this->device->timezone,
             'locale' => $this->device->locale,
-            'shareOpen' => (int)$config['shareOpen'],
-            'typeCode' => (int)$config['typeCode'],
-            'withK3' => (int)isset($k3['id']),
-            'k3Id' => (int)($k3['id'] ?? 0),
+            'shareOpen' => (int)$config->shareOpen,
+            'typeCode' => (int)$config->typeCode,
+            'withK3' => (int)$hasK3,
+            'k3Id' => (int)($k3?->petkit_id ?? 0),
             'btMac' => $this->device->bt_mac,
             'settings' => [
-                'sandType' => (int)$config['sandType'],
-                'manualLock' => (int)$config['manualLock'],
-                'lightMode' => (int)$config['lightMode'],
-                'clickOkEnable' => (int)$config['clickOkEnable'],
-                'autoWork' => (int)$config['autoWork'],
-                'fixedTimeClear' =>$config['fixedTimeClear'],
-                'downpos' => (int)$config['downpos'],
-                'deepRefresh' => (int)$config['deepRefresh'],
-                'autoIntervalMin' =>$config['autoIntervalMin'],
-                'stillTime' =>$config['stillTime'],
-                'unit' => (int)$config['unit'],
-                'language' =>$config['language'],
-                'avoidRepeat' => (int)$config['avoidRepeat'],
-                'underweight' => (int)$config['underweight'],
-                'kitten' => (int)$config['kitten'],
-                'stopTime' =>$config['stopTime'],
-                'sandFullWeight' => array_values($config['sandFullWeight']),
-                'disturbMode' => (int)$config['disturbMode'],
-                'sandSetUseConfig' =>$config['sandSetUseConfig'],
+                //test
+                'disturbRage' => [40,520],
+                'lightRange' => [0,1440],
+                'sandSaving' => 0,
+                'fixedTimeRefresh' => '1',
+                'sandType' => (int)$config->sandType,
+                'manualLock' => (int)$config->manualLock,
+                'lightMode' => (int)$config->lightMode,
+                'clickOkEnable' => (int)$config->clickOkEnable,
+                'autoWork' => (int)$config->autoWork,
+                'fixedTimeClear' =>$config->fixedTimeClear,
+                'downpos' => (int)$config->downpos,
+                'deepRefresh' => (int)$config->deepRefresh,
+                'autoIntervalMin' =>$config->autoIntervalMin,
+                'stillTime' =>$config->stillTime,
+                'unit' => (int)$config->unit,
+                'language' =>$config->language,
+                'avoidRepeat' => (int)$config->avoidRepeat,
+                'underweight' => (int)$config->underweight,
+                'kitten' => (int)$config->kitten,
+                'stopTime' =>$config->stopTime,
+                'sandFullWeight' => $config->sandFullWeight->toPetkitConfiguration(),
+                'disturbMode' => (int)$config->disturbMode,
+                'sandSetUseConfig' =>$config->sandSetUseConfig,
                 'k3Config' => [
-                    'config' => $config['k3Config']
+                    'config' => $k3?->configuration()?->toArray()['settings'] ?? [],
                 ],
-                'relateK3Switch' => (int)$config['relateK3Switch'] ?? 0,
-                'lightest' =>$config['lightest'],
-                'deepClean' => (int)$config['deepClean'],
-                'removeSand' => (int)$config['removeSand'],
-                'bury' => (int)$config['bury'],
+                'relateK3Switch' => (int)!$hasK3,
+                'lightest' =>$config->lightest,
+                'deepClean' => (int)$config->deepClean,
+                'removeSand' => (int)$config->removeSand,
+                'bury' => (int)$config->bury,
             ],
             'k3Device' => [
-                'id' => (int)($k3['id'] ?? 0),
-                'mac' => $k3['mac'] ?? '',
-                'sn' => $k3['serialNumber'] ?? '',
-                'secret' => $k3['secret'] ?? '',
+                'id' => (int)($k3?->petkit_id ?? 0),
+                'mac' => $k3?->mac ?? '',
+                'sn' => $k3?->serial_number ?? '',
+                'secret' => $k3?->secret ?? '',
             ],
-            'multiConfig' => (bool)($k3['id'] ?? 0) > 0,
-            'petInTipLimit' => (int)$config['petInTipLimit'],
+            'multiConfig' => true,
+            'petInTipLimit' => (int)$config->petInTipLimit,
         ];
+
+        if(!$hasK3) {
+            unset($result['k3Id']);
+            unset($result['k3Device']);
+        }
+        return $result;
     }
 
     public function toDeviceMultiConfig(): array {
-        $setting = $this->getDevice()->configuration['settings'];
+        $setting = $this->getDevice()->configuration();
 
         return [
-            'lightMultiRange' => $setting['lightRange'] ?? [],
-            'distrubMultiRange' => $setting['distrubRange'] ?? [],
+            'lightMultiRange' =>$setting->lightMultiRange ?? [],
+            'distrubMultiRange' => $setting->disturbMultiRange ?? [],
         ];
+    }
+
+    public function link(BluetoothDevice $bluetoothDevice, Device $device) {
+        $this->getDevice()->update(['link_with' => $bluetoothDevice->id]);
+
+        SetProperty::dispatchSync($device, [
+            'k3Id' => $device->petkit_id,
+            'autoRefresh' => 1
+        ]);
+
+    }
+
+    public function unlink(Device $device) {
+        $this->getDevice()->update(['link_with' => null]);
+
+        SetProperty::dispatchSync($device, [
+            'k3Id' => 0
+        ]);
+    }
+
+    private function updateK3(?\stdClass $message)
+    {
+        $k3 = $this->getK3();
+        if (is_null($k3)) {
+            return;
+        }
+
+        $configuration = $k3->configuration();
+
+        $update = false;
+        if (!empty($message?->params?->battery)) {
+            $configuration->battery = (int)$message->params->battery;
+            $update = true;
+        }
+
+        if (!empty($message?->params?->liquid)) {
+            $configuration->liquid = (int)$message->params->liquid;
+            $update = true;
+        }
+
+        if(!$update) {
+            return;
+        }
+
+        $k3->update(['configuration' => $configuration->toArray()]);
     }
 }

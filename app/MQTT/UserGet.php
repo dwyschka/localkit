@@ -12,6 +12,7 @@ use App\Http\Resources\MQTT\DevServerInfo;
 use App\Http\Resources\MQTT\StateReport;
 use App\Models\Device;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Log;
 
 class UserGet
 {
@@ -49,6 +50,11 @@ class UserGet
                 break;
 
         }
+        Log::info('Send User Get', [
+            'message' => $message,
+            'datatype' => $message?->params?->dataType ?? ''
+        ]);
+
         return new AnswerDTO(
             topic: sprintf('/%s/%s/user/get', $deviceId, $deviceName),
             message: $message,
