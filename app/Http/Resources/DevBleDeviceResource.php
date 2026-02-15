@@ -18,7 +18,7 @@ class DevBleDeviceResource extends PetkitHttpResource
      */
     public function toArray(Request $request): array
     {
-        $devices = BluetoothDevice::whereNot('type', 'k3')->all();
+        $devices = BluetoothDevice::whereNot('type', 'k3')->get();
 
         return [
             "list" => $devices->map(function ($device) {

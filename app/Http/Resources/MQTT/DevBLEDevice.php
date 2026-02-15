@@ -11,7 +11,7 @@ class DevBLEDevice extends JsonResource
 
     public function toArray(Request $request)
     {
-        $devices = BluetoothDevice::whereNot('type', 'k3')->all();
+        $devices = BluetoothDevice::whereNot('type', 'k3')->get();
         return [
             "msgType" => 0,
             "payload" => [
