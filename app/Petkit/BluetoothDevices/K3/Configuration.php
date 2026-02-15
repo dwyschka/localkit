@@ -68,8 +68,8 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         $config = $device->configuration;
         $data = [];
 
-        $settings = $config['settings'];
-        $consumables = $config['consumables'];
+        $settings = $config['settings'] ?? [];
+        $consumables = $config['consumables'] ?? [];
 
         // Load consumables
         $data['liquid'] = $consumables['liquid'] ?? null;
