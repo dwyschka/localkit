@@ -22,6 +22,7 @@ class Actions
                     $proxyDevice = $record->linkWith;
 
                     $definition = $proxyDevice->definition();
+
                     if ($definition instanceof BluetoothProxyInterface) {
                         $definition->btConnect($record);
                     }

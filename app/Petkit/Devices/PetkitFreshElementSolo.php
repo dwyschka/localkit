@@ -304,7 +304,7 @@ class PetkitFreshElementSolo implements DeviceDefinition, BluetoothProxyInterfac
     public function btConnect(BluetoothDevice $btDevice): void
     {
         ServiceConnect::dispatchSync(
-            $this->getDevice(), $btDevice,
+            $this->getDevice(), $btDevice
         );
 
     }
