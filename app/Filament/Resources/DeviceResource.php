@@ -56,6 +56,7 @@ class DeviceResource extends Resource
                     ->disabled(function ($record) {
                         return (empty($record->secret) || empty($record->mqtt_subdomain));
                     }),
+
                 Forms\Components\Fieldset::make('Device Configuration')->schema([
                     ...$form->getModelInstance()->ui()->formFields(),
                 ])

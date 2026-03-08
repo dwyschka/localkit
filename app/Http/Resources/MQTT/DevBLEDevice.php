@@ -19,7 +19,7 @@ class DevBLEDevice extends JsonResource
                 "dataType" => "dev_ble_device",
                 "list" => $devices->map(function ($device) {
                     return [
-                        "interval" => 240,
+                        "interval" => $device->interval,
                         "id" => $device->petkit_id,
                         "secret" => $device->secret,
                         "type" => $device->bluetoothDeviceType(),

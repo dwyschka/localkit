@@ -6,6 +6,7 @@ use App\DTOs\MultiRangeDTO;
 use App\DTOs\PetkitDTOInterface;
 use App\Helpers\JsonHelper;
 use App\Homeassistant\HomeassistantTopic;
+use App\Jobs\ServiceConnect;
 use App\Jobs\ServiceEnd;
 use App\Jobs\ServiceStart;
 use App\Jobs\SetProperty;
@@ -16,6 +17,8 @@ use App\Models\Pet;
 use App\MQTT\GenericReply;
 use App\MQTT\OtaMessage;
 use App\MQTT\UserGet;
+use App\Petkit\BluetoothDevices\BluetoothProxyInterface;
+use App\Petkit\BluetoothDevices\Message;
 use App\Petkit\DeviceActions;
 use App\Petkit\DeviceDefinition;
 use App\Petkit\Devices\Configuration\ConfigurationInterface;
@@ -26,7 +29,7 @@ use Illuminate\Support\Facades\Log;
 use PhpMqtt\Client\Facades\MQTT;
 use WendellAdriel\ValidatedDTO\SimpleDTO;
 
-class PetkitPuraMax implements DeviceDefinition
+class PetkitPuraMax implements DeviceDefinition, BluetoothProxyInterface
 {
     protected array $actions = [
         DeviceActions::START_CLEAN,
@@ -65,6 +68,12 @@ class PetkitPuraMax implements DeviceDefinition
     public function stateTopics(): array
     {
         return [
+            sprintf('/sys/%s/%s/thing/event/ble_response/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+                $content = json_decode($message?->params?->content, false);
+                Message::handleProxyMessage($content);
+
+                $this->reply($topic, $message);
+            },
             sprintf('/sys/%s/%s/thing/event/work_continue/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
                 $device->refresh();
                 $content = json_decode($message?->params?->content, false);
@@ -630,5 +639,13 @@ class PetkitPuraMax implements DeviceDefinition
         }
 
         $k3->update(['configuration' => $configuration->toArray()]);
+    }
+
+    public function btConnect(BluetoothDevice $btDevice): void
+    {
+        ServiceConnect::dispatchSync(
+            $this->getDevice(), $btDevice,
+        );
+
     }
 }

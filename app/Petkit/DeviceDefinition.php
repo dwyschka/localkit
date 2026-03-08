@@ -2,11 +2,11 @@
 
 namespace App\Petkit;
 
+use App\Models\BluetoothDevice;
 use App\Models\Device;
 
 interface DeviceDefinition
 {
-
     public function hasAction(string $action): bool;
     public function stateTopics(): array;
     public function subscribedTopics(): array;

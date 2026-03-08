@@ -5,16 +5,13 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\BluetoothDeviceResource\Pages;
 use App\Filament\Resources\BluetoothDeviceResource\RelationManagers;
 use App\Models\BluetoothDevice;
-use App\Petkit\Devices\PetkitFreshElementSolo;
-use App\Petkit\Devices\PetkitPuraMax;
-use App\Petkit\Devices\PetkitYumshareSolo;
+use App\Models\Device;
+use App\Petkit\BluetoothDevices\Actions;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class BluetoothDeviceResource extends Resource
 {
@@ -36,6 +33,15 @@ class BluetoothDeviceResource extends Resource
                 Forms\Components\TextInput::make('petkit_id')->required()->columnSpan('half'),
                 Forms\Components\TextInput::make('serial_number')->columnSpan('half'),
 
+                Forms\Components\Fieldset::make('Proxy Settings')->schema([
+                    Forms\Components\TextInput::make('interval')
+                        ->helperText('The interval in minutes to check the device status')
+                        ->numeric(true)->minValue(10),
+                    Forms\Components\Select::make('link_with')
+                        ->helperText('Set the Device to which the Proxy is linked')
+                    ->relationship('linkWith', 'name')
+                ])->hidden(fn($record) => $record->type == "k3"),
+
                 Forms\Components\Fieldset::make('Device Configuration')->schema([
                     ...$form->getModelInstance()->ui()?->formFields() ?? [],
                 ])->hiddenOn('create')
@@ -54,12 +60,25 @@ class BluetoothDeviceResource extends Resource
                     return $state;
                 }),
                 Tables\Columns\TextColumn::make('mac')->searchable(),
+                Tables\Columns\TextColumn::make('link_with')
+                    ->badge()
+                    ->formatStateUsing(function (?int $state) {
+                        if(empty($state)) {
+                            return 'None';
+                        }
+                        return Device::find($state)->name ?? 'None';
+
+                    })
+                    ->color('info')
             ])
             ->filters([
                 //
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\ActionGroup::make(
+                    Actions::actions()
+                )
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
