@@ -444,7 +444,7 @@ class PetkitPuraMax implements DeviceDefinition, BluetoothProxyInterface
             case 'stop_lightning':
                 $this->stopLightning($this->getDevice());
                 break;
-            case 'clean_litter':
+            case 'dump_litter':
                 $this->cleanLitter($this->getDevice());
                 break;
             case 'reset_n50':
