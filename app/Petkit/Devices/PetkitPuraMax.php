@@ -245,11 +245,13 @@ class PetkitPuraMax implements DeviceDefinition, BluetoothProxyInterface
     }
 
     public function getK3(): ?BluetoothDevice {
-        $id = $this->getDevice()?->link_with;
-        if(is_null($id)) {
+
+        $k3 = $this->getDevice()->bleLinked->firstWhere('type', 'k3');
+
+        if(is_null($k3)) {
             return null;
         }
-        return BluetoothDevice::find($id);
+        return $k3;
     }
     public function hasAction(string $action): bool
     {
@@ -596,20 +598,16 @@ class PetkitPuraMax implements DeviceDefinition, BluetoothProxyInterface
         ];
     }
 
-    public function link(BluetoothDevice $bluetoothDevice, Device $device) {
-        $this->getDevice()->update(['link_with' => $bluetoothDevice->id]);
-
-        SetProperty::dispatchSync($device, [
-            'k3Id' => $device->petkit_id,
+    public function link(BluetoothDevice $bluetoothDevice) {
+        SetProperty::dispatchSync($this->getDevice(), [
+            'k3Id' => $bluetoothDevice->petkit_id,
             'autoRefresh' => 1
         ]);
 
     }
 
-    public function unlink(Device $device) {
-        $this->getDevice()->update(['link_with' => null]);
-
-        SetProperty::dispatchSync($device, [
+    public function unlink() {
+        SetProperty::dispatchSync($this->getDevice(), [
             'k3Id' => 0
         ]);
     }

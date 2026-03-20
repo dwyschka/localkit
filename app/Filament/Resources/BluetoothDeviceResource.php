@@ -36,11 +36,13 @@ class BluetoothDeviceResource extends Resource
                 Forms\Components\Fieldset::make('Proxy Settings')->schema([
                     Forms\Components\TextInput::make('interval')
                         ->helperText('The interval in minutes to check the device status')
-                        ->numeric(true)->minValue(10),
+                        ->numeric(true)->minValue(10)
+                        ->hidden(fn($record) => $record->type == "k3")
+                    ,
                     Forms\Components\Select::make('link_with')
                         ->helperText('Set the Device to which the Proxy is linked')
-                    ->relationship('linkWith', 'name')
-                ])->hidden(fn($record) => $record->type == "k3"),
+                    ->relationship('linkWith', 'name', fn($query, $record) => $record->type == "k3" ? $query->whereIn('device_type', [ 't4' ]) : $query)
+                ]),
 
                 Forms\Components\Fieldset::make('Device Configuration')->schema([
                     ...$form->getModelInstance()->ui()?->formFields() ?? [],
