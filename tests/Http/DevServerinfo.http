@@ -1,4 +1,4 @@
-POST http://localhost/6/d4h/dev_serverinfo
+POST https://api-eu.petkt.com/6/d4h/dev_ble_device
 User-Agent: PETKIT DEV
-X-Device: id=400061044&nonce=D8ea5O6BGK9l&timestamp=1739098321&type=T4&sign=3e4ee0dc2dece5350ccdffcaf06b4909
+X-Device:id=300016346&nonce=dgi2pmil1dic&timestamp=1771158886&type=D4H&sign=92ba2f3fa8d7ae9a45769ed64f0e8188
 Content-Type: application/x-www-form-urlencoded

@@ -54,7 +54,7 @@ class DeviceActions
                 ->action(function (Device $record) {
                     $record->definition()->stopMaintenance($record);
                 }),
-            Action::make('Clean Litter')
+            Action::make('Dump Litter')
                 ->visible(function (Device $record) {
                     return $record->definition()->hasAction(self::CLEAN_LITTER);
                 })

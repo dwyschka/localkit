@@ -6,6 +6,7 @@ use App\Helpers\HomeassistantHelper;
 use App\Helpers\JsonHelper;
 use App\Homeassistant\Interfaces\Snapshot;
 use App\Jobs\SetProperty;
+use App\Petkit\DeviceDefinition;
 use App\Petkit\Devices;
 Use App\Petkit\UI;
 
@@ -84,7 +85,7 @@ class Device extends Model
     }
 
 
-    public function definition() {
+    public function definition(): DeviceDefinition {
 
         return match ($this->device_type) {
             't4' => new Devices\PetkitPuraMax($this),
@@ -115,4 +116,7 @@ class Device extends Model
         return in_array($this->device_type, ['d4h']);
     }
 
+    public function bleLinked() {
+        return $this->hasMany(BluetoothDevice::class, 'link_with', 'id');
+    }
 }

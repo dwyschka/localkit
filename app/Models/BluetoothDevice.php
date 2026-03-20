@@ -6,6 +6,8 @@ use App\Petkit\BluetoothDevices\K3;
 use App\Petkit\BluetoothDevices\W5;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use League\CommonMark\Extension\CommonMark\Node\Inline\Link;
 
 class BluetoothDevice extends Model
 {
@@ -20,6 +22,7 @@ class BluetoothDevice extends Model
     {
         self::updating(function (self $device) {
             $configuration = $device->configuration();
+
             $device->configuration = $configuration->toArray();
         });
 
@@ -62,5 +65,9 @@ class BluetoothDevice extends Model
             'w5' => 14,
             default => throw new \Exception('No valid device')
         };
+    }
+
+    public function linkWith(): BelongsTo {
+        return $this->belongsTo(Device::class, 'link_with', 'id');
     }
 }

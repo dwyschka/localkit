@@ -7,15 +7,19 @@ use App\Helpers\JsonHelper;
 use App\Helpers\Time;
 use App\Homeassistant\HomeassistantTopic;
 use App\Jobs\FeedRealtime;
+use App\Jobs\ServiceConnect;
 use App\Jobs\ServiceEnd;
 use App\Jobs\ServiceStart;
 use App\Jobs\SetProperty;
+use App\Models\BluetoothDevice;
 use App\Models\Device;
 use App\Models\History;
 use App\Models\Pet;
 use App\MQTT\GenericReply;
 use App\MQTT\OtaMessage;
 use App\MQTT\UserGet;
+use App\Petkit\BluetoothDevices\BluetoothProxyInterface;
+use App\Petkit\BluetoothDevices\Message;
 use App\Petkit\DeviceActions;
 use App\Petkit\DeviceDefinition;
 use App\Petkit\Devices\Configuration\ConfigurationInterface;
@@ -25,7 +29,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use PhpMqtt\Client\Facades\MQTT;
 
-class PetkitFreshElementSolo implements DeviceDefinition
+class PetkitFreshElementSolo implements DeviceDefinition, BluetoothProxyInterface
 {
     protected array $actions = [
         DeviceActions::START_FEEDING
@@ -53,6 +57,12 @@ class PetkitFreshElementSolo implements DeviceDefinition
     public function stateTopics(): array
     {
         return [
+            sprintf('/sys/%s/%s/thing/event/ble_response/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+                $content = json_decode($message?->params?->content, false);
+                Message::handleProxyMessage($content);
+
+                $this->reply($topic, $message);
+            },
             sprintf('/sys/%s/%s/thing/event/feed_stop/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
                 $device->update([
                     'working_state' => DeviceStates::IDLE->value
@@ -289,7 +299,13 @@ class PetkitFreshElementSolo implements DeviceDefinition
             'nextTick' => $nextTick['t'],
             'latest' => $latest
         ]);
+    }
 
+    public function btConnect(BluetoothDevice $btDevice): void
+    {
+        ServiceConnect::dispatchSync(
+            $this->getDevice(), $btDevice
+        );
 
     }
 }
