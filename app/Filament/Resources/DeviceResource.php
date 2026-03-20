@@ -95,15 +95,8 @@ class DeviceResource extends Resource
                     })
                     ->color(fn(string $state): string => 'danger'),
                 Tables\Columns\TextColumn::make('serial_number'),
-                Tables\Columns\TextColumn::make('link_with')
+                Tables\Columns\TextColumn::make('bleLinked.name')
                     ->badge()
-                    ->formatStateUsing(function (?int $state) {
-                        if(empty($state)) {
-                            return 'None';
-                        }
-                        return BluetoothDevice::find($state)->name ?? 'None';
-
-                    })
                     ->color('info')
 
             ])

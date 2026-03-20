@@ -24,6 +24,15 @@ class BluetoothDevice extends Model
             $configuration = $device->configuration();
 
             $device->configuration = $configuration->toArray();
+
+            if($device->isDirty('link_with')) {
+                $oldLinkedDevice = Device::find($device->getOriginal('link_with'));
+                if(!is_null($oldLinkedDevice)) {
+                    $oldLinkedDevice->definition()->unlink($device);
+                }
+                $device->linkWith->definition()->link($device);
+            }
+
         });
 
         self::creating(function (self $device) {
