@@ -42,6 +42,7 @@ class BaseEntity
                 'name' => $this->device->name,
                 'manufacturer' => 'Localkit',
                 'model' => $this->device->definition()->deviceName(),
+                'sw_version' => $this->device->firmware
             ],
             '~' => HomeassistantHelper::deviceTopic($this->device),
             'payload_available' => 'online',
