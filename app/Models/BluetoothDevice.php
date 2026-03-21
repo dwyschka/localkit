@@ -30,7 +30,7 @@ class BluetoothDevice extends Model
                 if(!is_null($oldLinkedDevice)) {
                     $oldLinkedDevice->definition()->unlink($device);
                 }
-                $device->linkWith->definition()->link($device);
+                $device->linkWith?->definition()?->link($device);
             }
 
         });
