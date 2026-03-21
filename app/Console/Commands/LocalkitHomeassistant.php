@@ -40,7 +40,7 @@ class LocalkitHomeassistant extends Command
 
         $devices = collect($devices)->merge($bluetoothDevices);
 
-        $bluetoothDevices->each(function (Device|BluetoothDevice $device) use ($mqtt) {
+        $devices->each(function (Device|BluetoothDevice $device) use ($mqtt) {
 
             if($device instanceof BluetoothDevice) {
                 $definition = $device->device();

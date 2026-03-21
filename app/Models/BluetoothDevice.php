@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Helpers\HomeassistantHelper;
 use App\Petkit\BluetoothDevices\K3;
 use App\Petkit\BluetoothDevices\W5;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use League\CommonMark\Extension\CommonMark\Node\Inline\Link;
+use PhpMqtt\Client\Facades\MQTT;
 
 class BluetoothDevice extends Model
 {
@@ -32,11 +34,18 @@ class BluetoothDevice extends Model
                 }
                 $device->linkWith?->definition()?->link($device);
             }
-
         });
 
         self::creating(function (self $device) {
             $device->configuration = $device->configuration()->toArray();
+        });
+
+        self::updated(function (self $device) {
+            $definition = $device->device();
+
+            MQTT::connection('homeassistant-publisher')
+                ->publish(HomeassistantHelper::deviceTopic($device), $definition->toHomeassistant(), 0, true);
+
         });
     }
 

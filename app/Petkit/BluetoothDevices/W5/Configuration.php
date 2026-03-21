@@ -115,6 +115,15 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     public float $purifiedWaterTodayLiters;
     public string $energyConsumedKwh;
 
+    #[Sensor(
+        technicalName: 'link_with',
+        name: 'Link With',
+        icon: 'mdi:information-outline',
+        valueTemplate: '{{ value_json.settings.linkWith }}',
+        entityCategory: 'diagnostic'
+    )]
+    public string $linkWith;
+
     public function defaults(): array
     {
         return [
@@ -147,6 +156,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'purifiedWaterLiters' => 0.0,
             'purifiedWaterTodayLiters' => 0.0,
             'energyConsumedKwh' => '0.000000',
+            'linkWith' => null,
         ];
     }
 
@@ -182,6 +192,8 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'purifiedWaterLiters' => ['numeric', 'min:0'],
             'purifiedWaterTodayLiters' => ['numeric', 'min:0'],
             'energyConsumedKwh' => ['string'],
+            'linkWith' => ['string', 'nullable'],
+
         ];
     }
 
@@ -268,6 +280,8 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         $data['purifiedWaterTodayLiters'] = $stats['purifiedWaterTodayLiters'] ?? null;
         $data['energyConsumedKwh'] = $stats['energyConsumedKwh'] ?? null;
 
+        $data['linkWith'] = $device->linkWith?->name ?? 'None';
+
         return new self(array_filter($data, fn($value) => $value !== null));
     }
 
@@ -340,6 +354,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
                 'ledLightTimeOnReadable' => $this->ledLightTimeOnReadable,
                 'ledLightTimeOff' => $this->ledLightTimeOff,
                 'ledLightTimeOffReadable' => $this->ledLightTimeOffReadable,
+                'linkWith' => $this->linkWith,
             ],
             'consumables' => [
                 'filterPercentage' => $this->filterPercentage,
