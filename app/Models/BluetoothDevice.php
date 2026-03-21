@@ -25,7 +25,7 @@ class BluetoothDevice extends Model
 
             $device->configuration = $configuration->toArray();
 
-            if($device->isDirty('link_with')) {
+            if($device->isDirty('link_with') && $device->type === 'k3') {
                 $oldLinkedDevice = Device::find($device->getOriginal('link_with'));
                 if(!is_null($oldLinkedDevice)) {
                     $oldLinkedDevice->definition()->unlink($device);
