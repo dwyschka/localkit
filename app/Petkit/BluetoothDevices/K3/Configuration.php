@@ -3,24 +3,54 @@
 namespace App\Petkit\BluetoothDevices\K3;
 
 use App\DTOs\DeviceConfigurationDTO;
+use App\Homeassistant\Sensor;
 use App\Models\BluetoothDevice;
 use App\Models\Device;
 use App\Petkit\Devices\Configuration\ConfigurationInterface;
 use Illuminate\Support\Facades\Log;
 use WendellAdriel\ValidatedDTO\Casting\ArrayCast;
 use WendellAdriel\ValidatedDTO\Casting\IntegerCast;
+use WendellAdriel\ValidatedDTO\Casting\StringCast;
 
 class Configuration extends DeviceConfigurationDTO implements ConfigurationInterface
 {
+    #[Sensor(
+        technicalName: 'liquid',
+        name: 'Liquid',
+        icon: 'mdi:information-outline',
+        unitOfMeasurement: '%',
+        valueTemplate: '{{ value_json.consumables.liquid }}',
+        entityCategory: 'diagnostic'
+    )]
     public int $liquid;
+
+    #[Sensor(
+        technicalName: 'battery',
+        name: 'Battery',
+        icon: 'mdi:information-outline',
+        deviceClass: 'battery',
+        unitOfMeasurement: '%',
+        valueTemplate: '{{ value_json.consumables.battery }}',
+        entityCategory: 'diagnostic'
+    )]
     public int $battery;
 
+    #[Sensor(
+        technicalName: 'link_with',
+        name: 'Link With',
+        icon: 'mdi:information-outline',
+        valueTemplate: '{{ value_json.settings.linkWith }}',
+        entityCategory: 'diagnostic'
+    )]
+    public string $linkWith;
     public array $standard;
     public int $lightness;
     public int $lowVoltage;
     public int $refreshTotalTime;
     public int $singleRefreshTime;
     public int $singleLightTime;
+
+
 
     public function defaults(): array
     {
@@ -32,7 +62,8 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'lowVoltage' => 5,
             'refreshTotalTime' => 11500,
             'singleRefreshTime' => 25,
-            'singleLightTime' => 120
+            'singleLightTime' => 120,
+            'link_with' => null
         ];
     }
 
@@ -47,6 +78,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'refreshTotalTime' => ['integer', 'min:0'],
             'singleRefreshTime' => ['integer', 'min:0'],
             'singleLightTime' => ['integer', 'min:0'],
+            'linkWith' => ['string', 'nullable'],
         ];
     }
 
@@ -82,6 +114,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         $data['singleRefreshTime'] = $settings['singleRefreshTime'] ?? null;
         $data['singleLightTime'] = $settings['singleLightTime'] ?? null;
 
+        $data['linkWith'] = $device->linkWith?->name ?? 'None';
 
         return new self(array_filter($data, fn($value) => $value !== null));
     }
@@ -99,9 +132,15 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
                 'lowVoltage' => $this->lowVoltage,
                 'refreshTotalTime' => $this->refreshTotalTime,
                 'singleRefreshTime' => $this->singleRefreshTime,
-                'singleLightTime' => $this->singleLightTime
+                'singleLightTime' => $this->singleLightTime,
+                'linkWith' => $this->linkWith ?? 'None'
             ]
         ];
+    }
+
+    public function toHomeassistant(): array
+    {
+        return $this->toArray();
     }
 
 }

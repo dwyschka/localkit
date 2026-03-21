@@ -4,12 +4,14 @@ namespace App\Petkit\BluetoothDevices\W5;
 
 use App\Models\BluetoothDevice;
 use App\Petkit\BluetoothDevices\Actions;
+use App\Petkit\BluetoothDevices\BluetoothDeviceTrait;
 use App\Petkit\BluetoothDevices\DeviceInterface;
 use App\Petkit\BluetoothDevices\HasParserInterface;
 use App\Petkit\BluetoothDevices\W5\Parser;
 
 class Device implements DeviceInterface, HasParserInterface
 {
+    use BluetoothDeviceTrait;
     public function __construct(protected BluetoothDevice $model) {}
 
     protected Parser $parser;
@@ -42,5 +44,9 @@ class Device implements DeviceInterface, HasParserInterface
 
         $this->model->save();
 
+    }
+
+    public function deviceName(): string {
+        return 'Water Fountain (W5)';
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Homeassistant;
 
+use App\Models\BluetoothDevice;
 use App\Petkit\Devices\Configuration\ConfigurationInterface;
 use PhpMqtt\Client\MqttClient;
 
@@ -12,7 +13,7 @@ class AutoDiscoveryService
     {
     }
 
-    public function discover(ConfigurationInterface $configuration, \App\Models\Device $device)
+    public function discover(ConfigurationInterface $configuration, \App\Models\Device|BluetoothDevice $device)
     {
         $reflectionClass = new \ReflectionClass($configuration);
 

@@ -6,6 +6,7 @@ use App\Helpers\HomeassistantHelper;
 use App\Homeassistant\AutoDiscoveryService;
 use App\Homeassistant\HomeassistantTopicService;
 use App\Homeassistant\Interfaces\Snapshot;
+use App\Models\BluetoothDevice;
 use App\Models\Device;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -35,9 +36,20 @@ class LocalkitHomeassistant extends Command
         $mqtt = MQTT::connection('homeassistant');
 
         $devices = Device::whereProxyMode(0)->get();
+        $bluetoothDevices = BluetoothDevice::all();
 
-        $devices->each(function (Device $device) use ($mqtt) {
-            $definition = $device->definition();
+        $devices = collect($devices)->merge($bluetoothDevices);
+
+        $bluetoothDevices->each(function (Device|BluetoothDevice $device) use ($mqtt) {
+
+            if($device instanceof BluetoothDevice) {
+                $definition = $device->device();
+                $configuration = $device->configuration();
+            } else {
+                $definition = $device->definition();
+                $configuration = $definition->configurationDefinition();
+            }
+
             $mqtt->publish(HomeassistantHelper::deviceTopic($device), $definition->toHomeassistant(), 0, true);
 
             if ($definition instanceof Snapshot) {
@@ -51,11 +63,12 @@ class LocalkitHomeassistant extends Command
                 }
             }
 
-            $configuration = $device->definition()->configurationDefinition();
+
             $service = new AutoDiscoveryService($mqtt);
 
             $service->discover($configuration, $device);
         });
+
 
         $service = new HomeassistantTopicService($devices);
 

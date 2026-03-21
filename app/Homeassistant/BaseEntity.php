@@ -3,11 +3,12 @@
 namespace App\Homeassistant;
 
 use App\Helpers\HomeassistantHelper;
+use App\Models\BluetoothDevice;
 
 class BaseEntity
 {
 
-    protected \App\Models\Device $device;
+    protected \App\Models\Device|BluetoothDevice $device;
 
     public function toTopic(): string
     {
@@ -33,6 +34,12 @@ class BaseEntity
     {
         $uniqueId = sprintf('%s_%s', $this->device->serial_number, $this->technicalName());
 
+        if($this->device instanceof BluetoothDevice) {
+            $definition = $this->device->device();
+        } else {
+            $definition = $this->device->definition();
+        }
+
         $config = [
             'name' => $this->name,
             'state_topic' => '~',
@@ -41,8 +48,8 @@ class BaseEntity
                 'ids' => [$this->device->serial_number],
                 'name' => $this->device->name,
                 'manufacturer' => 'Localkit',
-                'model' => $this->device->definition()->deviceName(),
-                'sw_version' => $this->device->firmware
+                'model' => $definition->deviceName(),
+                'sw_version' => $this->device?->firmware ?? 'unknown',
             ],
             '~' => HomeassistantHelper::deviceTopic($this->device),
             'payload_available' => 'online',
@@ -143,7 +150,7 @@ class BaseEntity
         return $config;
     }
 
-    public function setDevice(\App\Models\Device $device): void
+    public function setDevice(\App\Models\Device|BluetoothDevice $device): void
     {
 
         $this->device = $device;

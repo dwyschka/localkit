@@ -3,6 +3,8 @@
 namespace App\Petkit\BluetoothDevices\W5;
 
 use App\DTOs\DeviceConfigurationDTO;
+use App\Homeassistant\BinarySensor;
+use App\Homeassistant\Sensor;
 use App\Models\BluetoothDevice;
 use App\Models\Device;
 use App\Petkit\Devices\Configuration\ConfigurationInterface;
@@ -13,8 +15,31 @@ use WendellAdriel\ValidatedDTO\Casting\StringCast;
 
 class Configuration extends DeviceConfigurationDTO implements ConfigurationInterface
 {
+
+    #[BinarySensor(
+        technicalName: 'power_status',
+        name: 'Power',
+        icon: 'mdi:power',
+        deviceClass: 'power',
+        valueTemplate: '{{ value_json.states.powerStatus }}',
+        entityCategory: 'diagnostic',
+        payloadOn: 'on',
+        payloadOff: 'off'
+    )]
     public bool $powerStatus;
     public int $mode;
+
+
+    #[BinarySensor(
+        technicalName: 'running_status',
+        name: 'Running',
+        icon: 'mdi:circle',
+        deviceClass: 'power',
+        valueTemplate: '{{ value_json.states.runningStatus }}',
+        entityCategory: 'diagnostic',
+        payloadOn: 'on',
+        payloadOff: 'off'
+    )]
     public bool $runningStatus;
 
     public bool $dndState;
@@ -24,8 +49,40 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     public int $doNotDisturbTimeOff;
     public string $doNotDisturbTimeOffReadable;
 
+    #[BinarySensor(
+        technicalName: 'warning_breakdown',
+        name: 'Warning Breakdown',
+        icon: 'mdi:alert',
+        deviceClass: 'problem',
+        valueTemplate: '{{ value_json.states.warningBreakdown }}',
+        entityCategory: 'diagnostic',
+        payloadOn: 1,
+        payloadOff: 0
+    )]
     public int $warningBreakdown;
+
+    #[BinarySensor(
+        technicalName: 'warning_water_missing',
+        name: 'Warning Water Missing',
+        icon: 'mdi:water',
+        deviceClass: 'problem',
+        valueTemplate: '{{ value_json.states.warningWaterMissing }}',
+        entityCategory: 'diagnostic',
+        payloadOn: 1,
+        payloadOff: 0
+    )]
     public int $warningWaterMissing;
+
+    #[BinarySensor(
+        technicalName: 'warning_filter',
+        name: 'Warning Filter',
+        icon: 'mdi:filter',
+        deviceClass: 'problem',
+        valueTemplate: '{{ value_json.states.warningFilter }}',
+        entityCategory: 'diagnostic',
+        payloadOn: 1,
+        payloadOff: 0
+    )]
     public int $warningFilter;
 
     public int $pumpRuntime;
@@ -33,6 +90,14 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     public int $pumpRuntimeToday;
     public string $pumpRuntimeTodayReadable;
 
+    #[Sensor(
+        technicalName: 'filter_percentage',
+        name: 'Filter %',
+        icon: 'mdi:information-outline',
+        unitOfMeasurement: '%',
+        valueTemplate: '{{ value_json.consumables.filterPercentage }}',
+        entityCategory: 'diagnostic'
+    )]
     public int $filterPercentage;
     public int $filterTimeLeftDays;
 
@@ -90,7 +155,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         return [
             'powerStatus' => ['boolean'],
             'mode' => ['integer', 'min:0'],
-            'runningStatus' => ['integer', 'in:0,1'],
+            'runningStatus' => ['boolean'],
             'dndState' => ['boolean'],
             'doNotDisturbSwitch' => ['boolean'],
             'doNotDisturbTimeOn' => ['integer', 'min:0', 'max:1440'],
@@ -290,5 +355,19 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
                 'energyConsumedKwh' => $this->energyConsumedKwh,
             ],
         ];
+    }
+
+    public function toHomeassistant(): array
+    {
+        $toArray = $this->toArray();
+
+        $states = $toArray['states'];
+        foreach($states as $key => $value) {
+            $states[$key] = is_bool($value) ? ($value ? 'on' : 'off') : (string)$value;
+        }
+        $toArray['states'] = $states;
+
+
+        return $toArray;
     }
 }
