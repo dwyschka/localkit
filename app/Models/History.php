@@ -33,12 +33,13 @@ class History extends Model
                 return $this->createCleaningMessage();
             case 'MAINTENANCE':
                 return $this->createMaintenanceMessage();
+            case 'ERROR':
+                return $this->createErrorMessage();
         }
         return '';
     }
 
     public function title(): string {
-
         return __(sprintf('petkit.history.%s_title', Str::lower($this->type)));
     }
 
@@ -60,6 +61,11 @@ class History extends Model
         return __('petkit.history.cleaning', [
             'name' => $this->pet?->name ?? __('petkit.unknown')
         ]);
+    }
+
+    private function createErrorMessage()
+    {
+        return __(sprintf('petkit.error.%s', $this->parameters['error']));
     }
 
     private function createMaintenanceMessage()

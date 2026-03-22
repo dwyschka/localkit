@@ -60,7 +60,6 @@ class BaseEntity
         ];
 
 
-
         if (isset($this->commandTopic)) {
             $config['command_topic'] = HomeassistantHelper::deviceTopic($this->device) . '/' . $this->commandTopic;
         }
