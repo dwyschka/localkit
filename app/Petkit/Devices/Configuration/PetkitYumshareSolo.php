@@ -460,6 +460,7 @@ class PetkitYumshareSolo extends DeviceConfigurationDTO implements Configuration
         technicalName: 'durability_in_days',
         name: 'Next Desiccant Change in Days',
         icon: 'mdi:update',
+        unitOfMeasurement: 'd',
         valueTemplate: '{{ ((value_json.consumables.desiccantNextChange - as_timestamp(now())) / 86400) | round(1) }}',
         entityCategory: 'diagnostic'
     )]

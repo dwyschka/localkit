@@ -383,6 +383,7 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
         technicalName: 'durabilityInDays',
         name: 'Next N50 Change in Days',
         icon: 'mdi:update',
+        unitOfMeasurement: 'd',
         valueTemplate: '{{ ((value_json.consumables.n50NextChange - as_timestamp(now())) / 86400) | round(1) }}',
         entityCategory: 'diagnostic'
     )]
