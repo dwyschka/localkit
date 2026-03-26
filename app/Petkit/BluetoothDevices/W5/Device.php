@@ -44,6 +44,8 @@ class Device implements DeviceInterface, HasParserInterface
 
         $configuration = Configuration::fromParser($decode['decoded']);
 
+        Log::info('From Parser', ['msg' => $configuration]);
+
         $this->model->configuration = $configuration->toArray();
 
         $this->model->save();
