@@ -8,6 +8,7 @@ use App\Petkit\BluetoothDevices\BluetoothDeviceTrait;
 use App\Petkit\BluetoothDevices\DeviceInterface;
 use App\Petkit\BluetoothDevices\HasParserInterface;
 use App\Petkit\BluetoothDevices\W5\Parser;
+use Illuminate\Support\Facades\Log;
 
 class Device implements DeviceInterface, HasParserInterface
 {
@@ -36,14 +37,16 @@ class Device implements DeviceInterface, HasParserInterface
         $cmd = $message->cmd;
         $payload = $message->data;
 
+        Log::info('W5', ['cmd' => $cmd, 'payload' => $payload]);
         $binary = bin2hex(base64_decode(urldecode($payload)));
-        $decodedMessage = $this->parser()->decode($binary, $cmd);
-        $configuration = Configuration::fromParser($decodedMessage['decoded']);
+        $decode = $this->parser()->decode($binary, $cmd);
+        Log::info('Decoded', ['decode' => $decode]);
+
+        $configuration = Configuration::fromParser($decode['decoded']);
 
         $this->model->configuration = $configuration->toArray();
 
         $this->model->save();
-
     }
 
     public function deviceName(): string {
