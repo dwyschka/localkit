@@ -122,7 +122,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         valueTemplate: '{{ value_json.settings.linkWith }}',
         entityCategory: 'diagnostic'
     )]
-    public string $linkWith;
+    public ?string $linkWith;
 
     public function defaults(): array
     {
