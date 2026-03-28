@@ -14,7 +14,7 @@ use PhpMqtt\Client\Facades\MQTT;
 class BluetoothDevice extends Model
 {
 
-    protected $fillable = ['name', 'petkit_id', 'serial_number', 'mac', 'secret', 'type', 'configuration'];
+    protected $fillable = ['name', 'petkit_id', 'serial_number', 'mac', 'secret', 'type', 'configuration', 'interval', 'link_with'];
 
     protected $casts = [
         'configuration' => 'array'
