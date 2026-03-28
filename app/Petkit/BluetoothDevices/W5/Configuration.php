@@ -59,7 +59,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         payloadOn: 1,
         payloadOff: 0
     )]
-    public int $warningBreakdown;
+    public bool $warningBreakdown;
 
     #[BinarySensor(
         technicalName: 'warning_water_missing',
@@ -71,7 +71,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         payloadOn: 1,
         payloadOff: 0
     )]
-    public int $warningWaterMissing;
+    public bool $warningWaterMissing;
 
     #[BinarySensor(
         technicalName: 'warning_filter',
@@ -83,7 +83,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         payloadOn: 1,
         payloadOff: 0
     )]
-    public int $warningFilter;
+    public bool $warningFilter;
 
     public int $pumpRuntime;
     public string $pumpRuntimeReadable;
@@ -136,9 +136,9 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'doNotDisturbTimeOnReadable' => '22:00',
             'doNotDisturbTimeOff' => 480,
             'doNotDisturbTimeOffReadable' => '08:00',
-            'warningBreakdown' => 0,
-            'warningWaterMissing' => 0,
-            'warningFilter' => 0,
+            'warningBreakdown' => false,
+            'warningWaterMissing' => false,
+            'warningFilter' => false,
             'pumpRuntime' => 0,
             'pumpRuntimeReadable' => '0 days, 0 hours',
             'pumpRuntimeToday' => 0,
@@ -160,6 +160,12 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         ];
     }
 
+    public function setWarningBreakdown(bool $warningBreakdown): Configuration
+    {
+        $this->warningBreakdown = $warningBreakdown;
+        return $this;
+    }
+
     protected function rules(): array
     {
         return [
@@ -172,9 +178,9 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'doNotDisturbTimeOnReadable' => ['string'],
             'doNotDisturbTimeOff' => ['integer', 'min:0', 'max:1440'],
             'doNotDisturbTimeOffReadable' => ['string'],
-            'warningBreakdown' => ['integer', 'in:0,1'],
-            'warningWaterMissing' => ['integer', 'in:0,1'],
-            'warningFilter' => ['integer', 'in:0,1'],
+            'warningBreakdown' => ['boolean'],
+            'warningWaterMissing' => ['boolean'],
+            'warningFilter' => ['boolean'],
             'pumpRuntime' => ['integer', 'min:0'],
             'pumpRuntimeReadable' => ['string'],
             'pumpRuntimeToday' => ['integer', 'min:0'],
@@ -209,9 +215,9 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'doNotDisturbTimeOnReadable' => new StringCast(),
             'doNotDisturbTimeOff' => new IntegerCast(),
             'doNotDisturbTimeOffReadable' => new StringCast(),
-            'warningBreakdown' => new IntegerCast(),
-            'warningWaterMissing' => new IntegerCast(),
-            'warningFilter' => new IntegerCast(),
+            'warningBreakdown' => new BooleanCast(),
+            'warningWaterMissing' => new BooleanCast(),
+            'warningFilter' => new BooleanCast(),
             'pumpRuntime' => new IntegerCast(),
             'pumpRuntimeReadable' => new StringCast(),
             'pumpRuntimeToday' => new IntegerCast(),
@@ -254,9 +260,9 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         $data['doNotDisturbTimeOff'] = $settings['doNotDisturbTimeOff'] ?? null;
         $data['doNotDisturbTimeOffReadable'] = $settings['doNotDisturbTimeOffReadable'] ?? null;
 
-        $data['warningBreakdown'] = $status['warningBreakdown'] ?? null;
-        $data['warningWaterMissing'] = $status['warningWaterMissing'] ?? null;
-        $data['warningFilter'] = $status['warningFilter'] ?? null;
+        $data['warningBreakdown'] = $status['warningBreakdown'] ?? false;
+        $data['warningWaterMissing'] = $status['warningWaterMissing'] ?? false;
+        $data['warningFilter'] = $status['warningFilter'] ?? false;
 
         $data['pumpRuntime'] = $stats['pumpRuntime'] ?? null;
         $data['pumpRuntimeReadable'] = $stats['pumpRuntimeReadable'] ?? null;
@@ -299,9 +305,9 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         $data['doNotDisturbTimeOff'] = $parser['doNotDisturbTimeOff'] ?? null;
         $data['doNotDisturbTimeOffReadable'] = $parser['doNotDisturbTimeOffReadable'] ?? null;
 
-        $data['warningBreakdown'] = $parser['warningBreakdown'] ?? null;
-        $data['warningWaterMissing'] = $parser['warningWaterMissing'] ?? null;
-        $data['warningFilter'] = $parser['warningFilter'] ?? null;
+        $data['warningBreakdown'] = $parser['warningBreakdown'] ?? false;
+        $data['warningWaterMissing'] = $parser['warningWaterMissing'] ?? false;
+        $data['warningFilter'] = $parser['warningFilter'] ?? false;
 
         $data['pumpRuntime'] = $parser['pumpRuntime'] ?? null;
         $data['pumpRuntimeReadable'] = $parser['pumpRuntimeReadable'] ?? null;

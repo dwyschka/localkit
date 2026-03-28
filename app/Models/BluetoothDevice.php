@@ -43,8 +43,10 @@ class BluetoothDevice extends Model
         self::updated(function (self $device) {
             $definition = $device->device();
 
-            MQTT::connection('homeassistant-publisher')
-                ->publish(HomeassistantHelper::deviceTopic($device), $definition->toHomeassistant(), 0, true);
+            try {
+                MQTT::connection('homeassistant-publisher')
+                    ->publish(HomeassistantHelper::deviceTopic($device), $definition->toHomeassistant(), 0, true);
+            } catch (\Exception $e) {}
 
         });
     }
