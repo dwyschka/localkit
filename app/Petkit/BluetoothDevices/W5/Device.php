@@ -32,7 +32,7 @@ class Device implements DeviceInterface, HasParserInterface
     }
 
 
-    public function handleMessage(\stdClass $message): bool
+    public function handleMessage(\stdClass $message): void
     {
         $cmd = $message->cmd;
         $payload = $message->data;
@@ -40,8 +40,6 @@ class Device implements DeviceInterface, HasParserInterface
         Log::info('W5', ['cmd' => $cmd, 'payload' => $payload]);
 
         if($cmd != 230) {
-            Log::info('W5', ['cmd' => $cmd, 'payload' => $payload]);
-
             return;
         }
         Log::info('W5', ['cmd' => $cmd, 'payload' => $payload]);
@@ -57,40 +55,6 @@ class Device implements DeviceInterface, HasParserInterface
 
         $this->model->save();
 
-
-
-
-        $msg = json_decode('{
-      "powerStatus": 1,
-      "mode": 1,
-      "dndState": 0,
-      "warningBreakdown": 0,
-      "warningWaterMissing": 0,
-      "warningFilter": 0,
-      "pumpRuntime": 2185486,
-      "pumpRuntimeReadable": "25 days, 7 hours",
-      "filterPercentage": 15,
-      "runningStatus": 1,
-      "pumpRuntimeToday": 82500,
-      "pumpRuntimeTodayReadable": "22:55h",
-      "smartTimeOn": 3,
-      "smartTimeOff": 3,
-      "ledSwitch": 0,
-      "ledBrightness": 2,
-      "ledLightTimeOn": 0,
-      "ledLightTimeOnReadable": "00:00",
-      "ledLightTimeOff": 1440,
-      "ledLightTimeOffReadable": "24:00",
-      "doNotDisturbSwitch": 0,
-      "doNotDisturbTimeOn": 1320,
-      "doNotDisturbTimeOnReadable": "22:00",
-      "doNotDisturbTimeOff": 256,
-      "doNotDisturbTimeOffReadable": "04:16",
-      "filterTimeLeftDays": 450,
-      "purifiedWaterLiters": 27318.58,
-      "purifiedWaterTodayLiters": 1031.25,
-      "energyConsumedKwh": "0.455310"
-    }');
     }
 
     public function deviceName(): string {
