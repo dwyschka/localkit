@@ -32,7 +32,7 @@ class Device implements DeviceInterface, HasParserInterface
     }
 
 
-    public function handleMessage(\stdClass $message): void
+    public function handleMessage(\stdClass $message): bool
     {
         $cmd = $message->cmd;
         $payload = $message->data;
@@ -40,7 +40,7 @@ class Device implements DeviceInterface, HasParserInterface
         Log::info('W5', ['cmd' => $cmd, 'payload' => $payload]);
 
         if($cmd != 230) {
-            return;
+            return false;
         }
         Log::info('W5', ['cmd' => $cmd, 'payload' => $payload]);
         $binary = bin2hex(base64_decode(urldecode($payload)));
@@ -54,6 +54,8 @@ class Device implements DeviceInterface, HasParserInterface
         $this->model->configuration = $configuration->toArray();
 
         $this->model->save();
+
+        return true;
 
     }
 
