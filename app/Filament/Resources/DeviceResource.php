@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\DeviceResource\Pages;
 use App\Filament\Resources\DeviceResource\RelationManagers;
 use App\Jobs\ServiceStart;
+use App\Models\BluetoothDevice;
 use App\Models\Device;
 use App\Petkit\DeviceActions;
 use App\Petkit\Devices\PetkitFreshElementSolo;
@@ -13,7 +14,9 @@ use App\Petkit\Devices\PetkitYumshareSolo;
 use Filament\Actions\ActionGroup;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Support\Exceptions\Halt;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Tables\Actions\Action;
@@ -40,17 +43,22 @@ class DeviceResource extends Resource
                     'd4h' => PetkitYumshareSolo::deviceName(),
                 ])
                     ->columnSpan('half')->disabled(),
+
                 Forms\Components\TextInput::make('secret')->columnSpan('half'),
                 Forms\Components\TextInput::make('petkit_id')->columnSpan('half')->readOnly(),
-                Forms\Components\TextInput::make('mqtt_subdomain')->columnSpan('full'),
-                Forms\Components\Checkbox::make('ota_state')->columnSpan('full'),
+                Forms\Components\TextInput::make('mqtt_subdomain')->columnSpan('half'),
+                Forms\Components\Toggle::make('ota_state')
+                    ->helperText('If enabled, the MQTT Connection to Aliyun needs to be disabled')
+                    ->columnSpan('half'),
+                Forms\Components\Toggle::make('proxy_mode')
+                    ->columnSpan('half')
+                    ->helperText('If the field is disabled, please set a secret and the MQTT subdomain')
+                    ->disabled(function ($record) {
+                        return (empty($record->secret) || empty($record->mqtt_subdomain));
+                    }),
 
                 Forms\Components\Fieldset::make('Device Configuration')->schema([
                     ...$form->getModelInstance()->ui()->formFields(),
-                    //states are always hidden, but we need to add them to the form to make sure they are saved
-                    ...$form->getModelInstance()->ui()->hiddenFields(
-                        $form->getModelInstance()
-                    )
                 ])
 
             ]);
@@ -63,7 +71,7 @@ class DeviceResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('device_type')
                     ->formatStateUsing(function (string $state) {
-                        return match($state) {
+                        return match ($state) {
                             't4' => PetkitPuraMax::deviceName(),
                             'd4' => PetkitFreshElementSolo::deviceName(),
                             'd4h' => PetkitYumshareSolo::deviceName(),
@@ -83,11 +91,14 @@ class DeviceResource extends Resource
                 Tables\Columns\TextColumn::make('error')
                     ->badge()
                     ->formatStateUsing(function (string $state) {
-                        return __('petkit.error.'.$state);
+                        return __('petkit.error.' . $state);
                     })
                     ->color(fn(string $state): string => 'danger'),
                 Tables\Columns\TextColumn::make('serial_number'),
-                Tables\Columns\ToggleColumn::make('proxy_mode')
+                Tables\Columns\TextColumn::make('bleLinked.name')
+                    ->badge()
+                    ->color('info')
+
             ])
             ->filters([
                 //

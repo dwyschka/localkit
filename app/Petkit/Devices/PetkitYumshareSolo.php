@@ -2,17 +2,22 @@
 
 namespace App\Petkit\Devices;
 
+use App\DTOs\PetkitDTOInterface;
 use App\Helpers\JsonHelper;
 use App\Helpers\Time;
 use App\Homeassistant\HomeassistantTopic;
 use App\Homeassistant\Interfaces\Snapshot;
 use App\Jobs\FeedRealtime;
+use App\Jobs\ServiceConnect;
 use App\Jobs\ServiceStart;
 use App\Jobs\SetProperty;
 use App\Jobs\TakeSnapshot;
+use App\Models\BluetoothDevice;
 use App\Models\Device;
 use App\Models\History;
 use App\MQTT\GenericReply;
+use App\Petkit\BluetoothDevices\BluetoothProxyInterface;
+use App\Petkit\BluetoothDevices\Message;
 use App\Petkit\DeviceActions;
 use App\Petkit\DeviceDefinition;
 use App\Petkit\Devices\Configuration\ConfigurationInterface;
@@ -20,7 +25,7 @@ use App\Petkit\DeviceStates;
 use Illuminate\Support\Str;
 use PhpMqtt\Client\Facades\MQTT;
 
-class PetkitYumshareSolo implements DeviceDefinition, Snapshot
+class PetkitYumshareSolo implements DeviceDefinition, Snapshot, BluetoothProxyInterface
 {
     public static $workingStates = [
         DeviceStates::WORKING, DeviceStates::IDLE,
@@ -40,6 +45,11 @@ class PetkitYumshareSolo implements DeviceDefinition, Snapshot
             sprintf('/ota/device/upgrade/%s/%s', $this->device->productKey(), $this->device->deviceName()),
             sprintf('/sys/%s/%s/thing/service/property/set', $this->device->productKey(), $this->device->deviceName()),
             sprintf('/sys/%s/%s/thing/service/feed_realtime', $this->device->productKey(), $this->device->deviceName()),
+            sprintf('/sys/%s/%s/thing/service/connect', $this->device->productKey(), $this->device->deviceName()),
+            sprintf('/sys/%s/%s/thing/service/ble', $this->device->productKey(), $this->device->deviceName()),
+            sprintf('/sys/%s/%s/thing/event/ble_relay_start/post_reply', $this->device->productKey(), $this->device->deviceName()),
+            sprintf('/sys/%s/%s/thing/event/ble_relay_over/post_reply', $this->device->productKey(), $this->device->deviceName()),
+            sprintf('/sys/%s/%s/thing/event/ble_response/post_reply', $this->device->productKey(), $this->device->deviceName()),
         ];
     }
 
@@ -51,6 +61,12 @@ class PetkitYumshareSolo implements DeviceDefinition, Snapshot
     public function stateTopics(): array
     {
         return [
+            sprintf('/sys/%s/%s/thing/event/ble_response/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+                $content = json_decode($message?->params?->content, false);
+                Message::handleProxyMessage($content);
+
+                $this->reply($topic, $message);
+            },
             sprintf('/sys/%s/%s/thing/event/feed_stop/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
                 $state = json_decode($message?->params?->state, false);
                 $device->update([
@@ -196,10 +212,10 @@ class PetkitYumshareSolo implements DeviceDefinition, Snapshot
 
     public function configurationDefinition(): ConfigurationInterface
     {
-        return new Configuration\PetkitYumshareSolo($this->getDevice());
+        return Configuration\PetkitYumshareSolo::fromDevice($this->getDevice());
     }
 
-    public function defaultConfiguration()
+    public function configuration()
     {
         return $this->configurationDefinition()->toArray();
     }
@@ -213,9 +229,18 @@ class PetkitYumshareSolo implements DeviceDefinition, Snapshot
             $scheduleChange = !empty($difference);
         }
 
+        $dto = $this->configurationDefinition();
+
+
         if (!$scheduleChange) {
-            foreach ($difference as $key => $value) {
-                if (is_numeric($value) || is_bool($value)) {
+            foreach ($difference as $key => $val) {
+                $value = $dto->$key;
+
+                if($value instanceof PetkitDTOInterface) {
+                    $difference[$key] = $value->toPetkitConfiguration();
+                } else if (is_numeric($value)) {
+                    $difference[$key] = (int)$value;
+                } else if (is_bool($value)) {
                     $difference[$key] = (int)$value;
                 }
             }
@@ -260,14 +285,10 @@ class PetkitYumshareSolo implements DeviceDefinition, Snapshot
         $configuration = $this->configurationDefinition();
         $keys = get_object_vars($message);
 
-        foreach ($keys as $attributeName => $value) {
-            $methodName = 'set' . ucfirst($attributeName);
-            $configuration->$methodName($value);
+        foreach($keys as $attributeName => $value) {
+            $configuration->$attributeName = $value;
         }
-
-        $deviceConfig = $configuration->toArray();
-
-        $update = $this->getDevice()->update(['configuration' => $deviceConfig]);
+        $this->getDevice()->update(['configuration' => $configuration]);
     }
 
     #[HomeassistantTopic('action/start')]
@@ -430,23 +451,20 @@ class PetkitYumshareSolo implements DeviceDefinition, Snapshot
 
     private function updateConfiguration(mixed $content): array
     {
-        $settings = $this->device->configuration;
+        $settings = $this->getDevice()->configuration();
 
-        if(!isset($settings['states'])) {
-            $settings['states'] = [];
-        }
         //IP
         $pattern = '/Ip:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/';
         $match = Str::of($content->other)->match($pattern);
 
 
-        $settings['states']['ipAddress'] = $match->value();
-        $settings['states']['infrared'] = $content->ir;
-        $settings['states']['bowl'] = $content->bowl;
-        $settings['states']['door'] = $content->door;
-        $settings['states']['eatDetected'] = $content->eating;
+        $settings->ipAddress = $match->value();
+        $settings->infrared = $content->ir;
+        $settings->bowl = $content->bowl;
+        $settings->door = $content->door;
+        $settings->eatDetected = $content->eating;
 
-        return $settings;
+        return $settings->toArray();
     }
 
     private function prepareErrorReporting(mixed $state)
@@ -462,5 +480,13 @@ class PetkitYumshareSolo implements DeviceDefinition, Snapshot
         }
 
         return $error;
+    }
+
+    public function btConnect(BluetoothDevice $btDevice): void
+    {
+        ServiceConnect::dispatchSync(
+            $this->getDevice(), $btDevice,
+        );
+
     }
 }

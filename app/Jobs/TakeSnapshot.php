@@ -52,18 +52,16 @@ class TakeSnapshot implements ShouldQueue
 
 
         /** @var \App\Petkit\Devices\Configuration\PetkitYumshareSolo $configuration */
-        $configuration = $this->device->definition()->configurationDefinition();
+        $configuration = $this->device->configuration();
 
-        $lastSnapshot = $configuration->getLastSnapshot();
+        $lastSnapshot = $configuration->lastSnapshot;
         if (!is_null($lastSnapshot)) {
             Storage::disk('snapshots')->delete(
                 basename($lastSnapshot)
             );
         }
 
-        $configuration->setLastSnapshot(
-            $jpegFileName
-        );
+        $configuration->lastSnapshot = $jpegFileName;
 
         $this->device->update([
             'configuration' => $configuration->toArray()

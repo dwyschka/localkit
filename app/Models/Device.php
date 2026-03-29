@@ -6,6 +6,7 @@ use App\Helpers\HomeassistantHelper;
 use App\Helpers\JsonHelper;
 use App\Homeassistant\Interfaces\Snapshot;
 use App\Jobs\SetProperty;
+use App\Petkit\DeviceDefinition;
 use App\Petkit\Devices;
 Use App\Petkit\UI;
 
@@ -22,11 +23,13 @@ class Device extends Model
     protected static function booted()
     {
         self::updated(function ($device) {
+
             try {
                 if (isset($device->getChanges()['configuration'])) {
                     $device->definition()->propertyChange($device);
                 }
             } catch (\Exception $e) {
+
 
             }
 
@@ -47,13 +50,24 @@ class Device extends Model
                 MQTT::connection('homeassistant-publisher')->disconnect();
 //            }
         });
+
+        self::updating(function ($device) {
+
+            $configuration = $device->configuration();
+
+            $configuration->workingState = $device->working_state;
+            $configuration->error = $device->error;
+
+            $device->configuration = $configuration->toArray();
+
+        });
     }
     protected  $casts = [
         'configuration' => 'array'
     ];
 
     protected $fillable = [
-      'ota_state','name','device_type', 'firmware', 'mac', 'timezone', 'locale', 'petkit_id', 'serial_number', 'bt_mac', 'ap_mac', 'chip_id', 'mqtt_subdomain', 'last_heartbeat', 'working_state', 'error', 'mqtt_connected','configuration', 'secret'
+      'ota_state','name','device_type', 'firmware', 'mac', 'timezone', 'locale', 'petkit_id', 'serial_number', 'bt_mac', 'ap_mac', 'chip_id', 'mqtt_subdomain', 'last_heartbeat', 'working_state', 'error', 'mqtt_connected','configuration', 'secret', 'link_with'
     ];
 
     public function histories(): HasMany {
@@ -71,12 +85,21 @@ class Device extends Model
     }
 
 
-    public function definition() {
+    public function definition(): DeviceDefinition {
 
         return match ($this->device_type) {
             't4' => new Devices\PetkitPuraMax($this),
             'd4' => new Devices\PetkitFreshElementSolo($this),
             'd4h' => new Devices\PetkitYumshareSolo($this),
+        };
+    }
+
+    public function configuration() {
+
+        return match ($this->device_type) {
+            't4' => Devices\Configuration\PetkitPuraMax::fromDevice($this),
+            'd4' => Devices\Configuration\PetkitFreshElementSolo::fromDevice($this),
+            'd4h' => Devices\Configuration\PetkitYumshareSolo::fromDevice($this),
         };
     }
 
@@ -93,4 +116,7 @@ class Device extends Model
         return in_array($this->device_type, ['d4h']);
     }
 
+    public function bleLinked() {
+        return $this->hasMany(BluetoothDevice::class, 'link_with', 'id');
+    }
 }

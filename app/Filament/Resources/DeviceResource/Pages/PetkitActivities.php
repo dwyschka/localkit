@@ -37,25 +37,17 @@ class PetkitActivities extends Page
     public function infolist(Infolist $infolist): Infolist
     {
         return $infolist
-            ->state([
-                'activities' => $this->record->histories->map(function (History $history) {
-                    return [
-                        'title' => $history->title(),
-                        'description' => $history->message(),
-                        'type' => $history->type,
-                        'duration' => $history->duration(),
-                        'created_at' => $history->created_at
-                    ];
-                })->toArray(),
-            ])
             ->schema([
-                ActivitySection::make('activities')
-                    ->headingVisible(true)
+                ActivitySection::make('histories')
+                    ->headingVisible(false)
                     ->schema([
                         ActivityTitle::make('title')
+                            ->state(fn(History $record): string => $record->title())
+                            ->label('Title')
                             ->placeholder('No title is set')
                             ->allowHtml(), // Be aware that you will need to ensure that the HTML is safe to render, otherwise your application will be vulnerable to XSS attacks.
                         ActivityDescription::make('description')
+                            ->state(fn(History $record): string => $record->message())
                             ->placeholder('No description is set')
                             ->allowHtml(),
                         ActivityDate::make('created_at')
@@ -68,11 +60,6 @@ class PetkitActivities extends Page
                                 'MAINTENANCE' => 'heroicon-m-wrench-screwdriver',
                                 default => 'heroicon-m-exclamation-circle',
                             })
-                            /*
-                                You can animate icon with ->animation() method.
-                                Possible values : IconAnimation::Ping, IconAnimation::Pulse, IconAnimation::Bounce, IconAnimation::Spin or a Closure
-                             */
-                            ->animation(IconAnimation::Ping)
                             ->color(fn(string|null $state): string|null => match ($state) {
                                 'MAINTENANCE' => 'info',
                                 'CLEANING' => 'info',
@@ -87,7 +74,8 @@ class PetkitActivities extends Page
                     ->aside(false)
                     ->headingVisible(false) // make heading visible or not
                     ->extraAttributes(['class' => 'my-new-class']) // add extra class
-            ]);
+            ])
+            ->record($this->record);
     }
 
 }

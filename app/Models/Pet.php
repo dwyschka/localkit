@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\DB;
 
 class Pet extends Model
 {
-    protected $fillable = ['name', 'weight', 'birthday', 'species', 'gender', 'sterilised'];
+    protected $fillable = ['name', 'weight', 'birthdate', 'species', 'gender', 'sterilised'];
 
     public static function nearestWeight(float $weight)
     {

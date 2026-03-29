@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\BluetoothDevice;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Str;
@@ -17,9 +18,18 @@ class DevBleDeviceResource extends PetkitHttpResource
      */
     public function toArray(Request $request): array
     {
+        $devices = BluetoothDevice::whereNot('type', 'k3')->get();
+
         return [
-            "list" => [
-            ],
+            "list" => $devices->map(function ($device) {
+                return [
+                    "interval" => $device->interval,
+                    "id" => $device->petkit_id,
+                    "secret" => $device->secret,
+                    "type" => $device->bluetoothDeviceType(),
+                    "mac" => $device->mac
+                ];
+            })->toArray(),
             "nextTick" => 3600
         ];
     }

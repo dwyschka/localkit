@@ -18,7 +18,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
     {
         return [
             "method" => 'thing.service.start',
-            'id' => (string)time(),
+            'id' => (string)(time() * 1000),
             "params" => [
                 "start_action" => $this->payload['action']->start,
             ],

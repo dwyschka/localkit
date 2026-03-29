@@ -17,7 +17,7 @@ class PetResource extends Resource
 {
     protected static ?string $model = Pet::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-heart';
 
     public static function form(Form $form): Form
     {
@@ -33,9 +33,9 @@ class PetResource extends Resource
                     0 => 'Male',
                     1 => 'Female',
                 ])->required(),
-                Forms\Components\Select::make('Sterilised')->options([
-                    0 => 'no',
-                    1 => 'yes',
+                Forms\Components\Select::make('sterilised')->options([
+                    false => 'no',
+                    true => 'yes',
                 ])->required()
             ]);
     }

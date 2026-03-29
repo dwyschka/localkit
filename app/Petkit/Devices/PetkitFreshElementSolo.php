@@ -2,19 +2,24 @@
 
 namespace App\Petkit\Devices;
 
+use App\DTOs\PetkitDTOInterface;
 use App\Helpers\JsonHelper;
 use App\Helpers\Time;
 use App\Homeassistant\HomeassistantTopic;
 use App\Jobs\FeedRealtime;
+use App\Jobs\ServiceConnect;
 use App\Jobs\ServiceEnd;
 use App\Jobs\ServiceStart;
 use App\Jobs\SetProperty;
+use App\Models\BluetoothDevice;
 use App\Models\Device;
 use App\Models\History;
 use App\Models\Pet;
 use App\MQTT\GenericReply;
 use App\MQTT\OtaMessage;
 use App\MQTT\UserGet;
+use App\Petkit\BluetoothDevices\BluetoothProxyInterface;
+use App\Petkit\BluetoothDevices\Message;
 use App\Petkit\DeviceActions;
 use App\Petkit\DeviceDefinition;
 use App\Petkit\Devices\Configuration\ConfigurationInterface;
@@ -24,7 +29,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use PhpMqtt\Client\Facades\MQTT;
 
-class PetkitFreshElementSolo implements DeviceDefinition
+class PetkitFreshElementSolo implements DeviceDefinition, BluetoothProxyInterface
 {
     protected array $actions = [
         DeviceActions::START_FEEDING
@@ -44,12 +49,20 @@ class PetkitFreshElementSolo implements DeviceDefinition
             sprintf('/ota/device/upgrade/%s/%s', $this->device->productKey(), $this->device->deviceName()),
             sprintf('/sys/%s/%s/thing/service/property/set', $this->device->productKey(), $this->device->deviceName()),
             sprintf('/sys/%s/%s/thing/service/feed_realtime', $this->device->productKey(), $this->device->deviceName()),
+            sprintf('/sys/%s/%s/thing/service/connect', $this->device->productKey(), $this->device->deviceName()),
+            sprintf('/sys/%s/%s/thing/service/ble', $this->device->productKey(), $this->device->deviceName()),
         ];
     }
 
     public function stateTopics(): array
     {
         return [
+            sprintf('/sys/%s/%s/thing/event/ble_response/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+                $content = json_decode($message?->params?->content, false);
+                Message::handleProxyMessage($content);
+
+                $this->reply($topic, $message);
+            },
             sprintf('/sys/%s/%s/thing/event/feed_stop/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
                 $device->update([
                     'working_state' => DeviceStates::IDLE->value
@@ -137,7 +150,7 @@ class PetkitFreshElementSolo implements DeviceDefinition
         return 'Petkit FreshElement Solo';
     }
 
-    public function defaultConfiguration()
+    public function configuration()
     {
         return $this->configurationDefinition()->toArray();
     }
@@ -151,9 +164,19 @@ class PetkitFreshElementSolo implements DeviceDefinition
             $scheduleChange = !empty($difference);
         }
 
+        $dto = $this->configurationDefinition();
+
         if(!$scheduleChange) {
-            foreach ($difference as $key => $value) {
-                if (is_numeric($value) || is_bool($value) ) {
+            foreach ($difference as $key => $val) {
+
+                $value = $dto->$key;
+
+
+                if($value instanceof PetkitDTOInterface) {
+                    $difference[$key] = $value->toPetkitConfiguration();
+                } else if (is_numeric($value)) {
+                    $difference[$key] = (int)$value;
+                } else if (is_bool($value)) {
                     $difference[$key] = (int)$value;
                 }
             }
@@ -173,7 +196,7 @@ class PetkitFreshElementSolo implements DeviceDefinition
     }
 
     public function configurationDefinition(): ConfigurationInterface {
-        return new Configuration\PetkitFreshElementSolo($this->getDevice());
+        return \App\Petkit\Devices\Configuration\PetkitFreshElementSolo::fromDevice($this->getDevice());
     }
 
     #[HomeassistantTopic(topic: 'setting/set')]
@@ -182,13 +205,9 @@ class PetkitFreshElementSolo implements DeviceDefinition
         $keys = get_object_vars($message);
 
         foreach($keys as $attributeName => $value) {
-            $methodName = 'set' . ucfirst($attributeName);
-            $configuration->$methodName($value);
+            $configuration->$attributeName = $value;
         }
-
-        $deviceConfig = $configuration->toArray();
-
-        $update = $this->getDevice()->update(['configuration' => $deviceConfig]);
+        $this->getDevice()->update(['configuration' => $configuration]);
     }
 
     #[HomeassistantTopic('action/start')]
@@ -239,9 +258,9 @@ class PetkitFreshElementSolo implements DeviceDefinition
                 'factor' => (int)$config['factor'],
                 'feedSound' => (int)$config['feedSound'],
                 'foodWarn' => (int)$config['foodWarn'],
-                'foodWarnRange' => $config['foodWarnRange'],
+                'foodWarnRange' => [$config['foodWarnRange']['from'], $config['foodWarnRange']['till']],
                 'lightMode' => (int)$config['lightMode'],
-                'lightRange' => $config['lightRange'],
+                'lightRange' => [$config['lightRange']['from'], $config['lightRange']['till']],
                 'manualLock' => (int)$config['manualLock'],
             ],
             'shareOpen' => $config['shareOpen'],
@@ -280,7 +299,13 @@ class PetkitFreshElementSolo implements DeviceDefinition
             'nextTick' => $nextTick['t'],
             'latest' => $latest
         ]);
+    }
 
+    public function btConnect(BluetoothDevice $btDevice): void
+    {
+        ServiceConnect::dispatchSync(
+            $this->getDevice(), $btDevice
+        );
 
     }
 }

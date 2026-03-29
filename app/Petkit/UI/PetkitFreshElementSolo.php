@@ -29,13 +29,103 @@ use Filament\Forms\Form;
 class PetkitFreshElementSolo
 {
 
-    use HiddenFields;
     public function formFields(): array
     {
         return [
-            Section::make('Schedule Configuration')
+            Forms\Components\Section::make('Consumables')->columns(2)->schema([
+                Forms\Components\TextInput::make('configuration.consumables.desiccantDurability')->numeric(),
+                Forms\Components\TextInput::make('configuration.consumables.desiccantNextChange')->label('Next Reset in Days (Desiccant)')->formatStateUsing(function ($state) {
+                    if ($state <= 0) {
+                        return 'Not set';
+                    }
+                    $date = Carbon::parse($state);
+                    $now = Carbon::now();
+
+                    return round($now->diffInDays($date));
+
+                })->readOnly()->disabled(true),
+            ]),
+            Forms\Components\Section::make('Feeding')->schema([
+                Forms\Components\TextInput::make('configuration.settings.amount')
+                    ->label('Feeding Amount')
+                    ->helperText('Default amount for manual feeding')
+                    ->numeric(),
+            ]),
+            Forms\Components\Section::make('Settings')->columns(1)->schema([
+                Forms\Components\Toggle::make('configuration.settings.foodWarn')
+                    ->helperText('Activate the sound alarm when the food container runs empty. To end the alarm press the dispense button')
+                    ->label('Refill Alarm'),
+
+                Forms\Components\Section::make('Alarm Period')->schema([
+                    TimePicker::make('configuration.settings.foodWarnRange.from')
+                        ->formatStateUsing(function ($state) {
+                            return Time::toTimeFromMinutes((int)$state);
+                        })
+                        ->dehydrateStateUsing(function ($state) {
+                            return Time::toMinutes($state);
+                        })
+                        ->seconds(false),
+
+                    TimePicker::make('configuration.settings.foodWarnRange.till')
+                        ->formatStateUsing(function ($state) {
+                            return Time::toTimeFromMinutes((int)$state);
+                        })
+                        ->dehydrateStateUsing(function ($state) {
+                            return Time::toMinutes($state);
+                        })
+                        ->seconds(false)
+                ])
+                    ->dehydrateStateUsing(function ($state) {
+                        return $state;
+                    })
+                    ->columns(2)
+                    ->columnSpanFull(),
+
+                Forms\Components\Toggle::make('configuration.settings.manualLock')
+                    ->helperText('Activate Child Lock to disable the control panel')
+                    ->label('Child Lock'),
+
+                Forms\Components\Toggle::make('configuration.settings.lightMode')
+                    ->helperText('Indicator light work within the following period')
+                    ->label('Indicator Light'),
+
+                Repeater::make('configuration.settings.lightMultiRange.ranges')
+                    ->columns(2)
+                    ->label('Screen Period')
+                    ->schema(
+                        [
+                            TimePicker::make('from')
+                                ->label('From')
+                                ->seconds(false)
+                                ->required()
+                                ->formatStateUsing(
+                                    fn (?string $state) => Time::toTimeFromMinutes((int) $state)
+                                )
+                                ->dehydrateStateUsing(
+                                    fn ($state) => Time::toMinutes($state)
+                                ),
+
+                            TimePicker::make('till')
+                                ->label('Till')
+                                ->seconds(false)
+                                ->required()
+                                ->formatStateUsing(
+                                    fn (?string $state) => Time::toTimeFromMinutes((int) $state)
+                                )
+                                ->dehydrateStateUsing(
+                                    fn ($state) => Time::toMinutes($state)
+                                ),
+                        ]
+                    ),
+
+                Forms\Components\Toggle::make('configuration.settings.feedSound')
+                    ->helperText('Turn on the prompt tone, it will ring when the food is dispensing')
+                    ->label('Food dispense prompt tone'),
+            ]),
+            Section::make('Feeding Plan')
                 ->schema([
                     Repeater::make('configuration.schedule')
+
                         ->schema([
                             CheckboxList::make('re')
                                 ->label('Days of Week')
@@ -78,9 +168,9 @@ class PetkitFreshElementSolo
                                             }
                                         }),
                                     TextInput::make('id')
+                                        ->hidden(true)
+                                        ->dehydratedWhenHidden(true)
                                         ->label('id')
-                                        ->numeric()
-                                        ->hidden() // Hidden field to store the actual seconds value
                                         ->required(),
                                     TextInput::make('a')
                                         ->label('Amount')
@@ -90,14 +180,15 @@ class PetkitFreshElementSolo
                                         ->dehydrateStateUsing(fn($state) => (int)$state)
                                         ->suffix('amount'),
                                     TextInput::make('t')
+                                        ->hidden(true)
                                         ->label('Time (seconds)')
                                         ->numeric()
-                                        ->hidden() // Hidden field to store the actual seconds value
+                                        ->dehydratedWhenHidden(true)
                                         ->required(),
                                 ])
                                 ->columns(2)
                                 ->addActionLabel('Add Schedule Item')
-                                ->minItems(1)
+                                ->minItems(0)
                                 ->collapsible()
                                 ->live(true)
                                 ->dehydrateStateUsing(function (array $state) {
@@ -136,7 +227,7 @@ class PetkitFreshElementSolo
                         ])
                         ->columns(1)
                         ->addActionLabel('Add Day Schedule')
-                        ->minItems(1)
+                        ->minItems(0)
                         ->collapsible()
                         ->itemLabel(function (array $state): ?string {
                             $days = [];
@@ -155,55 +246,18 @@ class PetkitFreshElementSolo
                             return !empty($days) ? implode(', ', $days) : 'New Schedule';
                         }),
                 ]),
-            Forms\Components\Section::make('Section')->schema([
-                Forms\Components\TextInput::make('configuration.settings.factor')->numeric(),
-                Forms\Components\TextInput::make('configuration.settings.amount')->numeric(),
-            ]),
-            Forms\Components\Section::make('Options')->columns(3)->schema([
-                Forms\Components\Toggle::make('configuration.settings.feedSound')->label('Feeding chime'),
-                Forms\Components\Toggle::make('configuration.settings.manualLock')->label('Child Lock'),
-                Forms\Components\Toggle::make('configuration.settings.foodWarn')->label('Refill alarm'),
-            ]),
-            Forms\Components\Section::make('Unknown')->schema([
+            Forms\Components\Section::make('Unknown')->columns(2)->schema([
 
-                Forms\Components\Section::make('foodWarnRange')->schema([
-                    TimePicker::make('configuration.settings.foodWarnRange.0')
-                        ->label('From')
-                        ->seconds(false)
-                        ->required()
-                        ->formatStateUsing(fn(?string $state) => Time::toTimeFromMinutes((int)$state ?? 0))
-                        ->dehydrateStateUsing(fn($state) => Time::toMinutes($state)),
-                    TimePicker::make('configuration.settings.foodWarnRange.1')
-                        ->label('Till')
-                        ->required()
-                        ->seconds(false)
-                        ->after('time_from')
-                        ->formatStateUsing(fn(?string $state) => Time::toTimeFromMinutes((int)$state ?? 0))
-                        ->dehydrateStateUsing(fn($state) => Time::toMinutes($state)),
-                ])
-                    ->columns(2)
-                    ->columnSpanFull(),
+                Forms\Components\ViewField::make('UnknownWarning')
+                    ->columnSpanFull()
+                    ->view('filament.forms.warning')
+                    ->viewData(['message' => 'Its Unknown, because the changes are not verified']),
 
-                Forms\Components\Section::make('lightRange')->schema([
-                    TimePicker::make('configuration.settings.lightRange.0')
-                        ->label('From')
-                        ->seconds(false)
-                        ->required()
-                        ->formatStateUsing(fn(?string $state) => Time::toTimeFromMinutes((int)$state ?? 0))
-                        ->dehydrateStateUsing(fn($state) => Time::toMinutes($state)),
-                    TimePicker::make('configuration.settings.lightRange.1')
-                        ->label('Till')
-                        ->required()
-                        ->seconds(false)
-                        ->after('time_from')
-                        ->formatStateUsing(fn(?string $state) => Time::toTimeFromMinutes((int)$state ?? 0))
-                        ->dehydrateStateUsing(fn($state) => Time::toMinutes($state)),
-                ])
-                    ->columns(2)
-                    ->columnSpanFull(),
 
-                Forms\Components\Toggle::make('configuration.settings.shareOpen')->label('Share Open'),
-                Forms\Components\Toggle::make('configuration.settings.multiConfig')->label('Multi Config'),
+                Forms\Components\Toggle::make('configuration.settings.shareOpen')
+                    ->columnSpan('half')
+                    ->label('Share Open'),
+                Forms\Components\Toggle::make('configuration.settings.multiConfig')->columnSpan('half')->label('Multi Config'),
             ]),
 
 
