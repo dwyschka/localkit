@@ -5,6 +5,7 @@
     "description": "The skeleton application for the Laravel framework.",
     "keywords": ["laravel", "framework"],
     "license": "MIT",
+    "version": "1.0.0",
     "require": {
         "php": "^8.2",
         "calebporzio/sushi": "^2.5",
