@@ -67,7 +67,7 @@ class Device extends Model
     ];
 
     protected $fillable = [
-      'ota_state','name','device_type', 'firmware', 'mac', 'timezone', 'locale', 'petkit_id', 'serial_number', 'bt_mac', 'ap_mac', 'chip_id', 'mqtt_subdomain', 'last_heartbeat', 'working_state', 'error', 'mqtt_connected','configuration', 'secret', 'link_with'
+      'ota_state','name','proxy_mode', 'device_type', 'firmware', 'mac', 'timezone', 'locale', 'petkit_id', 'serial_number', 'bt_mac', 'ap_mac', 'chip_id', 'mqtt_subdomain', 'last_heartbeat', 'working_state', 'error', 'mqtt_connected','configuration', 'secret', 'link_with'
     ];
 
     public function histories(): HasMany {
