@@ -22,6 +22,7 @@ Route::prefix('{deviceType}')->group(function () {
 
     //embedded linux device
     Route::get('dev_syncTime', \App\Http\Controllers\Petkit\DevSyncTimeController::class);
+    Route::get('dev_only_iot_device_info_v2', \App\Http\Controllers\Petkit\DevOnlyIotDeviceInfoController::class);
     Route::get('dev_only_iot_device_info', \App\Http\Controllers\Petkit\DevOnlyIotDeviceInfoController::class);
     Route::get('dev_video_device_info', \App\Http\Controllers\Petkit\DevVideoDeviceInfoController::class);
     Route::get('dev_oss_sts_info_new_v2', \App\Http\Controllers\Petkit\DevOssStsInfoNewV2Controller::class);
