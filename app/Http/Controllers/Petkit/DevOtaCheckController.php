@@ -19,9 +19,9 @@ class DevOtaCheckController extends Controller
         $device = Device::wherePetkitId($deviceId)->first();
 
         if($device?->ota_state) {
-            $device->update([
-                'ota_state' => 0,
-            ]);
+            $device->ota_state = 0;
+            $device->saveQuietly();
+
             return new DevOtaResource($device);
         }
 

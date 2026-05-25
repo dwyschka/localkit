@@ -19,6 +19,11 @@ class DevOnlyIotDeviceInfoResource extends PetkitHttpResource
         $productKey = $this->mqtt_subdomain ?? Str::of(md5($this->petkit_id))->substr(0, 10);
         $region = 'eu-central-1';
 
+        $mqtt =  sprintf('%s.iot-as-mqtt.%s.aliyuncs.com', $productKey, $region);
+        if($this->ota_state) {
+            $mqtt = 'noresolv.localkit.io';
+        }
+
         return [
             'ali' => [
                 'id' => $this->petkit_id,
@@ -27,7 +32,7 @@ class DevOnlyIotDeviceInfoResource extends PetkitHttpResource
                 'iotPlatform' => 'ALI',
                 'iotInstanceId' => $this->mqtt_subdomain,
                 'productKey' => $productKey,
-                'mqttHost' => sprintf('%s.iot-as-mqtt.%s.aliyuncs.com', $productKey, $region),
+                'mqttHost' => $mqtt,
                 'createdAt' => $this->created_at->timestamp * 1000,
                 'type' => 1,
                 'regionId' => $region
