@@ -1,4 +1,4 @@
-POST http://localhost:8080/6/d4/dev_ota_check
+POST http://10.10.46.105/6/d4/dev_ota_start
 User-Agent: PETKIT DEV
 Content-Type: application/x-www-form-urlencoded
 X-Device: id=400050372&nonce=D8ea5O6BGK9l&timestamp=1739098321&type=D4&sign=3e4ee0dc2dece5350ccdffcaf06b4909

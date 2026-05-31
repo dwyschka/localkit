@@ -22,6 +22,7 @@ use App\Http\Controllers\Petkit\DevStateReportController;
 use App\Http\Controllers\Petkit\DevSyncTimeController;
 use App\Http\Controllers\Petkit\DevVideoDeviceInfoController;
 use App\Http\Controllers\Petkit\HeartbeatController;
+use App\Http\Controllers\Petkit\RepositoryController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('{deviceType}')->group(function () {
@@ -68,5 +69,6 @@ Route::prefix('{deviceType}')->group(function () {
        Route::get('topics/{serialNumber}', TopicController::class);
        Route::post('connected/{serialNumber}', DeviceConnectedController::class);
     });
+
 
 Route::any('{fallback}', DevFallbackController::class)->where('fallback', '.*');
