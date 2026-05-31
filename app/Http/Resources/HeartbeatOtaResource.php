@@ -28,7 +28,7 @@ class HeartbeatOtaResource extends PetkitHttpResource
             'content' => json_encode([
                 "msgType" => 0,
                 "payload" => [
-                    "firmwareId" => $firmware['id'] - 1
+                    "firmwareId" => $firmware['id']
                 ],
                 "type" => "ota",
                 "timestamp" => $ts
@@ -36,11 +36,6 @@ class HeartbeatOtaResource extends PetkitHttpResource
             'time' => (time() * 1000),
             'timestamp' => $ts
         ];
-
-        Log::info('heartbeat ota', [
-            'firmware' => $firmware,
-            'data' => $data
-        ]);
 
         return [
             $data

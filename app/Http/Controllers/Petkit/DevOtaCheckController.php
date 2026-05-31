@@ -20,14 +20,15 @@ class DevOtaCheckController extends Controller
         $device = Device::wherePetkitId($deviceId)->first();
 
         if($device?->ota_state) {
-            $device->ota_state = 0;
-            $device->saveQuietly();
-
-            ob_start();
-            $this->proxy($request, false);
-            $response = ob_get_clean();
-
-            Log::info('otacheck', ['proxy' => $response]);
+//            $device->ota_state = 0;
+//            $device->saveQuietly();
+//
+//            ob_start();
+//            $this->proxy($request, false);
+//            $response = ob_get_clean();
+//
+//            dd('wt');
+//            Log::info('otacheck', ['proxy' => $response]);
 
             return new DevOtaResource($device);
         }
