@@ -56,7 +56,6 @@ Route::prefix('{deviceType}')->group(function () {
     Route::get('dev_feed_get', DevFeedGetController::class);
     Route::get('dev_serverinfo', DevServerinfoController::class);
 
-    Route::any('{fallback}', DevFallbackController::class)->where('fallback', '.*');
 
 });
 
@@ -69,3 +68,5 @@ Route::prefix('{deviceType}')->group(function () {
        Route::get('topics/{serialNumber}', TopicController::class);
        Route::post('connected/{serialNumber}', DeviceConnectedController::class);
     });
+
+Route::any('{fallback}', DevFallbackController::class)->where('fallback', '.*');
