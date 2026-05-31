@@ -46,7 +46,7 @@ class OTA
     {
         $detail = $this->firmwareByDevice($device)['detail'];
         $detail = Http::get($detail);
-
+        Log::info('OTA detail', $detail?->json());
         if($detail->successful()) {
             Log::info('OTA detail', $detail->json('result'));
             return (array)$detail->json('result');
