@@ -21,6 +21,11 @@ class DevOtaController extends Controller
 
         Log::info('OTA', [$request->toArray()]);
         if($device?->ota_state) {
+            ob_start();
+            $this->proxy($request, false);
+            $response = ob_get_clean();
+
+            Log::info('ota', ['proxy' => $response]);
             return new JsonResponse([
                 'result' => 'success'
             ]);

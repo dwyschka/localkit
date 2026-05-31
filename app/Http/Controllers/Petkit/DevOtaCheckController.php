@@ -8,6 +8,7 @@ use App\Http\Resources\DevOtaCheckResource;
 use App\Http\Resources\DevOtaResource;
 use App\Models\Device;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class DevOtaCheckController extends Controller
 {
@@ -21,6 +22,12 @@ class DevOtaCheckController extends Controller
         if($device?->ota_state) {
             $device->ota_state = 0;
             $device->saveQuietly();
+
+            ob_start();
+            $this->proxy($request, false);
+            $response = ob_get_clean();
+
+            Log::info('otacheck', ['proxy' => $response]);
 
             return new DevOtaResource($device);
         }
