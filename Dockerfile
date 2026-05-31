@@ -1,4 +1,4 @@
-FROM ghcr.io/d.wyschka/localkit-docker:latest
+FROM ghcr.io/dwyschka/localkit-docker:latest
 
 USER root
 RUN docker-php-serversideup-s6-init
