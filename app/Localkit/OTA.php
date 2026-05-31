@@ -48,6 +48,7 @@ class OTA
         $detail = Http::get($detail);
 
         if($detail->successful()) {
+            Log::info('OTA detail', $detail->json('result'));
             return (array)$detail->json('result');
         }
         throw new \Exception('No valid data');
