@@ -41,7 +41,7 @@ class DeviceActions
     {
         return [
             Action::make('Check OTA')
-                ->visible(fn(Device $record) => $record->mqtt_connected)
+//                ->visible(fn(Device $record) => $record->mqtt_connected)
                 ->mountUsing(function (Form $form, Device $record) {
                     $available = app(OTA::class)->getAvailable($record);
 
@@ -52,6 +52,11 @@ class DeviceActions
                             ->send();
                         throw new Halt();
                     }
+
+                    $record->update([
+                        'ota_available' => 1,
+                        'available_version' => $available['version'],
+                    ]);
 
                     $form->fill(['version' => $available['version']]);
                 })
@@ -68,7 +73,6 @@ class DeviceActions
 
                     $record->update([
                         'ota_state' => 1,
-                        'available_version' => $data['version'],
                     ]);
                 }),
             Action::make('Start Cleaning')
