@@ -19,7 +19,7 @@ class DevOtaController extends Controller
         $deviceId = PetkitHeader::petkitId($request->header('X-Device'));
         $device = Device::wherePetkitId($deviceId)->first();
 
-        Log::info('OTA', ['device' => $device]);
+        Log::info('OTA', [$request->toArray()]);
         if($device?->ota_state) {
             return new JsonResponse([
                 'result' => 'success'

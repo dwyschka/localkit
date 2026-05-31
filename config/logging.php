@@ -58,6 +58,12 @@ return [
             'ignore_exceptions' => false,
         ],
 
+        'unmatched' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/unmatched.log'),
+            'level' => 'debug',
+        ],
+
         'single' => [
             'driver' => 'single',
             'path' => storage_path('logs/laravel.log'),
