@@ -19,15 +19,17 @@ class DevIotDeviceInfoResource extends PetkitHttpResource
         $iotInstanceId = 'iot-600a5gmp';
 
         $mqtt =  sprintf('%s.mqtt.iothub.aliyuncs.com', $iotInstanceId);
+        $productKey = $this->mqtt_subdomain ?? Str::of(md5($this->petkit_id))->substr(0, 10);
         if($this->ota_state) {
             $mqtt = 'noresolv.localkit.io';
+            $productKey = 'noresolv-localkit-io';
         }
         return [
             'id' => $this->petkit_id,
             'deviceName' => sprintf('d_%s_%s', $this->device_type, $this->serial_number),
             'deviceSecret' => $this->secret,
             'iotInstanceId' => $iotInstanceId,
-            'productKey' => $this->mqtt_subdomain ?? Str::of(md5($this->petkit_id))->substr(0, 10),
+            'productKey' => $productKey,
             'mqttHost' => $mqtt,
             'createdAt' => $this->created_at->timestamp * 1000,
             'type' => 1,
