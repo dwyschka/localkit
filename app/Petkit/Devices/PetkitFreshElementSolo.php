@@ -33,7 +33,8 @@ use PhpMqtt\Client\Facades\MQTT;
 class PetkitFreshElementSolo implements DeviceDefinition, BluetoothProxyInterface
 {
     protected array $actions = [
-        DeviceActions::START_FEEDING
+        DeviceActions::START_FEEDING,
+        DeviceActions::REBOOT,
     ];
     public static $workingStates = [
         DeviceStates::WORKING, DeviceStates::IDLE,
@@ -130,6 +131,8 @@ class PetkitFreshElementSolo implements DeviceDefinition, BluetoothProxyInterfac
         switch ($action) {
             case DeviceActions::START_FEEDING:
                 return $hasAction;
+            case DeviceActions::REBOOT:
+                return $hasAction && (bool)$this->device->mqtt_connected;
         }
 
         return $hasAction;
@@ -139,6 +142,11 @@ class PetkitFreshElementSolo implements DeviceDefinition, BluetoothProxyInterfac
     {
         $generic = GenericReply::reply($topic, $message);
         MQTT::connection('publisher')->publish($generic->getTopic(), $generic->getMessage());
+    }
+
+    public function reboot(Device $record): void
+    {
+        Reboot::dispatchSync($record);
     }
 
     public function startFeeding(Device $record): void
