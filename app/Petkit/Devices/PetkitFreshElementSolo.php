@@ -7,6 +7,7 @@ use App\Helpers\JsonHelper;
 use App\Helpers\Time;
 use App\Homeassistant\HomeassistantTopic;
 use App\Jobs\FeedRealtime;
+use App\Jobs\Reboot;
 use App\Jobs\ServiceConnect;
 use App\Jobs\ServiceEnd;
 use App\Jobs\ServiceStart;

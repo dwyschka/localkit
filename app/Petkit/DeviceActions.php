@@ -36,6 +36,8 @@ class DeviceActions
     public const LINK_WITH_K3 = 'link_with_k3';
     public const UNLINK_WITH_K3 = 'unlink_with_k3';
 
+    public const REBOOT = 'reboot';
+
 
     public static function actions()
     {
@@ -144,7 +146,15 @@ class DeviceActions
                 })
                 ->action(function (Device $record) {
                     $record->definition()->takeSnapshot($record);
+                }),
+            Action::make('Reboot')
+                ->visible(function (Device $record) {
+                    return $record->definition()->hasAction(self::REBOOT);
                 })
+                ->requiresConfirmation()
+                ->action(function (Device $record) {
+                    $record->definition()->reboot($record);
+                }),
         ];
     }
 }
