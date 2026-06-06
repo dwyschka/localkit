@@ -54,7 +54,7 @@ class OTA
             if (config('localkit.firmware_proxy')) {
                 $upstreamHost = parse_url(config('localkit.ota_repository'), PHP_URL_HOST);
                 $result = json_decode(
-                    str_replace($upstreamHost, config('petkit.local_ip'), json_encode($result)),
+                    str_replace($upstreamHost, 'api.eu-pet.com', json_encode($result)),
                     true
                 );
             }
