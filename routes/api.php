@@ -61,8 +61,8 @@ Route::prefix('{deviceType}')->group(function () {
 });
 
 
-    Route::post('poll/{slug}/heartbeat', HeartbeatController::class);
-    Route::get('poll/{slug}/heartbeat', HeartbeatController::class);
+    Route::match(['get', 'post'], 'poll/{slug}/heartbeat', HeartbeatController::class)
+        ->middleware(\App\Http\Middleware\LogDeviceHttpRequests::class);
 
 
     Route::prefix('api')->middleware(['api'])->group(function () {
