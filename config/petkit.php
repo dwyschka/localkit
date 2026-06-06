@@ -8,5 +8,4 @@ return [
     'homeassistant' => [
         'enabled' => env('HOMEASSISTANT_ENABLED', false),
     ],
-    'ota_repository' => env('OTA_REPOSITORY', 'https://tool.localkit.io/repository.json')
 ];

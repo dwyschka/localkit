@@ -33,7 +33,7 @@ class OTA
 
     public function loadRepository(): Collection
     {
-        $repository = Http::get(config('petkit.ota_repository'));
+        $repository = Http::get(sprintf('%s/%s', config('localkit.ota_repository'), 'repository.json'));
 
         if ($repository->successful()) {
             return collect($repository->json());
@@ -47,9 +47,19 @@ class OTA
         $detail = $this->firmwareByDevice($device)['detail'];
         $detail = Http::get($detail);
         Log::info('OTA detail', $detail?->json());
-        if($detail->successful()) {
-            Log::info('OTA detail', $detail->json('result'));
-            return (array)$detail->json('result');
+        if ($detail->successful()) {
+            $result = $detail->json('result');
+            Log::info('OTA detail', $result);
+
+            if (config('localkit.firmware_proxy')) {
+                $upstreamHost = parse_url(config('localkit.ota_repository'), PHP_URL_HOST);
+                $result = json_decode(
+                    str_replace($upstreamHost, config('petkit.local_ip'), json_encode($result)),
+                    true
+                );
+            }
+
+            return (array) $result;
         }
         throw new \Exception('No valid data');
     }
