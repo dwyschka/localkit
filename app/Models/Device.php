@@ -63,11 +63,12 @@ class Device extends Model
         });
     }
     protected  $casts = [
-        'configuration' => 'array'
+        'configuration' => 'array',
+        'debug_mode' => 'boolean',
     ];
 
     protected $fillable = [
-      'ota_state','ota_available','available_version','name','proxy_mode', 'device_type', 'firmware', 'mac', 'timezone', 'locale', 'petkit_id', 'serial_number', 'bt_mac', 'ap_mac', 'chip_id', 'mqtt_subdomain', 'last_heartbeat', 'working_state', 'error', 'mqtt_connected','configuration', 'secret', 'link_with'
+      'ota_state','ota_available','available_version','name','proxy_mode','debug_mode', 'device_type', 'firmware', 'mac', 'timezone', 'locale', 'petkit_id', 'serial_number', 'bt_mac', 'ap_mac', 'chip_id', 'mqtt_subdomain', 'last_heartbeat', 'working_state', 'error', 'mqtt_connected','configuration', 'secret', 'link_with'
     ];
 
     public function histories(): HasMany {

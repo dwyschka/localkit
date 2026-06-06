@@ -60,6 +60,9 @@ class DeviceResource extends Resource
                     ->disabled(function ($record) {
                         return (empty($record->secret) || empty($record->mqtt_subdomain));
                     }),
+                Forms\Components\Toggle::make('debug_mode')
+                    ->columnSpan('half')
+                    ->helperText('Logs all incoming HTTP requests from this device to storage/logs/device_{serial}.log'),
 
                 Forms\Components\Fieldset::make('Device Configuration')->schema([
                     ...$form->getModelInstance()->ui()->formFields(),
