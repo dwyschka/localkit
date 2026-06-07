@@ -21,8 +21,15 @@ class DevOtaController extends Controller
 
         Log::info('OTA', [$request->toArray()]);
         if($device?->ota_state) {
-
-            Log::info('Ota Start', ['device' => $device->id]);
+            if($request->input('success') === '1') {
+                $device->update([
+                    'ota_state' => 0,
+                    'ota_available' => 0
+                ]);
+                Log::info('Ota Complete', ['device' => $device->id]);
+            } else {
+                Log::info('Ota Start', ['device' => $device->id]);
+            }
             return new JsonResponse([
                 'result' => 'success'
             ], 200, [], JSON_UNESCAPED_SLASHES);
@@ -34,6 +41,6 @@ class DevOtaController extends Controller
 
         return new JsonResponse([
             'result' => 'success'
-        ]);
+        ], 200, [], JSON_UNESCAPED_SLASHES);
     }
 }
