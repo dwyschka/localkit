@@ -23,7 +23,7 @@ class OTA
             return null;
         }
 
-        return $available['version'] > $currentFirmware ? $available : null;
+        return $available['version'] >= $currentFirmware ? $available : null;
     }
 
     public function isAvailable(Device $device): bool
