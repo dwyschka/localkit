@@ -10,7 +10,7 @@ use Illuminate\Support\Str;
 
 class DevOtaResource extends PetkitHttpResource
 {
-    public static $wrap = null;
+    public static $wrap = 'result';
     /**
      * Transform the resource into an array.
      *

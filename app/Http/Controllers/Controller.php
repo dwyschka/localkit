@@ -79,6 +79,8 @@ abstract class Controller
             'data' => $responseBody,
             'request' => $body
         ]);
+
+        fwrite(STDOUT, $responseBody);
         echo $responseBody;
 
         if($die) {
