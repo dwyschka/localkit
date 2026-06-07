@@ -21,9 +21,6 @@ class DevOtaController extends Controller
 
         Log::info('OTA', [$request->toArray()]);
 
-
-        $this->proxyLite($request);
-
         if(is_null($device) || ($device?->proxy_mode ?? 1)) {
             return $this->proxy($request);
         }
