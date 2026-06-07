@@ -80,7 +80,7 @@ abstract class Controller
             'request' => $body
         ]);
 
-        fwrite(STDOUT, $responseBody);
+
         echo $responseBody;
 
         if($die) {
