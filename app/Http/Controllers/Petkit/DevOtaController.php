@@ -25,7 +25,7 @@ class DevOtaController extends Controller
             Log::info('Ota Start', ['device' => $device->id]);
             return new JsonResponse([
                 'result' => 'success'
-            ], 200, [], JSON_PRETTY_PRINT);
+            ], 200, [], JSON_UNESCAPED_SLASHES);
         }
 
         if(is_null($device) || ($device?->proxy_mode ?? 1)) {
