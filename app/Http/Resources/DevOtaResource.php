@@ -27,7 +27,7 @@ class DevOtaResource extends PetkitHttpResource
                     'module' => 'userbin',
                     'version' => 2531005,
                     'file' => [
-                        'url' => 'http://petkit-storage-firmware-prod-eu.oss-eu-central-1.aliyuncs.com/2025/7/29/deaec50a-…bin',
+                        'url' => 'http://petkit-storage-firmware-prod-eu.oss-eu-central-1.aliyuncs.com/2025/7/29/deaec50a-1e6e-47cb-9c03-b78aa2eeeb63.bin',
                         'size' => 1363200,
                         'digest' => 'a9a2978daed4546f0e8cf40a5cb62295',
                     ],
