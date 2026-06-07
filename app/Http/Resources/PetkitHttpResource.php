@@ -22,8 +22,6 @@ class PetkitHttpResource extends JsonResource
             JSON_UNESCAPED_SLASHES|JSON_PRESERVE_ZERO_FRACTION
         );
 
-        Log::info('PETKITHTTP', ['content' => $response->getContent()]);
-
         return $response->header('Content-Type', 'application/json;charset=utf-8')
             ->header('Content-Length', strlen($response->getContent()));
     }

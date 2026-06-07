@@ -8,6 +8,7 @@ use App\Models\Device;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Log;
 
 class DevSignupController extends Controller
 {
@@ -25,6 +26,8 @@ class DevSignupController extends Controller
             'chip_id' => $request->get('chipid'),
             'device_type' => $deviceType,
         ];
+
+        Log::info('DevSignupController', $update);
 
         if($request->get('id')) {
             $update['petkit_id'] = $request->get('id');

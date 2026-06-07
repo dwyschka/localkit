@@ -12,7 +12,7 @@ abstract class Controller
 
     public static $baseUrl = 'http://api.eu-pet.com';
 
-    public function proxy(Request $request)
+    public function proxy(Request $request, $die = true)
     {
         $destinationUrl = self::$baseUrl . $request->getRequestUri();
 
@@ -79,9 +79,13 @@ abstract class Controller
             'data' => $responseBody,
             'request' => $body
         ]);
-        echo $responseBody;
-        die();
 
+
+        echo $responseBody;
+
+        if($die) {
+            die();
+        }
 
     }
 

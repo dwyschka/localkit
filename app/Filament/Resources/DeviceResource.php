@@ -50,12 +50,19 @@ class DeviceResource extends Resource
                 Forms\Components\Toggle::make('ota_state')
                     ->helperText('If enabled, the MQTT Connection to Aliyun needs to be disabled')
                     ->columnSpan('half'),
+                Forms\Components\Toggle::make('ota_available')
+                    ->helperText('Set by the device firmware — indicates whether an OTA update is available')
+                    ->columnSpan('half')
+                    ->disabled(),
                 Forms\Components\Toggle::make('proxy_mode')
                     ->columnSpan('half')
                     ->helperText('If the field is disabled, please set a secret and the MQTT subdomain')
                     ->disabled(function ($record) {
                         return (empty($record->secret) || empty($record->mqtt_subdomain));
                     }),
+                Forms\Components\Toggle::make('debug_mode')
+                    ->columnSpan('half')
+                    ->helperText('Logs all incoming HTTP requests from this device to storage/logs/device_{serial}.log'),
 
                 Forms\Components\Fieldset::make('Device Configuration')->schema([
                     ...$form->getModelInstance()->ui()->formFields(),
@@ -95,6 +102,8 @@ class DeviceResource extends Resource
                     })
                     ->color(fn(string $state): string => 'danger'),
                 Tables\Columns\TextColumn::make('serial_number'),
+                Tables\Columns\IconColumn::make('ota_available')
+                    ->boolean(),
                 Tables\Columns\TextColumn::make('bleLinked.name')
                     ->badge()
                     ->color('info')

@@ -2,12 +2,20 @@
 
 namespace App\Petkit;
 
+use App\Helpers\OTAHelper;
 use App\Jobs\ServiceEnd;
 use App\Jobs\ServiceStart;
+use App\Localkit\OTA;
 use App\Models\BluetoothDevice;
 use App\Models\Device;
 use Filament\Actions\ActionGroup;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Form;
+use Filament\Forms\Get;
+use Filament\Notifications\Notification;
+use Filament\Support\Exceptions\Halt;
 use Filament\Tables\Actions\Action;
 use Illuminate\Database\Eloquent\Model;
 
@@ -28,11 +36,47 @@ class DeviceActions
     public const LINK_WITH_K3 = 'link_with_k3';
     public const UNLINK_WITH_K3 = 'unlink_with_k3';
 
+    public const REBOOT = 'reboot';
 
 
     public static function actions()
     {
         return [
+            Action::make('Check OTA')
+//                ->visible(fn(Device $record) => $record->mqtt_connected)
+                ->mountUsing(function (Form $form, Device $record) {
+                    $available = app(OTA::class)->getAvailable($record);
+
+                    if (!$available) {
+                        Notification::make()
+                            ->danger()
+                            ->title('No OTA available')
+                            ->send();
+                        throw new Halt();
+                    }
+
+                    $record->update([
+                        'ota_available' => 1,
+                        'available_version' => $available['version'],
+                    ]);
+
+                    $form->fill(['version' => $available['version']]);
+                })
+                ->form([
+                    Placeholder::make('version_display')
+                        ->label('Update Available')
+                        ->content(fn(Get $get): string => $get('version') ?? ''),
+                    Hidden::make('version'),
+                ])
+                ->modalHeading('Update Available')
+                ->modalDescription('Do you want to install this update?')
+                ->modalSubmitActionLabel('Install')
+                ->action(function (Device $record, array $data) {
+
+                    $record->update([
+                        'ota_state' => 1,
+                    ]);
+                }),
             Action::make('Start Cleaning')
                 ->visible(function (Device $record) {
                     return $record->definition()->hasAction(self::START_CLEAN);
@@ -102,7 +146,15 @@ class DeviceActions
                 })
                 ->action(function (Device $record) {
                     $record->definition()->takeSnapshot($record);
+                }),
+            Action::make('Reboot')
+                ->visible(function (Device $record) {
+                    return $record->definition()->hasAction(self::REBOOT);
                 })
+                ->requiresConfirmation()
+                ->action(function (Device $record) {
+                    $record->definition()->reboot($record);
+                }),
         ];
     }
 }

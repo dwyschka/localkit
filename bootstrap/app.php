@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
            't6/*'
         ]);
+        $middleware->appendToGroup('api', \App\Http\Middleware\LogDeviceHttpRequests::class);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

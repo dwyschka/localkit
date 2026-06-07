@@ -2,8 +2,10 @@
 
 namespace App\Http\Resources;
 
+use App\Localkit\OTA;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class DevOtaResource extends PetkitHttpResource
@@ -16,6 +18,22 @@ class DevOtaResource extends PetkitHttpResource
      */
     public function toArray(Request $request): array
     {
-        return $this->resource->definition()->toOTA();
+        return app(OTA::class)->toOTA($this->resource);
     }
+
+    public function toResponse($request)
+    {
+        $response = response()->json(
+            [
+                self::$wrap => $this->resolve($request)
+            ],
+            200,
+            [],
+            JSON_UNESCAPED_SLASHES
+        );
+
+        return $response->header('Content-Type', 'application/json;charset=utf-8')
+            ->header('Content-Length', strlen($response->getContent()));
+    }
+
 }

@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Localkit\OTA;
 use App\Management\Go2RTC;
 use App\Management\S6;
 use App\Models\User;
@@ -59,6 +60,8 @@ class AppServiceProvider extends ServiceProvider
                 app(S6::class)
             );
         });
+
+        $this->app->bind(OTA::class, fn() => new OTA());
 
     }
 }

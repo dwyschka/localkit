@@ -6,6 +6,7 @@ use App\DTOs\MultiRangeDTO;
 use App\DTOs\PetkitDTOInterface;
 use App\Helpers\JsonHelper;
 use App\Homeassistant\HomeassistantTopic;
+use App\Jobs\Reboot;
 use App\Jobs\ServiceConnect;
 use App\Jobs\ServiceEnd;
 use App\Jobs\ServiceStart;
@@ -41,7 +42,8 @@ class PetkitPuraMax implements DeviceDefinition, BluetoothProxyInterface
         DeviceActions::STOP_LIGHTNING,
         DeviceActions::RESET_N50,
         DeviceActions::LINK_WITH_K3,
-        DeviceActions::UNLINK_WITH_K3
+        DeviceActions::UNLINK_WITH_K3,
+        DeviceActions::REBOOT,
     ];
     public static $workingStates = [
         DeviceStates::WORKING, DeviceStates::IDLE, DeviceStates::PET_IN, DeviceStates::CLEANING, DeviceStates::MAINTENANCE,
@@ -277,6 +279,9 @@ class PetkitPuraMax implements DeviceDefinition, BluetoothProxyInterface
 
             case DeviceActions::STOP_MAINTENANCE:
                 return $hasAction && $this?->device?->working_state == DeviceStates::MAINTENANCE->value;
+
+            case DeviceActions::REBOOT:
+                return $hasAction && (bool)$this->device->mqtt_connected;
         }
 
         return $hasAction;
@@ -335,6 +340,11 @@ class PetkitPuraMax implements DeviceDefinition, BluetoothProxyInterface
         ]);
     }
 
+
+    public function reboot(Device $record): void
+    {
+        Reboot::dispatchSync($record);
+    }
 
     public static function deviceName()
     {
