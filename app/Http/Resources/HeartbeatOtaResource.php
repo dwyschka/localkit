@@ -22,13 +22,13 @@ class HeartbeatOtaResource extends PetkitHttpResource
 
         $ts = time();
 
-        //$firmware = app(OTA::class)->getAvailable($this->resource);
+        $firmware = app(OTA::class)->getAvailable($this->resource);
 
         $data = [
             'content' => json_encode([
                 "msgType" => 0,
                 "payload" => [
-                    "firmwareId" => 33
+                    "firmwareId" => $firmware['id'] ?? 33
                 ],
                 "type" => "ota",
                 "timestamp" => $ts
