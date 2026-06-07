@@ -46,10 +46,8 @@ class OTA
     {
         $detail = $this->firmwareByDevice($device)['detail'];
         $detail = Http::get($detail);
-        Log::info('OTA detail', $detail?->json());
         if ($detail->successful()) {
             $result = $detail->json('result');
-            Log::info('OTA detail', $result);
 
             if (config('localkit.firmware_proxy')) {
                 $upstreamHost = parse_url(config('localkit.ota_repository'), PHP_URL_HOST);

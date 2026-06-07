@@ -21,16 +21,4 @@ class DevOtaResource extends PetkitHttpResource
         return app(OTA::class)->toOta($this->resource);
     }
 
-    public function toResponse($request)
-    {
-        $response = response()->json(
-                $this->resolve($request),
-            200,
-            [],
-            JSON_UNESCAPED_SLASHES|JSON_PRESERVE_ZERO_FRACTION
-        );
-
-        return $response->header('Content-Type', 'application/json;charset=utf-8')
-            ->header('Content-Length', strlen($response->getContent()));
-    }
 }
