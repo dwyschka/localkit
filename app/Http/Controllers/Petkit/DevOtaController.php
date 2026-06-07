@@ -20,6 +20,12 @@ class DevOtaController extends Controller
         $device = Device::wherePetkitId($deviceId)->first();
 
         Log::info('OTA', [$request->toArray()]);
+
+
+        if(is_null($device) || ($device?->proxy_mode ?? 1)) {
+            return $this->proxy($request);
+        }
+
         if($device?->ota_state) {
             if($request->input('success') === '1') {
                 $device->update([
@@ -33,10 +39,6 @@ class DevOtaController extends Controller
             return new JsonResponse([
                 'result' => 'success'
             ], 200, [], JSON_UNESCAPED_SLASHES);
-        }
-
-        if(is_null($device) || ($device?->proxy_mode ?? 1)) {
-            return $this->proxy($request);
         }
 
         return new JsonResponse([
