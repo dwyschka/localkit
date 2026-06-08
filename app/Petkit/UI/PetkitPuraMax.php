@@ -106,6 +106,10 @@ class PetkitPuraMax
                     ->helperText('Disable auto and periodical Cleaning')
                     ->label('Kitten Protection'),
 
+                Forms\Components\Toggle::make('configuration.settings.sandSaving')
+                    ->helperText('Turn it on when clumps are relatively large')
+                    ->label('Litter-saving Mode'),
+
                 Forms\Components\Toggle::make('configuration.settings.autoWork')
                     ->helperText('After pet leaves, the device will start automatic cleaning')
                     ->label('Auto Cleaning'),

@@ -35,13 +35,14 @@ class DevOtaController extends Controller
             } else {
                 Log::info('Ota Start', ['device' => $device->id]);
             }
-            return new JsonResponse([
-                'result' => 'success'
-            ], 200, [], JSON_UNESCAPED_SLASHES);
-        }
 
-        return new JsonResponse([
-            'result' => 'success'
-        ], 200, [], JSON_UNESCAPED_SLASHES);
+            }
+
+            $data = ['result' => 'success'];
+            $json = json_encode($data);
+            return response($json, 200)
+                ->header('Content-Type', 'application/json;charset=utf-8')
+                ->header('Content-Length', mb_strlen($json, '8bit'));
+                
     }
 }

@@ -77,6 +77,7 @@ abstract class Controller
         Log::info('Proxy-Data', [
             'url' => $destinationUrl,
             'data' => $responseBody,
+            'headers' => $responseHeaders,
             'request' => $body
         ]);
 

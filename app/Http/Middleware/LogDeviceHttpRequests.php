@@ -58,6 +58,6 @@ class LogDeviceHttpRequests
             'response_body' => $response->getContent(),
         ];
 
-        Log::stack([$channel, 'default'])->debug('[HTTP] ' . $request->method() . ' ' . $request->path(), $context);
+        Log::stack([$channel, 'single'])->debug('[HTTP] ' . $request->method() . ' ' . $request->path(), $context);
     }
 }
