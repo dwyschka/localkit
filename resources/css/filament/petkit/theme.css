@@ -1,3 +1,99 @@
 @import '../../../../vendor/filament/filament/resources/css/theme.css';
 
 @config 'tailwind.config.js';
+
+.fi-sidebar-item.fi-active > .fi-sidebar-item-button {
+    position: relative;
+}
+.fi-sidebar-item.fi-active > .fi-sidebar-item-button::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: 0;
+    top: 0.3rem;
+    bottom: 0.3rem;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: rgb(var(--primary-500));
+}
+
+.fi-header-heading {
+    font-size: 1.75rem;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+}
+
+.fi-sidebar-group-label {
+    text-transform: uppercase;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+}
+
+.fi-section,
+.fi-ta-ctn,
+.fi-wi-stats-overview-stat {
+    border-radius: 0.9rem;
+}
+
+.fi-ta-header-cell .fi-ta-header-cell-label {
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.6875rem;
+    font-weight: 700;
+}
+
+.fi-wi-stats-overview-stat-value {
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+@media (max-width: 860px) {
+    .fi-ta-table,
+    .fi-ta-table > tbody {
+        display: block;
+    }
+    .fi-ta-table > thead {
+        display: none;
+    }
+    .fi-ta-table > tbody > tr.fi-ta-row {
+        display: block;
+        margin: 0 0 0.75rem;
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        border-radius: 0.9rem;
+        background: rgba(255, 255, 255, 0.02);
+        overflow: hidden;
+    }
+    .fi-ta-row > .fi-ta-cell {
+        display: flex !important;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        width: auto !important;
+        padding: 0.65rem 0.95rem !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .fi-ta-row > .fi-ta-cell:last-child {
+        border-bottom: 0;
+    }
+    .fi-ta-row > .fi-ta-cell::before {
+        content: attr(data-label);
+        flex: none;
+        color: rgb(var(--gray-400));
+        font-size: 0.6875rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    .fi-ta-row > .fi-ta-cell.lk-cardhead::before {
+        display: none;
+    }
+    .fi-ta-row > .fi-ta-selection-cell {
+        display: none;
+    }
+    .fi-ta-row > .fi-ta-cell:last-child {
+        justify-content: flex-start;
+    }
+    .fi-ta-row > .fi-ta-cell:last-child::before {
+        display: none;
+    }
+}

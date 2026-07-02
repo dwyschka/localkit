@@ -50,9 +50,12 @@ class ServicePage extends Page implements HasTable
             ->columns([
                 TextColumn::make('name')
                     ->label('Service')
+                    ->weight(\Filament\Support\Enums\FontWeight::Bold)
                     ->searchable()
-                    ->sortable(),
-
+                    ->sortable()
+                    ->icon('heroicon-o-server-stack')
+                    ->iconColor('primary')
+                    ->extraCellAttributes(['class' => 'lk-cardhead']),
                 TextColumn::make('statename')
                     ->label('Status')
                     ->badge()
@@ -62,8 +65,8 @@ class ServicePage extends Page implements HasTable
                         'STOPPED' => 'warning',
                         default => 'gray',
                     })
-                    ->sortable(),
-
+                    ->sortable()
+                    ->extraCellAttributes(['data-label' => 'Status']),
             ])
             ->actions([
                 Action::make('stop')

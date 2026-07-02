@@ -44,12 +44,27 @@ class PetResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')->searchable(),
-                Tables\Columns\TextColumn::make('species')->searchable(),
-                Tables\Columns\TextColumn::make('gender')->formatStateUsing(function(string $state) {
-                    return $state === '0' ? 'Male' : 'Female';
-                })->searchable(),
-                Tables\Columns\TextColumn::make('weight')->searchable(),
+                Tables\Columns\TextColumn::make('name')
+                    ->label('Pet')
+                    ->searchable()->sortable()
+                    ->weight(\Filament\Support\Enums\FontWeight::Bold)
+                    ->description(fn ($record) => $record->species)
+                    ->icon('heroicon-o-heart')
+                    ->iconColor('primary')
+                    ->extraCellAttributes(['class' => 'lk-cardhead']),
+                Tables\Columns\TextColumn::make('gender')
+                    ->label('Gender')
+                    ->badge()->color('gray')
+                    ->formatStateUsing(fn (string $state): string => $state === '0' ? 'Male' : 'Female')
+                    ->extraCellAttributes(['data-label' => 'Gender']),
+                Tables\Columns\TextColumn::make('weight')
+                    ->label('Weight')
+                    ->formatStateUsing(fn ($state): string => $state . ' kg')
+                    ->extraCellAttributes(['data-label' => 'Weight']),
+                Tables\Columns\TextColumn::make('birthdate')
+                    ->label('Birthdate')
+                    ->date('Y-m-d')->color('gray')
+                    ->extraCellAttributes(['data-label' => 'Birthdate']),
             ])
             ->filters([
                 //

@@ -32,82 +32,164 @@ class DeviceResource extends Resource
 
     public static function form(Form $form): Form
     {
-        return $form
+        $model = $form->getModelInstance();
+
+        $general = Forms\Components\Tabs\Tab::make('General')
+            ->icon('heroicon-o-cog-6-tooth')
+            ->columns(2)
             ->schema([
-                Forms\Components\TextInput::make('name')->columnSpan('full'),
-                Forms\Components\TextInput::make('firmware')->columnSpan('half')->readOnly(),
-                Forms\Components\TextInput::make('mac')->columnSpan('half')->readOnly(),
+                Forms\Components\TextInput::make('name')->columnSpanFull(),
                 Forms\Components\Select::make('device_type')->options([
                     't4' => PetkitPuraMax::deviceName(),
                     'd4' => PetkitFreshElementSolo::deviceName(),
                     'd4h' => PetkitYumshareSolo::deviceName(),
-                ])
-                    ->columnSpan('half')->disabled(),
-
-                Forms\Components\TextInput::make('secret')->columnSpan('half'),
-                Forms\Components\TextInput::make('petkit_id')->columnSpan('half')->readOnly(),
-                Forms\Components\TextInput::make('mqtt_subdomain')->columnSpan('half'),
-                Forms\Components\Toggle::make('ota_state')
-                    ->helperText('If enabled, the MQTT Connection to Aliyun needs to be disabled')
-                    ->columnSpan('half'),
-                Forms\Components\Toggle::make('ota_available')
-                    ->helperText('Set by the device firmware — indicates whether an OTA update is available')
-                    ->columnSpan('half')
-                    ->disabled(),
-                Forms\Components\Toggle::make('proxy_mode')
-                    ->columnSpan('half')
-                    ->helperText('If the field is disabled, please set a secret and the MQTT subdomain')
-                    ->disabled(function ($record) {
-                        return (empty($record->secret) || empty($record->mqtt_subdomain));
-                    }),
-                Forms\Components\Toggle::make('debug_mode')
-                    ->columnSpan('half')
-                    ->helperText('Logs all incoming HTTP requests from this device to storage/logs/device_{serial}.log'),
-
-                Forms\Components\Fieldset::make('Device Configuration')->schema([
-                    ...$form->getModelInstance()->ui()->formFields(),
-                ])
-
+                ])->disabled(),
+                Forms\Components\TextInput::make('serial_number')->readOnly(),
+                Forms\Components\TextInput::make('firmware')->readOnly(),
+                Forms\Components\TextInput::make('mac')->readOnly(),
+                Forms\Components\TextInput::make('petkit_id')->readOnly(),
+                Forms\Components\TextInput::make('secret'),
+                Forms\Components\TextInput::make('mqtt_subdomain'),
+                Forms\Components\Fieldset::make('Connection & proxy')
+                    ->columns(2)
+                    ->schema([
+                        Forms\Components\Toggle::make('proxy_mode')
+                            ->helperText('If the field is disabled, please set a secret and the MQTT subdomain')
+                            ->disabled(fn ($record) => empty($record?->secret) || empty($record?->mqtt_subdomain)),
+                        Forms\Components\Toggle::make('debug_mode')
+                            ->helperText('Logs all incoming HTTP requests from this device to storage/logs'),
+                        Forms\Components\Toggle::make('ota_state')
+                            ->helperText('If enabled, the MQTT connection to Aliyun needs to be disabled'),
+                        Forms\Components\Toggle::make('ota_available')
+                            ->helperText('Set by the device firmware — indicates whether an OTA update is available')
+                            ->disabled(),
+                    ]),
             ]);
+
+        $config = ($model->exists && $model->device_type) ? $model->ui()->formFields() : [];
+        $configTabs = self::normalizeConfigTabs($config);
+
+        return $form->schema([
+            Forms\Components\Placeholder::make('summary')
+                ->hiddenLabel()
+                ->columnSpanFull()
+                ->content(fn (?\App\Models\Device $record) => $record?->exists
+                    ? view('filament.device-summary', ['device' => $record])
+                    : ''),
+            Forms\Components\Tabs::make('Device')
+                ->columnSpanFull()
+                ->persistTabInQueryString()
+                ->tabs(array_merge([$general], $configTabs)),
+        ]);
+    }
+
+    public static function normalizeConfigTabs(array $config): array
+    {
+        $icons = [
+            'Consumables' => 'heroicon-o-beaker',
+            'Feeding' => 'heroicon-o-cake',
+            'Feeding Plan' => 'heroicon-o-calendar-days',
+            'Settings' => 'heroicon-o-cog-6-tooth',
+            'Smart Settings' => 'heroicon-o-sparkles',
+            'Media' => 'heroicon-o-video-camera',
+            'Camera Settings' => 'heroicon-o-camera',
+            'Voice Settings' => 'heroicon-o-speaker-wave',
+            'AI LAB' => 'heroicon-o-sparkles',
+            'Litter' => 'heroicon-o-square-3-stack-3d',
+            'Unknown' => 'heroicon-o-wrench-screwdriver',
+            'Advanced' => 'heroicon-o-wrench-screwdriver',
+        ];
+
+        $tabs = [];
+        foreach ($config as $component) {
+            if ($component instanceof Forms\Components\Tabs\Tab) {
+                $tabs[] = $component;
+            } elseif ($component instanceof Forms\Components\Section) {
+                $heading = $component->getHeading();
+                $label = (is_string($heading) && $heading !== '') ? $heading : 'Configuration';
+                $tabs[] = Forms\Components\Tabs\Tab::make($label)
+                    ->icon($icons[$label] ?? 'heroicon-o-adjustments-horizontal')
+                    ->schema($component->getChildComponents())
+                    ->columns($component->getColumns() ?: 1);
+            } else {
+                $tabs[] = Forms\Components\Tabs\Tab::make('Configuration')
+                    ->icon('heroicon-o-adjustments-horizontal')
+                    ->schema([$component]);
+            }
+        }
+
+        return $tabs;
     }
 
     public static function table(Table $table): Table
     {
         return $table
             ->poll('10s')
+            ->defaultSort('name')
             ->columns([
+                Tables\Columns\TextColumn::make('name')
+                    ->label('Device')
+                    ->searchable()
+                    ->sortable()
+                    ->weight(\Filament\Support\Enums\FontWeight::Bold)
+                    ->icon(fn ($record): string => $record->device_type === 't4' ? 'heroicon-o-archive-box' : 'heroicon-o-inbox-stack')
+                    ->iconColor('primary')
+                    ->extraCellAttributes(['class' => 'lk-cardhead']),
                 Tables\Columns\TextColumn::make('device_type')
-                    ->formatStateUsing(function (string $state) {
-                        return match ($state) {
-                            't4' => PetkitPuraMax::deviceName(),
-                            'd4' => PetkitFreshElementSolo::deviceName(),
-                            'd4h' => PetkitYumshareSolo::deviceName(),
-                        };
-                    }),
-                Tables\Columns\TextColumn::make('name')->searchable(),
-                Tables\Columns\TextColumn::make('working_state')->badge(),
+                    ->label('Type')
+                    ->badge()->color('gray')->sortable()
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        't4' => PetkitPuraMax::deviceName(),
+                        'd4' => PetkitFreshElementSolo::deviceName(),
+                        'd4h' => PetkitYumshareSolo::deviceName(),
+                        default => $state,
+                    })
+                    ->extraCellAttributes(['data-label' => 'Type']),
+                Tables\Columns\TextColumn::make('serial_number')
+                    ->label('Serial')
+                    ->searchable()->sortable()
+                    ->color('gray')
+                    ->fontFamily(\Filament\Support\Enums\FontFamily::Mono)
+                    ->extraCellAttributes(['data-label' => 'Serial']),
                 Tables\Columns\TextColumn::make('mqtt_connected')
-                    ->badge()
-                    ->formatStateUsing(function (string $state) {
-                        return $state === '0' ? 'Disconnected' : 'Connected';
+                    ->label('Connection')
+                    ->sortable()
+                    ->html()
+                    ->formatStateUsing(function (string $state): string {
+                        $connected = $state !== '0';
+                        $color = $connected ? '#4ade80' : '#f87171';
+                        $text = $connected ? 'Connected' : 'Disconnected';
+                        return '<span style="display:inline-flex;align-items:center;gap:7px;font-weight:600;color:' . $color . '">'
+                            . '<span style="width:8px;height:8px;border-radius:50%;flex:none;background:' . $color . '"></span>'
+                            . $text . '</span>';
                     })
-                    ->color(fn(string $state): string => match ($state) {
-                        '0' => 'danger',
-                        '1' => 'success'
-                    }),
-                Tables\Columns\TextColumn::make('error')
-                    ->badge()
-                    ->formatStateUsing(function (string $state) {
-                        return __('petkit.error.' . $state);
-                    })
-                    ->color(fn(string $state): string => 'danger'),
-                Tables\Columns\TextColumn::make('serial_number'),
-                Tables\Columns\IconColumn::make('ota_available')
-                    ->boolean(),
-                Tables\Columns\TextColumn::make('bleLinked.name')
-                    ->badge()
-                    ->color('info')
+                    ->extraCellAttributes(['data-label' => 'Connection']),
+                Tables\Columns\TextColumn::make('working_state')
+                    ->label('State')
+                    ->badge()->sortable()
+                    ->formatStateUsing(function ($state, $record) {
+                        if (! $record->error) {
+                            return $state;
+                        }
+                        $key = 'petkit.error.' . $record->error;
+                        $message = __($key);
 
+                        return $message === $key ? 'Error: ' . $record->error : $message;
+                    })
+                    ->color(fn ($state, $record): string => $record->error ? 'danger' : 'warning')
+                    ->wrap()
+                    ->extraCellAttributes(['data-label' => 'State']),
+                Tables\Columns\TextColumn::make('last_heartbeat')
+                    ->label('Last heartbeat')
+                    ->sortable()
+                    ->color('gray')
+                    ->formatStateUsing(fn ($state) => $state ? \Illuminate\Support\Carbon::createFromTimestamp((int) $state)->diffForHumans() : '—')
+                    ->description(fn ($state) => $state ? \Illuminate\Support\Carbon::createFromTimestamp((int) $state)->format('Y-m-d H:i') : null)
+                    ->extraCellAttributes(['data-label' => 'Last heartbeat']),
+                Tables\Columns\ToggleColumn::make('proxy_mode')
+                    ->label('Proxy')
+                    ->disabled()
+                    ->extraCellAttributes(['data-label' => 'Proxy']),
             ])
             ->filters([
                 //

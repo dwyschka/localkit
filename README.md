@@ -1,7 +1,10 @@
 # Localkit
 
 <p align="center">
-<img src="resources/images/logo.svg" width="150px">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="resources/images/brand/localkit-lockup-dark.svg">
+  <img src="resources/images/brand/localkit-lockup-light.svg" alt="localkit" width="260">
+</picture>
 </p>
 
 

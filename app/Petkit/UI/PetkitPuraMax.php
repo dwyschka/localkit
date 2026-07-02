@@ -14,7 +14,7 @@ class PetkitPuraMax
     public function formFields(): array
     {
         return [
-            Forms\Components\Section::make('consumables')->columns(3)->schema([
+            Forms\Components\Tabs\Tab::make('Consumables')->icon('heroicon-o-beaker')->columns(3)->schema([
                 Forms\Components\TextInput::make('configuration.consumables.n50Durability')->numeric(),
                 Forms\Components\TextInput::make('configuration.consumables.n50NextChange')->label('Next Reset in Days (N50)')->formatStateUsing(function ($state) {
                     if ($state <= 0) {
@@ -27,14 +27,14 @@ class PetkitPuraMax
 
                 })->readOnly()->disabled(true)
             ]),
-            Forms\Components\Section::make('Litter')->columns(3)->schema([
+            Forms\Components\Tabs\Tab::make('Litter')->icon('heroicon-o-square-3-stack-3d')->columns(3)->schema([
                 Forms\Components\TextInput::make('history_count')->readOnly()->formatStateUsing(function ($record) {
                     return $record->histories()->whereDate('created_at', now()->toDateTime())->where('type', '=', 'IN_USE')->count();
                 }),
                 Forms\Components\TextInput::make('configuration.litter.percent')->readOnly(),
                 Forms\Components\TextInput::make('configuration.litter.weight')->readOnly(),
             ]),
-            Forms\Components\Section::make('Settings')->schema([
+            Forms\Components\Tabs\Tab::make('Settings')->icon('heroicon-o-cog-6-tooth')->schema([
                 Forms\Components\Select::make('configuration.settings.sandType')->options([
                     '1' => 'Betonit/Mineral',
                     '2' => 'Tofu',
@@ -101,7 +101,7 @@ class PetkitPuraMax
                 ]),
             ]),
 
-            Forms\Components\Section::make('Smart Settings')->schema([
+            Forms\Components\Tabs\Tab::make('Smart Settings')->icon('heroicon-o-sparkles')->schema([
                 Forms\Components\Toggle::make('configuration.settings.kitten')
                     ->helperText('Disable auto and periodical Cleaning')
                     ->label('Kitten Protection'),
@@ -201,7 +201,7 @@ class PetkitPuraMax
                         })
                 ]),
 
-            Forms\Components\Section::make('Unknown')->schema([
+            Forms\Components\Tabs\Tab::make('Advanced')->icon('heroicon-o-wrench-screwdriver')->schema([
                 Forms\Components\ViewField::make('warning')
                     ->columnSpanFull()
                     ->view('filament.forms.warning')

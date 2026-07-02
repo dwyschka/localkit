@@ -55,7 +55,7 @@ class PetkitActivities extends Page
                             ->placeholder('No date is set.'),
                         ActivityIcon::make('type')
                             ->icon(fn(string|null $state): string|null => match ($state) {
-                                'IN_USE' => 'heroicon-m-exclamation-triangle',
+                                'IN_USE' => '💩',
                                 'CLEANING' => 'heroicon-m-arrow-path-rounded-square',
                                 'MAINTENANCE' => 'heroicon-m-wrench-screwdriver',
                                 default => 'heroicon-m-exclamation-circle',
