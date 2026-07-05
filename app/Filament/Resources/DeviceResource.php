@@ -8,6 +8,7 @@ use App\Jobs\ServiceStart;
 use App\Models\BluetoothDevice;
 use App\Models\Device;
 use App\Petkit\DeviceActions;
+use App\Petkit\Devices\PetkitFreshElement3;
 use App\Petkit\Devices\PetkitFreshElementSolo;
 use App\Petkit\Devices\PetkitPuraMax;
 use App\Petkit\Devices\PetkitYumshareSolo;
@@ -39,6 +40,7 @@ class DeviceResource extends Resource
                 Forms\Components\TextInput::make('mac')->columnSpan('half')->readOnly(),
                 Forms\Components\Select::make('device_type')->options([
                     't4' => PetkitPuraMax::deviceName(),
+                    'd3' => PetkitFreshElement3::deviceName(),
                     'd4' => PetkitFreshElementSolo::deviceName(),
                     'd4h' => PetkitYumshareSolo::deviceName(),
                 ])
@@ -80,6 +82,7 @@ class DeviceResource extends Resource
                     ->formatStateUsing(function (string $state) {
                         return match ($state) {
                             't4' => PetkitPuraMax::deviceName(),
+                            'd3' => PetkitFreshElement3::deviceName(),
                             'd4' => PetkitFreshElementSolo::deviceName(),
                             'd4h' => PetkitYumshareSolo::deviceName(),
                         };
@@ -142,7 +145,6 @@ class DeviceResource extends Resource
     {
         return [
             'index' => Pages\ListDevices::route('/'),
-            'create' => Pages\CreateDevice::route('/create'),
             'edit' => Pages\EditDevice::route('/{record}/edit'),
             'activities' => Pages\PetkitActivities::route('/order/{record}/activities'),
 
