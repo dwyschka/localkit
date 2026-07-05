@@ -49,15 +49,20 @@ class PetkitFreshElement3
                 Forms\Components\TextInput::make('configuration.settings.amount')
                     ->label('Feeding Amount')
                     ->helperText('Default amount for manual feeding')
-                    ->numeric(),
+                    ->numeric()
             ]),
-            Forms\Components\Section::make('Settings')->columns(1)->schema([
-                Forms\Components\Toggle::make('configuration.settings.foodWarn')
-                    ->helperText('Activate the sound alarm when the food container runs empty. To end the alarm press the dispense button')
-                    ->label('Refill Alarm'),
+            Forms\Components\Section::make('Settings')->columns(2)->schema([
+                Forms\Components\Toggle::make('configuration.settings.manualLock')
+                    ->helperText('Activate Child Lock to disable the control panel')
+                    ->columnSpan('half')
+                    ->label('Child Lock'),
 
-                Forms\Components\Section::make('Alarm Period')->schema([
-                    TimePicker::make('configuration.settings.foodWarnRange.from')
+                Forms\Components\Toggle::make('configuration.settings.lightMode')
+                    ->helperText('Indicator light work within the following period')
+                    ->label('Indicator Light'),
+
+                Forms\Components\Section::make('Light Period')->schema([
+                    TimePicker::make('configuration.settings.lightRange.from')
                         ->formatStateUsing(function ($state) {
                             return Time::toTimeFromMinutes((int)$state);
                         })
@@ -66,7 +71,7 @@ class PetkitFreshElement3
                         })
                         ->seconds(false),
 
-                    TimePicker::make('configuration.settings.foodWarnRange.till')
+                    TimePicker::make('configuration.settings.lightRange.till')
                         ->formatStateUsing(function ($state) {
                             return Time::toTimeFromMinutes((int)$state);
                         })
@@ -75,52 +80,59 @@ class PetkitFreshElement3
                         })
                         ->seconds(false)
                 ])
-                    ->dehydrateStateUsing(function ($state) {
-                        return $state;
-                    })
                     ->columns(2)
                     ->columnSpanFull(),
 
-                Forms\Components\Toggle::make('configuration.settings.manualLock')
-                    ->helperText('Activate Child Lock to disable the control panel')
-                    ->label('Child Lock'),
+                Forms\Components\Toggle::make('configuration.settings.soundEnable')
+                    ->helperText('Play the voice when the food is dispensing')
+                    ->label('Voice for Food Dispensing'),
 
-                Forms\Components\Toggle::make('configuration.settings.lightMode')
-                    ->helperText('Indicator light work within the following period')
-                    ->label('Indicator Light'),
+                Forms\Components\Toggle::make('configuration.settings.systemSoundEnable')
+                    ->helperText('Turn on the voice prompt of the device')
+                    ->label('Voice Prompt'),
 
-                Repeater::make('configuration.settings.lightMultiRange.ranges')
+                Forms\Components\TextInput::make('configuration.settings.volume')
+                    ->label('Volume')
+                    ->numeric()
+                    ->minValue(0)
+                    ->maxValue(9),
+
+                Forms\Components\Toggle::make('configuration.settings.disturbMode')
+                    ->helperText('Mute sounds and lights within the following period')
+                    ->label('Do Not Disturb'),
+
+                Forms\Components\Section::make('Do Not Disturb Period')->schema([
+                    TimePicker::make('configuration.settings.disturbRange.from')
+                        ->formatStateUsing(function ($state) {
+                            return Time::toTimeFromMinutes((int)$state);
+                        })
+                        ->dehydrateStateUsing(function ($state) {
+                            return Time::toMinutes($state);
+                        })
+                        ->seconds(false),
+
+                    TimePicker::make('configuration.settings.disturbRange.till')
+                        ->formatStateUsing(function ($state) {
+                            return Time::toTimeFromMinutes((int)$state);
+                        })
+                        ->dehydrateStateUsing(function ($state) {
+                            return Time::toMinutes($state);
+                        })
+                        ->seconds(false)
+                ])
                     ->columns(2)
-                    ->label('Screen Period')
-                    ->schema(
-                        [
-                            TimePicker::make('from')
-                                ->label('From')
-                                ->seconds(false)
-                                ->required()
-                                ->formatStateUsing(
-                                    fn (?string $state) => Time::toTimeFromMinutes((int) $state)
-                                )
-                                ->dehydrateStateUsing(
-                                    fn ($state) => Time::toMinutes($state)
-                                ),
+                    ->columnSpanFull(),
 
-                            TimePicker::make('till')
-                                ->label('Till')
-                                ->seconds(false)
-                                ->required()
-                                ->formatStateUsing(
-                                    fn (?string $state) => Time::toTimeFromMinutes((int) $state)
-                                )
-                                ->dehydrateStateUsing(
-                                    fn ($state) => Time::toMinutes($state)
-                                ),
-                        ]
-                    ),
+                Forms\Components\Toggle::make('configuration.settings.surplusControl')
+                    ->helperText('Pause dispensing while enough food is left in the bowl')
+                    ->label('Surplus Control'),
 
-                Forms\Components\Toggle::make('configuration.settings.feedSound')
-                    ->helperText('Turn on the prompt tone, it will ring when the food is dispensing')
-                    ->label('Food dispense prompt tone'),
+                Forms\Components\TextInput::make('configuration.settings.surplus')
+                    ->label('Surplus Amount')
+                    ->numeric()
+                    ->suffix('g'),
+
+
             ]),
             Section::make('Feeding Plan')
                 ->schema([
@@ -254,10 +266,21 @@ class PetkitFreshElement3
                     ->viewData(['message' => 'Its Unknown, because the changes are not verified']),
 
 
-                Forms\Components\Toggle::make('configuration.settings.shareOpen')
+                Forms\Components\Select::make('configuration.settings.language')->options([
+                    'en_US' => 'English',
+                    'zh_CN' => 'Chinese'
+                ])->label('Language'),
+
+                Forms\Components\TextInput::make('configuration.settings.selectedSound')
                     ->columnSpan('half')
-                    ->label('Share Open'),
-                Forms\Components\Toggle::make('configuration.settings.multiConfig')->columnSpan('half')->label('Multi Config'),
+                    ->readOnly()
+                    ->numeric()
+                    ->label('Selected Sound'),
+                Forms\Components\TextInput::make('configuration.settings.numLimit')
+                    ->columnSpan('half')
+                    ->readOnly()
+                    ->numeric()
+                    ->label('Num Limit'),
             ]),
 
 

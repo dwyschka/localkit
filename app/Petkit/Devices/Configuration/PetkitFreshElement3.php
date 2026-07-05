@@ -3,10 +3,7 @@
 namespace App\Petkit\Devices\Configuration;
 
 use App\DTOs\DeviceConfigurationDTO;
-use App\DTOs\K3ConfigDTO;
-use App\DTOs\MultiRangeDTO;
 use App\DTOs\RangeDTO;
-use App\DTOs\SandFullWeightDTO;
 use App\Homeassistant\Button;
 use App\Homeassistant\HASwitch;
 use App\Homeassistant\Number;
@@ -22,8 +19,6 @@ use WendellAdriel\ValidatedDTO\Casting\ArrayCast;
 
 class PetkitFreshElement3 extends DeviceConfigurationDTO implements ConfigurationInterface
 {
-
-    public int $factor;
 
     #[Sensor(
         technicalName: 'error',
@@ -44,42 +39,19 @@ class PetkitFreshElement3 extends DeviceConfigurationDTO implements Configuratio
     public ?string $workingState;
 
     #[HASwitch(
-        technicalName: 'food_warn',
-        name: 'Refill alarm',
+        technicalName: 'manual_lock',
+        name: 'Child lock',
         commandTopic: 'setting/set',
         icon: 'mdi:toggle-switch',
-        valueTemplate: '{{ value_json.settings.foodWarn | string }}',
-        commandTemplate: '{"foodWarn":{{ value }}}',
+        valueTemplate: '{{ value_json.settings.manualLock }}',
+        commandTemplate: '{"manualLock":{{ value }}}',
         payloadOn: true,
         payloadOff: false,
         stateOn: true,
         stateOff: false,
         entityCategory: 'config'
     )]
-    public bool $foodWarn;
-
-    #[HASwitch(
-        technicalName: 'feed_sound',
-        name: 'Food dispense prompt tone',
-        commandTopic: 'setting/set',
-        icon: 'mdi:toggle-switch',
-        valueTemplate: '{{ value_json.settings.feedSound }}',
-        commandTemplate: '{"feedSound":{{ value }}}',
-        payloadOn: true,
-        payloadOff: false,
-        stateOn: true,
-        stateOff: false,
-        entityCategory: 'config'
-    )]
-    public bool $feedSound;
-
-    public bool $multiConfig;
-
-    public RangeDTO $foodWarnRange;
-
-    public RangeDTO $lightRange;
-
-    public bool $shareOpen;
+    public bool $manualLock;
 
     #[HASwitch(
         technicalName: 'light_mode',
@@ -96,20 +68,105 @@ class PetkitFreshElement3 extends DeviceConfigurationDTO implements Configuratio
     )]
     public bool $lightMode;
 
+    public RangeDTO $lightRange;
+
     #[HASwitch(
-        technicalName: 'manual_lock',
-        name: 'Child lock',
+        technicalName: 'sound_enable',
+        name: 'Voice for Food Dispensing',
         commandTopic: 'setting/set',
-        icon: 'mdi:toggle-switch',
-        valueTemplate: '{{ value_json.settings.manualLock }}',
-        commandTemplate: '{"manualLock":{{ value }}}',
+        icon: 'mdi:volume-low',
+        valueTemplate: '{{ value_json.settings.soundEnable }}',
+        commandTemplate: '{"soundEnable":{{ value }}}',
         payloadOn: true,
         payloadOff: false,
         stateOn: true,
         stateOff: false,
         entityCategory: 'config'
     )]
-    public bool $manualLock;
+    public bool $soundEnable;
+
+    #[HASwitch(
+        technicalName: 'system_sound_enable',
+        name: 'Voice Prompt',
+        commandTopic: 'setting/set',
+        icon: 'mdi:desktop-classic',
+        valueTemplate: '{{ value_json.settings.systemSoundEnable }}',
+        commandTemplate: '{"systemSoundEnable":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
+    public bool $systemSoundEnable;
+
+    #[Number(
+        technicalName: 'volume',
+        name: 'Volume',
+        commandTopic: 'setting/set',
+        icon: 'mdi:speaker',
+        valueTemplate: '{{ value_json.settings.volume }}',
+        commandTemplate: '{"volume":{{ value }}}',
+        entityCategory: 'config',
+        min: 0,
+        max: 9,
+        step: 1
+    )]
+    public int $volume;
+
+    public int $selectedSound;
+
+    public string $language;
+
+    #[HASwitch(
+        technicalName: 'surplus_control',
+        name: 'Surplus Control',
+        commandTopic: 'setting/set',
+        icon: 'mdi:scale',
+        valueTemplate: '{{ value_json.settings.surplusControl }}',
+        commandTemplate: '{"surplusControl":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
+    public bool $surplusControl;
+
+    #[Number(
+        technicalName: 'surplus',
+        name: 'Surplus',
+        commandTopic: 'setting/set',
+        icon: 'mdi:food-drumstick',
+        valueTemplate: '{{ value_json.settings.surplus }}',
+        commandTemplate: '{"surplus":{{ value }}}',
+        entityCategory: 'config',
+        min: 0,
+        max: 100,
+        step: 10
+    )]
+    public int $surplus;
+
+    #[HASwitch(
+        technicalName: 'disturb_mode',
+        name: 'Do Not Disturb',
+        commandTopic: 'setting/set',
+        icon: 'mdi:sleep',
+        valueTemplate: '{{ value_json.settings.disturbMode }}',
+        commandTemplate: '{"disturbMode":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
+    public bool $disturbMode;
+
+    public RangeDTO $disturbRange;
+
+    public array $d3SoundFirmware;
+
+    public int $numLimit;
 
     #[Select(
         technicalName: 'amount',
@@ -132,6 +189,7 @@ class PetkitFreshElement3 extends DeviceConfigurationDTO implements Configuratio
         entityCategory: 'config'
     )]
     public int $amount;
+
     public array $schedule;
 
 
@@ -175,19 +233,24 @@ class PetkitFreshElement3 extends DeviceConfigurationDTO implements Configuratio
     protected function rules(): array
     {
         return [
-            'factor' => ['integer', 'min:1', 'max:100'],
             'error' => ['nullable', 'string'],
             'workingState' => ['nullable', 'string'],
-            'foodWarn' => ['bool'],
-            'feedSound' => ['bool'],
-            'multiConfig' => ['bool'],
-            'desiccantDurability' => ['integer', 'min:0', 'max:90'],
-            'desiccantNextChange' => [ 'integer', 'min:0'],
-            'foodWarnRange' => [],
-            'lightRange' => [],
-            'shareOpen' => ['bool'],
-            'lightMode' => ['bool'],
             'manualLock' => ['bool'],
+            'lightMode' => ['bool'],
+            'lightRange' => [],
+            'soundEnable' => ['bool'],
+            'systemSoundEnable' => ['bool'],
+            'volume' => ['integer', 'min:0', 'max:9'],
+            'selectedSound' => ['integer'],
+            'language' => ['string'],
+            'surplusControl' => ['bool'],
+            'surplus' => ['integer', 'min:0'],
+            'disturbMode' => ['bool'],
+            'disturbRange' => [],
+            'd3SoundFirmware' => ['array'],
+            'numLimit' => ['integer', 'min:0'],
+            'desiccantDurability' => ['integer', 'min:0', 'max:90'],
+            'desiccantNextChange' => ['integer', 'min:0'],
             'amount' => ['integer', 'min:1', 'max:100'],
             'schedule' => ['array']
         ];
@@ -196,40 +259,50 @@ class PetkitFreshElement3 extends DeviceConfigurationDTO implements Configuratio
     protected function defaults(): array
     {
         return [
-            'factor' => 10,
             'error' => null,
             'workingState' => 'IDLE',
-            'foodWarn' => true,
-            'feedSound' => false,
-            'multiConfig' => true,
-            'shareOpen' => false,
-            'lightMode' => false,
             'manualLock' => false,
+            'lightMode' => true,
+            'soundEnable' => false,
+            'systemSoundEnable' => true,
+            'volume' => 4,
+            'selectedSound' => -1,
+            'language' => 'en_US',
+            'surplusControl' => true,
+            'surplus' => 60,
+            'disturbMode' => false,
+            'd3SoundFirmware' => [],
+            'numLimit' => 5,
             'desiccantDurability' => 30,
             'desiccantNextChange' => 0,
             'amount' => 10,
             'schedule' => [],
-            'foodWarnRange' => ['from' => 0, 'till' => 1440],
             'lightRange' => ['from' => 0, 'till' => 1440],
+            'disturbRange' => ['from' => 1320, 'till' => 360],
         ];
     }
 
     protected function casts(): array
     {
         return [
-            'factor' => new IntegerCast(),
             'amount' => new IntegerCast(),
+            'volume' => new IntegerCast(),
+            'selectedSound' => new IntegerCast(),
+            'surplus' => new IntegerCast(),
+            'numLimit' => new IntegerCast(),
             'schedule' => new ArrayCast(),
-            'multiConfig' => new BooleanCast(),
-            'shareOpen' => new BooleanCast(),
-            'lightMode' => new BooleanCast(),
+            'd3SoundFirmware' => new ArrayCast(),
             'manualLock' => new BooleanCast(),
-            'foodWarn' => new BooleanCast(),
-            'feedSound' => new BooleanCast(),
+            'lightMode' => new BooleanCast(),
+            'soundEnable' => new BooleanCast(),
+            'systemSoundEnable' => new BooleanCast(),
+            'surplusControl' => new BooleanCast(),
+            'disturbMode' => new BooleanCast(),
             'error' => new StringCast(),
             'workingState' => new StringCast(),
-            'foodWarnRange' => new DTOCast(RangeDTO::class),
+            'language' => new StringCast(),
             'lightRange' => new DTOCast(RangeDTO::class),
+            'disturbRange' => new DTOCast(RangeDTO::class),
         ];
     }
 
@@ -248,16 +321,21 @@ class PetkitFreshElement3 extends DeviceConfigurationDTO implements Configuratio
         $data['error'] = $config['states']['error'] ?? null;
 
         // Load settings
-        $data['factor'] = $config['settings']['factor'] ?? null;
-        $data['shareOpen'] = $config['settings']['shareOpen'] ?? null;
-        $data['multiConfig'] = $config['settings']['multiConfig'] ?? null;
-        $data['lightMode'] = $config['settings']['lightMode'] ?? null;
         $data['manualLock'] = $config['settings']['manualLock'] ?? null;
-        $data['foodWarn'] = $config['settings']['foodWarn'] ?? null;
-        $data['feedSound'] = $config['settings']['feedSound'] ?? null;
-        $data['amount'] = $config['settings']['amount'] ?? null;
+        $data['lightMode'] = $config['settings']['lightMode'] ?? null;
         $data['lightRange'] = $config['settings']['lightRange'] ?? null;
-        $data['foodWarnRange'] = $config['settings']['foodWarnRange'] ?? null;
+        $data['soundEnable'] = $config['settings']['soundEnable'] ?? null;
+        $data['systemSoundEnable'] = $config['settings']['systemSoundEnable'] ?? null;
+        $data['volume'] = $config['settings']['volume'] ?? null;
+        $data['selectedSound'] = $config['settings']['selectedSound'] ?? null;
+        $data['language'] = $config['settings']['language'] ?? null;
+        $data['surplusControl'] = $config['settings']['surplusControl'] ?? null;
+        $data['surplus'] = $config['settings']['surplus'] ?? null;
+        $data['disturbMode'] = $config['settings']['disturbMode'] ?? null;
+        $data['disturbRange'] = $config['settings']['disturbRange'] ?? null;
+        $data['d3SoundFirmware'] = $config['settings']['d3SoundFirmware'] ?? null;
+        $data['numLimit'] = $config['settings']['numLimit'] ?? null;
+        $data['amount'] = $config['settings']['amount'] ?? null;
 
         // Load schedule
         $data['schedule'] = $config['schedule'] ?? null;
@@ -278,16 +356,21 @@ class PetkitFreshElement3 extends DeviceConfigurationDTO implements Configuratio
                 'error' => $this->error,
             ],
             'settings' => [
-                'factor' => $this->factor,
-                'shareOpen' => $this->shareOpen,
-                'multiConfig' => $this->multiConfig,
-                'lightMode' => $this->lightMode,
                 'manualLock' => $this->manualLock,
-                'foodWarn' => $this->foodWarn,
-                'feedSound' => $this->feedSound,
-                'amount' => $this->amount,
+                'lightMode' => $this->lightMode,
                 'lightRange' => $this->lightRange->toArray(),
-                'foodWarnRange' => $this->foodWarnRange->toArray(),
+                'soundEnable' => $this->soundEnable,
+                'systemSoundEnable' => $this->systemSoundEnable,
+                'volume' => $this->volume,
+                'selectedSound' => $this->selectedSound,
+                'language' => $this->language,
+                'surplusControl' => $this->surplusControl,
+                'surplus' => $this->surplus,
+                'disturbMode' => $this->disturbMode,
+                'disturbRange' => $this->disturbRange->toArray(),
+                'd3SoundFirmware' => $this->d3SoundFirmware,
+                'numLimit' => $this->numLimit,
+                'amount' => $this->amount,
             ],
             'schedule' => $this->schedule
         ];

@@ -4,4 +4,4 @@ User-Agent: PETKIT DEV
 Host: api.eu-pet.com
 Content-Type: application/x-www-form-urlencoded
 
-hardware=1&firmware=1.627&mac=0cb8155bd6c8&timezone=1.0&locale=Europe/Berlin&id=400661044&sn=20260413L12893&bt_mac=1cb8155bd6ca&ap_mac=0cb8155bd6c9&chipid=6018760
+hardware=1&firmware=1.627&mac=0cb8155bd6c8&timezone=1.0&locale=Europe/Berlin&id=400661044&sn=20241202G11724&bt_mac=0cb8155bd6c8&ap_mac=0cb8155bd6c8&chipid=6018760

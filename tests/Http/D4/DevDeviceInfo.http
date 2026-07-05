@@ -1,0 +1,31 @@
+< {%
+    function generateRandomString(length = 12) {
+        const chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        let result = "";
+        for (let i = 0; i < length; i++) {
+            result += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return result;
+    }
+
+    function generatePetkitSignature(deviceId, nonce, timestamp, deviceType, secretKey) {
+        if (!deviceId || !secretKey) {
+            throw new Error("Missing required parameters");
+        }
+        const signStr = `id${deviceId}nonce${nonce}timestamp${timestamp}type${deviceType}${secretKey}`;
+        return crypto.md5().updateWithText(signStr).digest().toHex();
+    }
+
+    const nonce = generateRandomString();
+    const secretKey = "d7ffd101d72b8e3e";
+    const ts = Math.floor(Date.now() / 1000) + 1;
+    const signature = generatePetkitSignature(400050372, nonce, ts, "D4", secretKey);
+
+    request.variables.set("petkitQuery",
+        `id=400050372&nonce=${nonce}&timestamp=${ts}&type=D4&sign=${signature}`);
+%}
+POST http://api.eu-pet.com/6/d4/dev_device_info
+User-Agent: PETKIT DEV
+Host: api.eu-pet.com
+Content-Type: application/x-www-form-urlencoded
+X-Device: {{petkitQuery}}
