@@ -16,6 +16,7 @@ class DevSignupController extends Controller
     public function __invoke(string $deviceType, Request $request)
     {
 
+
         $update = [
             'firmware' => $request->get('firmware'),
             'mac' => $request->get('mac'),
@@ -38,9 +39,9 @@ class DevSignupController extends Controller
             'serial_number' => $request->get('sn'),
         ], $update);
 
-        if(is_null($device) || ($device?->proxy_mode ?? 1)) {
-            return $this->proxy($request);
-        }
+//        if(is_null($device) || ($device?->proxy_mode ?? 1)) {
+//            return $this->proxy($request);
+//        }
 
         try {
             $device->update([

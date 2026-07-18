@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Log;
 
 class DevFallbackController extends Controller
 {
-    public function __invoke(string $deviceType, string $fallback, Request $request)
+    public function __invoke(string $deviceType, Request $request)
     {
         Log::channel('unmatched')->warning('Unmatched Petkit route', [
             'method'  => $request->method(),
@@ -17,6 +17,8 @@ class DevFallbackController extends Controller
             'headers' => $request->headers->all(),
             'body'    => $request->all(),
         ]);
+
+        $this->proxyLite($request);
 
         return response()->json(['error' => 'not_found'], 404);
     }

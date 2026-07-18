@@ -10,6 +10,7 @@ use App\Models\Device;
 use App\Petkit\DeviceActions;
 use App\Petkit\Devices\PetkitFreshElementSolo;
 use App\Petkit\Devices\PetkitPuraMax;
+use App\Petkit\Devices\PetkitPurobotCrystal;
 use App\Petkit\Devices\PetkitYumshareSolo;
 use Filament\Actions\ActionGroup;
 use Filament\Forms;
@@ -41,6 +42,7 @@ class DeviceResource extends Resource
                     't4' => PetkitPuraMax::deviceName(),
                     'd4' => PetkitFreshElementSolo::deviceName(),
                     'd4h' => PetkitYumshareSolo::deviceName(),
+                    't7' => PetkitPurobotCrystal::deviceName(),
                 ])
                     ->columnSpan('half')->disabled(),
 
@@ -82,6 +84,7 @@ class DeviceResource extends Resource
                             't4' => PetkitPuraMax::deviceName(),
                             'd4' => PetkitFreshElementSolo::deviceName(),
                             'd4h' => PetkitYumshareSolo::deviceName(),
+                            't7' => PetkitPurobotCrystal::deviceName(),
                         };
                     }),
                 Tables\Columns\TextColumn::make('name')->searchable(),
@@ -142,7 +145,6 @@ class DeviceResource extends Resource
     {
         return [
             'index' => Pages\ListDevices::route('/'),
-            'create' => Pages\CreateDevice::route('/create'),
             'edit' => Pages\EditDevice::route('/{record}/edit'),
             'activities' => Pages\PetkitActivities::route('/order/{record}/activities'),
 
