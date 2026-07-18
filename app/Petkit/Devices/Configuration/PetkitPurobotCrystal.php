@@ -117,16 +117,16 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
         technicalName: 'time_display',
         name: 'Timestamp Display',
         commandTopic: 'setting/set',
-        icon: 'mdi:clock-outline',
-        valueTemplate: '{{ value_json.settings.timestamp_enable }}',
-        commandTemplate: '{"timestamp_enable":{{ value }}}',
+        icon: 'mdi:toggle-switch',
+        valueTemplate: '{{ value_json.settings.timeDisplay }}',
+        commandTemplate: '{"timeDisplay":{{ value }}}',
         payloadOn: true,
         payloadOff: false,
         stateOn: true,
         stateOff: false,
         entityCategory: 'config'
     )]
-    public bool $timestamp_enable;
+    public bool $timeDisplay;
 
     #[HASwitch(
         technicalName: 'camera',
@@ -570,6 +570,43 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
     )]
     private $actionResetN60 = 1;
 
+    // Cardboard (litter tray liner)
+    #[Number(
+        technicalName: 'cardboard_durability',
+        name: 'Cardboard Durability',
+        commandTopic: 'setting/set',
+        icon: 'mdi:package-variant-closed',
+        valueTemplate: '{{ value_json.consumables.cardboardDurability }}',
+        commandTemplate: '{"cardboardDurability":{{ value }}}',
+        payloadOn: 1,
+        payloadOff: 0,
+        entityCategory: 'config',
+        min: 0,
+        max: 90,
+        step: 1
+    )]
+    public int $cardboardDurability;
+
+    #[Sensor(
+        technicalName: 'cardboard_durability_in_days',
+        name: 'Next Cardboard Change in Days',
+        icon: 'mdi:update',
+        unitOfMeasurement: 'd',
+        valueTemplate: '{{ ((value_json.consumables.cardboardNextChange - as_timestamp(now())) / 86400) | round(1) }}',
+        entityCategory: 'diagnostic'
+    )]
+    public mixed $cardboardNextChange;
+
+    #[Button(
+        technicalName: 'action_reset_cardboard',
+        name: 'Reset Cardboard',
+        commandTopic: 'action/start',
+        icon: 'mdi:package-variant-closed',
+        commandTemplate: '{"action": "reset_cardboard"}',
+        availabilityTemplate: 'online',
+    )]
+    private $actionResetCardboard = 1;
+
     // Toilet / spray (deodorant) settings
     #[HASwitch(
         technicalName: 'toilet_detection',
@@ -767,6 +804,26 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
     )]
     private $actionCleaning = 1;
 
+    #[Button(
+        technicalName: 'action_deodorize',
+        name: 'Deodorize',
+        commandTopic: 'action/start',
+        icon: 'mdi:spray',
+        commandTemplate: '{"action": "deodorize"}',
+        availabilityTemplate: '{% if value_json.states.state == "IDLE" %}online{% else %}offline{% endif %}',
+    )]
+    private $actionDeodorize = 1;
+
+    #[Button(
+        technicalName: 'action_level',
+        name: 'Level',
+        commandTopic: 'action/start',
+        icon: 'mdi:format-horizontal-align-center',
+        commandTemplate: '{"action": "level"}',
+        availabilityTemplate: '{% if value_json.states.state == "IDLE" %}online{% else %}offline{% endif %}',
+    )]
+    private $actionLevel = 1;
+
     protected function rules(): array
     {
         return [
@@ -791,7 +848,7 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
             'hertz' => ['integer', 'min:50', 'max:60'],
 
             // Display / camera
-            'timestamp_enable' => ['bool'],
+            'timeDisplay' => ['bool'],
             'camera' => ['bool'],
             'cameraMultiRange' => ['array'],
             'microphone' => ['bool'],
@@ -841,6 +898,8 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
             'sandTrayStandardDayMax' => ['integer', 'min:0'],
             'n60Durability' => ['integer', 'min:0', 'max:90'],
             'n60NextChange' => ['nullable'],
+            'cardboardDurability' => ['integer', 'min:0', 'max:90'],
+            'cardboardNextChange' => ['nullable'],
 
             // Toilet
             'toiletDetection' => ['bool'],
@@ -892,7 +951,7 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
             'hertz' => 50,
 
             // Display / camera
-            'timestamp_enable' => true,
+            'timeDisplay' => true,
             'camera' => true,
             'cameraMultiRange' => [
                 'name' => 'cameraMultiRange',
@@ -963,6 +1022,8 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
             'sandTrayStandardDayMax' => 90,
             'n60Durability' => 45,
             'n60NextChange' => 0,
+            'cardboardDurability' => 45,
+            'cardboardNextChange' => 0,
 
             // Toilet
             'toiletDetection' => true,
@@ -1018,7 +1079,7 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
             'hertz' => new IntegerCast(),
 
             // Display / camera
-            'timestamp_enable' => new BooleanCast(),
+            'time' => new BooleanCast(),
             'camera' => new BooleanCast(),
             'cameraMultiRange' => new DTOCast(MultiRangeDTO::class),
             'microphone' => new BooleanCast(),
@@ -1067,6 +1128,7 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
             'sandTrayStandardDay' => new IntegerCast(),
             'sandTrayStandardDayMax' => new IntegerCast(),
             'n60Durability' => new IntegerCast(),
+            'cardboardDurability' => new IntegerCast(),
 
             // Toilet
             'toiletDetection' => new BooleanCast(),
@@ -1107,6 +1169,8 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
         // Load consumables
         $data['n60Durability'] = $config['consumables']['n60Durability'] ?? null;
         $data['n60NextChange'] = $config['consumables']['n60NextChange'] ?? null;
+        $data['cardboardDurability'] = $config['consumables']['cardboardDurability'] ?? null;
+        $data['cardboardNextChange'] = $config['consumables']['cardboardNextChange'] ?? null;
 
         // Load states
         $data['workingState'] = $device->working_state ?? null;
@@ -1134,7 +1198,7 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
             $data['hertz'] = $settings['hertz'] ?? null;
 
             // Display / camera
-            $data['timestamp_enable'] = $settings['timestamp_enable'] ?? null;
+            $data['timeDisplay'] = $settings['timeDisplay'] ?? null;
             $data['camera'] = $settings['camera'] ?? null;
             $data['cameraMultiRange'] = $settings['cameraMultiRange'] ?? null;
             $data['microphone'] = $settings['microphone'] ?? null;
@@ -1223,6 +1287,8 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
             'consumables' => [
                 'n60Durability' => $this->n60Durability,
                 'n60NextChange' => $this->n60NextChange,
+                'cardboardDurability' => $this->cardboardDurability,
+                'cardboardNextChange' => $this->cardboardNextChange,
             ],
             'states' => [
                 'state' => $this->workingState,
@@ -1244,7 +1310,7 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
                 'hertz' => $this->hertz,
 
                 // Display / camera
-                'timestamp_enable' => $this->timestamp_enable,
+                'timeDisplay' => $this->timeDisplay,
                 'camera' => $this->camera,
                 'cameraMultiRange' => $this->cameraMultiRange,
                 'microphone' => $this->microphone,

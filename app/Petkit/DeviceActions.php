@@ -22,6 +22,8 @@ use Illuminate\Database\Eloquent\Model;
 class DeviceActions
 {
     public const START_CLEAN = 'start_clean';
+    public const DEODORIZE = 'deodorize';
+    public const LEVEL = 'level';
     public const START_MAINTENANCE = 'start_maintenance';
     public const STOP_MAINTENANCE = 'stop_maintenance';
     public const CLEAN_LITTER = 'clean_litter';
@@ -83,6 +85,20 @@ class DeviceActions
                 })
                 ->action(function (Device $record) {
                     $record->definition()->startCleaning($record);
+                }),
+            Action::make('Deodorize')
+                ->visible(function (Device $record) {
+                    return $record->definition()->hasAction(self::DEODORIZE);
+                })
+                ->action(function (Device $record) {
+                    $record->definition()->deodorize($record);
+                }),
+            Action::make('Level')
+                ->visible(function (Device $record) {
+                    return $record->definition()->hasAction(self::LEVEL);
+                })
+                ->action(function (Device $record) {
+                    $record->definition()->level($record);
                 }),
             Action::make('Start Maintenance')
                 ->visible(function (Device $record) {

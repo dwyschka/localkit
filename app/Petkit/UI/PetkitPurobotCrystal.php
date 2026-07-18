@@ -55,166 +55,108 @@ class PetkitPurobotCrystal
 
                         return round($now->diffInDays($date));
                     })->readOnly()->disabled(true),
+                Forms\Components\TextInput::make('configuration.consumables.cardboardDurability')
+                    ->label('Cardboard Durability (days)')
+                    ->numeric(),
+                Forms\Components\TextInput::make('configuration.consumables.cardboardNextChange')
+                    ->label('Next Reset in Days (Cardboard)')
+                    ->formatStateUsing(function ($state) {
+                        if ($state <= 0) {
+                            return 'Not set';
+                        }
+                        $date = Carbon::parse($state);
+                        $now = Carbon::now();
+
+                        return round($now->diffInDays($date));
+                    })->readOnly()->disabled(true),
             ]),
 
             Forms\Components\Section::make('Camera Settings')->columns(2)->schema([
                 Forms\Components\Toggle::make('configuration.settings.camera')
-                    ->helperText('Turning off the camera disables live streaming, playback and other video related functions')
+                    ->helperText('No video footage will be generated if you turn this feature off, but autop cleaning will still work')
                     ->label('Camera Switch'),
 
-                Forms\Components\Toggle::make('configuration.settings.microphone')
-                    ->helperText('Enable/Disable sound collection')
-                    ->label('Microphone'),
+                    Forms\Components\Toggle::make('configuration.settings.microphone')
+                        ->helperText('Enable/Disable sound collection')
+                        ->label('Microphone'),
 
-                Forms\Components\Toggle::make('configuration.settings.night')
-                    ->helperText('Enable infrared night vision in dark environments')
-                    ->label('Night Vision'),
+                    Forms\Components\Toggle::make('configuration.settings.microlight')
+                        ->helperText('EWhen enabled, the indicator light is ON')
+                        ->label('Microphone Indicator Light'),
 
-                Forms\Components\Toggle::make('configuration.settings.timestamp_enable')
-                    ->label('Timestamp Display'),
 
-                Forms\Components\Toggle::make('configuration.settings.microlight')
-                    ->label('Microphone Light'),
+                    Forms\Components\Toggle::make('configuration.settings.night')
+                        ->helperText('Enable infrared night vision in dark environment')
+                        ->label('Night Vision'),
 
-                Forms\Components\Toggle::make('configuration.settings.cameraLight')
-                    ->label('Camera Light'),
+                    Forms\Components\Toggle::make('configuration.settings.timeDisplay')
+                        ->label('Timestamp Display'),
 
-                Forms\Components\Toggle::make('configuration.settings.preLive')
-                    ->helperText('Keep a short preview stream ready')
-                    ->label('Preview Live'),
 
-                $this->multiRangeRepeater('configuration.settings.cameraMultiRange.ranges', 'Camera Active Period')
-                    ->columnSpanFull(),
+                    Forms\Components\Toggle::make('configuration.settings.cameraLight')
+                        ->label('Camera Light'),
+
+
             ]),
 
-            Forms\Components\Section::make('Detection')->columns(2)->schema([
+            Forms\Components\Section::make('Smart Detection')->columns(2)->schema([
                 Forms\Components\Toggle::make('configuration.settings.petDetection')
-                    ->helperText('For events of a pet visiting the toilet')
-                    ->label('Pet Visit Detection'),
+                    ->helperText('For auto detection of pet movement')
+                    ->label('Pet Appearance Detection'),
 
                 Forms\Components\Toggle::make('configuration.settings.toiletDetection')
-                    ->label('Toilet Detection'),
+                    ->helperText('For videos of pet toileting')
+                    ->label('Toilet Video Recording')
+                ]),
 
-                Forms\Components\Toggle::make('configuration.settings.moveDetection')
-                    ->helperText('For events of a pet moving before the camera')
-                    ->label('Move Detection'),
-
-                Forms\Components\Select::make('configuration.settings.moveSensitivity')
-                    ->label('Move Sensitivity')
-                    ->options(array_combine(range(0, 9), range(0, 9))),
-
-                Forms\Components\TextInput::make('configuration.settings.detectInterval')
-                    ->label('Detection Interval')
-                    ->numeric(),
-            ]),
 
             Forms\Components\Section::make('Cleaning')->columns(2)->schema([
-                Forms\Components\Toggle::make('configuration.settings.autoWork')
-                    ->helperText('After the pet leaves, the device starts automatic cleaning')
-                    ->label('Auto Cleaning'),
-
-                Forms\Components\Toggle::make('configuration.settings.avoidRepeat')
-                    ->helperText('Avoid repeated cleaning within a short period')
-                    ->label('Avoid Repeated Cleaning'),
-
-                Forms\Components\Toggle::make('configuration.settings.underweight')
-                    ->helperText('Disable auto cleaning when the detected weight is too light')
-                    ->label('Light Weight Protection'),
 
                 Forms\Components\Toggle::make('configuration.settings.kitten')
                     ->helperText('Disable auto and periodical cleaning')
                     ->label('Kitten Protection'),
 
-                Forms\Components\Toggle::make('configuration.settings.bury')
-                    ->label('Waste Covering'),
+                Forms\Components\Toggle::make('configuration.settings.autoWork')
+                    ->helperText('After the pet leaves, the device starts automatic cleaning')
+                    ->label('Auto Cleaning'),
 
-                Forms\Components\Toggle::make('configuration.settings.deepClean')
-                    ->label('Deep Cleaning'),
-
-                Forms\Components\Toggle::make('configuration.settings.downpos')
-                    ->helperText('Cylinder rotates from its initial level and wont pause during the process')
-                    ->label('Uninterrupted Rotation'),
-
-                Forms\Components\Select::make('configuration.settings.sandType')
-                    ->label('Litter Type')
+                Forms\Components\Select::make('configuration.settings.stillTime')
+                    ->label('Delayed Cleaning')
+                    ->helperText('Set time interval before device starts cleaning')
                     ->options([
-                        '0' => 'Sand',
-                        '1' => 'Betonit/Mineral',
-                        '2' => 'Tofu',
+                        1200 => '20 Minutes',
+                        1800 => '30 Minutes',
+                        2400 => '40 Minutes',
+                        3000 => '50 Minutes',
+                        3600 => '60 Minutes',
                     ]),
 
-                Forms\Components\Select::make('configuration.settings.unit')
-                    ->label('Unit')
-                    ->options([
-                        '0' => 'Kilogram',
-                        '1' => 'Pound',
-                    ]),
-
-                Forms\Components\TextInput::make('configuration.settings.stillTime')
-                    ->label('Still Time (seconds)')
-                    ->helperText('Delay before cleaning after the pet leaves')
-                    ->numeric(),
-
-                Forms\Components\TextInput::make('configuration.settings.autoIntervalMin')
-                    ->label('Auto Interval (min)')
-                    ->numeric(),
-
-                Forms\Components\TextInput::make('configuration.settings.sandTrayStandardDay')
-                    ->label('Litter Replacement Cycle (days)')
-                    ->numeric(),
+                Forms\Components\Toggle::make('configuration.settings.avoidRepeat')
+                    ->helperText('Avoid repeated cleaning within a short period')
+                    ->label('Avoid Repeated Cleaning')
             ]),
 
-            Forms\Components\Section::make('Health Monitoring')->columns(2)->schema([
-                Forms\Components\Toggle::make('configuration.settings.urine')
-                    ->label('Urine Detection'),
+            Forms\Components\Section::make('Deodorize')->columns(2)->schema([
+                Forms\Components\Toggle::make('configuration.settings.autoSpray')
+                    ->helperText('No auto-deodorize after pet use or before cleaning')
+                    ->label('Auto Deodorizing'),
 
-                Forms\Components\Toggle::make('configuration.settings.occult')
-                    ->helperText('Health monitoring for occult blood')
-                    ->label('Occult Blood Detection'),
-
-                Forms\Components\Toggle::make('configuration.settings.softMode')
-                    ->label('Soft Mode'),
+                Forms\Components\Toggle::make('configuration.settings.deepSpray')
+                    ->helperText('The device will deodorize twice consecutively each time')
+                    ->label('Deep Deodorizing'),
             ]),
 
-            Forms\Components\Section::make('Lights')->schema([
-                Forms\Components\Toggle::make('configuration.settings.lightMode')
-                    ->helperText('Indicator light works within the following period')
-                    ->label('Indicator Light'),
-                $this->multiRangeRepeater('configuration.settings.lightMultiRange.ranges', 'Indicator Light Period'),
+            Forms\Components\Section::make('Lights')->columns(2)->schema([
 
-                Forms\Components\Toggle::make('configuration.settings.lightAssist')
-                    ->label('Ambient Light Assist'),
-                $this->multiRangeRepeater('configuration.settings.lightAssistMultiRange.ranges', 'Ambient Light Period'),
 
                 Forms\Components\Toggle::make('configuration.settings.toiletLightAssist')
-                    ->label('Toilet Light Assist'),
-                $this->multiRangeRepeater('configuration.settings.toiletLightAssistMultiRange.ranges', 'Toilet Light Period'),
+                    ->helperText('Once turned off, no toileting event playback is available in low light')
+                    ->label('Light Assist for Toileting'),
 
-                Forms\Components\Toggle::make('configuration.settings.wifiLightAssist')
-                    ->label('WiFi Light Assist'),
-                $this->multiRangeRepeater('configuration.settings.wifiLightAssistMultiRange.ranges', 'WiFi Light Period'),
-            ])->collapsible()->collapsed(),
+                Forms\Components\Toggle::make('configuration.settings.lightAssist')
+                    ->helperText('Once turned off, no toileting event playback is available in low light')
+                    ->label('Light Assist for Cleaning'),
 
-            Forms\Components\Section::make('Sound')->columns(2)->schema([
-                Forms\Components\Select::make('configuration.settings.volume')
-                    ->columnSpanFull()
-                    ->label('Volume')
-                    ->options(array_combine(range(0, 9), range(0, 9))),
-
-                Forms\Components\Toggle::make('configuration.settings.systemSoundEnable')->label('Voice Prompt'),
-                Forms\Components\Toggle::make('configuration.settings.soundEnable')->label('Voice for Cleaning'),
-
-                Forms\Components\Fieldset::make('Do not Disturb (Tone)')->columns(1)->schema([
-                    Forms\Components\Toggle::make('configuration.settings.toneMode')->label('Silence Tones'),
-                    Forms\Components\Hidden::make('configuration.settings.toneMultiRange.name')->default('toneMultiRange'),
-                    $this->multiRangeRepeater('configuration.settings.toneMultiRange.ranges', 'Undisturbed Period'),
-                ]),
-
-                Forms\Components\Fieldset::make('Do not Disturb')->columns(1)->schema([
-                    Forms\Components\Toggle::make('configuration.settings.disturbMode')->label('Do not disturb'),
-                    Forms\Components\Hidden::make('configuration.settings.distrubMultiRange.name')->default('distrubMultiRange'),
-                    $this->multiRangeRepeater('configuration.settings.distrubMultiRange.ranges', 'Undisturbed Period'),
-                ]),
             ]),
 
             Forms\Components\Section::make('General')->columns(2)->schema([
@@ -226,9 +168,30 @@ class PetkitPurobotCrystal
                     ->helperText('Upload events and media to the cloud')
                     ->label('Cloud Upload'),
 
-                Forms\Components\Toggle::make('configuration.settings.shareOpen')->label('Share Open'),
-                Forms\Components\Toggle::make('configuration.settings.multiConfig')->label('Multi Config'),
+
+                Forms\Components\Toggle::make('configuration.settings.wifiLightAssist')
+                    ->helperText('The indicator light for Wi-Fi, cleaning, and the litter tray will turn on during your set period')
+                    ->label('Indicator Light'),
             ]),
+
+            Forms\Components\Section::make('Health Monitoring')->columns(2)->schema([
+                Forms\Components\Toggle::make('configuration.settings.voice')
+                    ->helperText('Health monitoring for voice')
+                    ->label('Yowling Detection'),
+
+                Forms\Components\Toggle::make('configuration.settings.urine')
+                    ->helperText('Require the right litter')
+                    ->label('Urine pH Detection'),
+
+                Forms\Components\Toggle::make('configuration.settings.softMode')
+                    ->label('Loose Stool Recognition'),
+
+                Forms\Components\Toggle::make('configuration.settings.softModeClean')
+                    ->helperText('Requires Loose Stool Recognition')
+                    ->label('Do not Clean Loose Stool'),
+            ]),
+
+
         ];
     }
 

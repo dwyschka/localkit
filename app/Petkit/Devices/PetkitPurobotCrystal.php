@@ -31,7 +31,7 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
         DeviceStates::WORKING, DeviceStates::IDLE,
     ];
     protected array $actions = [
-        DeviceActions::START_CLEAN, DeviceActions::TAKE_SNAPSHOT
+        DeviceActions::START_CLEAN, DeviceActions::DEODORIZE, DeviceActions::LEVEL, DeviceActions::TAKE_SNAPSHOT
     ];
 
     public function __construct(protected Device $device)
@@ -199,6 +199,8 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
         }
         switch ($action) {
             case DeviceActions::START_CLEAN:
+            case DeviceActions::DEODORIZE:
+            case DeviceActions::LEVEL:
                 return $hasAction && $this->device->working_state === DeviceStates::IDLE->value;
         }
 
@@ -305,6 +307,15 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
             case 'reset_n60':
                 $this->resetN60($this->getDevice());
                 break;
+            case 'reset_cardboard':
+                $this->resetCardboard($this->getDevice());
+                break;
+            case 'deodorize':
+                $this->deodorize($this->getDevice());
+                break;
+            case 'level':
+                $this->level($this->getDevice());
+                break;
         }
     }
 
@@ -321,9 +332,32 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
         ]);
     }
 
+    public function resetCardboard(Device $record): void
+    {
+        $configuration = $this->configurationDefinition();
+        $durability = $configuration->cardboardDurability;
+        $nextChange = Carbon::now()->addDays((int)$durability);
+
+        $configuration->cardboardNextChange = $nextChange->timestamp;
+
+        $record->update([
+            'configuration' => $configuration->toArray()
+        ]);
+    }
+
     public function startCleaning(Device $record): void
     {
         ServiceStart::dispatchSync($record, 0);
+    }
+
+    public function deodorize(Device $record): void
+    {
+        ServiceStart::dispatchSync($record, 2);
+    }
+
+    public function level(Device $record): void
+    {
+        ServiceStart::dispatchSync($record, 4);
     }
 
     public function toOTA(): array
@@ -372,7 +406,7 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
             'settings' => [
                 'manualLock' => (int)$config['manualLock'],
                 'lightMode' => (int)$config['lightMode'],
-                'timestamp_enable' => (int)$config['timestamp_enable'],
+                'timeDisplay' => (int)$config['timeDisplay'],
                 'camera' => (int)$config['camera'],
                 'microphone' => (int)$config['microphone'],
                 'night' => (int)$config['night'],
