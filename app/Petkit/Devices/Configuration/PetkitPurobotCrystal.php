@@ -444,36 +444,7 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
     public int $lightest;
     public int $stillTime;
 
-    #[Select(
-        technicalName: 'sand_type',
-        name: 'Litter Type',
-        options: [
-            'Sand',
-            'Betonit/Mineral',
-            'Tofu',
-        ],
-        commandTopic: 'setting/set',
-        icon: 'mdi:information-outline',
-        valueTemplate: '
-                {% if value_json.settings.sandType == 1 %}
-                  Betonit/Mineral
-                {% elif value_json.settings.sandType == 2 %}
-                  Tofu
-                {% else %}
-                  Sand
-                {% endif %}
-        ',
-        commandTemplate: '
-                {% if value == "Betonit/Mineral" %}
-                  {"sandType": 1}
-                {% elif value == "Tofu" %}
-                  {"sandType": 2}
-                {% else %}
-                  {"sandType": 0}
-                {% endif %}
-        ',
-        entityCategory: 'config'
-    )]
+    // Litter Type - not exposed to HA
     public int $sandType;
 
     // No weight sensor on this device - not exposed to HA

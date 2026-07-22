@@ -51,6 +51,13 @@ class LocalkitListen extends Command
 
             $output->writeln(sprintf('Got Message on Topic %s, %s', $topic, json_encode($message)));
 
+            $definitions->each(function ($definition) use ($topic, $message) {
+                $device = $definition->getDevice();
+                if ($device->debug_mode && str_contains($topic, $device->deviceName())) {
+                    $this->logDeviceMqttMessage($device, $topic, $message);
+                }
+            });
+
             $message = json_decode($message, false);
 
             if(Localkit::isLocalkitTopic($topic)) {
@@ -74,6 +81,20 @@ class LocalkitListen extends Command
         }, MqttClient::QOS_AT_MOST_ONCE);
 
         $mqtt->loop(true, false);
+    }
+
+    private function logDeviceMqttMessage(Device $device, string $topic, string $message): void
+    {
+        $channel = Log::build([
+            'driver' => 'single',
+            'path' => storage_path('logs/device_' . $device->serial_number . '.log'),
+            'level' => 'debug',
+        ]);
+
+        Log::stack([$channel, 'single'])->debug('[MQTT] ' . $topic, [
+            'topic' => $topic,
+            'message' => $message,
+        ]);
     }
 
 }
