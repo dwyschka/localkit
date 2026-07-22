@@ -177,7 +177,7 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
 
     #[HASwitch(
         technicalName: 'microlight',
-        name: 'Microphone Light',
+        name: 'Microphone Indicator Light',
         commandTopic: 'setting/set',
         icon: 'mdi:led-on',
         valueTemplate: '{{ value_json.settings.microlight }}',
@@ -208,26 +208,14 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
     public bool $preLive;
 
     // Indicator / assist lights
-    #[HASwitch(
-        technicalName: 'light_mode',
-        name: 'Indicator Light',
-        commandTopic: 'setting/set',
-        icon: 'mdi:lightbulb',
-        valueTemplate: '{{ value_json.settings.lightMode }}',
-        commandTemplate: '{"lightMode":{{ value }}}',
-        payloadOn: true,
-        payloadOff: false,
-        stateOn: true,
-        stateOff: false,
-        entityCategory: 'config'
-    )]
+    // Not in Localkit UI - not exposed to HA
     public bool $lightMode;
 
     public MultiRangeDTO $lightMultiRange;
 
     #[HASwitch(
         technicalName: 'light_assist',
-        name: 'Ambient Light Assist',
+        name: 'Light Assist for Cleaning',
         commandTopic: 'setting/set',
         icon: 'mdi:lightbulb-auto',
         valueTemplate: '{{ value_json.settings.lightAssist }}',
@@ -244,7 +232,7 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
 
     #[HASwitch(
         technicalName: 'toilet_light_assist',
-        name: 'Toilet Light Assist',
+        name: 'Light Assist for Toileting',
         commandTopic: 'setting/set',
         icon: 'mdi:lightbulb-auto',
         valueTemplate: '{{ value_json.settings.toiletLightAssist }}',
@@ -261,7 +249,7 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
 
     #[HASwitch(
         technicalName: 'wifi_light_assist',
-        name: 'WiFi Light Assist',
+        name: 'Indicator Light',
         commandTopic: 'setting/set',
         icon: 'mdi:wifi',
         valueTemplate: '{{ value_json.settings.wifiLightAssist }}',
@@ -280,37 +268,11 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
     public array $lightRangeTable;
     public array $toiletLightRangeTable;
 
-    // Do not disturb / tone
-    #[HASwitch(
-        technicalName: 'tone_mode',
-        name: 'Do not disturb (Tone)',
-        commandTopic: 'setting/set',
-        icon: 'mdi:volume-off',
-        valueTemplate: '{{ value_json.settings.toneMode }}',
-        commandTemplate: '{"toneMode":{{ value }}}',
-        payloadOn: true,
-        payloadOff: false,
-        stateOn: true,
-        stateOff: false,
-        entityCategory: 'config'
-    )]
+    // Do not disturb / tone - not in Localkit UI - not exposed to HA
     public bool $toneMode;
 
     public MultiRangeDTO $toneMultiRange;
 
-    #[HASwitch(
-        technicalName: 'disturb_mode',
-        name: 'Do not disturb',
-        commandTopic: 'setting/set',
-        icon: 'mdi:bell-off',
-        valueTemplate: '{{ value_json.settings.disturbMode }}',
-        commandTemplate: '{"disturbMode":{{ value }}}',
-        payloadOn: true,
-        payloadOff: false,
-        stateOn: true,
-        stateOff: false,
-        entityCategory: 'config'
-    )]
     public bool $disturbMode;
 
     public MultiRangeDTO $distrubMultiRange;
@@ -318,7 +280,7 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
     // Lock
     #[HASwitch(
         technicalName: 'manual_lock',
-        name: 'Child lock',
+        name: 'Child Lock',
         commandTopic: 'setting/set',
         icon: 'mdi:lock',
         valueTemplate: '{{ value_json.settings.manualLock }}',
@@ -365,19 +327,7 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
     )]
     public bool $avoidRepeat;
 
-    #[HASwitch(
-        technicalName: 'underweight',
-        name: 'Disable auto cleaning for light weight',
-        commandTopic: 'setting/set',
-        icon: 'mdi:feather',
-        valueTemplate: '{{ value_json.settings.underweight }}',
-        commandTemplate: '{"underweight":{{ value }}}',
-        payloadOn: true,
-        payloadOff: false,
-        stateOn: true,
-        stateOff: false,
-        entityCategory: 'config'
-    )]
+    // Not in Localkit UI - not exposed to HA
     public bool $underweight;
 
     #[HASwitch(
@@ -395,49 +345,9 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
     )]
     public bool $kitten;
 
-    #[HASwitch(
-        technicalName: 'bury',
-        name: 'Waste Covering',
-        commandTopic: 'setting/set',
-        icon: 'mdi:shovel',
-        valueTemplate: '{{ value_json.settings.bury }}',
-        commandTemplate: '{"bury":{{ value }}}',
-        payloadOn: true,
-        payloadOff: false,
-        stateOn: true,
-        stateOff: false,
-        entityCategory: 'config'
-    )]
+    // Not in Localkit UI - not exposed to HA
     public bool $bury;
-
-    #[HASwitch(
-        technicalName: 'deep_clean',
-        name: 'Deep Cleaning',
-        commandTopic: 'setting/set',
-        icon: 'mdi:broom',
-        valueTemplate: '{{ value_json.settings.deepClean }}',
-        commandTemplate: '{"deepClean":{{ value }}}',
-        payloadOn: true,
-        payloadOff: false,
-        stateOn: true,
-        stateOff: false,
-        entityCategory: 'config'
-    )]
     public bool $deepClean;
-
-    #[HASwitch(
-        technicalName: 'downpos',
-        name: 'Uninterrupted Rotation',
-        commandTopic: 'setting/set',
-        icon: 'mdi:cached',
-        valueTemplate: '{{ value_json.settings.downpos }}',
-        commandTemplate: '{"downpos":{{ value }}}',
-        payloadOn: true,
-        payloadOff: false,
-        stateOn: true,
-        stateOff: false,
-        entityCategory: 'config'
-    )]
     public bool $downpos;
 
     public bool $tumbling;
@@ -470,7 +380,7 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
     // Desiccant (deodorant crystal)
     #[Number(
         technicalName: 'n60_durability',
-        name: 'N60 Durability',
+        name: 'N60 Durability (days)',
         commandTopic: 'setting/set',
         icon: 'mdi:diamond-stone',
         valueTemplate: '{{ value_json.consumables.n60Durability }}',
@@ -507,7 +417,7 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
     // Cardboard (litter tray liner)
     #[Number(
         technicalName: 'cardboard_durability',
-        name: 'Cardboard Durability',
+        name: 'Cardboard Durability (days)',
         commandTopic: 'setting/set',
         icon: 'mdi:package-variant-closed',
         valueTemplate: '{{ value_json.consumables.cardboardDurability }}',
@@ -544,7 +454,7 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
     // Toilet / spray (deodorant) settings
     #[HASwitch(
         technicalName: 'toilet_detection',
-        name: 'Toilet Detection',
+        name: 'Toilet Video Recording',
         commandTopic: 'setting/set',
         icon: 'mdi:toilet',
         valueTemplate: '{{ value_json.settings.toiletDetection }}',
@@ -559,7 +469,7 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
 
     #[HASwitch(
         technicalName: 'urine',
-        name: 'Urine Detection',
+        name: 'Urine pH Detection',
         commandTopic: 'setting/set',
         icon: 'mdi:water',
         valueTemplate: '{{ value_json.settings.urine }}',
@@ -574,7 +484,7 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
 
     #[HASwitch(
         technicalName: 'soft_mode',
-        name: 'Soft Mode',
+        name: 'Loose Stool Recognition',
         commandTopic: 'setting/set',
         icon: 'mdi:cog',
         valueTemplate: '{{ value_json.settings.softMode }}',
@@ -589,19 +499,7 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
 
     public bool $softModeClean;
 
-    #[HASwitch(
-        technicalName: 'occult',
-        name: 'Health Monitoring (Occult Blood)',
-        commandTopic: 'setting/set',
-        icon: 'mdi:heart-pulse',
-        valueTemplate: '{{ value_json.settings.occult }}',
-        commandTemplate: '{"occult":{{ value }}}',
-        payloadOn: true,
-        payloadOff: false,
-        stateOn: true,
-        stateOff: false,
-        entityCategory: 'config'
-    )]
+    // Not in Localkit UI - not exposed to HA
     public bool $occult;
 
     // Detection
@@ -636,7 +534,7 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
 
     #[HASwitch(
         technicalName: 'pet_detection',
-        name: 'Pet Visit Detection',
+        name: 'Pet Appearance Detection',
         commandTopic: 'setting/set',
         icon: 'mdi:cat',
         valueTemplate: '{{ value_json.settings.petDetection }}',

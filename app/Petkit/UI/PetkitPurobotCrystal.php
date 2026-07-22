@@ -106,7 +106,27 @@ class PetkitPurobotCrystal
 
                 Forms\Components\Toggle::make('configuration.settings.toiletDetection')
                     ->helperText('For videos of pet toileting')
-                    ->label('Toilet Video Recording')
+                    ->label('Toilet Video Recording'),
+
+                Forms\Components\Toggle::make('configuration.settings.moveDetection')
+                    ->helperText('For events of movement before the camera')
+                    ->label('Move Detection'),
+
+                Forms\Components\Select::make('configuration.settings.moveSensitivity')
+                    ->helperText('Sensitivity for movement events before the camera')
+                    ->label('Move Sensitivity')
+                    ->options([
+                        0 => 0,
+                        1 => 1,
+                        2 => 2,
+                        3 => 3,
+                        4 => 4,
+                        5 => 5,
+                        6 => 6,
+                        7 => 7,
+                        8 => 8,
+                        9 => 9,
+                    ]),
                 ]),
 
 
