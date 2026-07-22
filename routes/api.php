@@ -9,6 +9,7 @@ use App\Http\Controllers\Petkit\DevEventReportController;
 use App\Http\Controllers\Petkit\DevFallbackController;
 use App\Http\Controllers\Petkit\DevFeedGetController;
 use App\Http\Controllers\Petkit\DevIotDeviceInfoController;
+use App\Http\Controllers\Petkit\DevK3DeviceInfoController;
 use App\Http\Controllers\Petkit\DevMultiConfigController;
 use App\Http\Controllers\Petkit\DevOnlyIotDeviceInfoController;
 use App\Http\Controllers\Petkit\DevOssStsInfoNewV2Controller;
@@ -41,6 +42,7 @@ Route::prefix('{deviceType}')->group(function () {
     Route::post('dev_ble_device', DevBleDeviceController::class);
     Route::post('dev_schedule_get', DevScheduleGetController::class);
     Route::post('dev_device_info', DevDeviceInfoController::class);
+    Route::post('dev_k3_device_info', DevK3DeviceInfoController::class);
 
     //2do
     Route::post('dev_state_report', DevStateReportController::class);
