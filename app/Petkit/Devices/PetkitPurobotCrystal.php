@@ -31,7 +31,8 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
         DeviceStates::WORKING, DeviceStates::IDLE,
     ];
     protected array $actions = [
-        DeviceActions::START_CLEAN, DeviceActions::DEODORIZE, DeviceActions::LEVEL, DeviceActions::TAKE_SNAPSHOT
+        DeviceActions::START_CLEAN, DeviceActions::DEODORIZE, DeviceActions::LEVEL, DeviceActions::TAKE_SNAPSHOT,
+        DeviceActions::RESET_N60, DeviceActions::RESET_CARDBOARD
     ];
 
     public function __construct(protected Device $device)

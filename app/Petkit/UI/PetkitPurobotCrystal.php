@@ -200,11 +200,6 @@ class PetkitPurobotCrystal
                     ->helperText('Activate the child lock to disable the control panel')
                     ->label('Child Lock'),
 
-                Forms\Components\Toggle::make('configuration.settings.upload')
-                    ->helperText('Upload events and media to the cloud')
-                    ->label('Cloud Upload'),
-
-
                 Forms\Components\Toggle::make('configuration.settings.wifiLightAssist')
                     ->helperText('The indicator light for Wi-Fi, cleaning, and the litter tray will turn on during your set period')
                     ->label('Indicator Light'),

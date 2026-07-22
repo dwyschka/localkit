@@ -31,6 +31,8 @@ class DeviceActions
     public const START_LIGHTNING = 'start_lightning';
     public const STOP_LIGHTNING = 'stop_lightning';
     public const RESET_N50 = 'reset_n50';
+    public const RESET_N60 = 'reset_n60';
+    public const RESET_CARDBOARD = 'reset_cardboard';
     public const START_FEEDING = 'start_feeder';
 
     public const TAKE_SNAPSHOT = 'take_snapshot';
@@ -127,6 +129,20 @@ class DeviceActions
                 })
                 ->action(function (Device $record) {
                     $record->definition()->resetN50($record);
+                }),
+            Action::make('Reset N60')
+                ->visible(function (Device $record) {
+                    return $record->definition()->hasAction(self::RESET_N60);
+                })
+                ->action(function (Device $record) {
+                    $record->definition()->resetN60($record);
+                }),
+            Action::make('Reset Cardboard')
+                ->visible(function (Device $record) {
+                    return $record->definition()->hasAction(self::RESET_CARDBOARD);
+                })
+                ->action(function (Device $record) {
+                    $record->definition()->resetCardboard($record);
                 }),
             Action::make('Start Odour')
                 ->visible(function (Device $record) {
