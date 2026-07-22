@@ -33,6 +33,9 @@ class LocalkitHomeassistant extends Command
      */
     public function handle()
     {
+        if(!config('app.enable.homeassistant')) {
+            return Command::SUCCESS;
+        }
         $mqtt = MQTT::connection('homeassistant');
 
         $devices = Device::whereProxyMode(0)->get();

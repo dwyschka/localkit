@@ -22,6 +22,8 @@ use Illuminate\Database\Eloquent\Model;
 class DeviceActions
 {
     public const START_CLEAN = 'start_clean';
+    public const DEODORIZE = 'deodorize';
+    public const LEVEL = 'level';
     public const START_MAINTENANCE = 'start_maintenance';
     public const STOP_MAINTENANCE = 'stop_maintenance';
     public const CLEAN_LITTER = 'clean_litter';
@@ -29,6 +31,8 @@ class DeviceActions
     public const START_LIGHTNING = 'start_lightning';
     public const STOP_LIGHTNING = 'stop_lightning';
     public const RESET_N50 = 'reset_n50';
+    public const RESET_N60 = 'reset_n60';
+    public const RESET_CARDBOARD = 'reset_cardboard';
     public const START_FEEDING = 'start_feeder';
 
     public const TAKE_SNAPSHOT = 'take_snapshot';
@@ -84,6 +88,20 @@ class DeviceActions
                 ->action(function (Device $record) {
                     $record->definition()->startCleaning($record);
                 }),
+            Action::make('Deodorize')
+                ->visible(function (Device $record) {
+                    return $record->definition()->hasAction(self::DEODORIZE);
+                })
+                ->action(function (Device $record) {
+                    $record->definition()->deodorize($record);
+                }),
+            Action::make('Level')
+                ->visible(function (Device $record) {
+                    return $record->definition()->hasAction(self::LEVEL);
+                })
+                ->action(function (Device $record) {
+                    $record->definition()->level($record);
+                }),
             Action::make('Start Maintenance')
                 ->visible(function (Device $record) {
                     return $record->definition()->hasAction(self::START_MAINTENANCE);
@@ -111,6 +129,20 @@ class DeviceActions
                 })
                 ->action(function (Device $record) {
                     $record->definition()->resetN50($record);
+                }),
+            Action::make('Reset N60')
+                ->visible(function (Device $record) {
+                    return $record->definition()->hasAction(self::RESET_N60);
+                })
+                ->action(function (Device $record) {
+                    $record->definition()->resetN60($record);
+                }),
+            Action::make('Reset Cardboard')
+                ->visible(function (Device $record) {
+                    return $record->definition()->hasAction(self::RESET_CARDBOARD);
+                })
+                ->action(function (Device $record) {
+                    $record->definition()->resetCardboard($record);
                 }),
             Action::make('Start Odour')
                 ->visible(function (Device $record) {

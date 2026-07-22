@@ -23,6 +23,9 @@ use App\Http\Controllers\Petkit\DevSyncTimeController;
 use App\Http\Controllers\Petkit\DevVideoDeviceInfoController;
 use App\Http\Controllers\Petkit\HeartbeatController;
 use App\Http\Controllers\Petkit\RepositoryController;
+use App\Http\Controllers\Petkit\DevSandtrayAuthController;
+use \App\Http\Controllers\Petkit\DevUploadLogTokenController;
+
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('{deviceType}')->group(function () {
@@ -56,6 +59,11 @@ Route::prefix('{deviceType}')->group(function () {
     Route::get('dev_attire_over', DevAttireOverController::class);
     Route::get('dev_feed_get', DevFeedGetController::class);
     Route::get('dev_serverinfo', DevServerinfoController::class);
+    Route::get('dev_schedule_get', DevScheduleGetController::class);
+
+    //Sandtray t7
+    Route::get('dev_sand_tray_auth', DevSandtrayAuthController::class);
+    Route::get('dev_upload_log_token', DevUploadLogTokenController::class);
 
 
 });
