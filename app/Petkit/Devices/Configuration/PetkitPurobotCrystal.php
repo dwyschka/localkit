@@ -205,19 +205,6 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
     )]
     public bool $cameraLight;
 
-    #[HASwitch(
-        technicalName: 'pre_live',
-        name: 'Preview Live',
-        commandTopic: 'setting/set',
-        icon: 'mdi:video-outline',
-        valueTemplate: '{{ value_json.settings.preLive }}',
-        commandTemplate: '{"preLive":{{ value }}}',
-        payloadOn: true,
-        payloadOff: false,
-        stateOn: true,
-        stateOff: false,
-        entityCategory: 'config'
-    )]
     public bool $preLive;
 
     // Indicator / assist lights
@@ -489,31 +476,7 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
     )]
     public int $sandType;
 
-    #[Select(
-        technicalName: 'unit',
-        name: 'Unit',
-        options: [
-            'Kilogram',
-            'Pound',
-        ],
-        commandTopic: 'setting/set',
-        icon: 'mdi:weight',
-        valueTemplate: '
-                {% if value_json.settings.unit == 0 %}
-                  Kilogram
-                {% else %}
-                  Pound
-                {% endif %}
-        ',
-        commandTemplate: '
-                {% if value == "Pound" %}
-                  {"unit": 1}
-                {% else %}
-                  {"unit": 0}
-                {% endif %}
-        ',
-        entityCategory: 'config'
-    )]
+    // No weight sensor on this device - not exposed to HA
     public int $unit;
 
     #[Number(
@@ -718,67 +681,14 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
     public int $detectInterval;
     public array $detectMultiRange;
 
-    // Sound
-    #[HASwitch(
-        technicalName: 'sound_enable',
-        name: 'Voice for Cleaning',
-        commandTopic: 'setting/set',
-        icon: 'mdi:volume-low',
-        valueTemplate: '{{ value_json.settings.soundEnable }}',
-        commandTemplate: '{"soundEnable":{{ value }}}',
-        payloadOn: true,
-        payloadOff: false,
-        stateOn: true,
-        stateOff: false,
-        entityCategory: 'config'
-    )]
+    // Sound (no speaker on this device - not exposed to HA)
     public bool $soundEnable;
-
-    #[HASwitch(
-        technicalName: 'system_sound_enable',
-        name: 'Voice Prompt',
-        commandTopic: 'setting/set',
-        icon: 'mdi:desktop-classic',
-        valueTemplate: '{{ value_json.settings.systemSoundEnable }}',
-        commandTemplate: '{"systemSoundEnable":{{ value }}}',
-        payloadOn: true,
-        payloadOff: false,
-        stateOn: true,
-        stateOff: false,
-        entityCategory: 'config'
-    )]
     public bool $systemSoundEnable;
-
-    #[Number(
-        technicalName: 'volume',
-        name: 'Volume',
-        commandTopic: 'setting/set',
-        icon: 'mdi:speaker',
-        valueTemplate: '{{ value_json.settings.volume }}',
-        commandTemplate: '{"volume":{{ value }}}',
-        entityCategory: 'config',
-        min: 0,
-        max: 9,
-        step: 1
-    )]
     public int $volume;
-
     public int $selectedSound;
     public bool $voice;
 
-    #[HASwitch(
-        technicalName: 'upload',
-        name: 'Cloud Upload',
-        commandTopic: 'setting/set',
-        icon: 'mdi:cloud-upload',
-        valueTemplate: '{{ value_json.settings.upload }}',
-        commandTemplate: '{"upload":{{ value }}}',
-        payloadOn: true,
-        payloadOff: false,
-        stateOn: true,
-        stateOff: false,
-        entityCategory: 'config'
-    )]
+    // Cloud upload - not exposed to HA
     public bool $upload;
 
     public array $capacity;

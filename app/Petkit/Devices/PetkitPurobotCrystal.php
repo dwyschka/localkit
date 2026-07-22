@@ -143,6 +143,22 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
                 ]);
 
             },
+            sprintf('/sys/%s/%s/thing/event/pet_in/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+                $configuration = $this->configurationDefinition();
+                $configuration->petDetected = true;
+
+                $device->update([
+                    'configuration' => $configuration->toArray()
+                ]);
+            },
+            sprintf('/sys/%s/%s/thing/event/pet_out/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+                $configuration = $this->configurationDefinition();
+                $configuration->petDetected = false;
+
+                $device->update([
+                    'configuration' => $configuration->toArray()
+                ]);
+            },
             sprintf('/sys/%s/%s/thing/event/feed_start/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
                 $content = json_decode($message?->params?->content, false);
                 $state = json_decode($message?->params?->state, false);
@@ -154,6 +170,15 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
                     'parameters' => $content,
                     'device_id' => $device->id
                 ]);
+
+                $device->update([
+                    'working_state' => DeviceStates::WORKING->value,
+                    'error' => $this->prepareErrorReporting($state),
+                    'configuration' => $this->updateConfiguration($state)
+                ]);
+            },
+            sprintf('/sys/%s/%s/thing/event/work_start/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+                $state = json_decode($message?->params?->state, false);
 
                 $device->update([
                     'working_state' => DeviceStates::WORKING->value,
