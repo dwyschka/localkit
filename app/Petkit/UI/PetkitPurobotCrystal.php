@@ -104,6 +104,22 @@ class PetkitPurobotCrystal
                     ->helperText('For auto detection of pet movement')
                     ->label('Pet Appearance Detection'),
 
+                Forms\Components\Select::make('configuration.settings.petSensitivity')
+                    ->helperText('Sensitivity for pet appearance detection')
+                    ->label('Pet Appearance Sensitivity')
+                    ->options([
+                        0 => 0,
+                        1 => 1,
+                        2 => 2,
+                        3 => 3,
+                        4 => 4,
+                        5 => 5,
+                        6 => 6,
+                        7 => 7,
+                        8 => 8,
+                        9 => 9,
+                    ]),
+
                 Forms\Components\Toggle::make('configuration.settings.toiletDetection')
                     ->helperText('For videos of pet toileting')
                     ->label('Toilet Video Recording'),

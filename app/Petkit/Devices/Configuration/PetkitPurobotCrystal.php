@@ -559,6 +559,20 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
     )]
     public bool $petDetection;
 
+    #[Number(
+        technicalName: 'pet_sensitivity',
+        name: 'Pet Appearance Sensitivity',
+        commandTopic: 'setting/set',
+        icon: 'mdi:cat',
+        valueTemplate: '{{ value_json.settings.petSensitivity }}',
+        commandTemplate: '{"petSensitivity":{{ value }}}',
+        entityCategory: 'config',
+        min: 0,
+        max: 9,
+        step: 1
+    )]
+    public int $petSensitivity;
+
     public int $detectInterval;
     public array $detectMultiRange;
 
@@ -704,6 +718,7 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
             'moveDetection' => ['bool'],
             'moveSensitivity' => ['integer', 'min:0', 'max:9'],
             'petDetection' => ['bool'],
+            'petSensitivity' => ['integer', 'min:0', 'max:9'],
             'detectInterval' => ['integer', 'min:0'],
             'detectMultiRange' => ['array'],
 
@@ -829,6 +844,7 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
             'moveDetection' => false,
             'moveSensitivity' => 0,
             'petDetection' => true,
+            'petSensitivity' => 0,
             'detectInterval' => 0,
             'detectMultiRange' => [],
 
@@ -935,6 +951,7 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
             'moveDetection' => new BooleanCast(),
             'moveSensitivity' => new IntegerCast(),
             'petDetection' => new BooleanCast(),
+            'petSensitivity' => new IntegerCast(),
             'detectInterval' => new IntegerCast(),
             'detectMultiRange' => new ArrayCast(),
 
@@ -1053,6 +1070,7 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
             $data['moveDetection'] = $settings['moveDetection'] ?? null;
             $data['moveSensitivity'] = $settings['moveSensitivity'] ?? null;
             $data['petDetection'] = $settings['petDetection'] ?? null;
+            $data['petSensitivity'] = $settings['petSensitivity'] ?? null;
             $data['detectInterval'] = $settings['detectInterval'] ?? null;
             $data['detectMultiRange'] = $settings['detectMultiRange'] ?? null;
 
@@ -1166,6 +1184,7 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
                 'moveDetection' => $this->moveDetection,
                 'moveSensitivity' => $this->moveSensitivity,
                 'petDetection' => $this->petDetection,
+                'petSensitivity' => $this->petSensitivity,
                 'detectInterval' => $this->detectInterval,
                 'detectMultiRange' => $this->detectMultiRange,
 
