@@ -47,6 +47,7 @@ class DeviceActions
     {
         return [
             Action::make('Check OTA')
+                ->label('Check OTA')
 //                ->visible(fn(Device $record) => $record->mqtt_connected)
                 ->mountUsing(function (Form $form, Device $record) {
                     $available = app(OTA::class)->getAvailable($record);

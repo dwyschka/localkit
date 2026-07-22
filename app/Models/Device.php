@@ -101,6 +101,7 @@ class Device extends Model
 
         return match ($this->device_type) {
             't4' => new Devices\PetkitPuraMax($this),
+            'd3' => new Devices\PetkitFreshElement3($this),
             'd4' => new Devices\PetkitFreshElementSolo($this),
             'd4h' => new Devices\PetkitYumshareSolo($this),
             't7' => new Devices\PetkitPurobotCrystal($this),
@@ -112,6 +113,7 @@ class Device extends Model
 
         return match ($this->device_type) {
             't4' => Devices\Configuration\PetkitPuraMax::fromDevice($this),
+            'd3' => Devices\Configuration\PetkitFreshElement3::fromDevice($this),
             'd4' => Devices\Configuration\PetkitFreshElementSolo::fromDevice($this),
             'd4h' => Devices\Configuration\PetkitYumshareSolo::fromDevice($this),
             't7' => Devices\Configuration\PetkitPurobotCrystal::fromDevice($this),
@@ -123,6 +125,7 @@ class Device extends Model
 
         return match ($this->device_type) {
             't4' => new UI\PetkitPuraMax($this),
+            'd3' => new UI\PetkitFreshElement3($this),
             'd4' => new UI\PetkitFreshElementSolo($this),
             'd4h' => new UI\PetkitYumshareSolo($this),
             't7' => new UI\PetkitPurobotCrystal($this),
