@@ -21,3 +21,5 @@ yarn-error.log
 /.vscode
 /.zed
 storage/localkit.sqlite
+/build
+/scripts/.build-cache

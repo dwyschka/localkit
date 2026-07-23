@@ -179,10 +179,13 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
                 ]);
             },
             sprintf('/sys/%s/%s/thing/event/work_start/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+                $device->update([
+                    'working_state' => DeviceStates::WORKING->value,
+                ]);
+
                 $state = json_decode($message?->params?->state, false);
 
                 $device->update([
-                    'working_state' => DeviceStates::WORKING->value,
                     'error' => $this->prepareErrorReporting($state),
                     'configuration' => $this->updateConfiguration($state)
                 ]);
