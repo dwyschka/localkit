@@ -141,6 +141,10 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
             sprintf('/sys/%s/%s/thing/event/light_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
                 $state = json_decode($message?->params?->state, false);
 
+                Log::error('LIGHT OVER', [
+                    'state' => $state,
+                ]);
+
                 // The light lifecycle is driven entirely through this topic: when the light is
                 // running the state carries a `lightState` object, and it's absent once it stops.
                 $device->update([
