@@ -141,16 +141,8 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
             sprintf('/sys/%s/%s/thing/event/light_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
                 $state = json_decode($message?->params?->state, false);
 
-                Log::error('LIGHT OVER', [
-                    'state' => $state,
-                ]);
-
                 $conf =  $this->updateConfiguration($state, ['lightning' => isset($state->lightState)]);
 
-                Log::info('LIGHT OVER', [
-                    'state' => $state,
-                    'conf' => $conf,
-                ]);
                 // The light lifecycle is driven entirely through this topic: when the light is
                 // running the state carries a `lightState` object, and it's absent once it stops.
                 $device->update([
@@ -551,9 +543,7 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
 
     private function updateConfiguration(mixed $content, array $extra = []): array
     {
-        Log::error('T7 Update conf', [
-            'content' => $content,
-        ]);
+
         $settings = $this->getDevice()->configuration();
 
         try {
@@ -561,12 +551,6 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
             //IP - reported inside the `other` string, key/value may or may not be quoted (e.g. Ip:"x.x.x.x" or "Ip":x.x.x.x)
             $pattern = '/(?:^|,)Ip:\\\\?"(\d{1,3}(?:\.\d{1,3}){3})\\\\?"/';
             $match = Str::of($content->other)->match($pattern);
-
-            Log::error('T7 IP Check', [
-                'content' => $content,
-                'other' => $content->other,
-                'match' => $match,
-            ]);
 
             if ($match->value() !== null) {
                 $settings->ipAddress = $match->value();
