@@ -68,10 +68,10 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
         name: 'Move Detected',
         icon: 'mdi:cursor-move',
         deviceClass: 'motion',
-        valueTemplate: '{{ value_json.states.moveDetected }}',
+        valueTemplate: '{{ value_json.states.moveDetected | int }}',
         entityCategory: 'diagnostic',
-        payloadOn: true,
-        payloadOff: false
+        payloadOn: '1',
+        payloadOff: '0'
     )]
     public bool $moveDetected;
 
@@ -80,19 +80,19 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
         name: 'Pet Detected',
         icon: 'mdi:cat',
         deviceClass: 'motion',
-        valueTemplate: '{{ value_json.states.petDetected }}',
+        valueTemplate: '{{ value_json.states.petDetected | int }}',
         entityCategory: 'diagnostic',
-        payloadOn: true,
-        payloadOff: false
+        payloadOn: '1',
+        payloadOff: '0'
     )]
     public bool $petDetected;
 
     #[BinarySensor(
         technicalName: 'infrared',
         name: 'Infrared',
-        valueTemplate: '{{ value_json.states.infrared ? "on": "off" }}',
-        payloadOn: true,
-        payloadOff: false
+        valueTemplate: '{{ value_json.states.infrared | int }}',
+        payloadOn: '1',
+        payloadOff: '0'
     )]
     public bool $infrared;
 
@@ -101,10 +101,10 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
         name: 'Light',
         icon: 'mdi:lightbulb',
         deviceClass: 'light',
-        valueTemplate: '{{ value_json.states.lightning }}',
+        valueTemplate: '{{ value_json.states.lightning | int }}',
         entityCategory: 'diagnostic',
-        payloadOn: true,
-        payloadOff: false
+        payloadOn: '1',
+        payloadOff: '0'
     )]
     public bool $lightning;
 

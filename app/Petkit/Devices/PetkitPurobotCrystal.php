@@ -630,8 +630,8 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
     {
         $settings = $this->getDevice()->configuration();
 
-        //IP - device reports this as Ip:"x.x.x.x" (quoted) inside the `other` string
-        $pattern = '/Ip:"?(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"?/';
+        //IP - reported inside the `other` string, key/value may or may not be quoted (e.g. Ip:"x.x.x.x" or "Ip":x.x.x.x)
+        $pattern = '/"?ip"?\s*[:=]\s*"?(\d{1,3}(?:\.\d{1,3}){3})"?/i';
         $match = Str::of($content->other)->match($pattern);
 
 
