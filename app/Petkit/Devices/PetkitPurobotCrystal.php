@@ -539,6 +539,9 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
 
     private function updateConfiguration(mixed $content, array $extra = []): array
     {
+        Log::error('T7 Update conf', [
+            'content' => $content,
+        ]);
         $settings = $this->getDevice()->configuration();
 
         try {
