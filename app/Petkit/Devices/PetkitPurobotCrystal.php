@@ -543,7 +543,7 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
             $settings = $this->getDevice()->configuration();
 
             //IP - reported inside the `other` string, key/value may or may not be quoted (e.g. Ip:"x.x.x.x" or "Ip":x.x.x.x)
-            $pattern ='(?:^|,)Ip:\\?"(\d{1,3}(?:\.\d{1,3}){3})\\?"';
+            $pattern = '/(?:^|,)Ip:\\\\?"(\d{1,3}(?:\.\d{1,3}){3})\\\\?"/';
             $match = Str::of($content->other)->match($pattern);
 
             Log::error('T7 IP Check', [
