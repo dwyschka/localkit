@@ -541,10 +541,22 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
         $pattern = '/"?ip"?\s*[:=]\s*"?(\d{1,3}(?:\.\d{1,3}){3})"?/i';
         $match = Str::of($content->other)->match($pattern);
 
-        Log::info('T7 IP Check', $content->other);
+        Log::error('T7 IP Check', [
+            'content' => $content,
+            'other' => $content->other,
+            'match' => $match,
+        ]);
 
-        $settings->ipAddress = $match->value();
-        $settings->infrared = $content->ir;
+        if ($match->value() !== null) {
+            $settings->ipAddress = $match->value();
+        }
+
+        // Not every state payload carries the top-level `ir` flag (e.g. light_over
+        // only reports sensor.ir_l/ir_r). `infrared` is a typed bool, so assigning a
+        // missing value as null would throw and abort the whole update.
+        if (isset($content->ir)) {
+            $settings->infrared = (bool) $content->ir;
+        }
 
         foreach ($extra as $property => $value) {
             $settings->$property = $value;
