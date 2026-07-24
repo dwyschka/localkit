@@ -145,11 +145,16 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
                     'state' => $state,
                 ]);
 
+                $conf =  $this->updateConfiguration($state, ['lightning' => isset($state->lightState)]);
+
+                Log::info('LIGHT OVER', [
+                    'state' => $state,
+                    'conf' => $conf,
+                ]);
                 // The light lifecycle is driven entirely through this topic: when the light is
                 // running the state carries a `lightState` object, and it's absent once it stops.
                 $device->update([
-                    'error' => $this->prepareErrorReporting($state),
-                    'configuration' => $this->updateConfiguration($state, ['lightning' => isset($state->lightState)])
+                    'configuration' => $conf
                 ]);
             },
             sprintf('/sys/%s/%s/thing/event/clean_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
@@ -264,7 +269,7 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
     {
         $data = $this->configurationDefinition()->toArray();
 
-        foreach (['moveDetected', 'petDetected', 'infrared', 'lightning'] as $state) {
+        foreach (['moveDetected', 'petDetected', 'lightning'] as $state) {
             if (array_key_exists($state, $data['states'])) {
                 $data['states'][$state] = (int)$data['states'][$state];
             }
@@ -565,13 +570,6 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
 
             if ($match->value() !== null) {
                 $settings->ipAddress = $match->value();
-            }
-
-            // Not every state payload carries the top-level `ir` flag (e.g. light_over
-            // only reports sensor.ir_l/ir_r). `infrared` is a typed bool, so assigning a
-            // missing value as null would throw and abort the whole update.
-            if (isset($content->ir)) {
-                $settings->infrared = (bool)$content->ir;
             }
 
             foreach ($extra as $property => $value) {

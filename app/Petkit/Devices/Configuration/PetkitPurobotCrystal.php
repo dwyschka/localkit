@@ -88,15 +88,6 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
     public bool $petDetected;
 
     #[BinarySensor(
-        technicalName: 'infrared',
-        name: 'Infrared',
-        valueTemplate: '{{ value_json.states.infrared }}',
-        payloadOn: '1',
-        payloadOff: '0'
-    )]
-    public bool $infrared;
-
-    #[BinarySensor(
         technicalName: 'lightning',
         name: 'Light',
         icon: 'mdi:lightbulb',
@@ -660,7 +651,6 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
             'error' => ['nullable', 'string'],
             'moveDetected' => ['bool'],
             'petDetected' => ['bool'],
-            'infrared' => ['bool'],
             'lightning' => ['bool'],
             'lastSnapshot' => ['nullable', 'string'],
             'stream' => ['nullable', 'string'],
@@ -765,7 +755,6 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
             'error' => null,
             'moveDetected' => false,
             'petDetected' => false,
-            'infrared' => false,
             'lightning' => false,
             'lastSnapshot' => null,
             'stream' => null,
@@ -895,7 +884,6 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
             'error' => new StringCast(),
             'moveDetected' => new BooleanCast(),
             'petDetected' => new BooleanCast(),
-            'infrared' => new BooleanCast(),
             'lightning' => new BooleanCast(),
             'lastSnapshot' => new StringCast(),
             'stream' => new StringCast(),
@@ -1012,7 +1000,6 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
             $data['ipAddress'] = $states['ipAddress'] ?? null;
             $data['moveDetected'] = $states['moveDetected'] ?? null;
             $data['petDetected'] = $states['petDetected'] ?? null;
-            $data['infrared'] = $states['infrared'] ?? null;
             $data['lightning'] = $states['lightning'] ?? null;
             $data['lastSnapshot'] = $states['lastSnapshot'] ?? null;
             $data['stream'] = $states['stream'] ?? null;
@@ -1131,7 +1118,6 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
                 'stream' => $this->stream,
                 'moveDetected' => $this->moveDetected,
                 'petDetected' => $this->petDetected,
-                'infrared' => $this->infrared,
                 'lightning' => $this->lightning,
             ],
             'settings' => [
