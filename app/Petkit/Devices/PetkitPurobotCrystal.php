@@ -161,7 +161,7 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
                 ]);
 
                 $configuration = $this->configurationDefinition();
-                $configuration->petDetected = true;
+                $configuration->petDetected = 1;
 
                 $device->update([
                     'configuration' => $configuration->toArray()
@@ -173,7 +173,7 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
                 ]);
 
                 $configuration = $this->configurationDefinition();
-                $configuration->petDetected = false;
+                $configuration->petDetected = 0;
 
                 $device->update([
                     'configuration' => $configuration->toArray()
@@ -214,7 +214,7 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
 
                 $device->update([
                     'error' => $this->prepareErrorReporting($state),
-                    'configuration' => $this->updateConfiguration($state, ['lightning' => true])
+                    'configuration' => $this->updateConfiguration($state, ['lightning' => 1])
                 ]);
             },
             sprintf('/sys/%s/%s/thing/event/light_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
@@ -222,7 +222,7 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
 
                 $device->update([
                     'error' => $this->prepareErrorReporting($state),
-                    'configuration' => $this->updateConfiguration($state, ['lightning' => false])
+                    'configuration' => $this->updateConfiguration($state, ['lightning' => 0])
                 ]);
             },
             sprintf('/sys/%s/%s/thing/event/clean_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
@@ -237,7 +237,7 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
             sprintf('/sys/%s/%s/thing/service/start', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
                 if (($message?->params?->start_action ?? null) == 7) {
                     $configuration = $this->configurationDefinition();
-                    $configuration->lightning = true;
+                    $configuration->lightning = 1;
 
                     $device->update([
                         'configuration' => $configuration->toArray()

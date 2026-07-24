@@ -68,45 +68,45 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
         name: 'Move Detected',
         icon: 'mdi:cursor-move',
         deviceClass: 'motion',
-        valueTemplate: '{{ value_json.states.moveDetected | int }}',
+        valueTemplate: '{{ value_json.states.moveDetected }}',
         entityCategory: 'diagnostic',
         payloadOn: '1',
         payloadOff: '0'
     )]
-    public bool $moveDetected;
+    public int $moveDetected;
 
     #[BinarySensor(
         technicalName: 'pet_detected',
         name: 'Pet Detected',
         icon: 'mdi:cat',
         deviceClass: 'motion',
-        valueTemplate: '{{ value_json.states.petDetected | int }}',
+        valueTemplate: '{{ value_json.states.petDetected }}',
         entityCategory: 'diagnostic',
         payloadOn: '1',
         payloadOff: '0'
     )]
-    public bool $petDetected;
+    public int $petDetected;
 
     #[BinarySensor(
         technicalName: 'infrared',
         name: 'Infrared',
-        valueTemplate: '{{ value_json.states.infrared | int }}',
+        valueTemplate: '{{ value_json.states.infrared }}',
         payloadOn: '1',
         payloadOff: '0'
     )]
-    public bool $infrared;
+    public int $infrared;
 
     #[BinarySensor(
         technicalName: 'lightning',
         name: 'Light',
         icon: 'mdi:lightbulb',
         deviceClass: 'light',
-        valueTemplate: '{{ value_json.states.lightning | int }}',
+        valueTemplate: '{{ value_json.states.lightning }}',
         entityCategory: 'diagnostic',
         payloadOn: '1',
         payloadOff: '0'
     )]
-    public bool $lightning;
+    public int $lightning;
 
     #[Image(
         technicalName: 'last_snapshot',
@@ -658,10 +658,10 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
             'ipAddress' => ['string'],
             'workingState' => ['nullable', 'string'],
             'error' => ['nullable', 'string'],
-            'moveDetected' => ['bool'],
-            'petDetected' => ['bool'],
-            'infrared' => ['bool'],
-            'lightning' => ['bool'],
+            'moveDetected' => ['integer'],
+            'petDetected' => ['integer'],
+            'infrared' => ['integer'],
+            'lightning' => ['integer'],
             'lastSnapshot' => ['nullable', 'string'],
             'stream' => ['nullable', 'string'],
 
@@ -763,10 +763,10 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
             'ipAddress' => '',
             'workingState' => null,
             'error' => null,
-            'moveDetected' => false,
-            'petDetected' => false,
-            'infrared' => false,
-            'lightning' => false,
+            'moveDetected' => 0,
+            'petDetected' => 0,
+            'infrared' => 0,
+            'lightning' => 0,
             'lastSnapshot' => null,
             'stream' => null,
 
@@ -893,10 +893,10 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
             'ipAddress' => new StringCast(),
             'workingState' => new StringCast(),
             'error' => new StringCast(),
-            'moveDetected' => new BooleanCast(),
-            'petDetected' => new BooleanCast(),
-            'infrared' => new BooleanCast(),
-            'lightning' => new BooleanCast(),
+            'moveDetected' => new IntegerCast(),
+            'petDetected' => new IntegerCast(),
+            'infrared' => new IntegerCast(),
+            'lightning' => new IntegerCast(),
             'lastSnapshot' => new StringCast(),
             'stream' => new StringCast(),
 
