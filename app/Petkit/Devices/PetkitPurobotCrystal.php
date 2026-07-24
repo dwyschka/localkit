@@ -234,6 +234,16 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
                     'configuration' => $this->updateConfiguration($state)
                 ]);
             },
+            sprintf('/sys/%s/%s/thing/service/start', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+                if (($message?->params?->start_action ?? null) == 7) {
+                    $configuration = $this->configurationDefinition();
+                    $configuration->lightning = true;
+
+                    $device->update([
+                        'configuration' => $configuration->toArray()
+                    ]);
+                }
+            },
         ];
     }
 
@@ -276,6 +286,12 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
             case DeviceActions::DEODORIZE:
             case DeviceActions::LEVEL:
                 return $hasAction && $this->device->working_state === DeviceStates::IDLE->value;
+
+            case DeviceActions::START_LIGHTNING:
+                return $hasAction && !($this->device->configuration['states']['lightning'] ?? false);
+
+            case DeviceActions::STOP_LIGHTNING:
+                return $hasAction && ($this->device->configuration['states']['lightning'] ?? false);
         }
 
         return $hasAction;
