@@ -14,7 +14,6 @@ use App\Jobs\SetProperty;
 use App\Jobs\TakeSnapshot;
 use App\Models\BluetoothDevice;
 use App\Models\Device;
-use App\Models\History;
 use App\MQTT\GenericReply;
 use App\Petkit\BluetoothDevices\BluetoothProxyInterface;
 use App\Petkit\BluetoothDevices\Message;
@@ -47,7 +46,6 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
         return [
             sprintf('/ota/device/upgrade/%s/%s', $this->device->productKey(), $this->device->deviceName()),
             sprintf('/sys/%s/%s/thing/service/property/set', $this->device->productKey(), $this->device->deviceName()),
-            sprintf('/sys/%s/%s/thing/service/feed_realtime', $this->device->productKey(), $this->device->deviceName()),
             sprintf('/sys/%s/%s/thing/service/connect', $this->device->productKey(), $this->device->deviceName()),
             sprintf('/sys/%s/%s/thing/service/ble', $this->device->productKey(), $this->device->deviceName()),
             sprintf('/sys/%s/%s/thing/event/ble_relay_start/post_reply', $this->device->productKey(), $this->device->deviceName()),
@@ -72,52 +70,14 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
 
                 $this->reply($topic, $message);
             },
-            sprintf('/sys/%s/%s/thing/event/feed_stop/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
-                $state = json_decode($message?->params?->state, false);
-                $device->update([
-                    'working_state' => DeviceStates::IDLE->value,
-                    'error' => $this->prepareErrorReporting($state),
-                    'configuration' => $this->updateConfiguration($state)
-                ]);
-            },
             sprintf('/sys/%s/%s/thing/event/property/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
                 // This event reports the state directly on `params`, not nested under `params.state`.
                 // The IP address is not a separate field here either - it's embedded in `other`, parsed in updateConfiguration().
+                // This is the only topic driving `working_state` for this device: presence of `workState` means cleaning is in progress.
                 $state = $message?->params;
 
-                $update = [
-                    'error' => $this->prepareErrorReporting($state),
-                    'configuration' => $this->updateConfiguration($state)
-                ];
-
-                if (!isset($state->workState)) {
-                    $update['working_state'] = DeviceStates::IDLE->value;
-                }
-
-                $device->update($update);
-            },
-            sprintf('/sys/%s/%s/thing/event/feed_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
-
-                $state = json_decode($message?->params?->state, false);
                 $device->update([
-                    'working_state' => DeviceStates::IDLE->value,
-                    'error' => $this->prepareErrorReporting($state),
-                    'configuration' => $this->updateConfiguration($state)
-                ]);
-            },
-            sprintf('/sys/%s/%s/thing/event/eat_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
-                $state = json_decode($message?->params?->state, false);
-                $device->update([
-                    'working_state' => DeviceStates::IDLE->value,
-                    'error' => $this->prepareErrorReporting($state),
-                    'configuration' => $this->updateConfiguration($state)
-                ]);
-            },
-            sprintf('/sys/%s/%s/thing/event/eat_start/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
-
-                $state = json_decode($message?->params?->state, false);
-                $device->update([
-                    'working_state' => DeviceStates::IDLE->value,
+                    'working_state' => isset($state->workState) ? DeviceStates::CLEANING->value : DeviceStates::IDLE->value,
                     'error' => $this->prepareErrorReporting($state),
                     'configuration' => $this->updateConfiguration($state)
                 ]);
@@ -128,7 +88,6 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
                 $state->moveDetected = 1;
 
                 $device->update([
-                    'working_state' => DeviceStates::IDLE->value,
                     'error' => $this->prepareErrorReporting($state),
                     'configuration' => $this->updateConfiguration($state)
                 ]);
@@ -144,7 +103,6 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
                 $state->petDetected = 1;
 
                 $device->update([
-                    'working_state' => DeviceStates::IDLE->value,
                     'error' => $this->prepareErrorReporting($state),
                     'configuration' => $this->updateConfiguration($state)
                 ]);
@@ -156,10 +114,6 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
 
             },
             sprintf('/sys/%s/%s/thing/event/pet_in/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
-                $device->update([
-                    'working_state' => DeviceStates::PET_IN->value,
-                ]);
-
                 $configuration = $this->configurationDefinition();
                 $configuration->petDetected = true;
 
@@ -168,10 +122,6 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
                 ]);
             },
             sprintf('/sys/%s/%s/thing/event/pet_out/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
-                $device->update([
-                    'working_state' => DeviceStates::IDLE->value,
-                ]);
-
                 $configuration = $this->configurationDefinition();
                 $configuration->petDetected = false;
 
@@ -179,29 +129,7 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
                     'configuration' => $configuration->toArray()
                 ]);
             },
-            sprintf('/sys/%s/%s/thing/event/feed_start/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
-                $content = json_decode($message?->params?->content, false);
-                $state = json_decode($message?->params?->state, false);
-
-                History::create([
-                    'messageId' => $message->params->event_id,
-                    'pet_id' => null,
-                    'type' => DeviceStates::CLEANING->value,
-                    'parameters' => $content,
-                    'device_id' => $device->id
-                ]);
-
-                $device->update([
-                    'working_state' => DeviceStates::CLEANING->value,
-                    'error' => $this->prepareErrorReporting($state),
-                    'configuration' => $this->updateConfiguration($state)
-                ]);
-            },
             sprintf('/sys/%s/%s/thing/event/work_start/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
-                $device->update([
-                    'working_state' => DeviceStates::CLEANING->value,
-                ]);
-
                 $state = json_decode($message?->params?->state, false);
 
                 $device->update([
@@ -229,7 +157,6 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
                 $state = json_decode($message?->params?->state, false);
 
                 $device->update([
-                    'working_state' => DeviceStates::IDLE->value,
                     'error' => $this->prepareErrorReporting($state),
                     'configuration' => $this->updateConfiguration($state)
                 ]);
@@ -251,23 +178,6 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
     {
         $generic = GenericReply::reply($topic, $message);
         MQTT::connection('publisher')->publish($generic->getTopic(), $generic->getMessage());
-    }
-
-    private function updateDevice(?\stdClass $message)
-    {
-        $hasError = $message->params->food == 0;
-        $isFeeding = $message->params->feeding == 1;
-        $err = null;
-
-        if ($hasError) {
-            $err = 'food_empty';
-        }
-
-        $this->getDevice()->update([
-            'working_state' => $isFeeding ? DeviceStates::CLEANING->value : DeviceStates::IDLE->value,
-            'error' => $err,
-        ]);
-
     }
 
     public function getDevice(): Device
@@ -656,10 +566,6 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
     private function prepareErrorReporting(mixed $state)
     {
         $error = null;
-
-        if ($state?->food == 0) {
-            $error = 'food_empty';
-        }
 
         if ($state?->door == 0) {
             $error = 'door_closed';
