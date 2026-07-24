@@ -28,11 +28,11 @@ use PhpMqtt\Client\Facades\MQTT;
 class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxyInterface
 {
     public static $workingStates = [
-        DeviceStates::WORKING, DeviceStates::IDLE,
+        DeviceStates::CLEANING, DeviceStates::IDLE, DeviceStates::PET_IN,
     ];
     protected array $actions = [
         DeviceActions::START_CLEAN, DeviceActions::DEODORIZE, DeviceActions::LEVEL, DeviceActions::TAKE_SNAPSHOT,
-        DeviceActions::RESET_N60, DeviceActions::RESET_CARDBOARD
+        DeviceActions::RESET_N60, DeviceActions::RESET_CARDBOARD, DeviceActions::RESET_WORKING_STATE
     ];
 
     public function __construct(protected Device $device)
@@ -145,6 +145,10 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
 
             },
             sprintf('/sys/%s/%s/thing/event/pet_in/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+                $device->update([
+                    'working_state' => DeviceStates::PET_IN->value,
+                ]);
+
                 $configuration = $this->configurationDefinition();
                 $configuration->petDetected = true;
 
@@ -153,6 +157,10 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
                 ]);
             },
             sprintf('/sys/%s/%s/thing/event/pet_out/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+                $device->update([
+                    'working_state' => DeviceStates::IDLE->value,
+                ]);
+
                 $configuration = $this->configurationDefinition();
                 $configuration->petDetected = false;
 
@@ -167,20 +175,20 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
                 History::create([
                     'messageId' => $message->params->event_id,
                     'pet_id' => null,
-                    'type' => DeviceStates::WORKING->value,
+                    'type' => DeviceStates::CLEANING->value,
                     'parameters' => $content,
                     'device_id' => $device->id
                 ]);
 
                 $device->update([
-                    'working_state' => DeviceStates::WORKING->value,
+                    'working_state' => DeviceStates::CLEANING->value,
                     'error' => $this->prepareErrorReporting($state),
                     'configuration' => $this->updateConfiguration($state)
                 ]);
             },
             sprintf('/sys/%s/%s/thing/event/work_start/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
                 $device->update([
-                    'working_state' => DeviceStates::WORKING->value,
+                    'working_state' => DeviceStates::CLEANING->value,
                 ]);
 
                 $state = json_decode($message?->params?->state, false);
@@ -235,7 +243,7 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
         }
 
         $this->getDevice()->update([
-            'working_state' => $isFeeding ? DeviceStates::WORKING->value : DeviceStates::IDLE->value,
+            'working_state' => $isFeeding ? DeviceStates::CLEANING->value : DeviceStates::IDLE->value,
             'error' => $err,
         ]);
 
@@ -397,6 +405,13 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
 
         $record->update([
             'configuration' => $configuration->toArray()
+        ]);
+    }
+
+    public function resetWorkingState(Device $record): void
+    {
+        $record->update([
+            'working_state' => DeviceStates::IDLE->value
         ]);
     }
 

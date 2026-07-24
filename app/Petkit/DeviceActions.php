@@ -42,6 +42,8 @@ class DeviceActions
 
     public const REBOOT = 'reboot';
 
+    public const RESET_WORKING_STATE = 'reset_working_state';
+
 
     public static function actions()
     {
@@ -187,6 +189,14 @@ class DeviceActions
                 ->requiresConfirmation()
                 ->action(function (Device $record) {
                     $record->definition()->reboot($record);
+                }),
+            Action::make('Reset State')
+                ->visible(function (Device $record) {
+                    return $record->definition()->hasAction(self::RESET_WORKING_STATE);
+                })
+                ->requiresConfirmation()
+                ->action(function (Device $record) {
+                    $record->definition()->resetWorkingState($record);
                 }),
         ];
     }
