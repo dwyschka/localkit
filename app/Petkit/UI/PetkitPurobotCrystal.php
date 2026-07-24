@@ -96,6 +96,10 @@ class PetkitPurobotCrystal
                     Forms\Components\Toggle::make('configuration.settings.cameraLight')
                         ->label('Camera Light'),
 
+                    Forms\Components\Toggle::make('configuration.settings.tumbling')
+                        ->helperText('Sets the Tumbling for Camera')
+                        ->label('Tumbling'),
+
 
             ]),
 
@@ -205,14 +209,18 @@ class PetkitPurobotCrystal
                     ->label('Indicator Light'),
             ]),
 
-            Forms\Components\Section::make('Health Monitoring')->columns(2)->schema([
+            Forms\Components\Section::make('Smart Health')->columns(2)->schema([
                 Forms\Components\Toggle::make('configuration.settings.voice')
                     ->helperText('Health monitoring for voice')
                     ->label('Yowling Detection'),
 
+                Forms\Components\Toggle::make('configuration.settings.occult')
+                    ->helperText('Determine if occult blood is checked')
+                    ->label('Occult Blood Detection'),
+
                 Forms\Components\Toggle::make('configuration.settings.urine')
-                    ->helperText('Require the right litter')
-                    ->label('Urine pH Detection'),
+                    ->helperText('Urine detection/measurement on/off')
+                    ->label('Urine Detection'),
 
                 Forms\Components\Toggle::make('configuration.settings.softMode')
                     ->label('Loose Stool Recognition'),

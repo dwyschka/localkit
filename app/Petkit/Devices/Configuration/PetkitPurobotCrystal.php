@@ -353,6 +353,19 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
     public bool $deepClean;
     public bool $downpos;
 
+    #[HASwitch(
+        technicalName: 'tumbling',
+        name: 'Tumbling',
+        commandTopic: 'setting/set',
+        icon: 'mdi:rotate-3d-variant',
+        valueTemplate: '{{ value_json.settings.tumbling }}',
+        commandTemplate: '{"tumbling":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
     public bool $tumbling;
     public int $lightest;
     public int $stillTime;
@@ -502,7 +515,19 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
 
     public bool $softModeClean;
 
-    // Not in Localkit UI - not exposed to HA
+    #[HASwitch(
+        technicalName: 'occult',
+        name: 'Occult Blood Detection',
+        commandTopic: 'setting/set',
+        icon: 'mdi:water-alert',
+        valueTemplate: '{{ value_json.settings.occult }}',
+        commandTemplate: '{"occult":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
     public bool $occult;
 
     // Detection
