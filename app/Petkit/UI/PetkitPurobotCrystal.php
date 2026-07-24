@@ -19,7 +19,7 @@ class PetkitPurobotCrystal
         return [
             Forms\Components\Section::make('Media')->schema([
                 Forms\Components\View::make('camera_stream')->viewData(fn($record): array => [
-                    'stream' => app(Go2RTC::class)->streamUrl($record)
+                    'streams' => app(Go2RTC::class)->streamUrls($record)
                 ])
                     ->hidden(fn($record) => is_null($record->configuration()->ipAddress))
                     ->columnSpan('full'),
