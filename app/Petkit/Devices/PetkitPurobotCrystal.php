@@ -270,6 +270,13 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
             }
         }
 
+        // MultiRange configs are not exposed to Home Assistant - strip them from the base json.
+        $data['settings'] = array_filter(
+            $data['settings'],
+            fn (string $key) => !Str::contains($key, 'MultiRange'),
+            ARRAY_FILTER_USE_KEY
+        );
+
         return json_encode($data);
     }
 
