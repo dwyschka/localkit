@@ -539,34 +539,40 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
 
     private function updateConfiguration(mixed $content, array $extra = []): array
     {
-        $settings = $this->getDevice()->configuration();
+        try {
+            $settings = $this->getDevice()->configuration();
 
-        //IP - reported inside the `other` string, key/value may or may not be quoted (e.g. Ip:"x.x.x.x" or "Ip":x.x.x.x)
-        $pattern = '/"?ip"?\s*[:=]\s*"?(\d{1,3}(?:\.\d{1,3}){3})"?/i';
-        $match = Str::of($content->other)->match($pattern);
+            //IP - reported inside the `other` string, key/value may or may not be quoted (e.g. Ip:"x.x.x.x" or "Ip":x.x.x.x)
+            $pattern ='(?:^|,)Ip:\\?"(\d{1,3}(?:\.\d{1,3}){3})\\?"';
+            $match = Str::of($content->other)->match($pattern);
 
-        Log::error('T7 IP Check', [
-            'content' => $content,
-            'other' => $content->other,
-            'match' => $match,
-        ]);
+            Log::error('T7 IP Check', [
+                'content' => $content,
+                'other' => $content->other,
+                'match' => $match,
+            ]);
 
-        if ($match->value() !== null) {
-            $settings->ipAddress = $match->value();
+            if ($match->value() !== null) {
+                $settings->ipAddress = $match->value();
+            }
+
+            // Not every state payload carries the top-level `ir` flag (e.g. light_over
+            // only reports sensor.ir_l/ir_r). `infrared` is a typed bool, so assigning a
+            // missing value as null would throw and abort the whole update.
+            if (isset($content->ir)) {
+                $settings->infrared = (bool)$content->ir;
+            }
+
+            foreach ($extra as $property => $value) {
+                $settings->$property = $value;
+            }
+
+            return $settings->toArray();
+        } catch (\Throwable $exception) {
+            Log::error('T7 Update', [
+                'msg' => $exception->getMessage(),
+            ]);
         }
-
-        // Not every state payload carries the top-level `ir` flag (e.g. light_over
-        // only reports sensor.ir_l/ir_r). `infrared` is a typed bool, so assigning a
-        // missing value as null would throw and abort the whole update.
-        if (isset($content->ir)) {
-            $settings->infrared = (bool) $content->ir;
-        }
-
-        foreach ($extra as $property => $value) {
-            $settings->$property = $value;
-        }
-
-        return $settings->toArray();
     }
 
     private function prepareErrorReporting(mixed $state)
