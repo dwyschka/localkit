@@ -539,8 +539,9 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
 
     private function updateConfiguration(mixed $content, array $extra = []): array
     {
+        $settings = $this->getDevice()->configuration();
+
         try {
-            $settings = $this->getDevice()->configuration();
 
             //IP - reported inside the `other` string, key/value may or may not be quoted (e.g. Ip:"x.x.x.x" or "Ip":x.x.x.x)
             $pattern = '/(?:^|,)Ip:\\\\?"(\d{1,3}(?:\.\d{1,3}){3})\\\\?"/';
@@ -573,6 +574,8 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
                 'msg' => $exception->getMessage(),
             ]);
         }
+
+        return $settings->toArray();
     }
 
     private function prepareErrorReporting(mixed $state)
