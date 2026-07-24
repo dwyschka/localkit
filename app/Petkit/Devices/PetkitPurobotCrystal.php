@@ -22,6 +22,7 @@ use App\Petkit\DeviceDefinition;
 use App\Petkit\Devices\Configuration\ConfigurationInterface;
 use App\Petkit\DeviceStates;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use PhpMqtt\Client\Facades\MQTT;
 
@@ -345,8 +346,12 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
 
     public function resetWorkingState(Device $record): void
     {
+        $configuration = $this->configurationDefinition();
+        $configuration->lightning = false;
+
         $record->update([
-            'working_state' => DeviceStates::IDLE->value
+            'working_state' => DeviceStates::IDLE->value,
+            'configuration' => $configuration->toArray()
         ]);
     }
 
@@ -536,6 +541,7 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
         $pattern = '/"?ip"?\s*[:=]\s*"?(\d{1,3}(?:\.\d{1,3}){3})"?/i';
         $match = Str::of($content->other)->match($pattern);
 
+        Log::info('T7 IP Check', $content->other);
 
         $settings->ipAddress = $match->value();
         $settings->infrared = $content->ir;
