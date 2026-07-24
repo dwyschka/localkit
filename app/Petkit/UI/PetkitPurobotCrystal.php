@@ -209,7 +209,7 @@ class PetkitPurobotCrystal
                     ->label('Indicator Light'),
             ]),
 
-            Forms\Components\Section::make('Smart Health')->columns(2)->schema([
+            Forms\Components\Section::make('Health Monitoring')->columns(2)->schema([
                 Forms\Components\Toggle::make('configuration.settings.voice')
                     ->helperText('Health monitoring for voice')
                     ->label('Yowling Detection'),
