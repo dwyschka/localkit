@@ -1,26 +1,7 @@
 <?php
 return [
-    'petkit' => [
-        'tserverUrl' => 'http://%s/main.ts?audio=1'
-    ],
-    'settings' => [
-        "streams" => [
-            "camera" => [
-            ]
-        ],
-        "api" => [
-            "listen" => ":1984",
-            "cors" => [
-                "allow_origin" => "*",
-                "allow_methods" => "GET, POST, OPTIONS",
-                "allow_headers" => "Content-Type"
-            ]
-        ],
-        "webrtc" => [
-            "listen" => ":8555"
-        ],
-        "log" => [
-            "level" => "info"
-        ]
-    ]
+    // Every HasCamera device runs its own go2rtc server on its local IP.
+    // Streams are served directly from the device, not from a central instance.
+    'port' => env('GO2RTC_DEVICE_PORT', 1984),
+    'stream' => env('GO2RTC_DEVICE_STREAM', 'camera'),
 ];

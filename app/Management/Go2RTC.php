@@ -3,50 +3,36 @@
 namespace App\Management;
 
 use App\Models\Device;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
-use Symfony\Component\Yaml\Yaml;
 
+/**
+ * Every HasCamera device runs its own go2rtc server on its local IP. This client
+ * builds the URLs to reach that per-device server - there is no central go2rtc.
+ */
 class Go2RTC
 {
-
-    public function __construct(protected S6 $s6)
-    {
-    }
-
-    public function enable(): void
-    {
-        Config::set('app.enable.go2rtc', true);
-    }
-
-    public function disable(): void
-    {
-        Config::set('app.enable.go2rtc', false);
-    }
-
-    public function createConfigYml(Collection $devices)
-    {
-
-        $go2rtcConfig = config('go2rtc.settings');
-        $tserver = \config('go2rtc.petkit.tserverUrl');
-
-        $go2rtcConfig['streams'] = $devices->mapWithKeys(function($device) use ($tserver) {
-            if($device->configuration['states']['ipAddress'] === null) {
-                return false;
-            }
-            return [$device->name => sprintf($tserver, $device->configuration['states']['ipAddress'])];
-        })->toArray();
-
-
-        Storage::disk('local')->put('go2rtc.yml', Yaml::dump($go2rtcConfig));
-    }
-
     public function streamUrl(Device $device): string
     {
-
-        return sprintf('http://%s:1984/stream.html?src=%s',config('petkit.local_ip'), $device->name);
+        return $this->url($device, '/stream.html');
     }
 
+    public function frameUrl(Device $device): string
+    {
+        return $this->url($device, '/api/frame.jpeg');
+    }
+
+    private function url(Device $device, string $path): string
+    {
+        return sprintf(
+            'http://%s:%d%s?src=%s',
+            $this->deviceIp($device),
+            config('go2rtc.port'),
+            $path,
+            config('go2rtc.stream')
+        );
+    }
+
+    private function deviceIp(Device $device): ?string
+    {
+        return $device->configuration['states']['ipAddress'] ?? null;
+    }
 }

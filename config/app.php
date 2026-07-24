@@ -125,8 +125,6 @@ return [
 
     'enable' => [
         'homeassistant' => env('LOCALKIT_HOMEASSISTANT_ENABLE', true),
-        'go2rtc' => env('LOCALKIT_GO2RTC_ENABLE', true),
-
     ]
 
 ];

@@ -1,5 +1,5 @@
 #!/command/with-contenv bash
-echo "Localkit: Go2rtc";
+echo "Localkit: Homeassistant";
 exec 2>&1
-exec /usr/local/bin/go2rtc -c /var/www/html/storage/app/private/go2rtc.yml
-
+cd /var/www/html
+exec php artisan localkit:homeassistant

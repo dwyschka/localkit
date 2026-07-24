@@ -13,7 +13,6 @@ class Service extends Model
 
     protected $services = [
         'localkit-homeassistant',
-        'localkit-go2rtc',
         'localkit-listen'
     ];
     protected $schema = [

@@ -56,9 +56,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         $this->app->bind(Go2RTC::class, function () {
-            return new Go2RTC(
-                app(S6::class)
-            );
+            return new Go2RTC();
         });
 
         $this->app->bind(OTA::class, fn() => new OTA());
