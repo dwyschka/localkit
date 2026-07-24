@@ -629,6 +629,26 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
     )]
     private $actionLevel = 1;
 
+    #[Button(
+        technicalName: 'action_start_lightning',
+        name: 'Start Lightning',
+        commandTopic: 'action/start',
+        icon: 'mdi:lightbulb-on',
+        commandTemplate: '{"action": "start_lightning"}',
+        availabilityTemplate: 'online',
+    )]
+    private $actionStartLightning = 1;
+
+    #[Button(
+        technicalName: 'action_stop_lightning',
+        name: 'Stop Lightning',
+        commandTopic: 'action/start',
+        icon: 'mdi:lightbulb-off',
+        commandTemplate: '{"action": "stop_lightning"}',
+        availabilityTemplate: 'online',
+    )]
+    private $actionStopLightning = 1;
+
     protected function rules(): array
     {
         return [

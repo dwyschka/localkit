@@ -8,6 +8,7 @@ use App\Helpers\Time;
 use App\Homeassistant\HomeassistantTopic;
 use App\Homeassistant\Interfaces\Snapshot;
 use App\Jobs\ServiceConnect;
+use App\Jobs\ServiceEnd;
 use App\Jobs\ServiceStart;
 use App\Jobs\SetProperty;
 use App\Jobs\TakeSnapshot;
@@ -32,7 +33,8 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
     ];
     protected array $actions = [
         DeviceActions::START_CLEAN, DeviceActions::DEODORIZE, DeviceActions::LEVEL, DeviceActions::TAKE_SNAPSHOT,
-        DeviceActions::RESET_N60, DeviceActions::RESET_CARDBOARD, DeviceActions::RESET_WORKING_STATE
+        DeviceActions::RESET_N60, DeviceActions::RESET_CARDBOARD, DeviceActions::RESET_WORKING_STATE,
+        DeviceActions::START_LIGHTNING, DeviceActions::STOP_LIGHTNING,
     ];
 
     public function __construct(protected Device $device)
@@ -52,6 +54,7 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
             sprintf('/sys/%s/%s/thing/event/ble_relay_over/post_reply', $this->device->productKey(), $this->device->deviceName()),
             sprintf('/sys/%s/%s/thing/event/ble_response/post_reply', $this->device->productKey(), $this->device->deviceName()),
             sprintf('/sys/%s/%s/thing/service/start', $this->device->productKey(), $this->device->deviceName()),
+            sprintf('/sys/%s/%s/thing/service/end', $this->device->productKey(), $this->device->deviceName()),
         ];
     }
 
@@ -387,6 +390,12 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
             case 'level':
                 $this->level($this->getDevice());
                 break;
+            case 'start_lightning':
+                $this->startLightning($this->getDevice());
+                break;
+            case 'stop_lightning':
+                $this->stopLightning($this->getDevice());
+                break;
         }
     }
 
@@ -436,6 +445,16 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
     public function level(Device $record): void
     {
         ServiceStart::dispatchSync($record, 4);
+    }
+
+    public function startLightning(Device $record): void
+    {
+        ServiceStart::dispatchSync($record, 7);
+    }
+
+    public function stopLightning(Device $record): void
+    {
+        ServiceEnd::dispatchSync($record, 7);
     }
 
     public function toOTA(): array
