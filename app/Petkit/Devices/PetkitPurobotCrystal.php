@@ -79,11 +79,19 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
             },
             sprintf('/sys/%s/%s/thing/event/property/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
                 // This event reports the state directly on `params`, not nested under `params.state`.
+                // The IP address is not a separate field here either - it's embedded in `other`, parsed in updateConfiguration().
                 $state = $message?->params;
-                $device->update([
+
+                $update = [
                     'error' => $this->prepareErrorReporting($state),
                     'configuration' => $this->updateConfiguration($state)
-                ]);
+                ];
+
+                if (!isset($state->workState)) {
+                    $update['working_state'] = DeviceStates::IDLE->value;
+                }
+
+                $device->update($update);
             },
             sprintf('/sys/%s/%s/thing/event/feed_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
 
