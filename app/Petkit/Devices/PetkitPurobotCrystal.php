@@ -137,20 +137,14 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
                     'configuration' => $this->updateConfiguration($state)
                 ]);
             },
-            sprintf('/sys/%s/%s/thing/event/light_start/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
-                $state = json_decode($message?->params?->state, false);
-
-                $device->update([
-                    'error' => $this->prepareErrorReporting($state),
-                    'configuration' => $this->updateConfiguration($state, ['lightning' => true])
-                ]);
-            },
             sprintf('/sys/%s/%s/thing/event/light_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
                 $state = json_decode($message?->params?->state, false);
 
+                // The light lifecycle is driven entirely through this topic: when the light is
+                // running the state carries a `lightState` object, and it's absent once it stops.
                 $device->update([
                     'error' => $this->prepareErrorReporting($state),
-                    'configuration' => $this->updateConfiguration($state, ['lightning' => false])
+                    'configuration' => $this->updateConfiguration($state, ['lightning' => isset($state->lightState)])
                 ]);
             },
             sprintf('/sys/%s/%s/thing/event/clean_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
@@ -160,16 +154,6 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
                     'error' => $this->prepareErrorReporting($state),
                     'configuration' => $this->updateConfiguration($state)
                 ]);
-            },
-            sprintf('/sys/%s/%s/thing/service/start', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
-                if (($message?->params?->start_action ?? null) == 7) {
-                    $configuration = $this->configurationDefinition();
-                    $configuration->lightning = true;
-
-                    $device->update([
-                        'configuration' => $configuration->toArray()
-                    ]);
-                }
             },
         ];
     }
