@@ -19,10 +19,10 @@ use Illuminate\Http\Resources\Json\JsonResource;
         return [
             "method" => 'thing.service.feed_realtime',
             'id' => (string)time(),
-            "params" => [
-                "amount" => $this->payload['amount'],
-                "id" => sprintf('r_%s_%d-1',date('Ymd'),rand(1000,9999)),
-            ],
+            "params" => array_merge(
+                $this->payload,
+                ["id" => sprintf('r_%s_%d-1', date('Ymd'), rand(1000, 9999))],
+            ),
             "version" => "1.0.0",
         ];
     }
