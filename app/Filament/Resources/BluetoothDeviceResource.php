@@ -9,9 +9,11 @@ use App\Models\Device;
 use App\Petkit\BluetoothDevices\Actions;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class BluetoothDeviceResource extends Resource
 {
@@ -37,11 +39,21 @@ class BluetoothDeviceResource extends Resource
                     Forms\Components\TextInput::make('interval')
                         ->helperText('The interval in minutes to check the device status')
                         ->numeric(true)->minValue(10)
-                        ->hidden(fn($record) => $record->type == "k3")
+                        ->hidden(fn($record) => $record?->type == "k3")
                     ,
                     Forms\Components\Select::make('link_with')
                         ->helperText('Set the Device to which the Proxy is linked')
-                    ->relationship('linkWith', 'name', fn($query, $record) => $record->type == "k3" ? $query->whereIn('device_type', [ 't4' ]) : $query)
+                        ->relationship(
+                            name: 'linkWith',
+                            titleAttribute: 'name',
+                            modifyQueryUsing: fn (Builder $query, Get $get): Builder =>
+                            $get('type') === 'k3'
+                                ? $query->whereIn('device_type', ['t4'])
+                                : $query,
+                        )
+                        ->getOptionLabelFromRecordUsing(
+                            fn ($record): string => $record->name ?? $record->device_type ?? "Device #{$record->getKey()}"
+                        )
                 ]),
 
                 Forms\Components\Fieldset::make('Device Configuration')->schema([
@@ -55,7 +67,7 @@ class BluetoothDeviceResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')->searchable(),
-                Tables\Columns\TextColumn::make('type')->searchable()->formatStateUsing(function(string $state) {
+                Tables\Columns\TextColumn::make('type')->searchable()->formatStateUsing(function(?string $state) {
                     if($state === 'k3') {
                         return 'K3 Spray';
                     }
