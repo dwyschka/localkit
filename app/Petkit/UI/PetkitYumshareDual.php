@@ -44,12 +44,12 @@ class PetkitYumshareDual
                     ->label('Feed Amount Hopper 1')
                     ->helperText('Default amount for manual feeding')
                     ->numeric()
-                    ->minValue(1),
+                    ->minValue(0),
                 Forms\Components\TextInput::make('configuration.settings.amount2')
                     ->label('Feed Amount Hopper 2')
                     ->helperText('Default amount for manual feeding')
                     ->numeric()
-                    ->minValue(1),
+                    ->minValue(0),
                 Forms\Components\TextInput::make('configuration.settings.factor1')
                     ->label('Hopper 1 Calibration Factor')
                     ->helperText('Calibration factor for the first hopper')

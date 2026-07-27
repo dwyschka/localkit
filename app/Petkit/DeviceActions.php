@@ -182,13 +182,13 @@ class DeviceActions
                             TextInput::make('amount1')
                                 ->label('Hopper 1 Amount')
                                 ->numeric()
-                                ->minValue(1)
+                                ->minValue(0)
                                 ->required()
                                 ->default($settings['amount1'] ?? 1),
                             TextInput::make('amount2')
                                 ->label('Hopper 2 Amount')
                                 ->numeric()
-                                ->minValue(1)
+                                ->minValue(0)
                                 ->required()
                                 ->default($settings['amount2'] ?? 1),
                         ];

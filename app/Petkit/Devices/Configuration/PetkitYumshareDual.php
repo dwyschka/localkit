@@ -42,7 +42,7 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
         valueTemplate: '{{ value_json.settings.amount1 }}',
         commandTemplate: '{"amount1": {{value}}}',
         entityCategory: 'config',
-        min: 1,
+        min: 0,
         max: 50,
         step: 1
     )]
@@ -56,7 +56,7 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
         valueTemplate: '{{ value_json.settings.amount2 }}',
         commandTemplate: '{"amount2": {{value}}}',
         entityCategory: 'config',
-        min: 1,
+        min: 0,
         max: 50,
         step: 1
     )]
@@ -558,8 +558,8 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
     protected function rules(): array
     {
         return [
-            'amount1' => ['integer', 'min:1', 'max:50'],
-            'amount2' => ['integer', 'min:1', 'max:50'],
+            'amount1' => ['integer', 'min:0', 'max:50'],
+            'amount2' => ['integer', 'min:0', 'max:50'],
             'schedule' => ['array'],
 
             'desiccantDurability' => ['integer', 'min:0', 'max:90'],
