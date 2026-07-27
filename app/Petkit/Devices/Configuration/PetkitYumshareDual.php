@@ -11,7 +11,6 @@ use App\Homeassistant\Image;
 use App\Homeassistant\Interfaces\Snapshot;
 use App\Homeassistant\Interfaces\Video;
 use App\Homeassistant\Number;
-use App\Homeassistant\Select;
 use App\Homeassistant\Sensor;
 use App\Models\BluetoothDevice;
 use App\Models\Device;
@@ -35,6 +34,18 @@ use WendellAdriel\ValidatedDTO\Casting\StringCast;
 class PetkitYumshareDual extends DeviceConfigurationDTO implements ConfigurationInterface, Video, Snapshot, HasCamera
 {
     // Basic settings
+    #[Number(
+        technicalName: 'amount',
+        name: 'Feed Amount',
+        commandTopic: 'setting/set',
+        icon: 'mdi:information-outline',
+        valueTemplate: '{{ value_json.settings.amount }}',
+        commandTemplate: '{"amount": {{value}}}',
+        entityCategory: 'config',
+        min: 1,
+        max: 50,
+        step: 1
+    )]
     public int $amount;
     public array $schedule;
 
@@ -269,7 +280,7 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
         valueTemplate: '{{ value_json.settings.factor1 }}',
         commandTemplate: '{"factor1":{{ value }}}',
         entityCategory: 'config',
-        min: 0,
+        min: 1,
         max: 100,
         step: 1
     )]
@@ -283,7 +294,7 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
         valueTemplate: '{{ value_json.settings.factor2 }}',
         commandTemplate: '{"factor2":{{ value }}}',
         entityCategory: 'config',
-        min: 0,
+        min: 1,
         max: 100,
         step: 1
     )]
@@ -445,20 +456,7 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
 
     public int $selectedSound;
 
-    // Feed amount
-    #[Select(
-        technicalName: 'amount',
-        name: 'Feed Amount',
-        options: ['10', '15', '20', '25', '30', '35', '40', '45', '50'],
-        commandTopic: 'setting/set',
-        icon: 'mdi:information-outline',
-        valueTemplate: '{{ value_json.settings.amount }}',
-        commandTemplate: '{"amount": {{value}}}',
-        entityCategory: 'config'
-    )]
-    // Defined above as public int $amount;
-
-        // AI and other settings
+    // AI and other settings
     public int $surplusControl;
     public int $surplusStandard;
 
@@ -546,7 +544,7 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
     protected function rules(): array
     {
         return [
-            'amount' => ['integer', 'in:10,15,20,25,30,35,40,45,50'],
+            'amount' => ['integer', 'min:1', 'max:50'],
             'schedule' => ['array'],
 
             'desiccantDurability' => ['integer', 'min:0', 'max:90'],
@@ -588,8 +586,8 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
             'eatVideo' => ['bool'],
 
             // Hopper factors
-            'factor1' => ['integer', 'min:0', 'max:100'],
-            'factor2' => ['integer', 'min:0', 'max:100'],
+            'factor1' => ['integer', 'min:1', 'max:100'],
+            'factor2' => ['integer', 'min:1', 'max:100'],
 
             // Detection
             'moveDetection' => ['bool'],
@@ -671,8 +669,8 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
             'eatVideo' => true,
 
             // Hopper factors
-            'factor1' => 0,
-            'factor2' => 0,
+            'factor1' => 1,
+            'factor2' => 1,
 
             // Detection
             'moveDetection' => false,
