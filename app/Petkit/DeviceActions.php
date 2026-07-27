@@ -175,7 +175,7 @@ class DeviceActions
                     return $record->definition()->hasAction(self::START_FEEDING);
                 })
                 ->form(function (Device $record) {
-                    $default = $record->configuration['settings']['amount'] ?? 10;
+                    $settings = $record->configuration['settings'] ?? [];
 
                     if ($record->definition() instanceof PetkitYumshareDual) {
                         return [
@@ -184,13 +184,13 @@ class DeviceActions
                                 ->numeric()
                                 ->minValue(1)
                                 ->required()
-                                ->default($default),
+                                ->default($settings['amount1'] ?? 1),
                             TextInput::make('amount2')
                                 ->label('Hopper 2 Amount')
                                 ->numeric()
                                 ->minValue(1)
                                 ->required()
-                                ->default($default),
+                                ->default($settings['amount2'] ?? 1),
                         ];
                     }
 
@@ -200,7 +200,7 @@ class DeviceActions
                             ->numeric()
                             ->minValue(1)
                             ->required()
-                            ->default($default),
+                            ->default($settings['amount'] ?? 10),
                     ];
                 })
                 ->modalHeading('Start Feeding')

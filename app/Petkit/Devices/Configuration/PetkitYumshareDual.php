@@ -35,18 +35,32 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
 {
     // Basic settings
     #[Number(
-        technicalName: 'amount',
-        name: 'Feed Amount',
+        technicalName: 'amount1',
+        name: 'Feed Amount Hopper 1',
         commandTopic: 'setting/set',
         icon: 'mdi:information-outline',
-        valueTemplate: '{{ value_json.settings.amount }}',
-        commandTemplate: '{"amount": {{value}}}',
+        valueTemplate: '{{ value_json.settings.amount1 }}',
+        commandTemplate: '{"amount1": {{value}}}',
         entityCategory: 'config',
         min: 1,
         max: 50,
         step: 1
     )]
-    public int $amount;
+    public int $amount1;
+
+    #[Number(
+        technicalName: 'amount2',
+        name: 'Feed Amount Hopper 2',
+        commandTopic: 'setting/set',
+        icon: 'mdi:information-outline',
+        valueTemplate: '{{ value_json.settings.amount2 }}',
+        commandTemplate: '{"amount2": {{value}}}',
+        entityCategory: 'config',
+        min: 1,
+        max: 50,
+        step: 1
+    )]
+    public int $amount2;
     public array $schedule;
 
     // States
@@ -544,7 +558,8 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
     protected function rules(): array
     {
         return [
-            'amount' => ['integer', 'min:1', 'max:50'],
+            'amount1' => ['integer', 'min:1', 'max:50'],
+            'amount2' => ['integer', 'min:1', 'max:50'],
             'schedule' => ['array'],
 
             'desiccantDurability' => ['integer', 'min:0', 'max:90'],
@@ -627,7 +642,8 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
     protected function defaults(): array
     {
         return [
-            'amount' => 10,
+            'amount1' => 1,
+            'amount2' => 1,
             'schedule' => [],
 
             'desiccantDurability' => 30,
@@ -715,7 +731,8 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
     protected function casts(): array
     {
         return [
-            'amount' => new IntegerCast(),
+            'amount1' => new IntegerCast(),
+            'amount2' => new IntegerCast(),
             'schedule' => new ArrayCast(),
 
             // States
@@ -822,7 +839,8 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
             $settings = $config['settings'];
 
             $data['shareOpen'] = $settings['shareOpen'] ?? null;
-            $data['amount'] = $settings['amount'] ?? null;
+            $data['amount1'] = $settings['amount1'] ?? null;
+            $data['amount2'] = $settings['amount2'] ?? null;
             $data['multiConfig'] = $settings['multiConfig'] ?? null;
             $data['lightMode'] = $settings['lightMode'] ?? null;
             $data['lightMultiRange'] = $settings['lightMultiRange'] ?? null;
@@ -910,7 +928,8 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
             ],
             'settings' => [
                 'shareOpen' => $this->shareOpen,
-                'amount' => $this->amount,
+                'amount1' => $this->amount1,
+                'amount2' => $this->amount2,
                 'multiConfig' => $this->multiConfig,
                 'lightMode' => $this->lightMode,
                 'lightMultiRange' => $this->lightMultiRange,
