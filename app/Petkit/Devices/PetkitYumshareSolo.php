@@ -305,10 +305,12 @@ class PetkitYumshareSolo implements DeviceDefinition, Snapshot, BluetoothProxyIn
         }
     }
 
-    public function startFeeding(Device $record): void
+    public function startFeeding(Device $record, ?int $amount = null): void
     {
-        FeedRealtime::dispatchSync($record, $this->device->configuration['settings']['amount'] ?? 10);
-        ServiceStart::dispatchSync($record, $this->device->configuration['settings']['amount'] ?? 10);
+        $amount ??= $this->device->configuration['settings']['amount'] ?? 10;
+
+        FeedRealtime::dispatchSync($record, $amount);
+        ServiceStart::dispatchSync($record, $amount);
     }
 
     public function toOTA(): array

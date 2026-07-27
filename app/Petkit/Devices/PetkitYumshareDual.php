@@ -305,12 +305,15 @@ class PetkitYumshareDual implements DeviceDefinition, Snapshot, BluetoothProxyIn
         }
     }
 
-    public function startFeeding(Device $record): void
+    public function startFeeding(Device $record, ?int $amount = null, ?int $amount2 = null): void
     {
-        $amount = $this->device->configuration['settings']['amount'] ?? 10;
+        $default = $this->device->configuration['settings']['amount'] ?? 10;
+        $amount ??= $default;
+        $amount2 ??= $default;
+
         // Dual is a two-hopper feeder, so feed_realtime carries amount1/amount2.
-        FeedRealtime::dispatchSync($record, $amount, $amount);
-        ServiceStart::dispatchSync($record, $amount);
+        FeedRealtime::dispatchSync($record, $amount, $amount2);
+        ServiceStart::dispatchSync($record, $amount + $amount2);
     }
 
     public function toOTA(): array

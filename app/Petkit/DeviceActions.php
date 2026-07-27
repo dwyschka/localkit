@@ -8,10 +8,12 @@ use App\Jobs\ServiceStart;
 use App\Localkit\OTA;
 use App\Models\BluetoothDevice;
 use App\Models\Device;
+use App\Petkit\Devices\PetkitYumshareDual;
 use Filament\Actions\ActionGroup;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
 use Filament\Notifications\Notification;
@@ -172,8 +174,45 @@ class DeviceActions
                 ->visible(function (Device $record) {
                     return $record->definition()->hasAction(self::START_FEEDING);
                 })
-                ->action(function (Device $record) {
-                    $record->definition()->startFeeding($record);
+                ->form(function (Device $record) {
+                    $default = $record->configuration['settings']['amount'] ?? 10;
+
+                    if ($record->definition() instanceof PetkitYumshareDual) {
+                        return [
+                            TextInput::make('amount1')
+                                ->label('Hopper 1 Amount')
+                                ->numeric()
+                                ->minValue(1)
+                                ->required()
+                                ->default($default),
+                            TextInput::make('amount2')
+                                ->label('Hopper 2 Amount')
+                                ->numeric()
+                                ->minValue(1)
+                                ->required()
+                                ->default($default),
+                        ];
+                    }
+
+                    return [
+                        TextInput::make('amount')
+                            ->label('Amount')
+                            ->numeric()
+                            ->minValue(1)
+                            ->required()
+                            ->default($default),
+                    ];
+                })
+                ->modalHeading('Start Feeding')
+                ->modalSubmitActionLabel('Feed')
+                ->action(function (Device $record, array $data) {
+                    $definition = $record->definition();
+
+                    if ($definition instanceof PetkitYumshareDual) {
+                        $definition->startFeeding($record, (int) $data['amount1'], (int) $data['amount2']);
+                    } else {
+                        $definition->startFeeding($record, (int) $data['amount']);
+                    }
                 }),
             Action::make('Take Snapshot')
                 ->visible(function (Device $record) {
