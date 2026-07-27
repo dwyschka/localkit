@@ -39,10 +39,19 @@ class PetkitYumshareDual
 
                 })->readOnly()->disabled(true),
             ]),
-            Forms\Components\Section::make('Feeding')->schema([
+            Forms\Components\Section::make('Feeding')->columns(2)->schema([
                 Forms\Components\TextInput::make('configuration.settings.amount')
                     ->label('Feeding Amount')
                     ->helperText('Default amount for manual feeding')
+                    ->columnSpanFull()
+                    ->numeric(),
+                Forms\Components\TextInput::make('configuration.settings.factor1')
+                    ->label('Hopper 1 Calibration Factor')
+                    ->helperText('Calibration factor for the first hopper')
+                    ->numeric(),
+                Forms\Components\TextInput::make('configuration.settings.factor2')
+                    ->label('Hopper 2 Calibration Factor')
+                    ->helperText('Calibration factor for the second hopper')
                     ->numeric(),
             ]),
             Section::make('Media')->schema([

@@ -261,7 +261,32 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
     public bool $eatVideo;
 
     // Hopper calibration factors (bowl 1 / bowl 2)
+    #[Number(
+        technicalName: 'factor1',
+        name: 'Hopper 1 Calibration Factor',
+        commandTopic: 'setting/set',
+        icon: 'mdi:tune-variant',
+        valueTemplate: '{{ value_json.settings.factor1 }}',
+        commandTemplate: '{"factor1":{{ value }}}',
+        entityCategory: 'config',
+        min: 0,
+        max: 100,
+        step: 1
+    )]
     public int $factor1;
+
+    #[Number(
+        technicalName: 'factor2',
+        name: 'Hopper 2 Calibration Factor',
+        commandTopic: 'setting/set',
+        icon: 'mdi:tune-variant',
+        valueTemplate: '{{ value_json.settings.factor2 }}',
+        commandTemplate: '{"factor2":{{ value }}}',
+        entityCategory: 'config',
+        min: 0,
+        max: 100,
+        step: 1
+    )]
     public int $factor2;
 
     // Detection settings
