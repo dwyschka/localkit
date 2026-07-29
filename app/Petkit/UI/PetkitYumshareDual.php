@@ -101,10 +101,6 @@ class PetkitYumshareDual
                 Forms\Components\Toggle::make('configuration.settings.timestamp_enable')
                     ->label('Timestamp Display'),
 
-                Forms\Components\Toggle::make('configuration.settings.eatVideo')
-                    ->helperText('Feature not Available: YUMSHARE video/photo will not be uploaded to the cloud after turning off')
-                    ->label('YUMSHARE Video/Photo Upload'),
-
                 Forms\Components\Toggle::make('configuration.settings.smartFrame')
                     ->label('Pet Tracking')
                     ->helperText('Highlight the pet when it is detected'),
@@ -112,12 +108,6 @@ class PetkitYumshareDual
                 Forms\Components\Toggle::make('configuration.settings.feedPicture')
                     ->label('Feeding Photo')
                     ->helperText('Save a photo to the cloud when food is dispensed'),
-
-                Forms\Components\TextInput::make('configuration.settings.attireId')
-                    ->label('Display Theme (Attire ID)')
-                    ->helperText('ID of the selected display theme / costume overlay (-1 = none)')
-                    ->numeric()
-                    ->minValue(-1),
 
                 Forms\Components\Fieldset::make('Detection')->schema([
                     Forms\Components\Toggle::make('configuration.settings.petDetection')
@@ -313,11 +303,6 @@ class PetkitYumshareDual
                 Forms\Components\Toggle::make('configuration.settings.soundEnable')->label('Voice for Food Dispensing'),
                 Forms\Components\Toggle::make('configuration.settings.feedSound')->label('Feed Completion Sound'),
 
-                Forms\Components\TextInput::make('configuration.settings.selectedSound')
-                    ->label('Selected Feeding Voice')
-                    ->helperText('ID of the selected feeding voice/sound (-1 = none)')
-                    ->numeric()
-                    ->minValue(-1),
 
                 Forms\Components\Fieldset::make('Do not Disturb')->columns(1)->schema([
                     Forms\Components\Toggle::make('configuration.settings.toneMode')->label('Do not disturb'),
@@ -387,6 +372,7 @@ class PetkitYumshareDual
 
                 Repeater::make('configuration.settings.lightMultiRange')
                     ->columns(2)
+                    ->columnSpanFull()
                     ->label('Screen Period')
                     ->schema(
                         [
@@ -446,18 +432,6 @@ class PetkitYumshareDual
                     ->label('Upload')
                     ->helperText('Enable cloud upload (unverified)'),
 
-                Forms\Components\Toggle::make('configuration.settings.log_upload')
-                    ->label('Log Upload')
-                    ->helperText('Upload device logs (MQTT property: logSwitch)'),
-
-                Forms\Components\Toggle::make('configuration.settings.logo_cn')
-                    ->label('Logo CN')
-                    ->helperText('Region logo flag (unverified)'),
-
-                Forms\Components\TextInput::make('configuration.settings.CTime')
-                    ->label('CTime')
-                    ->helperText('Unverified numeric value')
-                    ->numeric(),
             ]),
 
 
