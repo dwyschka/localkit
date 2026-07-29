@@ -26,6 +26,12 @@ class PetkitYumshareDual
     public function formFields(): array
     {
         return [
+            Forms\Components\Section::make('Stats')->schema([
+                Forms\Components\TextInput::make('configuration.states.ipAddress')
+                    ->label('IP Address')
+                    ->readOnly()
+                    ->disabled(true),
+            ]),
             Forms\Components\Section::make('Consumables')->columns(2)->schema([
                 Forms\Components\TextInput::make('configuration.consumables.desiccantDurability')->numeric(),
                 Forms\Components\TextInput::make('configuration.consumables.desiccantNextChange')->label('Next Reset in Days (Desiccant)')->formatStateUsing(function ($state) {

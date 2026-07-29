@@ -17,6 +17,12 @@ class PetkitPurobotCrystal
     public function formFields(): array
     {
         return [
+            Forms\Components\Section::make('Stats')->schema([
+                Forms\Components\TextInput::make('configuration.states.ipAddress')
+                    ->label('IP Address')
+                    ->readOnly()
+                    ->disabled(true),
+            ]),
             Forms\Components\Section::make('Media')->schema([
                 Forms\Components\View::make('camera_stream')->viewData(fn($record): array => [
                     'streams' => app(Go2RTC::class)->streamUrls($record)

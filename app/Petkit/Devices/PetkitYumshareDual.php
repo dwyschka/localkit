@@ -171,7 +171,7 @@ class PetkitYumshareDual implements DeviceDefinition, Snapshot, BluetoothProxyIn
 
     private function updateDevice(?\stdClass $message)
     {
-        $hasError = $message->params->food == 0;
+        $hasError = $message->params->food1 == 0 || $message->params->food2 == 0;
         $isFeeding = $message->params->feeding == 1;
         $err = null;
 
