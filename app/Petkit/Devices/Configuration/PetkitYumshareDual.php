@@ -28,7 +28,7 @@ use WendellAdriel\ValidatedDTO\Casting\StringCast;
  * NOTE: the property names must match the device's setting keys exactly, since
  * {@see \App\Petkit\Devices\PetkitYumshareDual::propertyChange()} diffs the
  * stored `settings` array and forwards the changed keys straight to the device.
- * The real device uses a mix of snake_case (e.g. timestamp_enable) and
+ * The real device uses a mix of snake_case (e.g. camera_enable) and
  * camelCase (e.g. moveDetection) setting keys - both are kept verbatim below.
  */
 class PetkitYumshareDual extends DeviceConfigurationDTO implements ConfigurationInterface, Video, Snapshot, HasCamera
@@ -239,49 +239,49 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
     public array $cameraRangeTable;
 
     #[HASwitch(
-        technicalName: 'mic_enable',
+        technicalName: 'microphone',
         name: 'Microphone',
         commandTopic: 'setting/set',
         icon: 'mdi:microphone',
-        valueTemplate: '{{ value_json.settings.mic_enable }}',
-        commandTemplate: '{"mic_enable":{{ value }}}',
+        valueTemplate: '{{ value_json.settings.microphone }}',
+        commandTemplate: '{"microphone":{{ value }}}',
         payloadOn: true,
         payloadOff: false,
         stateOn: true,
         stateOff: false,
         entityCategory: 'config'
     )]
-    public bool $mic_enable;
+    public bool $microphone;
 
     #[HASwitch(
-        technicalName: 'irlight_enable',
+        technicalName: 'night',
         name: 'Night Vision',
         commandTopic: 'setting/set',
         icon: 'mdi:moon-new',
-        valueTemplate: '{{ value_json.settings.irlight_enable }}',
-        commandTemplate: '{"irlight_enable":{{ value }}}',
+        valueTemplate: '{{ value_json.settings.night }}',
+        commandTemplate: '{"night":{{ value }}}',
         payloadOn: true,
         payloadOff: false,
         stateOn: true,
         stateOff: false,
         entityCategory: 'config'
     )]
-    public bool $irlight_enable;
+    public bool $night;
 
     #[HASwitch(
-        technicalName: 'timestamp_enable',
+        technicalName: 'timeDisplay',
         name: 'Timestamp Display',
         commandTopic: 'setting/set',
         icon: 'mdi:toggle-switch',
-        valueTemplate: '{{ value_json.settings.timestamp_enable }}',
-        commandTemplate: '{"timestamp_enable":{{ value }}}',
+        valueTemplate: '{{ value_json.settings.timeDisplay }}',
+        commandTemplate: '{"timeDisplay":{{ value }}}',
         payloadOn: true,
         payloadOff: false,
         stateOn: true,
         stateOff: false,
         entityCategory: 'config'
     )]
-    public bool $timestamp_enable;
+    public bool $timeDisplay;
 
     public bool $eatVideo;
 
@@ -595,9 +595,9 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
             'camera_enable' => ['bool'],
             'cameraMultiRange' => ['array'],
             'cameraRangeTable' => ['array'],
-            'mic_enable' => ['bool'],
-            'irlight_enable' => ['bool'],
-            'timestamp_enable' => ['bool'],
+            'microphone' => ['bool'],
+            'night' => ['bool'],
+            'timeDisplay' => ['bool'],
             'eatVideo' => ['bool'],
 
             // Hopper factors
@@ -679,9 +679,9 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
             'camera_enable' => true,
             'cameraMultiRange' => [[0, 1440]],
             'cameraRangeTable' => $this->defaultRangeTable(),
-            'mic_enable' => true,
-            'irlight_enable' => true,
-            'timestamp_enable' => true,
+            'microphone' => true,
+            'night' => true,
+            'timeDisplay' => true,
             'eatVideo' => true,
 
             // Hopper factors
@@ -765,9 +765,9 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
             'camera_enable' => new BooleanCast(),
             'cameraMultiRange' => new ArrayCast(),
             'cameraRangeTable' => new ArrayCast(),
-            'mic_enable' => new BooleanCast(),
-            'irlight_enable' => new BooleanCast(),
-            'timestamp_enable' => new BooleanCast(),
+            'microphone' => new BooleanCast(),
+            'night' => new BooleanCast(),
+            'timeDisplay' => new BooleanCast(),
             'eatVideo' => new BooleanCast(),
 
             // Hopper factors
@@ -859,9 +859,9 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
             $data['camera_enable'] = $settings['camera_enable'] ?? null;
             $data['cameraMultiRange'] = $settings['cameraMultiRange'] ?? null;
             $data['cameraRangeTable'] = $settings['cameraRangeTable'] ?? null;
-            $data['mic_enable'] = $settings['mic_enable'] ?? null;
-            $data['irlight_enable'] = $settings['irlight_enable'] ?? null;
-            $data['timestamp_enable'] = $settings['timestamp_enable'] ?? null;
+            $data['microphone'] = $settings['microphone'] ?? null;
+            $data['night'] = $settings['night'] ?? null;
+            $data['timeDisplay'] = $settings['timeDisplay'] ?? null;
             $data['eatVideo'] = $settings['eatVideo'] ?? null;
 
             // Hopper factors
@@ -948,9 +948,9 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
                 'camera_enable' => $this->camera_enable,
                 'cameraMultiRange' => $this->cameraMultiRange,
                 'cameraRangeTable' => $this->cameraRangeTable,
-                'mic_enable' => $this->mic_enable,
-                'irlight_enable' => $this->irlight_enable,
-                'timestamp_enable' => $this->timestamp_enable,
+                'microphone' => $this->microphone,
+                'night' => $this->night,
+                'timeDisplay' => $this->timeDisplay,
                 'eatVideo' => $this->eatVideo,
 
                 // Hopper factors

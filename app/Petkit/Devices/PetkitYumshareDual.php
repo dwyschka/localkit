@@ -360,9 +360,9 @@ class PetkitYumshareDual implements DeviceDefinition, Snapshot, BluetoothProxyIn
             'btMac' => $this->device->bt_mac,
             'typeCode' => (int)$config['typeCode'],
             'settings' => [
-                'timestamp_enable' => (int)$config['timestamp_enable'],
-                'irlight_enable' => (int)$config['irlight_enable'],
-                'mic_enable' => (int)$config['mic_enable'],
+                'timeDisplay' => (int)$config['timeDisplay'],
+                'night' => (int)$config['night'],
+                'microphone' => (int)$config['microphone'],
                 'factor1' => (int)$config['factor1'],
                 'factor2' => (int)$config['factor2'],
                 'foodWarn' => (int)$config['foodWarn'],

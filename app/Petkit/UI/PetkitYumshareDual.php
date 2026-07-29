@@ -96,15 +96,15 @@ class PetkitYumshareDual
                     ->helperText('Turning off the camera will not affect food dispensing, bit it will disable live streaming, playback, remaining food detection in the bowl, and other video releated functions')
                     ->label('Camera Switch'),
 
-                Forms\Components\Toggle::make('configuration.settings.mic_enable')
+                Forms\Components\Toggle::make('configuration.settings.microphone')
                     ->helperText('Enable/Disable sound collection')
                     ->label('Microphone'),
 
-                Forms\Components\Toggle::make('configuration.settings.irlight_enable')
+                Forms\Components\Toggle::make('configuration.settings.night')
                     ->helperText('Enable infrared night vision in dark environment')
                     ->label('Night Vision'),
 
-                Forms\Components\Toggle::make('configuration.settings.timestamp_enable')
+                Forms\Components\Toggle::make('configuration.settings.timeDisplay')
                     ->label('Timestamp Display'),
 
                 Forms\Components\Toggle::make('configuration.settings.smartFrame')
