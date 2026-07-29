@@ -109,6 +109,16 @@ class PetkitYumshareDual
                     ->label('Pet Tracking')
                     ->helperText('Highlight the pet when it is detected'),
 
+                Forms\Components\Toggle::make('configuration.settings.feedPicture')
+                    ->label('Feeding Photo')
+                    ->helperText('Save a photo to the cloud when food is dispensed'),
+
+                Forms\Components\TextInput::make('configuration.settings.attireId')
+                    ->label('Display Theme (Attire ID)')
+                    ->helperText('ID of the selected display theme / costume overlay (-1 = none)')
+                    ->numeric()
+                    ->minValue(-1),
+
                 Forms\Components\Fieldset::make('Detection')->schema([
                     Forms\Components\Toggle::make('configuration.settings.petDetection')
                         ->helperText('For events of pet visiting the feeder')
@@ -149,7 +159,14 @@ class PetkitYumshareDual
                             2 => 2,
                             3 => 3,
                             4 => 4
-                        ])
+                        ]),
+
+                    Forms\Components\TextInput::make('configuration.settings.detectInterval')
+                        ->label('Detection Interval')
+                        ->helperText('Minimum time between detection notifications (seconds)')
+                        ->numeric()
+                        ->minValue(0)
+                        ->suffix('sec'),
                 ])
             ]),
 
@@ -296,6 +313,12 @@ class PetkitYumshareDual
                 Forms\Components\Toggle::make('configuration.settings.soundEnable')->label('Voice for Food Dispensing'),
                 Forms\Components\Toggle::make('configuration.settings.feedSound')->label('Feed Completion Sound'),
 
+                Forms\Components\TextInput::make('configuration.settings.selectedSound')
+                    ->label('Selected Feeding Voice')
+                    ->helperText('ID of the selected feeding voice/sound (-1 = none)')
+                    ->numeric()
+                    ->minValue(-1),
+
                 Forms\Components\Fieldset::make('Do not Disturb')->columns(1)->schema([
                     Forms\Components\Toggle::make('configuration.settings.toneMode')->label('Do not disturb'),
                     Repeater::make('configuration.settings.toneMultiRange')
@@ -392,10 +415,23 @@ class PetkitYumshareDual
                     ),
 
             ]),
-            Forms\Components\Section::make('AI LAB')->schema([
-                Forms\Components\Select::make('configuration.settings.surplusControl')->options([
-                    0 => 'off',
-                ])
+            Forms\Components\Section::make('AI LAB')->columns(2)->schema([
+                Forms\Components\Toggle::make('configuration.settings.vomitDetection')
+                    ->label('Vomit Detection')
+                    ->helperText('Uses AI behavior recognition to detect signs of vomiting in cats and sends an instant notification'),
+
+                Forms\Components\Select::make('configuration.settings.surplusControl')
+                    ->label('Surplus Food Control')
+                    ->helperText('Pause feeding while surplus food remains in the bowl')
+                    ->options([
+                        0 => 'off',
+                    ]),
+
+                Forms\Components\TextInput::make('configuration.settings.surplusStandard')
+                    ->label('Surplus Food Standard')
+                    ->helperText('Minimum amount of surplus food in the bowl before feeding pauses')
+                    ->numeric()
+                    ->minValue(0),
             ]),
 
             Forms\Components\Section::make('Unknown')->columns(3)->schema([
@@ -405,6 +441,23 @@ class PetkitYumshareDual
                     ->viewData(['message' => 'Its Unknown, because the changes are not verified']),
                 Forms\Components\Toggle::make('configuration.settings.shareOpen')->label('Share Open'),
                 Forms\Components\Toggle::make('configuration.settings.multiConfig')->label('Multi Config'),
+
+                Forms\Components\Toggle::make('configuration.settings.upload')
+                    ->label('Upload')
+                    ->helperText('Enable cloud upload (unverified)'),
+
+                Forms\Components\Toggle::make('configuration.settings.log_upload')
+                    ->label('Log Upload')
+                    ->helperText('Upload device logs (MQTT property: logSwitch)'),
+
+                Forms\Components\Toggle::make('configuration.settings.logo_cn')
+                    ->label('Logo CN')
+                    ->helperText('Region logo flag (unverified)'),
+
+                Forms\Components\TextInput::make('configuration.settings.CTime')
+                    ->label('CTime')
+                    ->helperText('Unverified numeric value')
+                    ->numeric(),
             ]),
 
 
