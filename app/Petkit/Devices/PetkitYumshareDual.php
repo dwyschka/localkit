@@ -467,12 +467,14 @@ class PetkitYumshareDual implements DeviceDefinition, Snapshot, BluetoothProxyIn
     {
         $settings = $this->getDevice()->configuration();
 
-        //IP
-        $pattern = '/Ip:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/';
+        //IP - reported inside the `other` string, key/value may or may not be quoted (e.g. Ip:"x.x.x.x" or "Ip":x.x.x.x)
+        $pattern = '/(?:^|,)Ip:\\\\?"(\d{1,3}(?:\.\d{1,3}){3})\\\\?"/';
         $match = Str::of($content->other)->match($pattern);
 
+        if ($match->value() !== null) {
+            $settings->ipAddress = $match->value();
+        }
 
-        $settings->ipAddress = $match->value();
         $settings->infrared = $content->ir;
         $settings->bowl = $content->bowl;
         $settings->door = $content->door;
