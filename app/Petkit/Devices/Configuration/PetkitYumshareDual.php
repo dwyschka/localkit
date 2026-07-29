@@ -28,7 +28,7 @@ use WendellAdriel\ValidatedDTO\Casting\StringCast;
  * NOTE: the property names must match the device's setting keys exactly, since
  * {@see \App\Petkit\Devices\PetkitYumshareDual::propertyChange()} diffs the
  * stored `settings` array and forwards the changed keys straight to the device.
- * The real device uses a mix of snake_case (e.g. camera_enable) and
+ * The real device uses a mix of snake_case (e.g. sche_enable) and
  * camelCase (e.g. moveDetection) setting keys - both are kept verbatim below.
  */
 class PetkitYumshareDual extends DeviceConfigurationDTO implements ConfigurationInterface, Video, Snapshot, HasCamera
@@ -146,15 +146,6 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
     )]
     public int $bowl;
 
-    #[BinarySensor(
-        technicalName: 'infrared',
-        name: 'Infrared',
-        valueTemplate: '{{ value_json.states.infrared ? "on": "off" }}',
-        payloadOn: true,
-        payloadOff: false
-    )]
-    public bool $infrared;
-
     #[Image(
         technicalName: 'last_snapshot',
         name: 'Snapshot',
@@ -221,19 +212,19 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
 
     // Camera settings
     #[HASwitch(
-        technicalName: 'camera_enable',
+        technicalName: 'camera',
         name: 'Camera Switch',
         commandTopic: 'setting/set',
         icon: 'mdi:camera',
-        valueTemplate: '{{ value_json.settings.camera_enable }}',
-        commandTemplate: '{"camera_enable":{{ value }}}',
+        valueTemplate: '{{ value_json.settings.camera }}',
+        commandTemplate: '{"camera":{{ value }}}',
         payloadOn: true,
         payloadOff: false,
         stateOn: true,
         stateOff: false,
         entityCategory: 'config'
     )]
-    public bool $camera_enable;
+    public bool $camera;
 
     public array $cameraMultiRange;
     public array $cameraRangeTable;
@@ -574,7 +565,6 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
             'petDetected' => ['bool'],
             'door' => ['bool'],
             'bowl' => ['integer'],
-            'infrared' => ['bool'],
             'lastSnapshot' => ['nullable', 'string'],
             'stream' => ['nullable', 'string'],
 
@@ -592,7 +582,7 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
             'CTime' => ['integer'],
 
             // Camera
-            'camera_enable' => ['bool'],
+            'camera' => ['bool'],
             'cameraMultiRange' => ['array'],
             'cameraRangeTable' => ['array'],
             'microphone' => ['bool'],
@@ -658,7 +648,6 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
             'petDetected' => false,
             'door' => false,
             'bowl' => -1,
-            'infrared' => false,
             'lastSnapshot' => null,
             'stream' => null,
 
@@ -676,7 +665,7 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
             'CTime' => 0,
 
             // Camera
-            'camera_enable' => true,
+            'camera' => true,
             'cameraMultiRange' => [[0, 1440]],
             'cameraRangeTable' => $this->defaultRangeTable(),
             'microphone' => true,
@@ -744,7 +733,6 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
             'petDetected' => new BooleanCast(),
             'door' => new BooleanCast(),
             'bowl' => new IntegerCast(),
-            'infrared' => new BooleanCast(),
             'lastSnapshot' => new StringCast(),
             'stream' => new StringCast(),
 
@@ -762,7 +750,7 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
             'CTime' => new IntegerCast(),
 
             // Camera
-            'camera_enable' => new BooleanCast(),
+            'camera' => new BooleanCast(),
             'cameraMultiRange' => new ArrayCast(),
             'cameraRangeTable' => new ArrayCast(),
             'microphone' => new BooleanCast(),
@@ -829,7 +817,6 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
             $data['petDetected'] = $states['petDetected'] ?? null;
             $data['door'] = $states['door'] ?? null;
             $data['bowl'] = $states['bowl'] ?? null;
-            $data['infrared'] = $states['infrared'] ?? null;
             $data['lastSnapshot'] = $states['lastSnapshot'] ?? null;
             $data['stream'] = $states['stream'] ?? null;
         }
@@ -856,7 +843,7 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
             $data['CTime'] = $settings['CTime'] ?? null;
 
             // Camera settings
-            $data['camera_enable'] = $settings['camera_enable'] ?? null;
+            $data['camera'] = $settings['camera'] ?? null;
             $data['cameraMultiRange'] = $settings['cameraMultiRange'] ?? null;
             $data['cameraRangeTable'] = $settings['cameraRangeTable'] ?? null;
             $data['microphone'] = $settings['microphone'] ?? null;
@@ -924,7 +911,6 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
                 'moveDetected' => $this->moveDetected,
                 'eatDetected' => $this->eatDetected,
                 'petDetected' => $this->petDetected,
-                'infrared' => $this->infrared,
             ],
             'settings' => [
                 'shareOpen' => $this->shareOpen,
@@ -945,7 +931,7 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
                 'CTime' => $this->CTime,
 
                 // Camera settings
-                'camera_enable' => $this->camera_enable,
+                'camera' => $this->camera,
                 'cameraMultiRange' => $this->cameraMultiRange,
                 'cameraRangeTable' => $this->cameraRangeTable,
                 'microphone' => $this->microphone,

@@ -92,7 +92,7 @@ class PetkitYumshareDual
                 ->hidden(fn($record) => is_null($record->configuration()->ipAddress) || !$record->mqtt_connected),
 
             Forms\Components\Section::make('Camera Settings')->columns(2)->schema([
-                Forms\Components\Toggle::make('configuration.settings.camera_enable')
+                Forms\Components\Toggle::make('configuration.settings.camera')
                     ->helperText('Turning off the camera will not affect food dispensing, bit it will disable live streaming, playback, remaining food detection in the bowl, and other video releated functions')
                     ->label('Camera Switch'),
 
