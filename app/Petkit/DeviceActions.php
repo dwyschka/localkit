@@ -35,6 +35,7 @@ class DeviceActions
     public const RESET_N50 = 'reset_n50';
     public const RESET_N60 = 'reset_n60';
     public const RESET_CARDBOARD = 'reset_cardboard';
+    public const RESET_DESICCANT = 'reset_desiccant';
     public const START_FEEDING = 'start_feeder';
 
     public const TAKE_SNAPSHOT = 'take_snapshot';
@@ -148,6 +149,14 @@ class DeviceActions
                 })
                 ->action(function (Device $record) {
                     $record->definition()->resetCardboard($record);
+                }),
+            Action::make('Reset Desiccant')
+                ->visible(function (Device $record) {
+                    return $record->definition()->hasAction(self::RESET_DESICCANT);
+                })
+                ->requiresConfirmation()
+                ->action(function (Device $record) {
+                    $record->definition()->resetDesiccant($record);
                 }),
             Action::make('Start Odour')
                 ->visible(function (Device $record) {

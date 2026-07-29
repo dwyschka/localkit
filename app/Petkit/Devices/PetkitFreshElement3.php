@@ -35,6 +35,7 @@ class PetkitFreshElement3 implements DeviceDefinition, BluetoothProxyInterface
     protected array $actions = [
         DeviceActions::START_FEEDING,
         DeviceActions::REBOOT,
+        DeviceActions::RESET_DESICCANT,
     ];
     public static $workingStates = [
         DeviceStates::WORKING, DeviceStates::IDLE,
@@ -208,6 +209,19 @@ class PetkitFreshElement3 implements DeviceDefinition, BluetoothProxyInterface
 
     public function configurationDefinition(): ConfigurationInterface {
         return \App\Petkit\Devices\Configuration\PetkitFreshElement3::fromDevice($this->getDevice());
+    }
+
+    public function resetDesiccant(Device $record): void
+    {
+        $configuration = $this->configurationDefinition();
+        $durability = $configuration->desiccantDurability;
+        $nextChange = Carbon::now()->addDays((int)$durability);
+
+        $configuration->desiccantNextChange = $nextChange->timestamp;
+
+        $record->update([
+            'configuration' => $configuration->toArray()
+        ]);
     }
 
     #[HomeassistantTopic(topic: 'setting/set')]

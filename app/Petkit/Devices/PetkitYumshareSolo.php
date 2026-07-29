@@ -22,6 +22,7 @@ use App\Petkit\DeviceActions;
 use App\Petkit\DeviceDefinition;
 use App\Petkit\Devices\Configuration\ConfigurationInterface;
 use App\Petkit\DeviceStates;
+use Carbon\Carbon;
 use Illuminate\Support\Str;
 use PhpMqtt\Client\Facades\MQTT;
 
@@ -31,7 +32,7 @@ class PetkitYumshareSolo implements DeviceDefinition, Snapshot, BluetoothProxyIn
         DeviceStates::WORKING, DeviceStates::IDLE,
     ];
     protected array $actions = [
-        DeviceActions::START_FEEDING, DeviceActions::TAKE_SNAPSHOT
+        DeviceActions::START_FEEDING, DeviceActions::TAKE_SNAPSHOT, DeviceActions::RESET_DESICCANT
     ];
 
     public function __construct(protected Device $device)
@@ -213,6 +214,19 @@ class PetkitYumshareSolo implements DeviceDefinition, Snapshot, BluetoothProxyIn
     public function configurationDefinition(): ConfigurationInterface
     {
         return Configuration\PetkitYumshareSolo::fromDevice($this->getDevice());
+    }
+
+    public function resetDesiccant(Device $record): void
+    {
+        $configuration = $this->configurationDefinition();
+        $durability = $configuration->desiccantDurability;
+        $nextChange = Carbon::now()->addDays((int)$durability);
+
+        $configuration->desiccantNextChange = $nextChange->timestamp;
+
+        $record->update([
+            'configuration' => $configuration->toArray()
+        ]);
     }
 
     public function configuration()
