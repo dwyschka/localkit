@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class DevSignupController extends Controller
 {
@@ -38,6 +39,13 @@ class DevSignupController extends Controller
         $device = Device::updateOrCreate([
             'serial_number' => $request->get('sn'),
         ], $update);
+
+        if (empty($device->secret) || empty($device->mqtt_subdomain)) {
+            $device->update([
+                'secret' => $device->secret ?: Str::substr(md5(Str::random(16)), 0, 16),
+                'mqtt_subdomain' => $device->mqtt_subdomain ?: 'localkit',
+            ]);
+        }
 
 //        if(is_null($device) || ($device?->proxy_mode ?? 1)) {
 //            return $this->proxy($request);

@@ -35,6 +35,7 @@ class PetkitFreshElementSolo implements DeviceDefinition, BluetoothProxyInterfac
     protected array $actions = [
         DeviceActions::START_FEEDING,
         DeviceActions::REBOOT,
+        DeviceActions::RESET_DESICCANT,
     ];
     public static $workingStates = [
         DeviceStates::WORKING, DeviceStates::IDLE,
@@ -149,10 +150,12 @@ class PetkitFreshElementSolo implements DeviceDefinition, BluetoothProxyInterfac
         Reboot::dispatchSync($record);
     }
 
-    public function startFeeding(Device $record): void
+    public function startFeeding(Device $record, ?int $amount = null): void
     {
-        FeedRealtime::dispatchSync($record, $this->device->configuration['settings']['amount'] ?? 10);
-        ServiceStart::dispatchSync($record, $this->device->configuration['settings']['amount'] ?? 10);
+        $amount ??= $this->device->configuration['settings']['amount'] ?? 10;
+
+        FeedRealtime::dispatchSync($record, $amount);
+        ServiceStart::dispatchSync($record, $amount);
     }
     public static function deviceName()
     {
@@ -206,6 +209,19 @@ class PetkitFreshElementSolo implements DeviceDefinition, BluetoothProxyInterfac
 
     public function configurationDefinition(): ConfigurationInterface {
         return \App\Petkit\Devices\Configuration\PetkitFreshElementSolo::fromDevice($this->getDevice());
+    }
+
+    public function resetDesiccant(Device $record): void
+    {
+        $configuration = $this->configurationDefinition();
+        $durability = $configuration->desiccantDurability;
+        $nextChange = Carbon::now()->addDays((int)$durability);
+
+        $configuration->desiccantNextChange = $nextChange->timestamp;
+
+        $record->update([
+            'configuration' => $configuration->toArray()
+        ]);
     }
 
     #[HomeassistantTopic(topic: 'setting/set')]

@@ -26,7 +26,7 @@ class ServiceCommand extends Command
     ];
 
     protected array $services = [
-        'localkit-homeassistant', 'localkit-go2rtc', 'localkit-listen'
+        'localkit-homeassistant', 'localkit-listen'
     ];
 
     /**

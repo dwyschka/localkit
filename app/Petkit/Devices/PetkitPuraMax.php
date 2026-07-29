@@ -19,6 +19,7 @@ use App\MQTT\GenericReply;
 use App\MQTT\OtaMessage;
 use App\MQTT\UserGet;
 use App\Petkit\BluetoothDevices\BluetoothProxyInterface;
+use App\Petkit\BluetoothDevices\K3\Configuration as K3Configuration;
 use App\Petkit\BluetoothDevices\Message;
 use App\Petkit\DeviceActions;
 use App\Petkit\DeviceDefinition;
@@ -605,6 +606,25 @@ class PetkitPuraMax implements DeviceDefinition, BluetoothProxyInterface
         return [
             'lightMultiRange' =>$setting->lightMultiRange ?? [],
             'distrubMultiRange' => $setting->disturbMultiRange ?? [],
+        ];
+    }
+
+    public function toK3DeviceInfo(): array
+    {
+        $k3 = $this->getK3();
+        $config = $k3?->configuration() ?? new K3Configuration([]);
+
+        return [
+            'k3Config' => [
+                'config' => [
+                    'standard' => $config->standard,
+                    'lightness' => $config->lightness,
+                    'lowVoltage' => $config->lowVoltage,
+                    'refreshTotalTime' => $config->refreshTotalTime,
+                    'singleRefreshTime' => $config->singleRefreshTime,
+                    'singleLightTime' => $config->singleLightTime,
+                ],
+            ],
         ];
     }
 

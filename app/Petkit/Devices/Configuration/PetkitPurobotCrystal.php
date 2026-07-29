@@ -70,8 +70,8 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
         deviceClass: 'motion',
         valueTemplate: '{{ value_json.states.moveDetected }}',
         entityCategory: 'diagnostic',
-        payloadOn: true,
-        payloadOff: false
+        payloadOn: '1',
+        payloadOff: '0'
     )]
     public bool $moveDetected;
 
@@ -82,19 +82,10 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
         deviceClass: 'motion',
         valueTemplate: '{{ value_json.states.petDetected }}',
         entityCategory: 'diagnostic',
-        payloadOn: true,
-        payloadOff: false
+        payloadOn: '1',
+        payloadOff: '0'
     )]
     public bool $petDetected;
-
-    #[BinarySensor(
-        technicalName: 'infrared',
-        name: 'Infrared',
-        valueTemplate: '{{ value_json.states.infrared ? "on": "off" }}',
-        payloadOn: true,
-        payloadOff: false
-    )]
-    public bool $infrared;
 
     #[BinarySensor(
         technicalName: 'lightning',
@@ -103,8 +94,8 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
         deviceClass: 'light',
         valueTemplate: '{{ value_json.states.lightning }}',
         entityCategory: 'diagnostic',
-        payloadOn: true,
-        payloadOff: false
+        payloadOn: '1',
+        payloadOff: '0'
     )]
     public bool $lightning;
 
@@ -362,6 +353,19 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
     public bool $deepClean;
     public bool $downpos;
 
+    #[HASwitch(
+        technicalName: 'tumbling',
+        name: 'Tumbling',
+        commandTopic: 'setting/set',
+        icon: 'mdi:rotate-3d-variant',
+        valueTemplate: '{{ value_json.settings.tumbling }}',
+        commandTemplate: '{"tumbling":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
     public bool $tumbling;
     public int $lightest;
     public int $stillTime;
@@ -511,7 +515,19 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
 
     public bool $softModeClean;
 
-    // Not in Localkit UI - not exposed to HA
+    #[HASwitch(
+        technicalName: 'occult',
+        name: 'Occult Blood Detection',
+        commandTopic: 'setting/set',
+        icon: 'mdi:water-alert',
+        valueTemplate: '{{ value_json.settings.occult }}',
+        commandTemplate: '{"occult":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
     public bool $occult;
 
     // Detection
@@ -629,6 +645,26 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
     )]
     private $actionLevel = 1;
 
+    #[Button(
+        technicalName: 'action_start_lightning',
+        name: 'Start Lightning',
+        commandTopic: 'action/start',
+        icon: 'mdi:lightbulb-on',
+        commandTemplate: '{"action": "start_lightning"}',
+        availabilityTemplate: 'online',
+    )]
+    private $actionStartLightning = 1;
+
+    #[Button(
+        technicalName: 'action_stop_lightning',
+        name: 'Stop Lightning',
+        commandTopic: 'action/start',
+        icon: 'mdi:lightbulb-off',
+        commandTemplate: '{"action": "stop_lightning"}',
+        availabilityTemplate: 'online',
+    )]
+    private $actionStopLightning = 1;
+
     protected function rules(): array
     {
         return [
@@ -640,7 +676,6 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
             'error' => ['nullable', 'string'],
             'moveDetected' => ['bool'],
             'petDetected' => ['bool'],
-            'infrared' => ['bool'],
             'lightning' => ['bool'],
             'lastSnapshot' => ['nullable', 'string'],
             'stream' => ['nullable', 'string'],
@@ -745,7 +780,6 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
             'error' => null,
             'moveDetected' => false,
             'petDetected' => false,
-            'infrared' => false,
             'lightning' => false,
             'lastSnapshot' => null,
             'stream' => null,
@@ -875,7 +909,6 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
             'error' => new StringCast(),
             'moveDetected' => new BooleanCast(),
             'petDetected' => new BooleanCast(),
-            'infrared' => new BooleanCast(),
             'lightning' => new BooleanCast(),
             'lastSnapshot' => new StringCast(),
             'stream' => new StringCast(),
@@ -992,7 +1025,6 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
             $data['ipAddress'] = $states['ipAddress'] ?? null;
             $data['moveDetected'] = $states['moveDetected'] ?? null;
             $data['petDetected'] = $states['petDetected'] ?? null;
-            $data['infrared'] = $states['infrared'] ?? null;
             $data['lightning'] = $states['lightning'] ?? null;
             $data['lastSnapshot'] = $states['lastSnapshot'] ?? null;
             $data['stream'] = $states['stream'] ?? null;
@@ -1111,7 +1143,6 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
                 'stream' => $this->stream,
                 'moveDetected' => $this->moveDetected,
                 'petDetected' => $this->petDetected,
-                'infrared' => $this->infrared,
                 'lightning' => $this->lightning,
             ],
             'settings' => [
