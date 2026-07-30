@@ -106,6 +106,7 @@ class Device extends Model
             'd4h' => new Devices\PetkitYumshareSolo($this),
             'd4sh' => new Devices\PetkitYumshareDual($this),
             't7' => new Devices\PetkitPurobotCrystal($this),
+            't5' => new Devices\PetkitT5($this),
         };
     }
 
@@ -119,6 +120,7 @@ class Device extends Model
             'd4h' => Devices\Configuration\PetkitYumshareSolo::fromDevice($this),
             'd4sh' => Devices\Configuration\PetkitYumshareDual::fromDevice($this),
             't7' => Devices\Configuration\PetkitPurobotCrystal::fromDevice($this),
+            't5' => Devices\Configuration\PetkitT5::fromDevice($this),
         };
     }
 
@@ -132,6 +134,7 @@ class Device extends Model
             'd4h' => new UI\PetkitYumshareSolo($this),
             'd4sh' => new UI\PetkitYumshareDual($this),
             't7' => new UI\PetkitPurobotCrystal($this),
+            't5' => new UI\PetkitT5($this),
         };
     }
 
