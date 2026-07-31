@@ -1,0 +1,28 @@
+{
+    "identities": [
+        {
+            "name": "localkit",
+            "credentials": [
+                {
+                    "accessKey": "localkit",
+                    "secretKey": "localkit-secret-key"
+                }
+            ],
+            "actions": [
+                "Admin",
+                "Read",
+                "Write",
+                "List",
+                "Tagging"
+            ]
+        },
+        {
+            "name": "anonymous",
+            "actions": [
+                "Read:localkit",
+                "Write:localkit",
+                "List:localkit"
+            ]
+        }
+    ]
+}

@@ -38,9 +38,30 @@ services:
         environment:
             - LOCALKIT=http://localkit
 
+    seaweedfs:
+        image: chrislusf/seaweedfs:latest
+        container_name: seaweedfs
+        entrypoint: >
+            sh -c "
+            weed server -s3 -s3.port=8333 -s3.config=/etc/seaweedfs/s3.json -dir=/data -master.volumeSizeLimitMB=1024 -ip=seaweedfs -filer=true &
+            until weed shell -filer=localhost:8888 -c 'fs.mkdir /buckets/localkit' >/dev/null 2>&1; do sleep 1; done;
+            wait
+            "
+        ports:
+            - 9333:9333
+            - 8888:8888
+            - 8333:8333
+        volumes:
+            - seaweedfs-data:/data
+            - ./seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro
+        networks:
+            localkit:
+        restart: always
+
 volumes:
     localkit-storage:
     localkit-logs:
+    seaweedfs-data:
 
 networks:
     localkit:
