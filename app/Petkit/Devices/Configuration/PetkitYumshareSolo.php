@@ -25,6 +25,12 @@ use WendellAdriel\ValidatedDTO\Casting\StringCast;
 
 class PetkitYumshareSolo extends DeviceConfigurationDTO implements ConfigurationInterface, Video, Snapshot, HasCamera
 {
+    // Real Petkit device type code unconfirmed for d4h; falls back to 1.
+    public function deviceCode(): int
+    {
+        return 1;
+    }
+
     // Basic settings
     public int $factor;
     public int $amount;

@@ -22,12 +22,18 @@ use App\Petkit\DeviceActions;
 use App\Petkit\DeviceDefinition;
 use App\Petkit\Devices\Configuration\ConfigurationInterface;
 use App\Petkit\DeviceStates;
+use App\Petkit\Interfaces\HasCamera;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 use PhpMqtt\Client\Facades\MQTT;
 
-class PetkitYumshareDual implements DeviceDefinition, Snapshot, BluetoothProxyInterface
+class PetkitYumshareDual implements DeviceDefinition, Snapshot, BluetoothProxyInterface, HasCamera
 {
+    public function deviceCode(): int
+    {
+        return 25;
+    }
+
     public static $workingStates = [
         DeviceStates::WORKING, DeviceStates::IDLE,
     ];

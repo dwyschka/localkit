@@ -33,6 +33,11 @@ use WendellAdriel\ValidatedDTO\Casting\StringCast;
  */
 class PetkitYumshareDual extends DeviceConfigurationDTO implements ConfigurationInterface, Video, Snapshot, HasCamera
 {
+    public function deviceCode(): int
+    {
+        return 25;
+    }
+
     // Basic settings
     #[Number(
         technicalName: 'amount1',

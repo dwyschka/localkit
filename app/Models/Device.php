@@ -140,6 +140,13 @@ class Device extends Model
         return $this->definition() instanceof HasCamera;
     }
 
+    public function deviceCode(): int
+    {
+        $definition = $this->definition();
+
+        return $definition instanceof HasCamera ? $definition->deviceCode() : 1;
+    }
+
     public function bleLinked()
     {
         return $this->hasMany(BluetoothDevice::class, 'link_with', 'id');

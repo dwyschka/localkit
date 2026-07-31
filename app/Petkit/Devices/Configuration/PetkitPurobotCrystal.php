@@ -33,6 +33,12 @@ use WendellAdriel\ValidatedDTO\Casting\StringCast;
  */
 class PetkitPurobotCrystal extends DeviceConfigurationDTO implements ConfigurationInterface, Video, Snapshot, HasCamera
 {
+    // Real Petkit device type code unconfirmed for t7; falls back to 1.
+    public function deviceCode(): int
+    {
+        return 1;
+    }
+
     public array $schedule;
 
     // States
