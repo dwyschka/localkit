@@ -26,8 +26,8 @@ class DevOssStsInfoNewV2Resource extends PetkitHttpResource
         $endpoint = sprintf(
             'http://%s:%d/%s/',
             config('petkit.local_ip'),
-            config('s3.port'),
-            config('s3.bucket')
+            config('seaweedfs.port'),
+            config('seaweedfs.bucket')
         );
 
         $pathPrefix = sprintf('d4sh/%s', $this->petkit_id);
@@ -41,7 +41,7 @@ class DevOssStsInfoNewV2Resource extends PetkitHttpResource
             'cycleType' => $cycleType,
             'pathPrefix' => $pathPrefix,
             'aesKey' => $aesKey,
-            'bucket' => config('s3.bucket'),
+            'bucket' => config('seaweedfs.bucket'),
             'endpoint' => $endpoint,
             'expiration' => $expiration,
         ]);
