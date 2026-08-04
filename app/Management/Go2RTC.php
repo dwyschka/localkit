@@ -3,50 +3,77 @@
 namespace App\Management;
 
 use App\Models\Device;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
-use Symfony\Component\Yaml\Yaml;
+use Illuminate\Support\Facades\Http;
 
+/**
+ * Every HasCamera device runs its own go2rtc server on its local IP. This client
+ * builds the URLs to reach that per-device server - there is no central go2rtc.
+ */
 class Go2RTC
 {
-
-    public function __construct(protected S6 $s6)
+    public function streamUrl(Device $device, ?string $stream = null): string
     {
+        return $this->url($device, '/stream.html', $stream ?? config('go2rtc.stream'));
     }
 
-    public function enable(): void
+    public function frameUrl(Device $device, ?string $stream = null): string
     {
-        Config::set('app.enable.go2rtc', true);
+        return $this->url($device, '/api/frame.jpeg', $stream ?? config('go2rtc.stream'));
     }
 
-    public function disable(): void
+    /**
+     * Query the device's go2rtc for every configured stream name.
+     *
+     * @return array<int, string>
+     */
+    public function streams(Device $device): array
     {
-        Config::set('app.enable.go2rtc', false);
-    }
+        $ip = $this->deviceIp($device);
+        if ($ip === null) {
+            return [];
+        }
 
-    public function createConfigYml(Collection $devices)
-    {
+        try {
+            $response = Http::timeout(3)->get(sprintf('http://%s:%d/api/streams', $ip, config('go2rtc.port')));
 
-        $go2rtcConfig = config('go2rtc.settings');
-        $tserver = \config('go2rtc.petkit.tserverUrl');
-
-        $go2rtcConfig['streams'] = $devices->mapWithKeys(function($device) use ($tserver) {
-            if($device->configuration['states']['ipAddress'] === null) {
-                return false;
+            if (!$response->successful()) {
+                return [];
             }
-            return [$device->name => sprintf($tserver, $device->configuration['states']['ipAddress'])];
-        })->toArray();
 
-
-        Storage::disk('local')->put('go2rtc.yml', Yaml::dump($go2rtcConfig));
+            return array_keys($response->json() ?? []);
+        } catch (\Throwable $e) {
+            return [];
+        }
     }
 
-    public function streamUrl(Device $device): string
+    /**
+     * Map every stream on the device to its embeddable player URL.
+     *
+     * @return array<string, string>
+     */
+    public function streamUrls(Device $device): array
     {
+        $urls = [];
+        foreach ($this->streams($device) as $stream) {
+            $urls[$stream] = $this->streamUrl($device, $stream);
+        }
 
-        return sprintf('http://%s:1984/stream.html?src=%s',config('petkit.local_ip'), $device->name);
+        return $urls;
     }
 
+    private function url(Device $device, string $path, string $stream): string
+    {
+        return sprintf(
+            'http://%s:%d%s?src=%s',
+            $this->deviceIp($device),
+            config('go2rtc.port'),
+            $path,
+            $stream
+        );
+    }
+
+    private function deviceIp(Device $device): ?string
+    {
+        return $device->configuration['states']['ipAddress'] ?? null;
+    }
 }

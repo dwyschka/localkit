@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Management\Go2RTC;
 use App\Models\Device;
 use App\MQTT\FeedRealtimeMessage;
 use App\MQTT\PropertySetMessage;
@@ -46,7 +47,7 @@ class TakeSnapshot implements ShouldQueue
 
 
         Storage::disk('snapshots')->writeStream(
-            $jpegFileName, Http::get('http://localhost:1984/api/frame.jpeg?src='. $this->device->name)->resource()
+            $jpegFileName, Http::get(app(Go2RTC::class)->frameUrl($this->device))->resource()
         );
 
 

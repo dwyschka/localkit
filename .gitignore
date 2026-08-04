@@ -20,3 +20,6 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+storage/localkit.sqlite
+/build
+/scripts/.build-cache

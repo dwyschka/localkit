@@ -31,7 +31,7 @@ class HeartbeatController extends Controller
             'last_heartbeat' => time()
         ]);
 
-        Log::info($deviceId, ['heartbeat']);
+        Log::info('Heartbeat', ['device' => $deviceId, 'request' => $request->all()]);
         return new HeartbeatResource($device);
     }
 }

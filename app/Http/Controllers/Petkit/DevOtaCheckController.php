@@ -8,6 +8,7 @@ use App\Http\Resources\DevOtaCheckResource;
 use App\Http\Resources\DevOtaResource;
 use App\Models\Device;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class DevOtaCheckController extends Controller
 {
@@ -19,9 +20,17 @@ class DevOtaCheckController extends Controller
         $device = Device::wherePetkitId($deviceId)->first();
 
         if($device?->ota_state) {
-            $device->update([
-                'ota_state' => 0,
-            ]);
+            Log::info('Ota Check', ['device' => $device->id]);
+//            $device->ota_state = 0;
+//            $device->saveQuietly();
+//
+//            ob_start();
+//            $this->proxy($request, false);
+//            $response = ob_get_clean();
+//
+//            dd('wt');
+//            Log::info('otacheck', ['proxy' => $response]);
+
             return new DevOtaResource($device);
         }
 

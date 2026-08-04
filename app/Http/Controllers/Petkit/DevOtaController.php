@@ -8,6 +8,7 @@ use App\Http\Resources\DevOtaCheckResource;
 use App\Models\Device;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class DevOtaController extends Controller
 {
@@ -18,18 +19,30 @@ class DevOtaController extends Controller
         $deviceId = PetkitHeader::petkitId($request->header('X-Device'));
         $device = Device::wherePetkitId($deviceId)->first();
 
-        if($device?->ota_state) {
-            return new JsonResponse([
-                'result' => 'success'
-            ]);
-        }
+        Log::info('OTA', [$request->toArray()]);
 
         if(is_null($device) || ($device?->proxy_mode ?? 1)) {
             return $this->proxy($request);
         }
 
-        return new JsonResponse([
-            'result' => 'success'
-        ]);
+        if($device?->ota_state) {
+            if($request->input('success') === '1') {
+                $device->update([
+                    'ota_state' => 0,
+                    'ota_available' => 0
+                ]);
+                Log::info('Ota Complete', ['device' => $device->id]);
+            } else {
+                Log::info('Ota Start', ['device' => $device->id]);
+            }
+
+            }
+
+            $data = ['result' => 'success'];
+            $json = json_encode($data);
+            return response($json, 200)
+                ->header('Content-Type', 'application/json;charset=utf-8')
+                ->header('Content-Length', mb_strlen($json, '8bit'));
+                
     }
 }

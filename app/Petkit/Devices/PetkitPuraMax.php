@@ -6,6 +6,7 @@ use App\DTOs\MultiRangeDTO;
 use App\DTOs\PetkitDTOInterface;
 use App\Helpers\JsonHelper;
 use App\Homeassistant\HomeassistantTopic;
+use App\Jobs\Reboot;
 use App\Jobs\ServiceConnect;
 use App\Jobs\ServiceEnd;
 use App\Jobs\ServiceStart;
@@ -18,6 +19,7 @@ use App\MQTT\GenericReply;
 use App\MQTT\OtaMessage;
 use App\MQTT\UserGet;
 use App\Petkit\BluetoothDevices\BluetoothProxyInterface;
+use App\Petkit\BluetoothDevices\K3\Configuration as K3Configuration;
 use App\Petkit\BluetoothDevices\Message;
 use App\Petkit\DeviceActions;
 use App\Petkit\DeviceDefinition;
@@ -41,7 +43,8 @@ class PetkitPuraMax implements DeviceDefinition, BluetoothProxyInterface
         DeviceActions::STOP_LIGHTNING,
         DeviceActions::RESET_N50,
         DeviceActions::LINK_WITH_K3,
-        DeviceActions::UNLINK_WITH_K3
+        DeviceActions::UNLINK_WITH_K3,
+        DeviceActions::REBOOT,
     ];
     public static $workingStates = [
         DeviceStates::WORKING, DeviceStates::IDLE, DeviceStates::PET_IN, DeviceStates::CLEANING, DeviceStates::MAINTENANCE,
@@ -277,6 +280,9 @@ class PetkitPuraMax implements DeviceDefinition, BluetoothProxyInterface
 
             case DeviceActions::STOP_MAINTENANCE:
                 return $hasAction && $this?->device?->working_state == DeviceStates::MAINTENANCE->value;
+
+            case DeviceActions::REBOOT:
+                return $hasAction && (bool)$this->device->mqtt_connected;
         }
 
         return $hasAction;
@@ -335,6 +341,11 @@ class PetkitPuraMax implements DeviceDefinition, BluetoothProxyInterface
         ]);
     }
 
+
+    public function reboot(Device $record): void
+    {
+        Reboot::dispatchSync($record);
+    }
 
     public static function deviceName()
     {
@@ -595,6 +606,25 @@ class PetkitPuraMax implements DeviceDefinition, BluetoothProxyInterface
         return [
             'lightMultiRange' =>$setting->lightMultiRange ?? [],
             'distrubMultiRange' => $setting->disturbMultiRange ?? [],
+        ];
+    }
+
+    public function toK3DeviceInfo(): array
+    {
+        $k3 = $this->getK3();
+        $config = $k3?->configuration() ?? new K3Configuration([]);
+
+        return [
+            'k3Config' => [
+                'config' => [
+                    'standard' => $config->standard,
+                    'lightness' => $config->lightness,
+                    'lowVoltage' => $config->lowVoltage,
+                    'refreshTotalTime' => $config->refreshTotalTime,
+                    'singleRefreshTime' => $config->singleRefreshTime,
+                    'singleLightTime' => $config->singleLightTime,
+                ],
+            ],
         ];
     }
 

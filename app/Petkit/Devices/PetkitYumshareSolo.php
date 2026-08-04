@@ -22,6 +22,7 @@ use App\Petkit\DeviceActions;
 use App\Petkit\DeviceDefinition;
 use App\Petkit\Devices\Configuration\ConfigurationInterface;
 use App\Petkit\DeviceStates;
+use Carbon\Carbon;
 use Illuminate\Support\Str;
 use PhpMqtt\Client\Facades\MQTT;
 
@@ -31,7 +32,7 @@ class PetkitYumshareSolo implements DeviceDefinition, Snapshot, BluetoothProxyIn
         DeviceStates::WORKING, DeviceStates::IDLE,
     ];
     protected array $actions = [
-        DeviceActions::START_FEEDING, DeviceActions::TAKE_SNAPSHOT
+        DeviceActions::START_FEEDING, DeviceActions::TAKE_SNAPSHOT, DeviceActions::RESET_DESICCANT
     ];
 
     public function __construct(protected Device $device)
@@ -215,6 +216,19 @@ class PetkitYumshareSolo implements DeviceDefinition, Snapshot, BluetoothProxyIn
         return Configuration\PetkitYumshareSolo::fromDevice($this->getDevice());
     }
 
+    public function resetDesiccant(Device $record): void
+    {
+        $configuration = $this->configurationDefinition();
+        $durability = $configuration->desiccantDurability;
+        $nextChange = Carbon::now()->addDays((int)$durability);
+
+        $configuration->desiccantNextChange = $nextChange->timestamp;
+
+        $record->update([
+            'configuration' => $configuration->toArray()
+        ]);
+    }
+
     public function configuration()
     {
         return $this->configurationDefinition()->toArray();
@@ -305,10 +319,12 @@ class PetkitYumshareSolo implements DeviceDefinition, Snapshot, BluetoothProxyIn
         }
     }
 
-    public function startFeeding(Device $record): void
+    public function startFeeding(Device $record, ?int $amount = null): void
     {
-        FeedRealtime::dispatchSync($record, $this->device->configuration['settings']['amount'] ?? 10);
-        ServiceStart::dispatchSync($record, $this->device->configuration['settings']['amount'] ?? 10);
+        $amount ??= $this->device->configuration['settings']['amount'] ?? 10;
+
+        FeedRealtime::dispatchSync($record, $amount);
+        ServiceStart::dispatchSync($record, $amount);
     }
 
     public function toOTA(): array
@@ -453,10 +469,13 @@ class PetkitYumshareSolo implements DeviceDefinition, Snapshot, BluetoothProxyIn
     {
         $settings = $this->getDevice()->configuration();
 
-        //IP
-        $pattern = '/Ip:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/';
+        //IP - reported inside the `other` string, key/value may or may not be quoted (e.g. Ip:"x.x.x.x" or "Ip":x.x.x.x)
+        $pattern = '/(?:^|,)Ip:\\\\?"(\d{1,3}(?:\.\d{1,3}){3})\\\\?"/';
         $match = Str::of($content->other)->match($pattern);
 
+        if ($match->value() !== null) {
+            $settings->ipAddress = $match->value();
+        }
 
         $settings->ipAddress = $match->value();
         $settings->infrared = $content->ir;

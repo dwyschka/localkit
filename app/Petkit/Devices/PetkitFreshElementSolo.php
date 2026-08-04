@@ -7,6 +7,7 @@ use App\Helpers\JsonHelper;
 use App\Helpers\Time;
 use App\Homeassistant\HomeassistantTopic;
 use App\Jobs\FeedRealtime;
+use App\Jobs\Reboot;
 use App\Jobs\ServiceConnect;
 use App\Jobs\ServiceEnd;
 use App\Jobs\ServiceStart;
@@ -32,7 +33,9 @@ use PhpMqtt\Client\Facades\MQTT;
 class PetkitFreshElementSolo implements DeviceDefinition, BluetoothProxyInterface
 {
     protected array $actions = [
-        DeviceActions::START_FEEDING
+        DeviceActions::START_FEEDING,
+        DeviceActions::REBOOT,
+        DeviceActions::RESET_DESICCANT,
     ];
     public static $workingStates = [
         DeviceStates::WORKING, DeviceStates::IDLE,
@@ -129,6 +132,8 @@ class PetkitFreshElementSolo implements DeviceDefinition, BluetoothProxyInterfac
         switch ($action) {
             case DeviceActions::START_FEEDING:
                 return $hasAction;
+            case DeviceActions::REBOOT:
+                return $hasAction && (bool)$this->device->mqtt_connected;
         }
 
         return $hasAction;
@@ -140,10 +145,17 @@ class PetkitFreshElementSolo implements DeviceDefinition, BluetoothProxyInterfac
         MQTT::connection('publisher')->publish($generic->getTopic(), $generic->getMessage());
     }
 
-    public function startFeeding(Device $record): void
+    public function reboot(Device $record): void
     {
-        FeedRealtime::dispatchSync($record, $this->device->configuration['settings']['amount'] ?? 10);
-        ServiceStart::dispatchSync($record, $this->device->configuration['settings']['amount'] ?? 10);
+        Reboot::dispatchSync($record);
+    }
+
+    public function startFeeding(Device $record, ?int $amount = null): void
+    {
+        $amount ??= $this->device->configuration['settings']['amount'] ?? 10;
+
+        FeedRealtime::dispatchSync($record, $amount);
+        ServiceStart::dispatchSync($record, $amount);
     }
     public static function deviceName()
     {
@@ -197,6 +209,19 @@ class PetkitFreshElementSolo implements DeviceDefinition, BluetoothProxyInterfac
 
     public function configurationDefinition(): ConfigurationInterface {
         return \App\Petkit\Devices\Configuration\PetkitFreshElementSolo::fromDevice($this->getDevice());
+    }
+
+    public function resetDesiccant(Device $record): void
+    {
+        $configuration = $this->configurationDefinition();
+        $durability = $configuration->desiccantDurability;
+        $nextChange = Carbon::now()->addDays((int)$durability);
+
+        $configuration->desiccantNextChange = $nextChange->timestamp;
+
+        $record->update([
+            'configuration' => $configuration->toArray()
+        ]);
     }
 
     #[HomeassistantTopic(topic: 'setting/set')]

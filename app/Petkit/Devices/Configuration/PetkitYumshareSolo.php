@@ -15,6 +15,7 @@ use App\Homeassistant\Select;
 use App\Homeassistant\Sensor;
 use App\Models\BluetoothDevice;
 use App\Models\Device;
+use App\Petkit\Interfaces\HasCamera;
 use Illuminate\Support\Facades\Storage;
 use WendellAdriel\ValidatedDTO\Casting\ArrayCast;
 use WendellAdriel\ValidatedDTO\Casting\BooleanCast;
@@ -22,7 +23,7 @@ use WendellAdriel\ValidatedDTO\Casting\DTOCast;
 use WendellAdriel\ValidatedDTO\Casting\IntegerCast;
 use WendellAdriel\ValidatedDTO\Casting\StringCast;
 
-class PetkitYumshareSolo extends DeviceConfigurationDTO implements ConfigurationInterface, Video, Snapshot
+class PetkitYumshareSolo extends DeviceConfigurationDTO implements ConfigurationInterface, Video, Snapshot, HasCamera
 {
     // Basic settings
     public int $factor;

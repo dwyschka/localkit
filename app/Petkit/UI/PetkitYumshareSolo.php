@@ -26,6 +26,12 @@ class PetkitYumshareSolo
     public function formFields(): array
     {
         return [
+            Forms\Components\Section::make('Stats')->schema([
+                Forms\Components\TextInput::make('configuration.states.ipAddress')
+                    ->label('IP Address')
+                    ->readOnly()
+                    ->disabled(true),
+            ]),
             Forms\Components\Section::make('Consumables')->columns(2)->schema([
                 Forms\Components\TextInput::make('configuration.consumables.desiccantDurability')->numeric(),
                 Forms\Components\TextInput::make('configuration.consumables.desiccantNextChange')->label('Next Reset in Days (Desiccant)')->formatStateUsing(function ($state) {
@@ -47,7 +53,7 @@ class PetkitYumshareSolo
             ]),
             Section::make('Media')->schema([
                 Forms\Components\View::make('camera_stream')->viewData(fn($record): array => [
-                    'stream' => app(Go2RTC::class)->streamUrl($record)
+                    'streams' => app(Go2RTC::class)->streamUrls($record)
                 ])
                     ->hidden(fn($record) => is_null($record->configuration()->ipAddress))
                     ->columnSpan('full'),

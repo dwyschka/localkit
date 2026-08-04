@@ -306,6 +306,21 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
         entityCategory: 'config'
     )]
     public bool $kitten;
+
+    #[HASwitch(
+        technicalName: 'sand_saving',
+        name: 'Litter-saving Mode',
+        commandTopic: 'setting/set',
+        icon: 'mdi:content-save',
+        valueTemplate: '{{ value_json.settings.sandSaving }}',
+        commandTemplate: '{"sandSaving":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
+    public bool $sandSaving;
     public int $stopTime;
     public SandFullWeightDTO $sandFullWeight;
 
@@ -493,6 +508,7 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
             'avoidRepeat' => ['bool'],
             'underweight' => ['bool'],
             'kitten' => ['bool'],
+            'sandSaving' => ['bool'],
             'stopTime' => ['integer', 'min:0'],
             'sandFullWeight' => ['array', 'size:5'],
             'sandFullWeight.*' => ['integer', 'min:0'],
@@ -535,6 +551,7 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
             'avoidRepeat' => true,
             'underweight' => false,
             'kitten' => false,
+            'sandSaving' => false,
             'stopTime' => 600,
             'sandFullWeight' => [],
             'disturbMode' => false,
@@ -591,6 +608,7 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
             'avoidRepeat' => new BooleanCast(),
             'underweight' => new BooleanCast(),
             'kitten' => new BooleanCast(),
+            'sandSaving' => new BooleanCast(),
             'stopTime' => new IntegerCast(),
             'sandFullWeight' => new DTOCast(SandFullWeightDTO::class),
             'disturbMode' => new BooleanCast(),
@@ -646,6 +664,7 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
         $data['avoidRepeat'] = $config['settings']['avoidRepeat'] ?? null;
         $data['underweight'] = $config['settings']['underweight'] ?? null;
         $data['kitten'] = $config['settings']['kitten'] ?? null;
+        $data['sandSaving'] = $config['settings']['sandSaving'] ?? null;
         $data['stopTime'] = $config['settings']['stopTime'] ?? null;
         $data['sandFullWeight'] = $config['settings']['sandFullWeight'] ?? null;
         $data['disturbMode'] = $config['settings']['disturbMode'] ?? null;
@@ -700,6 +719,7 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
                 'avoidRepeat' => $this->avoidRepeat,
                 'underweight' => $this->underweight,
                 'kitten' => $this->kitten,
+                'sandSaving' => $this->sandSaving,
                 'stopTime' => $this->stopTime,
                 'sandFullWeight' => $this->sandFullWeight,
                 'disturbMode' => $this->disturbMode,

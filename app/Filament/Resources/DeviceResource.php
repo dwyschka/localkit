@@ -8,9 +8,12 @@ use App\Jobs\ServiceStart;
 use App\Models\BluetoothDevice;
 use App\Models\Device;
 use App\Petkit\DeviceActions;
+use App\Petkit\Devices\PetkitFreshElement3;
 use App\Petkit\Devices\PetkitFreshElementSolo;
 use App\Petkit\Devices\PetkitPuraMax;
+use App\Petkit\Devices\PetkitPurobotCrystal;
 use App\Petkit\Devices\PetkitYumshareSolo;
+use App\Petkit\Devices\PetkitYumshareDual;
 use Filament\Actions\ActionGroup;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -39,8 +42,11 @@ class DeviceResource extends Resource
                 Forms\Components\TextInput::make('mac')->columnSpan('half')->readOnly(),
                 Forms\Components\Select::make('device_type')->options([
                     't4' => PetkitPuraMax::deviceName(),
+                    'd3' => PetkitFreshElement3::deviceName(),
                     'd4' => PetkitFreshElementSolo::deviceName(),
                     'd4h' => PetkitYumshareSolo::deviceName(),
+                    'd4sh' => PetkitYumshareDual::deviceName(),
+                    't7' => PetkitPurobotCrystal::deviceName(),
                 ])
                     ->columnSpan('half')->disabled(),
 
@@ -50,12 +56,19 @@ class DeviceResource extends Resource
                 Forms\Components\Toggle::make('ota_state')
                     ->helperText('If enabled, the MQTT Connection to Aliyun needs to be disabled')
                     ->columnSpan('half'),
+                Forms\Components\Toggle::make('ota_available')
+                    ->helperText('Set by the device firmware — indicates whether an OTA update is available')
+                    ->columnSpan('half')
+                    ->disabled(),
                 Forms\Components\Toggle::make('proxy_mode')
                     ->columnSpan('half')
                     ->helperText('If the field is disabled, please set a secret and the MQTT subdomain')
                     ->disabled(function ($record) {
                         return (empty($record->secret) || empty($record->mqtt_subdomain));
                     }),
+                Forms\Components\Toggle::make('debug_mode')
+                    ->columnSpan('half')
+                    ->helperText('Logs all incoming HTTP requests from this device to storage/logs/device_{serial}.log'),
 
                 Forms\Components\Fieldset::make('Device Configuration')->schema([
                     ...$form->getModelInstance()->ui()->formFields(),
@@ -73,8 +86,11 @@ class DeviceResource extends Resource
                     ->formatStateUsing(function (string $state) {
                         return match ($state) {
                             't4' => PetkitPuraMax::deviceName(),
+                            'd3' => PetkitFreshElement3::deviceName(),
                             'd4' => PetkitFreshElementSolo::deviceName(),
                             'd4h' => PetkitYumshareSolo::deviceName(),
+                            'd4sh' => PetkitYumshareDual::deviceName(),
+                            't7' => PetkitPurobotCrystal::deviceName(),
                         };
                     }),
                 Tables\Columns\TextColumn::make('name')->searchable(),
@@ -95,6 +111,8 @@ class DeviceResource extends Resource
                     })
                     ->color(fn(string $state): string => 'danger'),
                 Tables\Columns\TextColumn::make('serial_number'),
+                Tables\Columns\IconColumn::make('ota_available')
+                    ->boolean(),
                 Tables\Columns\TextColumn::make('bleLinked.name')
                     ->badge()
                     ->color('info')
@@ -133,7 +151,6 @@ class DeviceResource extends Resource
     {
         return [
             'index' => Pages\ListDevices::route('/'),
-            'create' => Pages\CreateDevice::route('/create'),
             'edit' => Pages\EditDevice::route('/{record}/edit'),
             'activities' => Pages\PetkitActivities::route('/order/{record}/activities'),
 

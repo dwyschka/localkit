@@ -15,6 +15,7 @@ class Number extends BaseEntity
         public string $name,
         public string $commandTopic,
         public string $icon = 'mdi:form-select',
+        public ?string $unitOfMeasurement = null,
         public ?string $valueTemplate = null,
         public ?string $commandTemplate = null,
         public string|int $payloadOn = 'ON',

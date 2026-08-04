@@ -8,12 +8,15 @@ use App\Models\Device;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class DevSignupController extends Controller
 {
 
     public function __invoke(string $deviceType, Request $request)
     {
+
 
         $update = [
             'firmware' => $request->get('firmware'),
@@ -26,6 +29,8 @@ class DevSignupController extends Controller
             'device_type' => $deviceType,
         ];
 
+        Log::info('DevSignupController', $update);
+
         if($request->get('id')) {
             $update['petkit_id'] = $request->get('id');
         }
@@ -35,9 +40,16 @@ class DevSignupController extends Controller
             'serial_number' => $request->get('sn'),
         ], $update);
 
-        if(is_null($device) || ($device?->proxy_mode ?? 1)) {
-            return $this->proxy($request);
+        if (empty($device->secret) || empty($device->mqtt_subdomain)) {
+            $device->update([
+                'secret' => $device->secret ?: Str::substr(md5(Str::random(16)), 0, 16),
+                'mqtt_subdomain' => $device->mqtt_subdomain ?: 'localkit',
+            ]);
         }
+
+//        if(is_null($device) || ($device?->proxy_mode ?? 1)) {
+//            return $this->proxy($request);
+//        }
 
         try {
             $device->update([

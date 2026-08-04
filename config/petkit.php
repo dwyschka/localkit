@@ -7,5 +7,5 @@ return [
     'bypass_auth_id' => env('BYPASS_AUTH_ID', 1),
     'homeassistant' => [
         'enabled' => env('HOMEASSISTANT_ENABLED', false),
-    ]
+    ],
 ];

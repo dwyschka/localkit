@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Localkit\OTA;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Log;
@@ -21,19 +22,23 @@ class HeartbeatOtaResource extends PetkitHttpResource
 
         $ts = time();
 
+        $firmware = app(OTA::class)->getAvailable($this->resource);
+
+        $data = [
+            'content' => json_encode([
+                "msgType" => 0,
+                "payload" => [
+                    "firmwareId" => $firmware['id'] ?? 33
+                ],
+                "type" => "ota",
+                "timestamp" => $ts
+            ]),
+            'time' => (time() * 1000),
+            'timestamp' => $ts
+        ];
+
         return [
-            [
-                'content' => json_encode([
-                    "msgType" => 0,
-                    "payload" => [
-                        "firmwareId" => 33
-                    ],
-                    "type" => "ota",
-                    "timestamp" => $ts
-                ]),
-                'time' => (time() * 1000),
-                'timestamp' => $ts
-            ]
+            $data
         ];
     }
 }

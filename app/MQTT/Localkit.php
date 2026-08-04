@@ -7,7 +7,7 @@ use Illuminate\Support\Str;
 
 class Localkit
 {
-    static protected $regEx = '/d_\w+_(\d{8}.?\d{5})/';
+    static protected $regEx = '/d_[a-z0-9]{2,4}_(?<serialNumber>[^|&,]+)/i';
     static protected array $topics = [
         'localkit/clients'
     ];
