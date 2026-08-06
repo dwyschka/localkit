@@ -36,7 +36,7 @@ use PhpMqtt\Client\Facades\MQTT;
  * not confirmed during firmware analysis, so they are intentionally left
  * unimplemented rather than guessed.
  */
-class PetkitW7H implements DeviceDefinition, Snapshot, BluetoothProxyInterface, HasCamera
+class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxyInterface, HasCamera
 {
     public static $workingStates = [
         DeviceStates::WORKING, DeviceStates::IDLE,
@@ -161,7 +161,7 @@ class PetkitW7H implements DeviceDefinition, Snapshot, BluetoothProxyInterface, 
 
     public function configurationDefinition(): ConfigurationInterface
     {
-        return Configuration\PetkitW7H::fromDevice($this->getDevice());
+        return Configuration\PetkitEversweetUltra::fromDevice($this->getDevice());
     }
 
     public function configuration()

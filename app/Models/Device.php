@@ -106,7 +106,7 @@ class Device extends Model
             'd4h' => new Devices\PetkitYumshareSolo($this),
             'd4sh' => new Devices\PetkitYumshareDual($this),
             't7' => new Devices\PetkitPurobotCrystal($this),
-            'w7h' => new Devices\PetkitW7H($this),
+            'w7h' => new Devices\PetkitEversweetUltra($this),
         };
     }
 
@@ -120,7 +120,7 @@ class Device extends Model
             'd4h' => Devices\Configuration\PetkitYumshareSolo::fromDevice($this),
             'd4sh' => Devices\Configuration\PetkitYumshareDual::fromDevice($this),
             't7' => Devices\Configuration\PetkitPurobotCrystal::fromDevice($this),
-            'w7h' => Devices\Configuration\PetkitW7H::fromDevice($this),
+            'w7h' => Devices\Configuration\PetkitEversweetUltra::fromDevice($this),
         };
     }
 
@@ -134,7 +134,7 @@ class Device extends Model
             'd4h' => new UI\PetkitYumshareSolo($this),
             'd4sh' => new UI\PetkitYumshareDual($this),
             't7' => new UI\PetkitPurobotCrystal($this),
-            'w7h' => new UI\PetkitW7H($this),
+            'w7h' => new UI\PetkitEversweetUltra($this),
         };
     }
 

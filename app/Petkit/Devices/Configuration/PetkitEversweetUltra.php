@@ -26,7 +26,7 @@ use WendellAdriel\ValidatedDTO\Casting\StringCast;
  * with camera, auto water change and a heater.
  *
  * NOTE: the property names must match the device's setting keys exactly, since
- * {@see \App\Petkit\Devices\PetkitW7H::propertyChange()} diffs the stored
+ * {@see \App\Petkit\Devices\PetkitEversweetUltra::propertyChange()} diffs the stored
  * `settings` array and forwards the changed keys straight to the device.
  * Keys marked "(local file only)" in `IMPLEMENT/w7h_config_keys.csv` are not
  * remotely settable over property_set - they are still kept here for parity
@@ -45,7 +45,7 @@ use WendellAdriel\ValidatedDTO\Casting\StringCast;
  * dead/shared-SDK leftovers from other device families (D4sh, T6, T7, AQ1S)
  * and are never exposed to W7H users.
  */
-class PetkitW7H extends DeviceConfigurationDTO implements ConfigurationInterface, Video, Snapshot, HasCamera
+class PetkitEversweetUltra extends DeviceConfigurationDTO implements ConfigurationInterface, Video, Snapshot, HasCamera
 {
     // States
     #[Sensor(

@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\HtmlString;
 use Filament\Forms;
 
-class PetkitW7H
+class PetkitEversweetUltra
 {
 
     public function formFields(): array
