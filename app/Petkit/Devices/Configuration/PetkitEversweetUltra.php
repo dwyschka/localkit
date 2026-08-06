@@ -18,6 +18,7 @@ use App\Petkit\Interfaces\HasCamera;
 use Illuminate\Support\Facades\Storage;
 use WendellAdriel\ValidatedDTO\Casting\ArrayCast;
 use WendellAdriel\ValidatedDTO\Casting\BooleanCast;
+use WendellAdriel\ValidatedDTO\Casting\FloatCast;
 use WendellAdriel\ValidatedDTO\Casting\IntegerCast;
 use WendellAdriel\ValidatedDTO\Casting\StringCast;
 
@@ -105,6 +106,444 @@ class PetkitEversweetUltra extends DeviceConfigurationDTO implements Configurati
     public ?string $lastSnapshot;
 
     public ?string $stream;
+
+    // Fault flags - IMPLEMENT/w7h_error_states.csv, nested under the wire
+    // state's `err` object. Most names are inherited from shared litter-box
+    // firmware (tary = waste tray, ptc = heater, cyc = circulation pump);
+    // rep* naming is explicitly uncertain per the CSV.
+    #[BinarySensor(
+        technicalName: 'tray_door',
+        name: 'Waste Tray Door',
+        valueTemplate: '{{ value_json.states.taryD }}',
+        entityCategory: 'diagnostic',
+        payloadOn: true,
+        payloadOff: false
+    )]
+    public bool $taryD;
+
+    #[BinarySensor(
+        technicalName: 'tray_lock',
+        name: 'Waste Tray Lock',
+        valueTemplate: '{{ value_json.states.taryL }}',
+        entityCategory: 'diagnostic',
+        payloadOn: true,
+        payloadOff: false
+    )]
+    public bool $taryL;
+
+    #[BinarySensor(
+        technicalName: 'tray_full',
+        name: 'Waste Tray Full',
+        valueTemplate: '{{ value_json.states.taryF }}',
+        entityCategory: 'diagnostic',
+        deviceClass: 'problem',
+        payloadOn: true,
+        payloadOff: false
+    )]
+    public bool $taryF;
+
+    #[BinarySensor(
+        technicalName: 'tray_overflow',
+        name: 'Waste Tray Overflow',
+        valueTemplate: '{{ value_json.states.taryO }}',
+        entityCategory: 'diagnostic',
+        deviceClass: 'problem',
+        payloadOn: true,
+        payloadOff: false
+    )]
+    public bool $taryO;
+
+    #[BinarySensor(
+        technicalName: 'heater_low_water',
+        name: 'Heater Low Water Protect',
+        valueTemplate: '{{ value_json.states.ptcL }}',
+        entityCategory: 'diagnostic',
+        deviceClass: 'problem',
+        payloadOn: true,
+        payloadOff: false
+    )]
+    public bool $ptcL;
+
+    #[BinarySensor(
+        technicalName: 'heater_malfunction',
+        name: 'Heater Malfunction',
+        valueTemplate: '{{ value_json.states.ptcM }}',
+        entityCategory: 'diagnostic',
+        deviceClass: 'problem',
+        payloadOn: true,
+        payloadOff: false
+    )]
+    public bool $ptcM;
+
+    #[BinarySensor(
+        technicalName: 'valve_lock',
+        name: 'Lift Valve Lock',
+        valueTemplate: '{{ value_json.states.valveL }}',
+        entityCategory: 'diagnostic',
+        payloadOn: true,
+        payloadOff: false
+    )]
+    public bool $valveL;
+
+    #[BinarySensor(
+        technicalName: 'valve_error',
+        name: 'Lift Valve Error',
+        valueTemplate: '{{ value_json.states.valveE }}',
+        entityCategory: 'diagnostic',
+        deviceClass: 'problem',
+        payloadOn: true,
+        payloadOff: false
+    )]
+    public bool $valveE;
+
+    #[BinarySensor(
+        technicalName: 'valve_normal',
+        name: 'Lift Valve Normal',
+        valueTemplate: '{{ value_json.states.valveN }}',
+        entityCategory: 'diagnostic',
+        payloadOn: true,
+        payloadOff: false
+    )]
+    public bool $valveN;
+
+    #[BinarySensor(
+        technicalName: 'pump_lock',
+        name: 'Circulation Pump Lock',
+        valueTemplate: '{{ value_json.states.cycL }}',
+        entityCategory: 'diagnostic',
+        payloadOn: true,
+        payloadOff: false
+    )]
+    public bool $cycL;
+
+    #[BinarySensor(
+        technicalName: 'pump_malfunction',
+        name: 'Circulation Pump Malfunction',
+        valueTemplate: '{{ value_json.states.cycM }}',
+        entityCategory: 'diagnostic',
+        deviceClass: 'problem',
+        payloadOn: true,
+        payloadOff: false
+    )]
+    public bool $cycM;
+
+    // Naming uncertain per IMPLEMENT/w7h_error_states.csv ("Replacement/relief pump(?)").
+    #[BinarySensor(
+        technicalName: 'rep_lock',
+        name: 'Rep Lock (uncertain)',
+        valueTemplate: '{{ value_json.states.repL }}',
+        entityCategory: 'diagnostic',
+        payloadOn: true,
+        payloadOff: false
+    )]
+    public bool $repL;
+
+    #[BinarySensor(
+        technicalName: 'rep_malfunction',
+        name: 'Rep Malfunction (uncertain)',
+        valueTemplate: '{{ value_json.states.repM }}',
+        entityCategory: 'diagnostic',
+        deviceClass: 'problem',
+        payloadOn: true,
+        payloadOff: false
+    )]
+    public bool $repM;
+
+    // Install/lock flags - top-level wire state fields.
+    #[BinarySensor(
+        technicalName: 'storage_installed',
+        name: 'Storage Tray Installed',
+        valueTemplate: '{{ value_json.states.stgInstall }}',
+        entityCategory: 'diagnostic',
+        payloadOn: true,
+        payloadOff: false
+    )]
+    public bool $stgInstall;
+
+    #[BinarySensor(
+        technicalName: 'storage_full',
+        name: 'Storage Tray Full',
+        valueTemplate: '{{ value_json.states.stgFullState }}',
+        entityCategory: 'diagnostic',
+        deviceClass: 'problem',
+        payloadOn: true,
+        payloadOff: false
+    )]
+    public bool $stgFullState;
+
+    #[BinarySensor(
+        technicalName: 'clean_water_tank_installed',
+        name: 'Clean Water Tank Installed',
+        valueTemplate: '{{ value_json.states.cwtInstall }}',
+        entityCategory: 'diagnostic',
+        payloadOn: true,
+        payloadOff: false
+    )]
+    public bool $cwtInstall;
+
+    #[BinarySensor(
+        technicalName: 'waste_tank_installed',
+        name: 'Waste Tank Installed',
+        valueTemplate: '{{ value_json.states.wtInstall }}',
+        entityCategory: 'diagnostic',
+        payloadOn: true,
+        payloadOff: false
+    )]
+    public bool $wtInstall;
+
+    #[BinarySensor(
+        technicalName: 'waste_tank_lock',
+        name: 'Waste Tank Lock',
+        valueTemplate: '{{ value_json.states.wtLock }}',
+        entityCategory: 'diagnostic',
+        payloadOn: true,
+        payloadOff: false
+    )]
+    public bool $wtLock;
+
+    #[BinarySensor(
+        technicalName: 'heater_installed',
+        name: 'Heater Installed',
+        valueTemplate: '{{ value_json.states.heatInstall }}',
+        entityCategory: 'diagnostic',
+        payloadOn: true,
+        payloadOff: false
+    )]
+    public bool $heatInstall;
+
+    // Run-state / status codes - top-level wire state fields, verbatim ints.
+    #[Sensor(
+        technicalName: 'camera_status',
+        name: 'Camera Status Code',
+        icon: 'mdi:camera',
+        valueTemplate: '{{ value_json.states.cameraStatus }}',
+        entityCategory: 'diagnostic'
+    )]
+    public int $cameraStatus;
+
+    #[Sensor(
+        technicalName: 'heat_state',
+        name: 'Heater Run State',
+        icon: 'mdi:radiator',
+        valueTemplate: '{{ value_json.states.heatState }}',
+        entityCategory: 'diagnostic'
+    )]
+    public int $heatState;
+
+    #[Sensor(
+        technicalName: 'lift_valve_state',
+        name: 'Lift Valve Run State',
+        icon: 'mdi:valve',
+        valueTemplate: '{{ value_json.states.liftValveState }}',
+        entityCategory: 'diagnostic'
+    )]
+    public int $liftValveState;
+
+    #[Sensor(
+        technicalName: 'pump_state',
+        name: 'Pump Run State',
+        icon: 'mdi:pump',
+        valueTemplate: '{{ value_json.states.pumpState }}',
+        entityCategory: 'diagnostic'
+    )]
+    public int $pumpState;
+
+    #[Sensor(
+        technicalName: 'water_pump_state',
+        name: 'Water Pump Run State',
+        icon: 'mdi:pump',
+        valueTemplate: '{{ value_json.states.waterPumpState }}',
+        entityCategory: 'diagnostic'
+    )]
+    public int $waterPumpState;
+
+    #[Sensor(
+        technicalName: 'cwt_state',
+        name: 'Clean Water Tank State',
+        icon: 'mdi:water',
+        valueTemplate: '{{ value_json.states.cwtState }}',
+        entityCategory: 'diagnostic'
+    )]
+    public int $cwtState;
+
+    #[Sensor(
+        technicalName: 'wt_state',
+        name: 'Waste Tank State',
+        icon: 'mdi:water-alert',
+        valueTemplate: '{{ value_json.states.wtState }}',
+        entityCategory: 'diagnostic'
+    )]
+    public int $wtState;
+
+    #[Sensor(
+        technicalName: 'add_water_state',
+        name: 'Add Water State',
+        icon: 'mdi:water-plus',
+        valueTemplate: '{{ value_json.states.addWaterState }}',
+        entityCategory: 'diagnostic'
+    )]
+    public int $addWaterState;
+
+    #[Sensor(
+        technicalName: 'flush_state',
+        name: 'Flush State',
+        icon: 'mdi:waves',
+        valueTemplate: '{{ value_json.states.flushState }}',
+        entityCategory: 'diagnostic'
+    )]
+    public int $flushState;
+
+    #[Sensor(
+        technicalName: 'lift_reset_state',
+        name: 'Lift Valve Reset State',
+        icon: 'mdi:valve',
+        valueTemplate: '{{ value_json.states.liftResetState }}',
+        entityCategory: 'diagnostic'
+    )]
+    public int $liftResetState;
+
+    #[Sensor(
+        technicalName: 'lift_live_state',
+        name: 'Lift Valve Live State',
+        icon: 'mdi:valve',
+        valueTemplate: '{{ value_json.states.liftLiveState }}',
+        entityCategory: 'diagnostic'
+    )]
+    public int $liftLiveState;
+
+    #[Sensor(
+        technicalName: 'disinfect_time',
+        name: 'Disinfect Time',
+        icon: 'mdi:timer-outline',
+        unitOfMeasurement: 's',
+        valueTemplate: '{{ value_json.states.disinfectTime }}',
+        entityCategory: 'diagnostic'
+    )]
+    public int $disinfectTime;
+
+    #[Sensor(
+        technicalName: 'heat_left_time',
+        name: 'Heater Remaining Run Time',
+        icon: 'mdi:timer-outline',
+        unitOfMeasurement: 's',
+        valueTemplate: '{{ value_json.states.heatLeftTime }}',
+        entityCategory: 'diagnostic'
+    )]
+    public int $heatLeftTime;
+
+    #[Sensor(
+        technicalName: 'heat_status_time',
+        name: 'Time In Current Heat State',
+        icon: 'mdi:timer-outline',
+        unitOfMeasurement: 's',
+        valueTemplate: '{{ value_json.states.heatStatusTime }}',
+        entityCategory: 'diagnostic'
+    )]
+    public int $heatStatusTime;
+
+    #[Sensor(
+        technicalName: 'heat_real_temp',
+        name: 'Measured Heater Temperature',
+        icon: 'mdi:thermometer',
+        valueTemplate: '{{ value_json.states.heatRealTemp }}',
+        entityCategory: 'diagnostic'
+    )]
+    public int $heatRealTemp;
+
+    #[Sensor(
+        technicalName: 'disinfect_state',
+        name: 'Disinfect Cycle State',
+        icon: 'mdi:water-check',
+        valueTemplate: '{{ value_json.states.disinfectState }}',
+        entityCategory: 'diagnostic'
+    )]
+    public int $disinfectState;
+
+    #[BinarySensor(
+        technicalName: 'add_water_frequent',
+        name: 'Add Water Too Frequent',
+        valueTemplate: '{{ value_json.states.addWaterFrequent }}',
+        entityCategory: 'diagnostic',
+        deviceClass: 'problem',
+        payloadOn: true,
+        payloadOff: false
+    )]
+    public bool $addWaterFrequent;
+
+    // Hall-effect position sensors - nested under the wire state's `sensor`
+    // object. Naming (Cover/Door/Lift-Tray) is inherited from shared
+    // litter-box firmware; relevance to this fountain is unconfirmed.
+    #[Sensor(technicalName: 'hall_ch', name: 'Hall Sensor CH', valueTemplate: '{{ value_json.states.hall_CH }}', entityCategory: 'diagnostic')]
+    public float $hall_CH;
+
+    #[Sensor(technicalName: 'hall_cl', name: 'Hall Sensor CL', valueTemplate: '{{ value_json.states.hall_CL }}', entityCategory: 'diagnostic')]
+    public float $hall_CL;
+
+    #[Sensor(technicalName: 'hall_ckl', name: 'Hall Sensor CKL', valueTemplate: '{{ value_json.states.hall_CKL }}', entityCategory: 'diagnostic')]
+    public float $hall_CKL;
+
+    #[Sensor(technicalName: 'hall_ckr', name: 'Hall Sensor CKR', valueTemplate: '{{ value_json.states.hall_CKR }}', entityCategory: 'diagnostic')]
+    public float $hall_CKR;
+
+    #[Sensor(technicalName: 'hall_dh', name: 'Hall Sensor DH', valueTemplate: '{{ value_json.states.hall_DH }}', entityCategory: 'diagnostic')]
+    public float $hall_DH;
+
+    #[Sensor(technicalName: 'hall_dkl', name: 'Hall Sensor DKL', valueTemplate: '{{ value_json.states.hall_DKL }}', entityCategory: 'diagnostic')]
+    public float $hall_DKL;
+
+    #[Sensor(technicalName: 'hall_dkr', name: 'Hall Sensor DKR', valueTemplate: '{{ value_json.states.hall_DKR }}', entityCategory: 'diagnostic')]
+    public float $hall_DKR;
+
+    #[Sensor(technicalName: 'hall_ltu', name: 'Hall Sensor LTU', valueTemplate: '{{ value_json.states.hall_LTU }}', entityCategory: 'diagnostic')]
+    public float $hall_LTU;
+
+    #[Sensor(technicalName: 'hall_ltd', name: 'Hall Sensor LTD', valueTemplate: '{{ value_json.states.hall_LTD }}', entityCategory: 'diagnostic')]
+    public float $hall_LTD;
+
+    #[Sensor(technicalName: 'hall_ty', name: 'Hall Sensor TY', valueTemplate: '{{ value_json.states.hall_TY }}', entityCategory: 'diagnostic')]
+    public float $hall_TY;
+
+    // Work-state codes - only present on some events (e.g. work_start),
+    // nested under the wire state's `workState` object.
+    #[Sensor(technicalName: 'work_mode', name: 'Work Mode', valueTemplate: '{{ value_json.states.workMode }}', entityCategory: 'diagnostic')]
+    public int $workMode;
+
+    #[Sensor(technicalName: 'work_reason', name: 'Work Reason', valueTemplate: '{{ value_json.states.workReason }}', entityCategory: 'diagnostic')]
+    public int $workReason;
+
+    #[Sensor(technicalName: 'safe_warn', name: 'Safety Warning Code', icon: 'mdi:alert', valueTemplate: '{{ value_json.states.safeWarn }}', entityCategory: 'diagnostic')]
+    public int $safeWarn;
+
+    #[Sensor(technicalName: 'work_process', name: 'Work Process', valueTemplate: '{{ value_json.states.workProcess }}', entityCategory: 'diagnostic')]
+    public int $workProcess;
+
+    // Last error_start event content (IMPLEMENT/w7h_error_states.csv rows 57-59).
+    #[Sensor(
+        technicalName: 'last_error_code',
+        name: 'Last Error Code',
+        icon: 'mdi:alert-circle-outline',
+        valueTemplate: '{{ value_json.states.lastErrorCode }}',
+        entityCategory: 'diagnostic'
+    )]
+    public ?string $lastErrorCode;
+
+    #[Sensor(
+        technicalName: 'last_error_message',
+        name: 'Last Error Message',
+        icon: 'mdi:message-alert-outline',
+        valueTemplate: '{{ value_json.states.lastErrorMessage }}',
+        entityCategory: 'diagnostic'
+    )]
+    public ?string $lastErrorMessage;
+
+    #[Sensor(
+        technicalName: 'last_error_detail',
+        name: 'Last Error Detail',
+        icon: 'mdi:message-alert-outline',
+        valueTemplate: '{{ value_json.states.lastErrorDetail }}',
+        entityCategory: 'diagnostic'
+    )]
+    public ?string $lastErrorDetail;
 
     // Camera settings
     #[HASwitch(
@@ -723,6 +1162,71 @@ class PetkitEversweetUltra extends DeviceConfigurationDTO implements Configurati
             'lastSnapshot' => ['nullable', 'string'],
             'stream' => ['nullable', 'string'],
 
+            // Fault flags
+            'taryD' => ['bool'],
+            'taryL' => ['bool'],
+            'taryF' => ['bool'],
+            'taryO' => ['bool'],
+            'ptcL' => ['bool'],
+            'ptcM' => ['bool'],
+            'valveL' => ['bool'],
+            'valveE' => ['bool'],
+            'valveN' => ['bool'],
+            'cycL' => ['bool'],
+            'cycM' => ['bool'],
+            'repL' => ['bool'],
+            'repM' => ['bool'],
+
+            // Install/lock flags
+            'stgInstall' => ['bool'],
+            'stgFullState' => ['bool'],
+            'cwtInstall' => ['bool'],
+            'wtInstall' => ['bool'],
+            'wtLock' => ['bool'],
+            'heatInstall' => ['bool'],
+
+            // Run-state codes
+            'cameraStatus' => ['integer'],
+            'heatState' => ['integer'],
+            'liftValveState' => ['integer'],
+            'pumpState' => ['integer'],
+            'waterPumpState' => ['integer'],
+            'cwtState' => ['integer'],
+            'wtState' => ['integer'],
+            'addWaterState' => ['integer'],
+            'flushState' => ['integer'],
+            'liftResetState' => ['integer'],
+            'liftLiveState' => ['integer'],
+            'disinfectTime' => ['integer'],
+            'heatLeftTime' => ['integer'],
+            'heatStatusTime' => ['integer'],
+            'heatRealTemp' => ['integer'],
+            'disinfectState' => ['integer'],
+            'addWaterFrequent' => ['bool'],
+
+            // Hall sensors
+            'hall_CH' => ['numeric'],
+            'hall_CL' => ['numeric'],
+            'hall_CKL' => ['numeric'],
+            'hall_CKR' => ['numeric'],
+            'hall_DH' => ['numeric'],
+            'hall_DKL' => ['numeric'],
+            'hall_DKR' => ['numeric'],
+            'hall_LTU' => ['numeric'],
+            'hall_LTD' => ['numeric'],
+            'hall_TY' => ['numeric'],
+
+            // Work state
+            'workMode' => ['integer'],
+            'workReason' => ['integer'],
+            'safeWarn' => ['integer'],
+            'workProcess' => ['integer'],
+
+            // Last error event
+            'lastErrorCode' => ['nullable', 'string'],
+            'lastErrorMessage' => ['nullable', 'string'],
+            'lastErrorDetail' => ['nullable', 'string'],
+
             // Camera
             'camera' => ['bool'],
             'cameraMultiRange' => ['array'],
@@ -808,6 +1312,71 @@ class PetkitEversweetUltra extends DeviceConfigurationDTO implements Configurati
             'drinkDetected' => false,
             'lastSnapshot' => null,
             'stream' => null,
+
+            // Fault flags
+            'taryD' => false,
+            'taryL' => false,
+            'taryF' => false,
+            'taryO' => false,
+            'ptcL' => false,
+            'ptcM' => false,
+            'valveL' => false,
+            'valveE' => false,
+            'valveN' => false,
+            'cycL' => false,
+            'cycM' => false,
+            'repL' => false,
+            'repM' => false,
+
+            // Install/lock flags
+            'stgInstall' => false,
+            'stgFullState' => false,
+            'cwtInstall' => false,
+            'wtInstall' => false,
+            'wtLock' => false,
+            'heatInstall' => false,
+
+            // Run-state codes
+            'cameraStatus' => 0,
+            'heatState' => 0,
+            'liftValveState' => 0,
+            'pumpState' => 0,
+            'waterPumpState' => 0,
+            'cwtState' => 0,
+            'wtState' => 0,
+            'addWaterState' => 0,
+            'flushState' => 0,
+            'liftResetState' => 0,
+            'liftLiveState' => 0,
+            'disinfectTime' => 0,
+            'heatLeftTime' => 0,
+            'heatStatusTime' => 0,
+            'heatRealTemp' => 0,
+            'disinfectState' => 0,
+            'addWaterFrequent' => false,
+
+            // Hall sensors
+            'hall_CH' => 0,
+            'hall_CL' => 0,
+            'hall_CKL' => 0,
+            'hall_CKR' => 0,
+            'hall_DH' => 0,
+            'hall_DKL' => 0,
+            'hall_DKR' => 0,
+            'hall_LTU' => 0,
+            'hall_LTD' => 0,
+            'hall_TY' => 0,
+
+            // Work state
+            'workMode' => 0,
+            'workReason' => 0,
+            'safeWarn' => 0,
+            'workProcess' => 0,
+
+            // Last error event
+            'lastErrorCode' => null,
+            'lastErrorMessage' => null,
+            'lastErrorDetail' => null,
 
             // Camera
             'camera' => true,
@@ -900,6 +1469,71 @@ class PetkitEversweetUltra extends DeviceConfigurationDTO implements Configurati
             'lastSnapshot' => new StringCast(),
             'stream' => new StringCast(),
 
+            // Fault flags
+            'taryD' => new BooleanCast(),
+            'taryL' => new BooleanCast(),
+            'taryF' => new BooleanCast(),
+            'taryO' => new BooleanCast(),
+            'ptcL' => new BooleanCast(),
+            'ptcM' => new BooleanCast(),
+            'valveL' => new BooleanCast(),
+            'valveE' => new BooleanCast(),
+            'valveN' => new BooleanCast(),
+            'cycL' => new BooleanCast(),
+            'cycM' => new BooleanCast(),
+            'repL' => new BooleanCast(),
+            'repM' => new BooleanCast(),
+
+            // Install/lock flags
+            'stgInstall' => new BooleanCast(),
+            'stgFullState' => new BooleanCast(),
+            'cwtInstall' => new BooleanCast(),
+            'wtInstall' => new BooleanCast(),
+            'wtLock' => new BooleanCast(),
+            'heatInstall' => new BooleanCast(),
+
+            // Run-state codes
+            'cameraStatus' => new IntegerCast(),
+            'heatState' => new IntegerCast(),
+            'liftValveState' => new IntegerCast(),
+            'pumpState' => new IntegerCast(),
+            'waterPumpState' => new IntegerCast(),
+            'cwtState' => new IntegerCast(),
+            'wtState' => new IntegerCast(),
+            'addWaterState' => new IntegerCast(),
+            'flushState' => new IntegerCast(),
+            'liftResetState' => new IntegerCast(),
+            'liftLiveState' => new IntegerCast(),
+            'disinfectTime' => new IntegerCast(),
+            'heatLeftTime' => new IntegerCast(),
+            'heatStatusTime' => new IntegerCast(),
+            'heatRealTemp' => new IntegerCast(),
+            'disinfectState' => new IntegerCast(),
+            'addWaterFrequent' => new BooleanCast(),
+
+            // Hall sensors
+            'hall_CH' => new FloatCast(),
+            'hall_CL' => new FloatCast(),
+            'hall_CKL' => new FloatCast(),
+            'hall_CKR' => new FloatCast(),
+            'hall_DH' => new FloatCast(),
+            'hall_DKL' => new FloatCast(),
+            'hall_DKR' => new FloatCast(),
+            'hall_LTU' => new FloatCast(),
+            'hall_LTD' => new FloatCast(),
+            'hall_TY' => new FloatCast(),
+
+            // Work state
+            'workMode' => new IntegerCast(),
+            'workReason' => new IntegerCast(),
+            'safeWarn' => new IntegerCast(),
+            'workProcess' => new IntegerCast(),
+
+            // Last error event
+            'lastErrorCode' => new StringCast(),
+            'lastErrorMessage' => new StringCast(),
+            'lastErrorDetail' => new StringCast(),
+
             // Camera
             'camera' => new BooleanCast(),
             'cameraMultiRange' => new ArrayCast(),
@@ -990,6 +1624,71 @@ class PetkitEversweetUltra extends DeviceConfigurationDTO implements Configurati
             $data['drinkDetected'] = $states['drinkDetected'] ?? null;
             $data['lastSnapshot'] = $states['lastSnapshot'] ?? null;
             $data['stream'] = $states['stream'] ?? null;
+
+            // Fault flags
+            $data['taryD'] = $states['taryD'] ?? null;
+            $data['taryL'] = $states['taryL'] ?? null;
+            $data['taryF'] = $states['taryF'] ?? null;
+            $data['taryO'] = $states['taryO'] ?? null;
+            $data['ptcL'] = $states['ptcL'] ?? null;
+            $data['ptcM'] = $states['ptcM'] ?? null;
+            $data['valveL'] = $states['valveL'] ?? null;
+            $data['valveE'] = $states['valveE'] ?? null;
+            $data['valveN'] = $states['valveN'] ?? null;
+            $data['cycL'] = $states['cycL'] ?? null;
+            $data['cycM'] = $states['cycM'] ?? null;
+            $data['repL'] = $states['repL'] ?? null;
+            $data['repM'] = $states['repM'] ?? null;
+
+            // Install/lock flags
+            $data['stgInstall'] = $states['stgInstall'] ?? null;
+            $data['stgFullState'] = $states['stgFullState'] ?? null;
+            $data['cwtInstall'] = $states['cwtInstall'] ?? null;
+            $data['wtInstall'] = $states['wtInstall'] ?? null;
+            $data['wtLock'] = $states['wtLock'] ?? null;
+            $data['heatInstall'] = $states['heatInstall'] ?? null;
+
+            // Run-state codes
+            $data['cameraStatus'] = $states['cameraStatus'] ?? null;
+            $data['heatState'] = $states['heatState'] ?? null;
+            $data['liftValveState'] = $states['liftValveState'] ?? null;
+            $data['pumpState'] = $states['pumpState'] ?? null;
+            $data['waterPumpState'] = $states['waterPumpState'] ?? null;
+            $data['cwtState'] = $states['cwtState'] ?? null;
+            $data['wtState'] = $states['wtState'] ?? null;
+            $data['addWaterState'] = $states['addWaterState'] ?? null;
+            $data['flushState'] = $states['flushState'] ?? null;
+            $data['liftResetState'] = $states['liftResetState'] ?? null;
+            $data['liftLiveState'] = $states['liftLiveState'] ?? null;
+            $data['disinfectTime'] = $states['disinfectTime'] ?? null;
+            $data['heatLeftTime'] = $states['heatLeftTime'] ?? null;
+            $data['heatStatusTime'] = $states['heatStatusTime'] ?? null;
+            $data['heatRealTemp'] = $states['heatRealTemp'] ?? null;
+            $data['disinfectState'] = $states['disinfectState'] ?? null;
+            $data['addWaterFrequent'] = $states['addWaterFrequent'] ?? null;
+
+            // Hall sensors
+            $data['hall_CH'] = $states['hall_CH'] ?? null;
+            $data['hall_CL'] = $states['hall_CL'] ?? null;
+            $data['hall_CKL'] = $states['hall_CKL'] ?? null;
+            $data['hall_CKR'] = $states['hall_CKR'] ?? null;
+            $data['hall_DH'] = $states['hall_DH'] ?? null;
+            $data['hall_DKL'] = $states['hall_DKL'] ?? null;
+            $data['hall_DKR'] = $states['hall_DKR'] ?? null;
+            $data['hall_LTU'] = $states['hall_LTU'] ?? null;
+            $data['hall_LTD'] = $states['hall_LTD'] ?? null;
+            $data['hall_TY'] = $states['hall_TY'] ?? null;
+
+            // Work state
+            $data['workMode'] = $states['workMode'] ?? null;
+            $data['workReason'] = $states['workReason'] ?? null;
+            $data['safeWarn'] = $states['safeWarn'] ?? null;
+            $data['workProcess'] = $states['workProcess'] ?? null;
+
+            // Last error event
+            $data['lastErrorCode'] = $states['lastErrorCode'] ?? null;
+            $data['lastErrorMessage'] = $states['lastErrorMessage'] ?? null;
+            $data['lastErrorDetail'] = $states['lastErrorDetail'] ?? null;
         }
 
         // Load settings
@@ -1086,6 +1785,71 @@ class PetkitEversweetUltra extends DeviceConfigurationDTO implements Configurati
                 'stream' => $this->stream,
                 'petDetected' => $this->petDetected,
                 'drinkDetected' => $this->drinkDetected,
+
+                // Fault flags
+                'taryD' => $this->taryD,
+                'taryL' => $this->taryL,
+                'taryF' => $this->taryF,
+                'taryO' => $this->taryO,
+                'ptcL' => $this->ptcL,
+                'ptcM' => $this->ptcM,
+                'valveL' => $this->valveL,
+                'valveE' => $this->valveE,
+                'valveN' => $this->valveN,
+                'cycL' => $this->cycL,
+                'cycM' => $this->cycM,
+                'repL' => $this->repL,
+                'repM' => $this->repM,
+
+                // Install/lock flags
+                'stgInstall' => $this->stgInstall,
+                'stgFullState' => $this->stgFullState,
+                'cwtInstall' => $this->cwtInstall,
+                'wtInstall' => $this->wtInstall,
+                'wtLock' => $this->wtLock,
+                'heatInstall' => $this->heatInstall,
+
+                // Run-state codes
+                'cameraStatus' => $this->cameraStatus,
+                'heatState' => $this->heatState,
+                'liftValveState' => $this->liftValveState,
+                'pumpState' => $this->pumpState,
+                'waterPumpState' => $this->waterPumpState,
+                'cwtState' => $this->cwtState,
+                'wtState' => $this->wtState,
+                'addWaterState' => $this->addWaterState,
+                'flushState' => $this->flushState,
+                'liftResetState' => $this->liftResetState,
+                'liftLiveState' => $this->liftLiveState,
+                'disinfectTime' => $this->disinfectTime,
+                'heatLeftTime' => $this->heatLeftTime,
+                'heatStatusTime' => $this->heatStatusTime,
+                'heatRealTemp' => $this->heatRealTemp,
+                'disinfectState' => $this->disinfectState,
+                'addWaterFrequent' => $this->addWaterFrequent,
+
+                // Hall sensors
+                'hall_CH' => $this->hall_CH,
+                'hall_CL' => $this->hall_CL,
+                'hall_CKL' => $this->hall_CKL,
+                'hall_CKR' => $this->hall_CKR,
+                'hall_DH' => $this->hall_DH,
+                'hall_DKL' => $this->hall_DKL,
+                'hall_DKR' => $this->hall_DKR,
+                'hall_LTU' => $this->hall_LTU,
+                'hall_LTD' => $this->hall_LTD,
+                'hall_TY' => $this->hall_TY,
+
+                // Work state
+                'workMode' => $this->workMode,
+                'workReason' => $this->workReason,
+                'safeWarn' => $this->safeWarn,
+                'workProcess' => $this->workProcess,
+
+                // Last error event
+                'lastErrorCode' => $this->lastErrorCode,
+                'lastErrorMessage' => $this->lastErrorMessage,
+                'lastErrorDetail' => $this->lastErrorDetail,
             ],
             'settings' => [
                 // Camera

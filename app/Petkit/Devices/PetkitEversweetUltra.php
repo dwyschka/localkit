@@ -88,8 +88,24 @@ class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxy
 
                 $this->reply($topic, $message);
             },
-            sprintf('/sys/%s/%s/thing/event/property_post/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/property/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+                // Unlike the other event topics, property/post carries the device
+                // state directly as `params` - not wrapped in a `state` string.
+                $this->applyState($device, $message->params);
+            },
+            sprintf('/sys/%s/%s/thing/event/add_water_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
                 $this->parseState($device, $message);
+            },
+            sprintf('/sys/%s/%s/thing/event/error_start/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+                $this->parseState($device, $message);
+                $this->recordErrorEvent($device, json_decode($message?->params?->content ?? 'null', false));
+            },
+            sprintf('/sys/%s/%s/thing/event/error_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+                $this->parseState($device, $message);
+                $this->recordErrorEvent($device, json_decode($message?->params?->content ?? 'null', false));
+            },
+            sprintf('/sys/%s/%s/thing/event/work_start/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+                $this->parseState($device, $message, DeviceStates::WORKING->value);
             },
             sprintf('/sys/%s/%s/thing/event/pet_detect/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
                 $this->parseState($device, $message, mutate: function (\stdClass $state) use ($device) {
@@ -113,9 +129,11 @@ class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxy
     }
 
     /**
-     * Checks the message for a `state` attribute and, if present, parses it the
-     * same way the property_post topic does: updating the working state, error
-     * reporting and the stored configuration.
+     * Checks the message for a `state` attribute (present on event topics like
+     * add_water_over/error_start/work_start/pet_detect) and, if present,
+     * decodes it and applies it exactly like the `property/post` topic does -
+     * `state` carries the same device-state shape as `property/post`'s bare
+     * params.
      *
      * @param  (callable(\stdClass): void)|null  $mutate  Optional hook applied to the
      *         decoded state after the base update (used for transient detection flags).
@@ -132,15 +150,80 @@ class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxy
             return;
         }
 
-        $device->update([
-            'working_state' => $workingState,
-            'error' => null,
-            'configuration' => $this->updateConfiguration($state)
-        ]);
+        $this->applyState($device, $state, $workingState);
 
         if ($mutate !== null) {
             $mutate($state);
         }
+    }
+
+    private function applyState(Device $device, \stdClass $state, string $workingState = DeviceStates::IDLE->value): void
+    {
+        $device->update([
+            'working_state' => $workingState,
+            'error' => $this->prepareErrorReporting($state),
+            'configuration' => $this->updateConfiguration($state)
+        ]);
+    }
+
+    /**
+     * Maps IMPLEMENT/w7h_error_states.csv fault flags to a single error code,
+     * most severe first. Most of the boolean flags on this shared firmware
+     * base are named for litter-box hardware (tary = waste tray, ptc =
+     * heater, valve = lift valve, cyc = circulation pump) and are only
+     * mapped here where the name unambiguously indicates a fault
+     * (…F = full, …O = overflow, …E = error, …M = malfunction).
+     */
+    private function prepareErrorReporting(\stdClass $state): ?string
+    {
+        // The fault booleans are nested under `err` on the wire, not top-level.
+        $err = $state->err ?? null;
+
+        if (($err->taryO ?? null) == 1) {
+            return 'tray_overflow';
+        }
+
+        if (($err->taryF ?? null) == 1 || ($state->wtState ?? null) == 2) {
+            return 'wastebin_full';
+        }
+
+        if (($err->valveE ?? null) == 1) {
+            return 'valve_error';
+        }
+
+        if (($err->cycM ?? null) == 1) {
+            return 'pump_malfunction';
+        }
+
+        if (($err->ptcM ?? null) == 1) {
+            return 'heater_malfunction';
+        }
+
+        if (($err->ptcL ?? null) == 1) {
+            return 'heater_low_water';
+        }
+
+        return null;
+    }
+
+    /**
+     * `content` on error_start/error_over (IMPLEMENT/w7h_error_states.csv rows
+     * 57-62) carries the error code/message/detail for the error that just
+     * became active or just cleared - kept as a "last error" record since
+     * neither event's code has a known string table.
+     */
+    private function recordErrorEvent(Device $device, ?\stdClass $content): void
+    {
+        if ($content === null) {
+            return;
+        }
+
+        $settings = $device->configuration();
+        $settings->lastErrorCode = $content->err ?? null;
+        $settings->lastErrorMessage = $content->msg ?? null;
+        $settings->lastErrorDetail = $content->detail ?? null;
+
+        $device->update(['configuration' => $settings->toArray()]);
     }
 
     private function reply(string $topic, ?\stdClass $message)
@@ -176,11 +259,20 @@ class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxy
 
     public function drainAndFlush(Device $record): void
     {
+        // No confirmed device-reported "flush in progress" event exists yet
+        // (IMPLEMENT/w7h_error_states.csv's flushState/pumpState/waterPumpState
+        // read 0 in every capture we have, even mid-cycle), so we mark WORKING
+        // optimistically here; the next property/post heartbeat resets it to
+        // IDLE once the (presumably brief) cycle has finished.
+        $record->update(['working_state' => DeviceStates::WORKING->value]);
         ResetCyclePump::dispatchSync($record);
     }
 
     public function deepClean(Device $record): void
     {
+        // See drainAndFlush() - same reasoning, no confirmed liftValveState/
+        // liftResetState/liftLiveState value is known to mean "in progress".
+        $record->update(['working_state' => DeviceStates::WORKING->value]);
         ResetLiftValve::dispatchSync($record);
     }
 
@@ -315,6 +407,12 @@ class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxy
         ];
     }
 
+    private const FAULT_FLAGS = ['taryD', 'taryL', 'taryF', 'taryO', 'ptcL', 'ptcM', 'valveL', 'valveE', 'valveN', 'cycL', 'cycM', 'repL', 'repM'];
+    private const INSTALL_FLAGS = ['stgInstall', 'stgFullState', 'cwtInstall', 'wtInstall', 'wtLock', 'heatInstall'];
+    private const RUN_STATE_CODES = ['cameraStatus', 'heatState', 'liftValveState', 'pumpState', 'waterPumpState', 'cwtState', 'wtState', 'addWaterState', 'flushState', 'liftResetState', 'liftLiveState', 'disinfectTime', 'heatLeftTime', 'heatStatusTime', 'heatRealTemp', 'disinfectState'];
+    private const HALL_SENSORS = ['hall_CH', 'hall_CL', 'hall_CKL', 'hall_CKR', 'hall_DH', 'hall_DKL', 'hall_DKR', 'hall_LTU', 'hall_LTD', 'hall_TY'];
+    private const WORK_STATE_FIELDS = ['workMode', 'workReason', 'safeWarn', 'workProcess'];
+
     private function updateConfiguration(mixed $content): array
     {
         $settings = $this->getDevice()->configuration();
@@ -325,6 +423,48 @@ class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxy
 
         if ($match->value() !== null) {
             $settings->ipAddress = $match->value();
+        }
+
+        // Fault flags - IMPLEMENT/w7h_error_states.csv, nested under `err`.
+        if (isset($content->err) && is_object($content->err)) {
+            foreach (self::FAULT_FLAGS as $flag) {
+                if (isset($content->err->$flag)) {
+                    $settings->$flag = (bool) $content->err->$flag;
+                }
+            }
+        }
+
+        // Install/lock flags and run-state codes are top-level on the state.
+        foreach (self::INSTALL_FLAGS as $flag) {
+            if (isset($content->$flag)) {
+                $settings->$flag = (bool) $content->$flag;
+            }
+        }
+        foreach (self::RUN_STATE_CODES as $field) {
+            if (isset($content->$field)) {
+                $settings->$field = (int) $content->$field;
+            }
+        }
+        if (isset($content->addWaterFrequent)) {
+            $settings->addWaterFrequent = (bool) $content->addWaterFrequent;
+        }
+
+        // Hall-effect sensors, nested under `sensor`.
+        if (isset($content->sensor) && is_object($content->sensor)) {
+            foreach (self::HALL_SENSORS as $hall) {
+                if (isset($content->sensor->$hall)) {
+                    $settings->$hall = (float) $content->sensor->$hall;
+                }
+            }
+        }
+
+        // Work-state codes only appear on some events (e.g. work_start), nested under `workState`.
+        if (isset($content->workState) && is_object($content->workState)) {
+            foreach (self::WORK_STATE_FIELDS as $field) {
+                if (isset($content->workState->$field)) {
+                    $settings->$field = (int) $content->workState->$field;
+                }
+            }
         }
 
         return $settings->toArray();

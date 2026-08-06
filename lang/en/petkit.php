@@ -17,5 +17,11 @@ return [
         'hallT' =>'The lid is not closed',
         'full' =>'The bin is full',
         'food_empty' => 'The food bin is empty',
+        'wastebin_full' => 'The waste water tank is full',
+        'tray_overflow' => 'The waste tray has overflowed',
+        'valve_error' => 'The lift valve has a fault',
+        'pump_malfunction' => 'The circulation pump has a fault',
+        'heater_malfunction' => 'The heater has a fault',
+        'heater_low_water' => 'The heater is protecting against low water',
     ]
 ];
