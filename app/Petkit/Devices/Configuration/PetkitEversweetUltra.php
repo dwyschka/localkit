@@ -641,6 +641,31 @@ class PetkitEversweetUltra extends DeviceConfigurationDTO implements Configurati
     public array $capacity;
     public array $schedule;
 
+    // Consumables
+    #[Number(
+        technicalName: 'cube_durability',
+        name: 'Cube Durability',
+        commandTopic: 'setting/set',
+        icon: 'mdi:cube-outline',
+        valueTemplate: '{{ value_json.consumables.cubeDurability }}',
+        commandTemplate: '{"cubeDurability":{{ value }}}',
+        entityCategory: 'config',
+        min: 0,
+        max: 90,
+        step: 1
+    )]
+    public int $cubeDurability;
+
+    #[Sensor(
+        technicalName: 'cube_durability_in_days',
+        name: 'Next Cube Change in Days',
+        icon: 'mdi:update',
+        unitOfMeasurement: 'd',
+        valueTemplate: '{{ ((value_json.consumables.cubeNextChange - as_timestamp(now())) / 86400) | round(1) }}',
+        entityCategory: 'diagnostic'
+    )]
+    public int $cubeNextChange;
+
     // Buttons
     #[Button(
         technicalName: 'action_snapshot',
@@ -652,9 +677,43 @@ class PetkitEversweetUltra extends DeviceConfigurationDTO implements Configurati
     )]
     private $actionSnapshot = 1;
 
+    #[Button(
+        technicalName: 'action_add_water_reset',
+        name: 'Reset Add Water',
+        commandTopic: 'action/start',
+        icon: 'mdi:water-plus-outline',
+        commandTemplate: '{"action": "add_water_reset"}',
+        availabilityTemplate: 'online',
+    )]
+    private $actionAddWaterReset = 1;
+
+    #[Button(
+        technicalName: 'action_drain_and_flush',
+        name: 'Drain and Flush',
+        commandTopic: 'action/start',
+        icon: 'mdi:pump',
+        commandTemplate: '{"action": "drain_and_flush"}',
+        availabilityTemplate: 'online',
+    )]
+    private $actionDrainAndFlush = 1;
+
+    #[Button(
+        technicalName: 'action_deep_clean',
+        name: 'Deep Clean',
+        commandTopic: 'action/start',
+        icon: 'mdi:spray-bottle',
+        commandTemplate: '{"action": "deep_clean"}',
+        availabilityTemplate: 'online',
+    )]
+    private $actionDeepClean = 1;
+
     protected function rules(): array
     {
         return [
+            // Consumables
+            'cubeDurability' => ['integer', 'min:0', 'max:90'],
+            'cubeNextChange' => ['integer', 'min:0'],
+
             // States
             'ipAddress' => ['string'],
             'workingState' => ['nullable', 'string'],
@@ -737,6 +796,10 @@ class PetkitEversweetUltra extends DeviceConfigurationDTO implements Configurati
     protected function defaults(): array
     {
         return [
+            // Consumables
+            'cubeDurability' => 30,
+            'cubeNextChange' => 0,
+
             // States
             'ipAddress' => '',
             'workingState' => null,
@@ -824,6 +887,10 @@ class PetkitEversweetUltra extends DeviceConfigurationDTO implements Configurati
     protected function casts(): array
     {
         return [
+            // Consumables
+            'cubeDurability' => new IntegerCast(),
+            'cubeNextChange' => new IntegerCast(),
+
             // States
             'ipAddress' => new StringCast(),
             'workingState' => new StringCast(),
@@ -907,6 +974,10 @@ class PetkitEversweetUltra extends DeviceConfigurationDTO implements Configurati
     {
         $config = $device->configuration;
         $data = [];
+
+        // Load consumables
+        $data['cubeDurability'] = $config['consumables']['cubeDurability'] ?? null;
+        $data['cubeNextChange'] = $config['consumables']['cubeNextChange'] ?? null;
 
         // Load states
         $data['workingState'] = $device->working_state ?? null;
@@ -1003,6 +1074,10 @@ class PetkitEversweetUltra extends DeviceConfigurationDTO implements Configurati
     public function toArray(): array
     {
         return [
+            'consumables' => [
+                'cubeDurability' => $this->cubeDurability,
+                'cubeNextChange' => $this->cubeNextChange,
+            ],
             'states' => [
                 'state' => $this->workingState,
                 'error' => $this->error,

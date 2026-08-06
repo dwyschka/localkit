@@ -6,6 +6,9 @@ use App\DTOs\PetkitDTOInterface;
 use App\Helpers\JsonHelper;
 use App\Homeassistant\HomeassistantTopic;
 use App\Homeassistant\Interfaces\Snapshot;
+use App\Jobs\AddWaterReset;
+use App\Jobs\ResetCyclePump;
+use App\Jobs\ResetLiftValve;
 use App\Jobs\ServiceConnect;
 use App\Jobs\SetProperty;
 use App\Jobs\TakeSnapshot;
@@ -19,6 +22,7 @@ use App\Petkit\DeviceDefinition;
 use App\Petkit\Devices\Configuration\ConfigurationInterface;
 use App\Petkit\DeviceStates;
 use App\Petkit\Interfaces\HasCamera;
+use Carbon\Carbon;
 use Illuminate\Support\Str;
 use PhpMqtt\Client\Facades\MQTT;
 
@@ -28,12 +32,14 @@ use PhpMqtt\Client\Facades\MQTT;
  * IMPLEMENT/w7h_actions.csv for the firmware-level reverse-engineering this
  * class is based on.
  *
- * Only `snapshot` (via Go2RTC, no vendor MQTT contract needed) and the
- * generic settings/property_set push (shared infra, already proven by the
- * other NextGen devices) are wired to real MQTT traffic. The remaining
- * commands from w7h_actions.csv (power/start/stop/lapse/play_sound/...) are
- * known to exist on the device but their exact outbound topic/payload was
- * not confirmed during firmware analysis, so they are intentionally left
+ * `snapshot` (via Go2RTC, no vendor MQTT contract needed), the generic
+ * settings/property_set push (shared infra, already proven by the other
+ * NextGen devices) and `add_water_Reset`/`reset_cycle_pump`/`reset_lift_valve`
+ * (via the same `thing.service.<name>` RPC shape already confirmed for
+ * `start`/`connect`) are wired to real MQTT traffic. The remaining commands
+ * from w7h_actions.csv (power/start/stop/lapse/play_sound/...) are known to
+ * exist on the device but their exact outbound payload shape was not
+ * confirmed during firmware analysis, so they are intentionally left
  * unimplemented rather than guessed.
  */
 class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxyInterface, HasCamera
@@ -43,6 +49,10 @@ class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxy
     ];
     protected array $actions = [
         DeviceActions::TAKE_SNAPSHOT,
+        DeviceActions::RESET_ADD_WATER,
+        DeviceActions::RESET_CUBE,
+        DeviceActions::DRAIN_AND_FLUSH,
+        DeviceActions::DEEP_CLEAN,
     ];
 
     public function __construct(protected Device $device)
@@ -159,6 +169,34 @@ class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxy
         TakeSnapshot::dispatchSync($record);
     }
 
+    public function resetAddWater(Device $record): void
+    {
+        AddWaterReset::dispatchSync($record);
+    }
+
+    public function drainAndFlush(Device $record): void
+    {
+        ResetCyclePump::dispatchSync($record);
+    }
+
+    public function deepClean(Device $record): void
+    {
+        ResetLiftValve::dispatchSync($record);
+    }
+
+    public function resetCube(Device $record): void
+    {
+        $configuration = $this->configurationDefinition();
+        $durability = $configuration->cubeDurability;
+        $nextChange = Carbon::now()->addDays((int)$durability);
+
+        $configuration->cubeNextChange = $nextChange->timestamp;
+
+        $record->update([
+            'configuration' => $configuration->toArray()
+        ]);
+    }
+
     public function configurationDefinition(): ConfigurationInterface
     {
         return Configuration\PetkitEversweetUltra::fromDevice($this->getDevice());
@@ -219,6 +257,15 @@ class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxy
         switch ($action) {
             case 'snapshot':
                 $this->takeSnapshot($this->getDevice());
+                break;
+            case 'add_water_reset':
+                $this->resetAddWater($this->getDevice());
+                break;
+            case 'drain_and_flush':
+                $this->drainAndFlush($this->getDevice());
+                break;
+            case 'deep_clean':
+                $this->deepClean($this->getDevice());
                 break;
         }
     }

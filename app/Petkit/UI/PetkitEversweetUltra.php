@@ -4,6 +4,7 @@ namespace App\Petkit\UI;
 
 use App\Helpers\Time;
 use App\Management\Go2RTC;
+use Illuminate\Support\Carbon;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
@@ -21,6 +22,26 @@ class PetkitEversweetUltra
             Forms\Components\Section::make('Stats')->schema([
                 Forms\Components\TextInput::make('configuration.states.ipAddress')
                     ->label('IP Address')
+                    ->readOnly()
+                    ->disabled(true),
+            ]),
+
+            Forms\Components\Section::make('Consumables')->columns(2)->schema([
+                Forms\Components\TextInput::make('configuration.consumables.cubeDurability')
+                    ->label('Cube Durability')
+                    ->suffix('days')
+                    ->numeric(),
+                Forms\Components\TextInput::make('configuration.consumables.cubeNextChange')
+                    ->label('Next Cube Change in Days')
+                    ->formatStateUsing(function ($state) {
+                        if ($state <= 0) {
+                            return 'Not set';
+                        }
+                        $date = Carbon::parse($state);
+                        $now = Carbon::now();
+
+                        return round($now->diffInDays($date));
+                    })
                     ->readOnly()
                     ->disabled(true),
             ]),

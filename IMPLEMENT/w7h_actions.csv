@@ -1,0 +1,27 @@
+command,payload_discriminator,action_field,parameters,device_variant,notes
+power,"strcmp(cmd,""power"")",power_action,-,all,Power on/off toggle
+start,"strcmp(cmd,""start"")",start_action,key,all,Start a session (e.g. feed/monitor); key likely identifies sub-target
+stop,"strcmp(cmd,""stop"")",stop_action,-,all,Stop current session
+end,"strcmp(cmd,""end"")",end_action,-,all,End current session
+continue,"strcmp(cmd,""continue"")",continue_action,-,all,Resume/continue paused session
+reset_pet,"strcmp(cmd,""reset_pet"")",reset_pet_action,-,all,Reset pet-detection/recognition state
+lapse,"strcmp(cmd,""lapse"")",lapse_action,-,all,Timelapse trigger (camera)
+added,"strcmp(cmd,""added"")","(none - re-reads ""added"" field itself, then falls through to generic handling)",added,all,"Acknowledgement / no distinct action, evidence weak"
+play_sound,"strcmp(cmd,""play_sound"")",-,soundId,all,Play a built-in sound by id
+start_live,"strcmp(cmd,""start_live"")",-,"license, rtcToken, channelId, definition, rtmToken, appRtmUserId, devRtmUserId",all,Starts Agora RTC video-call session (shares param block with start_rtm)
+start_rtm,"strcmp(cmd,""start_rtm"")",-,"license, rtcToken, channelId, definition, rtmToken, appRtmUserId, devRtmUserId",all,Starts Agora RTM messaging session (same param block as start_live)
+open_camera,"strcmp(cmd,""open_camera"")",-,duration,all,Open live camera preview for N seconds
+open_camera_real,"strcmp(cmd,""open_camera_real"")",-,duration,all,Variant of open_camera (raw/real stream)
+clear_cwt_light,"strcmp(cmd,""clear_cwt_light"")",-,"(unlabeled - single GetObjectItem call, key string not resolved in this pass)",all,Clears the clean-water-tray warning light (cleanWaterLackLight/cleanWaterEmptyLight)
+temp_report_action,"strcmp(cmd,""temp_report_action"")  [note: full action name used as the cmd string itself]",-,temp_report,all,Ingests a device temperature report
+add_water_Reset,"strcmp(cmd,""add_water_Reset"")",-,(unlabeled - single GetObjectItem call),all,Resets the add-watzer switch/counter state (see addWaterSwitch)
+ble_relay_update,"strcmp(cmd,""ble_relay_update"")",update_action,-,all,BLE relay module firmware/state update
+connect,"strcmp(cmd,""connect"")",connect_action,-,all,Connect/pair trigger
+ble,"strcmp(cmd,""ble"")",-,(forwarded),all,Routes to BLE relay handler (pk_hmi_ctrl_BD_relay_cmd_action family @0x4f4bc)
+privacy,"strcmp(cmd,""privacy"")",privacy_actfion,-,all,Privacy mode toggle (camera cover/mute)
+discern,"strcmp(cmd,""discern"")",-,discern_get,all,Pet recognition/discernment query
+reset_bagbox,"strcmp(cmd,""reset_bagbox"")",-,-,all (likely shared litter-box firmware base),"Simple trigger; name suggests litter-box hardware, may be inert on the W7H fountain"
+clear_softstate,"strcmp(cmd,""clear_softstate"")",-,-,all,Clears soft error/fault state
+reset_cycle_pump,"strcmp(cmd,""reset_cycle_pump"")",-,-,all,"No JSON params - posts fixed event (r1=0x12) into the same event-dispatch path as start/stop. Matches app label ""Drain and Flush"" (cycles/resets the circulation pump)"
+reset_lift_valve,"strcmp(cmd,""reset_lift_valve"")",-,-,all,"No JSON params - posts fixed event (r1=0x10) into the same event-dispatch path. Matches app label ""Deep Clean"" (resets the lift valve to fully drain the tank for cleaning)"
+power_on_do_action / power_off_do_action,log-tag only; exact strcmp discriminator not traced in this pass,-,-,all,Two log-tagged internal handlers near dispatcher preamble (0x43636/0x436de); relationship to a specific payload cmd string not confirmed - flagged for follow-up
