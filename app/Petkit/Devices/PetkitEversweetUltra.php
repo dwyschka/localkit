@@ -34,7 +34,7 @@ use PhpMqtt\Client\Facades\MQTT;
  *
  * `snapshot` (via Go2RTC, no vendor MQTT contract needed), the generic
  * settings/property_set push (shared infra, already proven by the other
- * NextGen devices) and `add_water_Reset`/`reset_cycle_pump`/`reset_lift_valve`
+ * NextGen devices) and `add_water_reset`/`reset_cycle_pump`/`reset_lift_valve`
  * (via the same `thing.service.<name>` RPC shape already confirmed for
  * `start`/`connect`) are wired to real MQTT traffic. The remaining commands
  * from w7h_actions.csv (power/start/stop/lapse/play_sound/...) are known to

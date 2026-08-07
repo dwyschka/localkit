@@ -10,10 +10,10 @@ class AddWaterReset extends JsonResource
     public function toArray(Request $request)
     {
         return [
-            "method" => 'thing.service.add_water_Reset',
+            "method" => 'thing.service.add_water_reset',
             'id' => (string)time(),
             "params" => [
-                "add_water_Reset_action" => 1,
+                "add_water_reset_action" => 1,
             ],
             "version" => "1.0.0",
         ];
