@@ -23,6 +23,12 @@ class Device extends Model
 
     protected static function booted()
     {
+        self::creating(function ($device) {
+            if (empty($device->name)) {
+                $device->name = $device->serial_number;
+            }
+        });
+
         self::updated(function ($device) {
 
             try {

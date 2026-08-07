@@ -283,6 +283,16 @@ class DeviceActions
                 ->action(function (Device $record) {
                     $record->definition()->resetWorkingState($record);
                 }),
+            // Available to every device: the `error` field is model-level (set e.g.
+            // by a failed OTA, see DevOtaController), so clearing it does not need
+            // per-device logic. Shown only while there is an error to clear.
+            Action::make('Reset Error')
+                ->label('Reset Error')
+                ->visible(fn(Device $record) => filled($record->error))
+                ->requiresConfirmation()
+                ->action(function (Device $record) {
+                    $record->update(['error' => null]);
+                }),
         ];
     }
 }

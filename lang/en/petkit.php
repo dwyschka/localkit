@@ -23,5 +23,7 @@ return [
         'pump_malfunction' => 'The circulation pump has a fault',
         'heater_malfunction' => 'The heater has a fault',
         'heater_low_water' => 'The heater is protecting against low water',
+        'ota_failed' => 'The firmware update failed',
+        'ota_task_failed' => 'The firmware update could not be started (device out of resources)',
     ]
 ];

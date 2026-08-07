@@ -38,6 +38,24 @@ services:
         environment:
             - LOCALKIT=http://localkit
 
+    localkit-storage:
+        image: dxflrs/garage:v2.3.0
+        container_name: garage
+        restart: unless-stopped
+        command: /garage server --single-node --default-bucket
+        volumes:
+            - ./s3/garage.toml:/etc/garage.toml:ro   # Config (Bind-Mount, read-only)
+            - ./s3/meta:/var/lib/garage/meta    # Metadaten
+            - ./s3/data:/var/lib/garage/data    # Objektdaten (die eigentlichen Dateien)
+        environment:
+            # Seit v2.3.0: legt beim ersten Start automatisch Layout,
+            # Key und Bucket an. Diese Credentials nutzt du im S3-Client.
+            GARAGE_DEFAULT_ACCESS_KEY: "GKe1fd06e4975f7148c6f4359fa9d50163"
+            GARAGE_DEFAULT_SECRET_KEY: "b2ebda94643d392065f5381599e6db2a1a87367786742dfce9aac56e4904d9ab"
+            GARAGE_DEFAULT_BUCKET: "localkit"
+            GARAGE_RPC_SECRET: "c3a420b7e56ef9af4f10cdc7fd63ce85ea3bbc0d01ca25c8f9b599b4758c3bea"
+            GARAGE_ADMIN_TOKEN: "VAzx8x90il2aqyJxTmPksAKEmbjyEIQae/g7VC+rnXk="
+            GARAGE_METRICS_TOKEN: "5Y4IRSRx3FVcrwsTFWPYf0s1qUPZCoZ1w2h5oERyLtI="
 volumes:
     localkit-storage:
     localkit-logs:
