@@ -18,8 +18,6 @@ class DevFallbackController extends Controller
             'body'    => $request->all(),
         ]);
 
-        $this->proxyLite($request);
-
         return response()->json(['error' => 'not_found'], 404);
     }
 }

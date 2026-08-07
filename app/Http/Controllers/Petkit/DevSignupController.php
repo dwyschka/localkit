@@ -47,10 +47,6 @@ class DevSignupController extends Controller
             ]);
         }
 
-//        if(is_null($device) || ($device?->proxy_mode ?? 1)) {
-//            return $this->proxy($request);
-//        }
-
         try {
             $device->update([
                 'configuration' => $device->configuration()->toArray(),

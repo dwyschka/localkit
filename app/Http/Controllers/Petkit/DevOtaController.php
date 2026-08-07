@@ -22,15 +22,7 @@ class DevOtaController extends Controller
 
         Log::info('OTA', [$request->toArray()]);
 
-        if(is_null($device) || ($device?->proxy_mode ?? 1)) {
-            return $this->proxy($request);
-        }
-
         if($device?->ota_state) {
-            // dev_ota_complete always carries a `success` field (derived from the
-            // otafail reason code, see D4_OTA_HTTP_workflow.txt §6.3); dev_ota_start
-            // does not. Absence of `success` therefore means the device just began
-            // downloading/flashing the new firmware.
             if ($request->has('success')) {
                 if ($request->input('success') === '1') {
                     $device->update([

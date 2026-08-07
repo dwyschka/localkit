@@ -239,12 +239,7 @@ class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxy
 
     public function hasAction(string $action): bool
     {
-        $hasAction = in_array($action, $this->actions);
-        if ($this->device->proxy_mode == 1) {
-            return false;
-        }
-
-        return $hasAction;
+        return in_array($action, $this->actions);
     }
 
     public function takeSnapshot(Device $record): void
