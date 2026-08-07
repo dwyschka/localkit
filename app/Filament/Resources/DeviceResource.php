@@ -62,12 +62,6 @@ class DeviceResource extends Resource
                     ->helperText('Set by the device firmware — indicates whether an OTA update is available')
                     ->columnSpan('half')
                     ->disabled(),
-                Forms\Components\Toggle::make('proxy_mode')
-                    ->columnSpan('half')
-                    ->helperText('If the field is disabled, please set a secret and the MQTT subdomain')
-                    ->disabled(function ($record) {
-                        return (empty($record->secret) || empty($record->mqtt_subdomain));
-                    }),
                 Forms\Components\Toggle::make('debug_mode')
                     ->columnSpan('half')
                     ->helperText('Logs all incoming HTTP requests from this device to storage/logs/device_{serial}.log'),
