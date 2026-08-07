@@ -17,12 +17,6 @@ class DevServerinfoController extends Controller
         $deviceId = PetkitHeader::petkitId($request->header('X-Device'));
         $device = Device::wherePetkitId($deviceId)->firstOrFail();
 
-        if(is_null($device) || ($device?->proxy_mode ?? 1)) {
-
-            Log::info($deviceId, ['proxy']);
-            $this->proxy($request);
-        }
-
         return new DevServerinfoResource($device);
     }
 }

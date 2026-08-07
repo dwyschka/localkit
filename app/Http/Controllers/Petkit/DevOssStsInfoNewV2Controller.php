@@ -14,6 +14,6 @@ class DevOssStsInfoNewV2Controller extends Controller
 
     public function __invoke(Request $request)
     {
-        $this->proxy($request);
+        return response()->json([]);
     }
 }

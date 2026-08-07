@@ -23,6 +23,12 @@ class Device extends Model
 
     protected static function booted()
     {
+        self::creating(function ($device) {
+            if (empty($device->name)) {
+                $device->name = $device->serial_number;
+            }
+        });
+
         self::updated(function ($device) {
 
             try {
@@ -77,7 +83,7 @@ class Device extends Model
     ];
 
     protected $fillable = [
-        'ota_state', 'ota_available', 'available_version', 'name', 'proxy_mode', 'debug_mode', 'device_type', 'firmware', 'mac', 'timezone', 'locale', 'petkit_id', 'serial_number', 'bt_mac', 'ap_mac', 'chip_id', 'mqtt_subdomain', 'last_heartbeat', 'working_state', 'error', 'mqtt_connected', 'configuration', 'secret', 'link_with'
+        'ota_state', 'ota_available', 'available_version', 'name', 'debug_mode', 'device_type', 'firmware', 'mac', 'timezone', 'locale', 'petkit_id', 'serial_number', 'bt_mac', 'ap_mac', 'chip_id', 'mqtt_subdomain', 'last_heartbeat', 'working_state', 'error', 'mqtt_connected', 'configuration', 'secret', 'link_with'
     ];
 
     public function histories(): HasMany
@@ -106,6 +112,7 @@ class Device extends Model
             'd4h' => new Devices\PetkitYumshareSolo($this),
             'd4sh' => new Devices\PetkitYumshareDual($this),
             't7' => new Devices\PetkitPurobotCrystal($this),
+            'w7h' => new Devices\PetkitEversweetUltra($this),
         };
     }
 
@@ -119,6 +126,7 @@ class Device extends Model
             'd4h' => Devices\Configuration\PetkitYumshareSolo::fromDevice($this),
             'd4sh' => Devices\Configuration\PetkitYumshareDual::fromDevice($this),
             't7' => Devices\Configuration\PetkitPurobotCrystal::fromDevice($this),
+            'w7h' => Devices\Configuration\PetkitEversweetUltra::fromDevice($this),
         };
     }
 
@@ -132,6 +140,7 @@ class Device extends Model
             'd4h' => new UI\PetkitYumshareSolo($this),
             'd4sh' => new UI\PetkitYumshareDual($this),
             't7' => new UI\PetkitPurobotCrystal($this),
+            'w7h' => new UI\PetkitEversweetUltra($this),
         };
     }
 

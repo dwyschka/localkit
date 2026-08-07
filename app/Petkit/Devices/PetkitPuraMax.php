@@ -261,9 +261,6 @@ class PetkitPuraMax implements DeviceDefinition, BluetoothProxyInterface
         $hasAction = in_array($action, $this->actions);
         $hasK3 = !empty($this->getK3());
 
-        if ($this->device->proxy_mode == 1) {
-            return false;
-        }
         switch ($action) {
             case DeviceActions::RESET_N50:
                 return $hasAction;

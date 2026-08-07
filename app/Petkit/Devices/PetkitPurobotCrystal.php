@@ -174,9 +174,7 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
     public function hasAction(string $action): bool
     {
         $hasAction = in_array($action, $this->actions);
-        if ($this->device->proxy_mode == 1) {
-            return false;
-        }
+
         switch ($action) {
             case DeviceActions::START_CLEAN:
             case DeviceActions::DEODORIZE:

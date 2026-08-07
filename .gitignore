@@ -23,3 +23,5 @@ yarn-error.log
 storage/localkit.sqlite
 /build
 /scripts/.build-cache
+/IMPLEMENT
+.DS_Store

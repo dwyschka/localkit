@@ -23,10 +23,6 @@ class HeartbeatController extends Controller
             return new HeartbeatOtaResource($device);
         }
 
-        if(is_null($device) || ($device?->proxy_mode ?? 1)) {
-            $this->proxy($request);
-        }
-
         $device->update([
             'last_heartbeat' => time()
         ]);

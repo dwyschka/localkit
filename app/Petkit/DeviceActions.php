@@ -47,6 +47,11 @@ class DeviceActions
 
     public const RESET_WORKING_STATE = 'reset_working_state';
 
+    public const RESET_ADD_WATER = 'reset_add_water';
+    public const RESET_CUBE = 'reset_cube';
+    public const DRAIN_AND_FLUSH = 'drain_and_flush';
+    public const DEEP_CLEAN = 'deep_clean';
+
 
     public static function actions()
     {
@@ -230,6 +235,38 @@ class DeviceActions
                 ->action(function (Device $record) {
                     $record->definition()->takeSnapshot($record);
                 }),
+            Action::make('Reset Add Water')
+                ->visible(function (Device $record) {
+                    return $record->definition()->hasAction(self::RESET_ADD_WATER);
+                })
+                ->requiresConfirmation()
+                ->action(function (Device $record) {
+                    $record->definition()->resetAddWater($record);
+                }),
+            Action::make('Reset Cube')
+                ->visible(function (Device $record) {
+                    return $record->definition()->hasAction(self::RESET_CUBE);
+                })
+                ->requiresConfirmation()
+                ->action(function (Device $record) {
+                    $record->definition()->resetCube($record);
+                }),
+            Action::make('Drain and Flush')
+                ->visible(function (Device $record) {
+                    return $record->definition()->hasAction(self::DRAIN_AND_FLUSH);
+                })
+                ->requiresConfirmation()
+                ->action(function (Device $record) {
+                    $record->definition()->drainAndFlush($record);
+                }),
+            Action::make('Deep Clean')
+                ->visible(function (Device $record) {
+                    return $record->definition()->hasAction(self::DEEP_CLEAN);
+                })
+                ->requiresConfirmation()
+                ->action(function (Device $record) {
+                    $record->definition()->deepClean($record);
+                }),
             Action::make('Reboot')
                 ->visible(function (Device $record) {
                     return $record->definition()->hasAction(self::REBOOT);
@@ -245,6 +282,16 @@ class DeviceActions
                 ->requiresConfirmation()
                 ->action(function (Device $record) {
                     $record->definition()->resetWorkingState($record);
+                }),
+            // Available to every device: the `error` field is model-level (set e.g.
+            // by a failed OTA, see DevOtaController), so clearing it does not need
+            // per-device logic. Shown only while there is an error to clear.
+            Action::make('Reset Error')
+                ->label('Reset Error')
+                ->visible(fn(Device $record) => filled($record->error))
+                ->requiresConfirmation()
+                ->action(function (Device $record) {
+                    $record->update(['error' => null]);
                 }),
         ];
     }

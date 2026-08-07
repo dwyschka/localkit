@@ -11,6 +11,7 @@ enum DeviceStates: string
     case ONLINE = 'ONLINE';
     case CLEANING = 'CLEANING';
     case MAINTENANCE = 'MAINTENANCE';
+    case UPDATING = 'UPDATING';
     case PET_IN = 'IN USE';
 
 }
