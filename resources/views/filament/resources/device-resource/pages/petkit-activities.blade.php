@@ -1,0 +1,63 @@
+<x-filament-panels::page>
+    @php($histories = $this->getHistories())
+
+    <style>
+        .petkit-timeline { position: relative; padding-left: 2.75rem; }
+        .petkit-timeline::before {
+            content: '';
+            position: absolute;
+            left: 1.25rem;
+            top: 0.25rem;
+            bottom: 0.25rem;
+            width: 2px;
+            background: var(--gray-200);
+        }
+        .dark .petkit-timeline::before { background: var(--gray-700); }
+        .petkit-timeline__item { position: relative; padding-bottom: 1.75rem; }
+        .petkit-timeline__item:last-child { padding-bottom: 0; }
+        .petkit-timeline__node {
+            position: absolute;
+            left: -1.75rem;
+            top: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.25rem;
+            height: 2.25rem;
+            border-radius: 9999px;
+            background: color-mix(in oklch, var(--color-500) 15%, transparent);
+            color: var(--color-500);
+        }
+        .petkit-timeline__node svg { width: 1.25rem; height: 1.25rem; }
+        .petkit-timeline__title { font-weight: 600; font-size: 0.95rem; }
+        .petkit-timeline__desc { color: var(--gray-500); font-size: 0.875rem; margin-top: 0.125rem; }
+        .petkit-timeline__date { color: var(--gray-400); font-size: 0.75rem; margin-top: 0.25rem; }
+    </style>
+
+    @if ($histories->isEmpty())
+        <x-filament::section>
+            <div style="text-align:center;padding:1.5rem 0;color:var(--gray-500);font-size:0.875rem;">
+                {{ __('No activities recorded yet.') }}
+            </div>
+        </x-filament::section>
+    @else
+        <x-filament::section>
+            <div class="petkit-timeline">
+                @foreach ($histories as $history)
+                    @php($meta = \App\Filament\Resources\DeviceResource\Pages\PetkitActivities::typeMeta($history->type))
+                    <div class="petkit-timeline__item">
+                        <span class="petkit-timeline__node" style="{{ \Filament\Support\get_color_css_variables($meta['color'], shades: [500]) }}">
+                            @svg($meta['icon'])
+                        </span>
+
+                        <div class="petkit-timeline__title">{{ $history->title() }}</div>
+                        <div class="petkit-timeline__desc">{!! $history->message() !!}</div>
+                        <div class="petkit-timeline__date">
+                            {{ $history->created_at?->timezone('Europe/Berlin')?->format('F j, Y · H:i') }}
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </x-filament::section>
+    @endif
+</x-filament-panels::page>

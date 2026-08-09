@@ -169,6 +169,13 @@ class DeviceResource extends Resource
                     ->button()
                     ->color('gray')
                     ->size('sm'),
+                Action::make('view_activities')
+                    ->label('Activities')
+                    ->icon('heroicon-m-bolt')
+                    ->color('purple')
+                    ->button()
+                    ->size('sm')
+                    ->url(fn($record) => DeviceResource::getUrl('activities', ['record' => $record])),
 
                 ...array_map(
                     function (Action $action) {
@@ -223,6 +230,7 @@ class DeviceResource extends Resource
         return [
             'index' => ListDevices::route('/'),
             'edit' => EditDevice::route('/{record}/edit'),
+            'activities' => Pages\PetkitActivities::route('/{record}/activities'),
         ];
     }
 }
