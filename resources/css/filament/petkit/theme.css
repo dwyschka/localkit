@@ -1,3 +1,22 @@
 @import '../../../../vendor/filament/filament/resources/css/theme.css';
 
 @config 'tailwind.config.js';
+
+/* Lay the per-card control buttons out as a tidy 2-per-row grid instead of a
+   single overflowing row (Filament defaults to a nowrap flex row at >= sm). */
+.fi-ta-content-grid .fi-ta-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+    width: 100%;
+}
+
+/* Make every action fill its grid cell so the buttons line up evenly. */
+.fi-ta-content-grid .fi-ta-actions > * {
+    width: 100%;
+}
+
+.fi-ta-content-grid .fi-ta-actions .fi-btn {
+    width: 100%;
+    justify-content: center;
+}

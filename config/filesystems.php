@@ -49,7 +49,9 @@ return [
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => env('APP_URL').'/storage',
+            // Root-relative by default so uploaded files resolve against whatever
+            // host serves the panel (localhost, LAN IP, or the public domain).
+            'url' => env('PUBLIC_DISK_URL', '/storage'),
             'visibility' => 'public',
             'throw' => false,
             'report' => false,
