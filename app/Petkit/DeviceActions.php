@@ -50,6 +50,8 @@ class DeviceActions
     public const RESET_ADD_WATER = 'reset_add_water';
     public const RESET_CUBE = 'reset_cube';
     public const DRAIN_AND_FLUSH = 'drain_and_flush';
+    public const REFILL = 'refill';
+    public const DRAIN = 'drain';
     public const DEEP_CLEAN = 'deep_clean';
 
 
@@ -258,6 +260,22 @@ class DeviceActions
                 ->requiresConfirmation()
                 ->action(function (Device $record) {
                     $record->definition()->drainAndFlush($record);
+                }),
+            Action::make('Refill')
+                ->visible(function (Device $record) {
+                    return $record->definition()->hasAction(self::REFILL);
+                })
+                ->requiresConfirmation()
+                ->action(function (Device $record) {
+                    $record->definition()->refill($record);
+                }),
+            Action::make('Drain')
+                ->visible(function (Device $record) {
+                    return $record->definition()->hasAction(self::DRAIN);
+                })
+                ->requiresConfirmation()
+                ->action(function (Device $record) {
+                    $record->definition()->drain($record);
                 }),
             Action::make('Deep Clean')
                 ->visible(function (Device $record) {

@@ -7,9 +7,8 @@ use App\Helpers\JsonHelper;
 use App\Homeassistant\HomeassistantTopic;
 use App\Homeassistant\Interfaces\Snapshot;
 use App\Jobs\AddWaterReset;
-use App\Jobs\ResetCyclePump;
-use App\Jobs\ResetLiftValve;
 use App\Jobs\ServiceConnect;
+use App\Jobs\ServiceStart;
 use App\Jobs\SetProperty;
 use App\Jobs\TakeSnapshot;
 use App\Models\BluetoothDevice;
@@ -34,13 +33,13 @@ use PhpMqtt\Client\Facades\MQTT;
  *
  * `snapshot` (via Go2RTC, no vendor MQTT contract needed), the generic
  * settings/property_set push (shared infra, already proven by the other
- * NextGen devices) and `add_water_reset`/`reset_cycle_pump`/`reset_lift_valve`
- * (via the same `thing.service.<name>` RPC shape already confirmed for
- * `start`/`connect`) are wired to real MQTT traffic. The remaining commands
- * from w7h_actions.csv (power/start/stop/lapse/play_sound/...) are known to
- * exist on the device but their exact outbound payload shape was not
- * confirmed during firmware analysis, so they are intentionally left
- * unimplemented rather than guessed.
+ * NextGen devices), `add_water_reset` and the maintenance cycles
+ * (drain-and-flush/refill/drain/deep-clean, all `thing.service.start` with a
+ * `start_action` code confirmed from live MQTT capture - see startAction())
+ * are wired to real MQTT traffic. The remaining commands from w7h_actions.csv
+ * (power/stop/lapse/play_sound/...) are known to exist on the device but their
+ * exact outbound payload shape was not confirmed, so they are intentionally
+ * left unimplemented rather than guessed.
  */
 class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxyInterface, HasCamera
 {
@@ -52,8 +51,21 @@ class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxy
         DeviceActions::RESET_ADD_WATER,
         DeviceActions::RESET_CUBE,
         DeviceActions::DRAIN_AND_FLUSH,
+        DeviceActions::REFILL,
+        DeviceActions::DRAIN,
         DeviceActions::DEEP_CLEAN,
     ];
+
+    /**
+     * `start_action` values for `thing.service.start`, confirmed from live W7H
+     * MQTT capture. Unlike the litter-box firmware, the fountain does not have
+     * dedicated reset_cycle_pump/reset_lift_valve RPCs - every maintenance
+     * cycle is a `start` with one of these codes.
+     */
+    private const START_DRAIN_AND_FLUSH = 1;
+    private const START_REFILL = 2;
+    private const START_DRAIN = 3;
+    private const START_DEEP_CLEAN = 4;
 
     public function __construct(protected Device $device)
     {
@@ -103,6 +115,13 @@ class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxy
             sprintf('/sys/%s/%s/thing/event/error_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
                 $this->parseState($device, $message);
                 $this->recordErrorEvent($device, json_decode($message?->params?->content ?? 'null', false));
+
+                // error_over signals the fault named in `content.err` has ended
+                // (the accompanying state's `err` flags read all-clear), so drop
+                // the surfaced error state if one is still set.
+                if (filled($device->error)) {
+                    $device->update(['error' => null]);
+                }
             },
             sprintf('/sys/%s/%s/thing/event/work_start/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
                 $this->parseState($device, $message, DeviceStates::WORKING->value);
@@ -254,21 +273,37 @@ class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxy
 
     public function drainAndFlush(Device $record): void
     {
-        // No confirmed device-reported "flush in progress" event exists yet
-        // (IMPLEMENT/w7h_error_states.csv's flushState/pumpState/waterPumpState
-        // read 0 in every capture we have, even mid-cycle), so we mark WORKING
-        // optimistically here; the next property/post heartbeat resets it to
-        // IDLE once the (presumably brief) cycle has finished.
-        $record->update(['working_state' => DeviceStates::WORKING->value]);
-        ResetCyclePump::dispatchSync($record);
+        $this->startAction($record, self::START_DRAIN_AND_FLUSH);
+    }
+
+    public function refill(Device $record): void
+    {
+        $this->startAction($record, self::START_REFILL);
+    }
+
+    public function drain(Device $record): void
+    {
+        $this->startAction($record, self::START_DRAIN);
     }
 
     public function deepClean(Device $record): void
     {
-        // See drainAndFlush() - same reasoning, no confirmed liftValveState/
-        // liftResetState/liftLiveState value is known to mean "in progress".
+        $this->startAction($record, self::START_DEEP_CLEAN);
+    }
+
+    /**
+     * Triggers a maintenance cycle via `thing.service.start`.
+     *
+     * No confirmed device-reported "in progress" event exists for these cycles
+     * (IMPLEMENT/w7h_error_states.csv's flushState/pumpState/liftValveState read
+     * 0 in every capture we have, even mid-cycle), so we mark WORKING
+     * optimistically here; the next property/post heartbeat resets it to IDLE
+     * once the (presumably brief) cycle has finished.
+     */
+    private function startAction(Device $record, int $startAction): void
+    {
         $record->update(['working_state' => DeviceStates::WORKING->value]);
-        ResetLiftValve::dispatchSync($record);
+        ServiceStart::dispatchSync($record, $startAction);
     }
 
     public function resetCube(Device $record): void
@@ -350,6 +385,12 @@ class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxy
                 break;
             case 'drain_and_flush':
                 $this->drainAndFlush($this->getDevice());
+                break;
+            case 'refill':
+                $this->refill($this->getDevice());
+                break;
+            case 'drain':
+                $this->drain($this->getDevice());
                 break;
             case 'deep_clean':
                 $this->deepClean($this->getDevice());

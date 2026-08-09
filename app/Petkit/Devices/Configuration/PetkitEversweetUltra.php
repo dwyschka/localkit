@@ -1137,6 +1137,26 @@ class PetkitEversweetUltra extends DeviceConfigurationDTO implements Configurati
     private $actionDrainAndFlush = 1;
 
     #[Button(
+        technicalName: 'action_refill',
+        name: 'Refill',
+        commandTopic: 'action/start',
+        icon: 'mdi:water-plus',
+        commandTemplate: '{"action": "refill"}',
+        availabilityTemplate: 'online',
+    )]
+    private $actionRefill = 1;
+
+    #[Button(
+        technicalName: 'action_drain',
+        name: 'Drain',
+        commandTopic: 'action/start',
+        icon: 'mdi:water-minus',
+        commandTemplate: '{"action": "drain"}',
+        availabilityTemplate: 'online',
+    )]
+    private $actionDrain = 1;
+
+    #[Button(
         technicalName: 'action_deep_clean',
         name: 'Deep Clean',
         commandTopic: 'action/start',
