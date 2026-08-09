@@ -14,7 +14,8 @@ use App\Http\Controllers\Petkit\DevMultiConfigController;
 use App\Http\Controllers\Petkit\DevOnlyIotDeviceInfoController;
 use App\Http\Controllers\Petkit\DevOssStsInfoNewV2Controller;
 use App\Http\Controllers\Petkit\DevOtaCheckController;
-use App\Http\Controllers\Petkit\DevOtaController;
+use App\Http\Controllers\Petkit\DevOtaCompleteController;
+use App\Http\Controllers\Petkit\DevOtaStartController;
 use App\Http\Controllers\Petkit\DevScheduleGetController;
 use App\Http\Controllers\Petkit\DevServerinfoController;
 use App\Http\Controllers\Petkit\DevSignupController;
@@ -35,8 +36,8 @@ Route::prefix('{deviceType}')->group(function () {
 
     Route::post('dev_iot_device_info', DevIotDeviceInfoController::class);
     Route::post('dev_ota_check', DevOtaCheckController::class);
-    Route::post('dev_ota_start', DevOtaController::class);
-    Route::post('dev_ota_complete', DevOtaController::class);
+    Route::post('dev_ota_start', DevOtaStartController::class);
+    Route::post('dev_ota_complete', DevOtaCompleteController::class);
     Route::post('dev_serverinfo', DevServerinfoController::class);
     Route::post('dev_multi_config', DevMultiConfigController::class);
     Route::post('dev_ble_device', DevBleDeviceController::class);

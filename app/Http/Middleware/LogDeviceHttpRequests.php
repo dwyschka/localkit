@@ -55,6 +55,7 @@ class LogDeviceHttpRequests
             'headers' => $request->headers->all(),
             'body' => $request->all(),
             'response_status' => $response->getStatusCode(),
+            'response_headers' => $response->headers->all(),
             'response_body' => $response->getContent(),
         ];
 
