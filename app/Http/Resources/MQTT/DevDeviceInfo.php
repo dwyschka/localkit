@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\MQTT;
 
+use App\Models\Device;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -10,7 +11,7 @@ class DevDeviceInfo extends JsonResource
 
     public function toArray(Request $request)
     {
-        /** @var \App\Models\Device $this->resource */
+        /** @var Device $this ->resource */
         return [
             'msgType' => 0,
             'payload' => [

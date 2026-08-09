@@ -2,6 +2,12 @@
 
 namespace App\Petkit\UI;
 
+use Filament\Schemas\Components\Section;
+use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Forms\Components\ViewField;
+use Filament\Forms\Components\Select;
 use App\Helpers\Time;
 use App\Jobs\ServiceEnd;
 use App\Jobs\ServiceStart;
@@ -14,11 +20,8 @@ use App\Petkit\DeviceDefinition;
 use App\Petkit\DeviceStates;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
-use Filament\Forms\Get;
-use Filament\Forms\Set;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -32,9 +35,9 @@ class PetkitFreshElement3
     public function formFields(): array
     {
         return [
-            Forms\Components\Section::make('Consumables')->columns(2)->schema([
-                Forms\Components\TextInput::make('configuration.consumables.desiccantDurability')->numeric(),
-                Forms\Components\TextInput::make('configuration.consumables.desiccantNextChange')->label('Next Reset in Days (Desiccant)')->formatStateUsing(function ($state) {
+            Section::make('Consumables')->columns(2)->schema([
+                TextInput::make('configuration.consumables.desiccantDurability')->numeric(),
+                TextInput::make('configuration.consumables.desiccantNextChange')->label('Next Reset in Days (Desiccant)')->formatStateUsing(function ($state) {
                     if ($state <= 0) {
                         return 'Not set';
                     }
@@ -45,23 +48,23 @@ class PetkitFreshElement3
 
                 })->readOnly()->disabled(true),
             ]),
-            Forms\Components\Section::make('Feeding')->schema([
-                Forms\Components\TextInput::make('configuration.settings.amount')
+            Section::make('Feeding')->schema([
+                TextInput::make('configuration.settings.amount')
                     ->label('Feeding Amount')
                     ->helperText('Default amount for manual feeding')
                     ->numeric()
             ]),
-            Forms\Components\Section::make('Settings')->columns(2)->schema([
-                Forms\Components\Toggle::make('configuration.settings.manualLock')
+            Section::make('Settings')->columns(2)->schema([
+                Toggle::make('configuration.settings.manualLock')
                     ->helperText('Activate Child Lock to disable the control panel')
                     ->columnSpan('half')
                     ->label('Child Lock'),
 
-                Forms\Components\Toggle::make('configuration.settings.lightMode')
+                Toggle::make('configuration.settings.lightMode')
                     ->helperText('Indicator light work within the following period')
                     ->label('Indicator Light'),
 
-                Forms\Components\Section::make('Light Period')->schema([
+                Section::make('Light Period')->schema([
                     TimePicker::make('configuration.settings.lightRange.from')
                         ->formatStateUsing(function ($state) {
                             return Time::toTimeFromMinutes((int)$state);
@@ -83,25 +86,25 @@ class PetkitFreshElement3
                     ->columns(2)
                     ->columnSpanFull(),
 
-                Forms\Components\Toggle::make('configuration.settings.soundEnable')
+                Toggle::make('configuration.settings.soundEnable')
                     ->helperText('Play the voice when the food is dispensing')
                     ->label('Voice for Food Dispensing'),
 
-                Forms\Components\Toggle::make('configuration.settings.systemSoundEnable')
+                Toggle::make('configuration.settings.systemSoundEnable')
                     ->helperText('Turn on the voice prompt of the device')
                     ->label('Voice Prompt'),
 
-                Forms\Components\TextInput::make('configuration.settings.volume')
+                TextInput::make('configuration.settings.volume')
                     ->label('Volume')
                     ->numeric()
                     ->minValue(0)
                     ->maxValue(9),
 
-                Forms\Components\Toggle::make('configuration.settings.disturbMode')
+                Toggle::make('configuration.settings.disturbMode')
                     ->helperText('Mute sounds and lights within the following period')
                     ->label('Do Not Disturb'),
 
-                Forms\Components\Section::make('Do Not Disturb Period')->schema([
+                Section::make('Do Not Disturb Period')->schema([
                     TimePicker::make('configuration.settings.disturbRange.from')
                         ->formatStateUsing(function ($state) {
                             return Time::toTimeFromMinutes((int)$state);
@@ -123,11 +126,11 @@ class PetkitFreshElement3
                     ->columns(2)
                     ->columnSpanFull(),
 
-                Forms\Components\Toggle::make('configuration.settings.surplusControl')
+                Toggle::make('configuration.settings.surplusControl')
                     ->helperText('Pause dispensing while enough food is left in the bowl')
                     ->label('Surplus Control'),
 
-                Forms\Components\TextInput::make('configuration.settings.surplus')
+                TextInput::make('configuration.settings.surplus')
                     ->label('Surplus Amount')
                     ->numeric()
                     ->suffix('g'),
@@ -258,25 +261,25 @@ class PetkitFreshElement3
                             return !empty($days) ? implode(', ', $days) : 'New Schedule';
                         }),
                 ]),
-            Forms\Components\Section::make('Unknown')->columns(2)->schema([
+            Section::make('Unknown')->columns(2)->schema([
 
-                Forms\Components\ViewField::make('UnknownWarning')
+                ViewField::make('UnknownWarning')
                     ->columnSpanFull()
                     ->view('filament.forms.warning')
                     ->viewData(['message' => 'Its Unknown, because the changes are not verified']),
 
 
-                Forms\Components\Select::make('configuration.settings.language')->options([
+                Select::make('configuration.settings.language')->options([
                     'en_US' => 'English',
                     'zh_CN' => 'Chinese'
                 ])->label('Language'),
 
-                Forms\Components\TextInput::make('configuration.settings.selectedSound')
+                TextInput::make('configuration.settings.selectedSound')
                     ->columnSpan('half')
                     ->readOnly()
                     ->numeric()
                     ->label('Selected Sound'),
-                Forms\Components\TextInput::make('configuration.settings.numLimit')
+                TextInput::make('configuration.settings.numLimit')
                     ->columnSpan('half')
                     ->readOnly()
                     ->numeric()

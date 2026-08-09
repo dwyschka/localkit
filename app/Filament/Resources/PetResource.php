@@ -2,11 +2,24 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Support\Enums\TextSize;
+use Filament\Tables\Columns\ImageColumn;
+use Filament\Actions\EditAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use App\Filament\Resources\PetResource\Pages\ListPets;
+use App\Filament\Resources\PetResource\Pages\CreatePet;
+use App\Filament\Resources\PetResource\Pages\EditPet;
 use App\Filament\Resources\PetResource\Pages;
 use App\Filament\Resources\PetResource\RelationManagers;
 use App\Models\Pet;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables;
@@ -20,13 +33,13 @@ class PetResource extends Resource
 {
     protected static ?string $model = Pet::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-heart';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-heart';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                Forms\Components\FileUpload::make('images')
+        return $schema
+            ->components([
+                FileUpload::make('images')
                     ->label('Photos')
                     ->image()
                     ->multiple()
@@ -38,17 +51,17 @@ class PetResource extends Resource
                     ->visibility('public')
                     ->columnSpanFull(),
 
-                Forms\Components\TextInput::make('name')->columnSpan('half')->required(),
-                Forms\Components\TextInput::make('weight')->numeric(true)->columnSpan('half')->required(),
+                TextInput::make('name')->columnSpan('half')->required(),
+                TextInput::make('weight')->numeric(true)->columnSpan('half')->required(),
 
-                Forms\Components\DatePicker::make('birthdate')->columnSpan('half')->required(),
-                Forms\Components\TextInput::make('species')->columnSpan('half')->required(),
+                DatePicker::make('birthdate')->columnSpan('half')->required(),
+                TextInput::make('species')->columnSpan('half')->required(),
 
-                Forms\Components\Select::make('gender')->options([
+                Select::make('gender')->options([
                     0 => 'Male',
                     1 => 'Female',
                 ])->required(),
-                Forms\Components\Select::make('sterilised')->options([
+                Select::make('sterilised')->options([
                     false => 'no',
                     true => 'yes',
                 ])->required()
@@ -66,11 +79,11 @@ class PetResource extends Resource
                 Stack::make([
                     // 1. Name (with gender badge)
                     Split::make([
-                        Tables\Columns\TextColumn::make('name')
+                        TextColumn::make('name')
                             ->searchable()
                             ->weight(FontWeight::Bold)
-                            ->size(Tables\Columns\TextColumn\TextColumnSize::Large),
-                        Tables\Columns\TextColumn::make('gender')
+                            ->size(TextSize::Large),
+                        TextColumn::make('gender')
                             ->badge()
                             ->grow(false)
                             ->color(fn(string $state): string => $state === '0' ? 'info' : 'pink')
@@ -78,7 +91,7 @@ class PetResource extends Resource
                     ]),
 
                     // 2. Photo (first image only)
-                    Tables\Columns\ImageColumn::make('images')
+                    ImageColumn::make('images')
                         ->label('Photo')
                         ->disk('public')
                         // `images` is an array of paths — only show the first photo on the card.
@@ -90,11 +103,11 @@ class PetResource extends Resource
 
                     // 3. Metadata
                     Split::make([
-                        Tables\Columns\TextColumn::make('species')
+                        TextColumn::make('species')
                             ->searchable()
                             ->color('gray')
                             ->icon('heroicon-m-sparkles'),
-                        Tables\Columns\TextColumn::make('weight')
+                        TextColumn::make('weight')
                             ->searchable()
                             ->color('gray')
                             ->icon('heroicon-m-scale')
@@ -106,15 +119,15 @@ class PetResource extends Resource
             ->filters([
                 //
             ])
-            ->actions([
-                Tables\Actions\EditAction::make()
+            ->recordActions([
+                EditAction::make()
                     ->button()
                     ->size('sm'),
             ])
-            ->actionsAlignment('left')
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+            ->recordActionsAlignment('start')
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }
@@ -129,9 +142,9 @@ class PetResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListPets::route('/'),
-            'create' => Pages\CreatePet::route('/create'),
-            'edit' => Pages\EditPet::route('/{record}/edit'),
+            'index' => ListPets::route('/'),
+            'create' => CreatePet::route('/create'),
+            'edit' => EditPet::route('/{record}/edit'),
         ];
     }
 }

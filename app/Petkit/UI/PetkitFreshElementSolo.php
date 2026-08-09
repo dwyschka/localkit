@@ -2,6 +2,11 @@
 
 namespace App\Petkit\UI;
 
+use Filament\Schemas\Components\Section;
+use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Forms\Components\ViewField;
 use App\Helpers\Time;
 use App\Jobs\ServiceEnd;
 use App\Jobs\ServiceStart;
@@ -14,11 +19,8 @@ use App\Petkit\DeviceDefinition;
 use App\Petkit\DeviceStates;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
-use Filament\Forms\Get;
-use Filament\Forms\Set;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -32,9 +34,9 @@ class PetkitFreshElementSolo
     public function formFields(): array
     {
         return [
-            Forms\Components\Section::make('Consumables')->columns(2)->schema([
-                Forms\Components\TextInput::make('configuration.consumables.desiccantDurability')->numeric(),
-                Forms\Components\TextInput::make('configuration.consumables.desiccantNextChange')->label('Next Reset in Days (Desiccant)')->formatStateUsing(function ($state) {
+            Section::make('Consumables')->columns(2)->schema([
+                TextInput::make('configuration.consumables.desiccantDurability')->numeric(),
+                TextInput::make('configuration.consumables.desiccantNextChange')->label('Next Reset in Days (Desiccant)')->formatStateUsing(function ($state) {
                     if ($state <= 0) {
                         return 'Not set';
                     }
@@ -45,18 +47,18 @@ class PetkitFreshElementSolo
 
                 })->readOnly()->disabled(true),
             ]),
-            Forms\Components\Section::make('Feeding')->schema([
-                Forms\Components\TextInput::make('configuration.settings.amount')
+            Section::make('Feeding')->schema([
+                TextInput::make('configuration.settings.amount')
                     ->label('Feeding Amount')
                     ->helperText('Default amount for manual feeding')
                     ->numeric(),
             ]),
-            Forms\Components\Section::make('Settings')->columns(1)->schema([
-                Forms\Components\Toggle::make('configuration.settings.foodWarn')
+            Section::make('Settings')->columns(1)->schema([
+                Toggle::make('configuration.settings.foodWarn')
                     ->helperText('Activate the sound alarm when the food container runs empty. To end the alarm press the dispense button')
                     ->label('Refill Alarm'),
 
-                Forms\Components\Section::make('Alarm Period')->schema([
+                Section::make('Alarm Period')->schema([
                     TimePicker::make('configuration.settings.foodWarnRange.from')
                         ->formatStateUsing(function ($state) {
                             return Time::toTimeFromMinutes((int)$state);
@@ -81,11 +83,11 @@ class PetkitFreshElementSolo
                     ->columns(2)
                     ->columnSpanFull(),
 
-                Forms\Components\Toggle::make('configuration.settings.manualLock')
+                Toggle::make('configuration.settings.manualLock')
                     ->helperText('Activate Child Lock to disable the control panel')
                     ->label('Child Lock'),
 
-                Forms\Components\Toggle::make('configuration.settings.lightMode')
+                Toggle::make('configuration.settings.lightMode')
                     ->helperText('Indicator light work within the following period')
                     ->label('Indicator Light'),
 
@@ -118,7 +120,7 @@ class PetkitFreshElementSolo
                         ]
                     ),
 
-                Forms\Components\Toggle::make('configuration.settings.feedSound')
+                Toggle::make('configuration.settings.feedSound')
                     ->helperText('Turn on the prompt tone, it will ring when the food is dispensing')
                     ->label('Food dispense prompt tone'),
             ]),
@@ -246,18 +248,18 @@ class PetkitFreshElementSolo
                             return !empty($days) ? implode(', ', $days) : 'New Schedule';
                         }),
                 ]),
-            Forms\Components\Section::make('Unknown')->columns(2)->schema([
+            Section::make('Unknown')->columns(2)->schema([
 
-                Forms\Components\ViewField::make('UnknownWarning')
+                ViewField::make('UnknownWarning')
                     ->columnSpanFull()
                     ->view('filament.forms.warning')
                     ->viewData(['message' => 'Its Unknown, because the changes are not verified']),
 
 
-                Forms\Components\Toggle::make('configuration.settings.shareOpen')
+                Toggle::make('configuration.settings.shareOpen')
                     ->columnSpan('half')
                     ->label('Share Open'),
-                Forms\Components\Toggle::make('configuration.settings.multiConfig')->columnSpan('half')->label('Multi Config'),
+                Toggle::make('configuration.settings.multiConfig')->columnSpan('half')->label('Multi Config'),
             ]),
 
 

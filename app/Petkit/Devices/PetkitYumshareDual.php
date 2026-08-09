@@ -2,6 +2,7 @@
 
 namespace App\Petkit\Devices;
 
+use stdClass;
 use App\DTOs\PetkitDTOInterface;
 use App\Helpers\JsonHelper;
 use App\Helpers\Time;
@@ -62,7 +63,7 @@ class PetkitYumshareDual implements DeviceDefinition, Snapshot, BluetoothProxyIn
     public function stateTopics(): array
     {
         return [
-            sprintf('/sys/%s/%s/thing/event/ble_response/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/ble_response/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
                 $content = json_decode($message?->params?->content, false);
                 Message::handleProxyMessage($content);
 
@@ -70,23 +71,23 @@ class PetkitYumshareDual implements DeviceDefinition, Snapshot, BluetoothProxyIn
 
                 $this->reply($topic, $message);
             },
-            sprintf('/sys/%s/%s/thing/event/feed_stop/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/feed_stop/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
                 $this->parseState($device, $message);
             },
-            sprintf('/sys/%s/%s/thing/event/property_post/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/property_post/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
                 $this->parseState($device, $message);
             },
-            sprintf('/sys/%s/%s/thing/event/feed_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/feed_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
                 $this->parseState($device, $message);
             },
-            sprintf('/sys/%s/%s/thing/event/eat_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/eat_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
                 $this->parseState($device, $message);
             },
-            sprintf('/sys/%s/%s/thing/event/eat_start/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/eat_start/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
                 $this->parseState($device, $message);
             },
-            sprintf('/sys/%s/%s/thing/event/move_detect/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
-                $this->parseState($device, $message, mutate: function (\stdClass $state) use ($device) {
+            sprintf('/sys/%s/%s/thing/event/move_detect/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+                $this->parseState($device, $message, mutate: function (stdClass $state) use ($device) {
                     $state->moveDetected = 1;
                     $device->update([
                         'configuration' => $this->updateConfiguration($state)
@@ -94,8 +95,8 @@ class PetkitYumshareDual implements DeviceDefinition, Snapshot, BluetoothProxyIn
                     $state->moveDetected = 0;
                 });
             },
-            sprintf('/sys/%s/%s/thing/event/pet_detect/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
-                $this->parseState($device, $message, mutate: function (\stdClass $state) use ($device) {
+            sprintf('/sys/%s/%s/thing/event/pet_detect/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+                $this->parseState($device, $message, mutate: function (stdClass $state) use ($device) {
                     $state->petDetected = 1;
                     $device->update([
                         'configuration' => $this->updateConfiguration($state)
@@ -103,7 +104,7 @@ class PetkitYumshareDual implements DeviceDefinition, Snapshot, BluetoothProxyIn
                     $state->petDetected = 0;
                 });
             },
-            sprintf('/sys/%s/%s/thing/event/feed_start/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/feed_start/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
                 $content = json_decode($message?->params?->content, false);
 
                 History::create([
@@ -124,10 +125,10 @@ class PetkitYumshareDual implements DeviceDefinition, Snapshot, BluetoothProxyIn
      * same way the property_post topic does: updating the working state, error
      * reporting and the stored configuration.
      *
-     * @param  (callable(\stdClass): void)|null  $mutate  Optional hook applied to the
+     * @param callable(stdClass):void|null $mutate Optional hook applied to the
      *         decoded state after the base update (used for transient detection flags).
      */
-    private function parseState(Device $device, ?\stdClass $message, string $workingState = DeviceStates::IDLE->value, ?callable $mutate = null): void
+    private function parseState(Device $device, ?stdClass $message, string $workingState = DeviceStates::IDLE->value, ?callable $mutate = null): void
     {
         if (!isset($message->params->state)) {
             return;
@@ -150,13 +151,13 @@ class PetkitYumshareDual implements DeviceDefinition, Snapshot, BluetoothProxyIn
         }
     }
 
-    private function reply(string $topic, ?\stdClass $message)
+    private function reply(string $topic, ?stdClass $message)
     {
         $generic = GenericReply::reply($topic, $message);
         MQTT::connection('publisher')->publish($generic->getTopic(), $generic->getMessage());
     }
 
-    private function updateDevice(?\stdClass $message)
+    private function updateDevice(?stdClass $message)
     {
         $hasError = $message->params->food1 == 0 || $message->params->food2 == 0;
         $isFeeding = $message->params->feeding == 1;
@@ -278,7 +279,7 @@ class PetkitYumshareDual implements DeviceDefinition, Snapshot, BluetoothProxyIn
     }
 
     #[HomeassistantTopic(topic: 'setting/set')]
-    public function settings(\stdClass $message)
+    public function settings(stdClass $message)
     {
         $configuration = $this->configurationDefinition();
         $keys = get_object_vars($message);
@@ -290,7 +291,7 @@ class PetkitYumshareDual implements DeviceDefinition, Snapshot, BluetoothProxyIn
     }
 
     #[HomeassistantTopic('action/start')]
-    public function action(\stdClass $message): void
+    public function action(stdClass $message): void
     {
         $action = $message->action;
         switch ($action) {

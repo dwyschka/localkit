@@ -34,6 +34,8 @@ return [
             'driver' => 'local',
             'root' => storage_path('app/snapshots'),
             'serve' => true,
+            // Laravel 13 requires each served disk to expose a unique URL.
+            'url' => '/storage/snapshots',
             'throw' => false,
             'report' => false,
         ],
@@ -42,6 +44,7 @@ return [
             'driver' => 'local',
             'root' => storage_path('app/private'),
             'serve' => true,
+            'url' => '/storage/local',
             'throw' => false,
             'report' => false,
         ],

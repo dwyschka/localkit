@@ -2,6 +2,7 @@
 
 namespace App\Localkit;
 
+use Exception;
 use App\Models\Device;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
@@ -59,7 +60,7 @@ class OTA
 
             return (array) $result;
         }
-        throw new \Exception('No valid data');
+        throw new Exception('No valid data');
     }
 
     private function firmwareByDevice(Device $device): array

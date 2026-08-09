@@ -2,10 +2,10 @@
 
 namespace App\Petkit\BluetoothDevices;
 
+use Filament\Actions\Action;
 use App\Models\BluetoothDevice;
 use App\Models\Device;
 use Filament\Forms\Components\Select;
-use Filament\Tables\Actions\Action;
 
 class Actions
 {

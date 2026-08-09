@@ -2,6 +2,7 @@
 
 namespace App\MQTT;
 
+use stdClass;
 use App\Http\Resources\MQTT\OtaResource;
 use App\Http\Resources\MQTT\PropertySet;
 use App\Http\Resources\MQTT\ServiceStart;
@@ -11,7 +12,7 @@ class ServiceStartMessage
 {
 
     public static function send(Device $device, $service = 0): AnswerDTO {
-        $action = new \stdClass();
+        $action = new stdClass();
         $action->start = $service;
 
         return new AnswerDTO(

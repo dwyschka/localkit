@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use Exception;
 use App\Helpers\HomeassistantHelper;
 use App\Homeassistant\AutoDiscoveryService;
 use App\Homeassistant\HomeassistantTopicService;
@@ -61,7 +62,7 @@ class LocalkitHomeassistant extends Command
                     if (!is_null($snapshotMessage)) {
                         $mqtt->publish(HomeassistantHelper::snapshotTopic($device), $snapshotMessage, 0, true);
                     }
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     Log::error($e->getMessage());
                 }
             }

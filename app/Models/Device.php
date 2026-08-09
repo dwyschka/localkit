@@ -2,6 +2,14 @@
 
 namespace App\Models;
 
+use Exception;
+use App\Petkit\Devices\PetkitPuraMax;
+use App\Petkit\Devices\PetkitFreshElement3;
+use App\Petkit\Devices\PetkitFreshElementSolo;
+use App\Petkit\Devices\PetkitYumshareSolo;
+use App\Petkit\Devices\PetkitYumshareDual;
+use App\Petkit\Devices\PetkitPurobotCrystal;
+use App\Petkit\Devices\PetkitEversweetUltra;
 use App\Helpers\HomeassistantHelper;
 use App\Helpers\JsonHelper;
 use App\Homeassistant\Interfaces\Snapshot;
@@ -35,7 +43,7 @@ class Device extends Model
                 if (isset($device->getChanges()['configuration'])) {
                     $device->definition()->propertyChange($device);
                 }
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
 
 
             }
@@ -106,13 +114,13 @@ class Device extends Model
     {
 
         return match ($this->device_type) {
-            't4' => new Devices\PetkitPuraMax($this),
-            'd3' => new Devices\PetkitFreshElement3($this),
-            'd4' => new Devices\PetkitFreshElementSolo($this),
-            'd4h' => new Devices\PetkitYumshareSolo($this),
-            'd4sh' => new Devices\PetkitYumshareDual($this),
-            't7' => new Devices\PetkitPurobotCrystal($this),
-            'w7h' => new Devices\PetkitEversweetUltra($this),
+            't4' => new PetkitPuraMax($this),
+            'd3' => new PetkitFreshElement3($this),
+            'd4' => new PetkitFreshElementSolo($this),
+            'd4h' => new PetkitYumshareSolo($this),
+            'd4sh' => new PetkitYumshareDual($this),
+            't7' => new PetkitPurobotCrystal($this),
+            'w7h' => new PetkitEversweetUltra($this),
         };
     }
 

@@ -2,13 +2,14 @@
 
 namespace App\Petkit\BluetoothDevices;
 
+use stdClass;
 use App\Models\BluetoothDevice;
 use Illuminate\Support\Facades\Log;
 
 class Message
 {
 
-    public static function handleProxyMessage(\stdClass $message)
+    public static function handleProxyMessage(stdClass $message)
     {
         Log::info('BLE Message Received', ['msg' => $message]);
         $btDevice = BluetoothDevice::where('mac', $message->device->mac)->first();

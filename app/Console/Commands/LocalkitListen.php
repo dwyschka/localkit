@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use Exception;
 use App\Http\Resources\MQTT\SuccessResource;
 use App\Models\Device;
 use App\MQTT\GenericReply;
@@ -74,7 +75,7 @@ class LocalkitListen extends Command
                             }
                         });
                 });
-            } catch (\Exception $exception) {
+            } catch (Exception $exception) {
                 $output->writeln(sprintf('Error: %s', $exception->getMessage()));
                 Log::error($exception->getMessage());
             }

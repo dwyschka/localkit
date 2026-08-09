@@ -2,6 +2,18 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Fieldset;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Support\Enums\TextSize;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Actions\EditAction;
+use Filament\Actions\Action;
+use App\Filament\Resources\DeviceResource\Pages\ListDevices;
+use App\Filament\Resources\DeviceResource\Pages\EditDevice;
 use App\Filament\Resources\DeviceResource\Pages;
 use App\Filament\Resources\DeviceResource\RelationManagers;
 use App\Jobs\ServiceStart;
@@ -17,7 +29,6 @@ use App\Petkit\Devices\PetkitYumshareDual;
 use App\Petkit\Devices\PetkitEversweetUltra;
 use Filament\Actions\ActionGroup;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\FontWeight;
@@ -27,7 +38,6 @@ use Filament\Tables\Columns\Layout\Grid;
 use Filament\Tables\Columns\Layout\Split;
 use Filament\Tables\Columns\Layout\Stack;
 use Filament\Tables\Table;
-use Filament\Tables\Actions\Action;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
@@ -36,16 +46,16 @@ class DeviceResource extends Resource
 {
     protected static ?string $model = Device::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                Forms\Components\TextInput::make('name')->columnSpan('full'),
-                Forms\Components\TextInput::make('firmware')->columnSpan('half')->readOnly(),
-                Forms\Components\TextInput::make('mac')->columnSpan('half')->readOnly(),
-                Forms\Components\Select::make('device_type')->options([
+        return $schema
+            ->components([
+                TextInput::make('name')->columnSpan('full'),
+                TextInput::make('firmware')->columnSpan('half')->readOnly(),
+                TextInput::make('mac')->columnSpan('half')->readOnly(),
+                Select::make('device_type')->options([
                     't4' => PetkitPuraMax::deviceName(),
                     'd3' => PetkitFreshElement3::deviceName(),
                     'd4' => PetkitFreshElementSolo::deviceName(),
@@ -56,22 +66,22 @@ class DeviceResource extends Resource
                 ])
                     ->columnSpan('half')->disabled(),
 
-                Forms\Components\TextInput::make('secret')->columnSpan('half'),
-                Forms\Components\TextInput::make('petkit_id')->columnSpan('half')->readOnly(),
-                Forms\Components\TextInput::make('mqtt_subdomain')->columnSpan('half'),
-                Forms\Components\Toggle::make('ota_state')
+                TextInput::make('secret')->columnSpan('half'),
+                TextInput::make('petkit_id')->columnSpan('half')->readOnly(),
+                TextInput::make('mqtt_subdomain')->columnSpan('half'),
+                Toggle::make('ota_state')
                     ->helperText('If enabled, the MQTT Connection to Aliyun needs to be disabled')
                     ->columnSpan('half'),
-                Forms\Components\Toggle::make('ota_available')
+                Toggle::make('ota_available')
                     ->helperText('Set by the device firmware — indicates whether an OTA update is available')
                     ->columnSpan('half')
                     ->disabled(),
-                Forms\Components\Toggle::make('debug_mode')
+                Toggle::make('debug_mode')
                     ->columnSpan('half')
                     ->helperText('Logs all incoming HTTP requests from this device to storage/logs/device_{serial}.log'),
 
-                Forms\Components\Fieldset::make('Device Configuration')->schema([
-                    ...$form->getModelInstance()->ui()->formFields(),
+                Fieldset::make('Device Configuration')->schema([
+                    ...$schema->getModelInstance()->ui()->formFields(),
                 ])
 
             ]);
@@ -88,9 +98,9 @@ class DeviceResource extends Resource
             ->columns([
                 Stack::make([
                     Split::make([
-                        Tables\Columns\TextColumn::make('device_type')
+                        TextColumn::make('device_type')
                             ->weight(FontWeight::Bold)
-                            ->size(Tables\Columns\TextColumn\TextColumnSize::Large)
+                            ->size(TextSize::Large)
                             ->formatStateUsing(function (string $state) {
                                 return match ($state) {
                                     't4' => PetkitPuraMax::deviceName(),
@@ -102,18 +112,18 @@ class DeviceResource extends Resource
                                     'w7h' => PetkitEversweetUltra::deviceName(),
                                 };
                             }),
-                        Tables\Columns\TextColumn::make('working_state')
+                        TextColumn::make('working_state')
                             ->badge()
                             ->grow(false),
                     ]),
 
-                    Tables\Columns\TextColumn::make('name')
+                    TextColumn::make('name')
                         ->searchable()
                         ->color('gray')
                         ->icon('heroicon-m-tag'),
 
                     Split::make([
-                        Tables\Columns\TextColumn::make('mqtt_connected')
+                        TextColumn::make('mqtt_connected')
                             ->badge()
                             ->grow(false)
                             ->icon(fn(string $state): string => $state === '0' ? 'heroicon-m-signal-slash' : 'heroicon-m-signal')
@@ -124,14 +134,14 @@ class DeviceResource extends Resource
                                 '0' => 'danger',
                                 '1' => 'success'
                             }),
-                        Tables\Columns\TextColumn::make('bleLinked.name')
+                        TextColumn::make('bleLinked.name')
                             ->badge()
                             ->grow(false)
                             ->icon('heroicon-m-link')
                             ->color('info'),
                     ]),
 
-                    Tables\Columns\TextColumn::make('error')
+                    TextColumn::make('error')
                         ->badge()
                         ->icon('heroicon-m-exclamation-triangle')
                         ->formatStateUsing(function (string $state) {
@@ -140,11 +150,11 @@ class DeviceResource extends Resource
                         ->color(fn(string $state): string => 'danger'),
 
                     Split::make([
-                        Tables\Columns\TextColumn::make('serial_number')
+                        TextColumn::make('serial_number')
                             ->color('gray')
                             ->icon('heroicon-m-hashtag')
                             ->copyable(),
-                        Tables\Columns\IconColumn::make('ota_available')
+                        IconColumn::make('ota_available')
                             ->label('OTA')
                             ->boolean()
                             ->grow(false),
@@ -154,18 +164,11 @@ class DeviceResource extends Resource
             ->filters([
                 //
             ])
-            ->actions([
-                Tables\Actions\EditAction::make()
+            ->recordActions([
+                EditAction::make()
                     ->button()
                     ->color('gray')
                     ->size('sm'),
-                Tables\Actions\Action::make('view_activities')
-                    ->label('Activities')
-                    ->icon('heroicon-m-bolt')
-                    ->color('purple')
-                    ->button()
-                    ->size('sm')
-                    ->url(fn($record) => DeviceResource::getUrl('activities', ['record' => $record])),
 
                 ...array_map(
                     function (Action $action) {
@@ -183,7 +186,7 @@ class DeviceResource extends Resource
                     DeviceActions::actions()
                 ),
             ])
-            ->actionsAlignment('left');
+            ->recordActionsAlignment('start');
     }
 
     /**
@@ -218,10 +221,8 @@ class DeviceResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListDevices::route('/'),
-            'edit' => Pages\EditDevice::route('/{record}/edit'),
-            'activities' => Pages\PetkitActivities::route('/order/{record}/activities'),
-
+            'index' => ListDevices::route('/'),
+            'edit' => EditDevice::route('/{record}/edit'),
         ];
     }
 }

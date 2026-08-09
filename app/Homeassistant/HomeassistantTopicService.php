@@ -2,6 +2,8 @@
 
 namespace App\Homeassistant;
 
+use stdClass;
+use App\Models\Device;
 use App\Helpers\HomeassistantHelper;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
@@ -15,9 +17,9 @@ class HomeassistantTopicService
 
     }
 
-    public function resolve(string $topic, \stdClass $message)
+    public function resolve(string $topic, stdClass $message)
     {
-        /** @var \App\Models\Device $device */
+        /** @var Device $device */
         foreach($this->devices as $device) {
             $reflection = new ReflectionClass($device->definition());
             $methods = $reflection->getMethods();

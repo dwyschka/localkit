@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Petkit;
 
+use Exception;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\DevSignupResource;
 use App\Models\Device;
@@ -51,7 +52,7 @@ class DevSignupController extends Controller
             $device->update([
                 'configuration' => $device->configuration()->toArray(),
             ]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return new JsonResponse(['result' => 'error', 'message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
         }
 

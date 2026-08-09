@@ -2,6 +2,7 @@
 
 namespace App\Petkit\Devices;
 
+use stdClass;
 use App\DTOs\PetkitDTOInterface;
 use App\Helpers\JsonHelper;
 use App\Homeassistant\HomeassistantTopic;
@@ -93,7 +94,7 @@ class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxy
     public function stateTopics(): array
     {
         return [
-            sprintf('/sys/%s/%s/thing/event/ble_response/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/ble_response/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
                 $content = json_decode($message?->params?->content, false);
                 Message::handleProxyMessage($content);
 
@@ -101,19 +102,19 @@ class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxy
 
                 $this->reply($topic, $message);
             },
-            sprintf('/sys/%s/%s/thing/event/property/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/property/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
                 // Unlike the other event topics, property/post carries the device
                 // state directly as `params` - not wrapped in a `state` string.
                 $this->applyState($device, $message->params);
             },
-            sprintf('/sys/%s/%s/thing/event/add_water_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/add_water_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
                 $this->parseState($device, $message);
             },
-            sprintf('/sys/%s/%s/thing/event/error_start/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/error_start/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
                 $this->parseState($device, $message);
                 $this->recordErrorEvent($device, json_decode($message?->params?->content ?? 'null', false));
             },
-            sprintf('/sys/%s/%s/thing/event/error_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/error_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
                 $this->parseState($device, $message);
                 $this->recordErrorEvent($device, json_decode($message?->params?->content ?? 'null', false));
 
@@ -124,11 +125,11 @@ class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxy
                     $device->update(['error' => null]);
                 }
             },
-            sprintf('/sys/%s/%s/thing/event/work_start/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/work_start/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
                 $this->parseState($device, $message, DeviceStates::WORKING->value);
             },
-            sprintf('/sys/%s/%s/thing/event/pet_detect/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
-                $this->parseState($device, $message, mutate: function (\stdClass $state) use ($device) {
+            sprintf('/sys/%s/%s/thing/event/pet_detect/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+                $this->parseState($device, $message, mutate: function (stdClass $state) use ($device) {
                     $state->petDetected = 1;
                     $device->update([
                         'configuration' => $this->updateConfiguration($state)
@@ -136,8 +137,8 @@ class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxy
                     $state->petDetected = 0;
                 });
             },
-            sprintf('/sys/%s/%s/thing/event/drink_detect/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
-                $this->parseState($device, $message, mutate: function (\stdClass $state) use ($device) {
+            sprintf('/sys/%s/%s/thing/event/drink_detect/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+                $this->parseState($device, $message, mutate: function (stdClass $state) use ($device) {
                     $state->drinkDetected = 1;
                     $device->update([
                         'configuration' => $this->updateConfiguration($state)
@@ -155,10 +156,10 @@ class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxy
      * `state` carries the same device-state shape as `property/post`'s bare
      * params.
      *
-     * @param  (callable(\stdClass): void)|null  $mutate  Optional hook applied to the
+     * @param callable(stdClass):void|null $mutate Optional hook applied to the
      *         decoded state after the base update (used for transient detection flags).
      */
-    private function parseState(Device $device, ?\stdClass $message, string $workingState = DeviceStates::IDLE->value, ?callable $mutate = null): void
+    private function parseState(Device $device, ?stdClass $message, string $workingState = DeviceStates::IDLE->value, ?callable $mutate = null): void
     {
         if (!isset($message->params->state)) {
             return;
@@ -177,7 +178,7 @@ class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxy
         }
     }
 
-    private function applyState(Device $device, \stdClass $state, string $workingState = DeviceStates::IDLE->value): void
+    private function applyState(Device $device, stdClass $state, string $workingState = DeviceStates::IDLE->value): void
     {
         $device->update([
             'working_state' => $workingState,
@@ -194,7 +195,7 @@ class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxy
      * mapped here where the name unambiguously indicates a fault
      * (…F = full, …O = overflow, …E = error, …M = malfunction).
      */
-    private function prepareErrorReporting(\stdClass $state): ?string
+    private function prepareErrorReporting(stdClass $state): ?string
     {
         // The fault booleans are nested under `err` on the wire, not top-level.
         $err = $state->err ?? null;
@@ -232,7 +233,7 @@ class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxy
      * became active or just cleared - kept as a "last error" record since
      * neither event's code has a known string table.
      */
-    private function recordErrorEvent(Device $device, ?\stdClass $content): void
+    private function recordErrorEvent(Device $device, ?stdClass $content): void
     {
         if ($content === null) {
             return;
@@ -246,7 +247,7 @@ class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxy
         $device->update(['configuration' => $settings->toArray()]);
     }
 
-    private function reply(string $topic, ?\stdClass $message)
+    private function reply(string $topic, ?stdClass $message)
     {
         $generic = GenericReply::reply($topic, $message);
         MQTT::connection('publisher')->publish($generic->getTopic(), $generic->getMessage());
@@ -362,7 +363,7 @@ class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxy
     }
 
     #[HomeassistantTopic(topic: 'setting/set')]
-    public function settings(\stdClass $message)
+    public function settings(stdClass $message)
     {
         $configuration = $this->configurationDefinition();
         $keys = get_object_vars($message);
@@ -374,7 +375,7 @@ class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxy
     }
 
     #[HomeassistantTopic('action/start')]
-    public function action(\stdClass $message): void
+    public function action(stdClass $message): void
     {
         $action = $message->action;
         switch ($action) {

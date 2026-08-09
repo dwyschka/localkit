@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Petkit\Devices\Configuration\PetkitYumshareSolo;
 use App\Management\Go2RTC;
 use App\Models\Device;
 use App\MQTT\FeedRealtimeMessage;
@@ -52,7 +53,7 @@ class TakeSnapshot implements ShouldQueue
 
 
 
-        /** @var \App\Petkit\Devices\Configuration\PetkitYumshareSolo $configuration */
+        /** @var PetkitYumshareSolo $configuration */
         $configuration = $this->device->configuration();
 
         $lastSnapshot = $configuration->lastSnapshot;

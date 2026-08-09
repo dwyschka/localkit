@@ -2,13 +2,14 @@
 
 namespace App\Homeassistant;
 
+use App\Models\Device;
 use App\Helpers\HomeassistantHelper;
 use App\Models\BluetoothDevice;
 
 class BaseEntity
 {
 
-    protected \App\Models\Device|BluetoothDevice $device;
+    protected Device|BluetoothDevice $device;
 
     public function toTopic(): string
     {
@@ -150,7 +151,7 @@ class BaseEntity
         return $config;
     }
 
-    public function setDevice(\App\Models\Device|BluetoothDevice $device): void
+    public function setDevice(Device|BluetoothDevice $device): void
     {
 
         $this->device = $device;

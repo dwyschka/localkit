@@ -2,12 +2,12 @@
 
 namespace App\Filament\Pages;
 
+use Filament\Actions\Action;
 use App\Management\S6;
 
 use App\Models\Service;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
-use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
@@ -16,11 +16,11 @@ use Filament\Tables\Table;
 class ServicePage extends Page implements HasTable
 {
     Use InteractsWithTable;
-    protected static ?string $navigationIcon = 'heroicon-o-rocket-launch';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-rocket-launch';
 
-    protected static string $view = 'filament.pages.service-page';
+    protected string $view = 'filament.pages.service-page';
 
-    protected static ?string $navigationGroup = 'System';
+    protected static string | \UnitEnum | null $navigationGroup = 'System';
 
     protected static ?int $navigationSort = 2;
 
@@ -65,7 +65,7 @@ class ServicePage extends Page implements HasTable
                     ->sortable(),
 
             ])
-            ->actions([
+            ->recordActions([
                 Action::make('stop')
                     ->icon('heroicon-o-stop')
                     ->color('danger')

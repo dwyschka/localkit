@@ -2,6 +2,7 @@
 
 namespace App\Petkit\BluetoothDevices\W5;
 
+use stdClass;
 use App\Models\BluetoothDevice;
 use App\Petkit\BluetoothDevices\Actions;
 use App\Petkit\BluetoothDevices\BluetoothDeviceTrait;
@@ -32,7 +33,7 @@ class Device implements DeviceInterface, HasParserInterface
     }
 
 
-    public function handleMessage(\stdClass $message): bool
+    public function handleMessage(stdClass $message): bool
     {
         $cmd = $message->cmd;
         $payload = $message->data;

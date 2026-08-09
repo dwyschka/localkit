@@ -2,15 +2,22 @@
 
 namespace App\Petkit\UI;
 
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\View;
+use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Fieldset;
+use Filament\Forms\Components\Select;
+use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\ViewField;
 use App\Helpers\Time;
 use App\Management\Go2RTC;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
-use Filament\Forms\Get;
-use Filament\Forms\Set;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -26,15 +33,15 @@ class PetkitYumshareSolo
     public function formFields(): array
     {
         return [
-            Forms\Components\Section::make('Stats')->schema([
-                Forms\Components\TextInput::make('configuration.states.ipAddress')
+            Section::make('Stats')->schema([
+                TextInput::make('configuration.states.ipAddress')
                     ->label('IP Address')
                     ->readOnly()
                     ->disabled(true),
             ]),
-            Forms\Components\Section::make('Consumables')->columns(2)->schema([
-                Forms\Components\TextInput::make('configuration.consumables.desiccantDurability')->numeric(),
-                Forms\Components\TextInput::make('configuration.consumables.desiccantNextChange')->label('Next Reset in Days (Desiccant)')->formatStateUsing(function ($state) {
+            Section::make('Consumables')->columns(2)->schema([
+                TextInput::make('configuration.consumables.desiccantDurability')->numeric(),
+                TextInput::make('configuration.consumables.desiccantNextChange')->label('Next Reset in Days (Desiccant)')->formatStateUsing(function ($state) {
                     if ($state <= 0) {
                         return 'Not set';
                     }
@@ -45,20 +52,20 @@ class PetkitYumshareSolo
 
                 })->readOnly()->disabled(true),
             ]),
-            Forms\Components\Section::make('Feeding')->schema([
-                Forms\Components\TextInput::make('configuration.settings.amount')
+            Section::make('Feeding')->schema([
+                TextInput::make('configuration.settings.amount')
                     ->label('Feeding Amount')
                     ->helperText('Default amount for manual feeding')
                     ->numeric(),
             ]),
             Section::make('Media')->schema([
-                Forms\Components\View::make('camera_stream')->viewData(fn($record): array => [
+                View::make('camera_stream')->viewData(fn($record): array => [
                     'streams' => app(Go2RTC::class)->streamUrls($record)
                 ])
                     ->hidden(fn($record) => is_null($record->configuration()->ipAddress))
                     ->columnSpan('full'),
 
-                Forms\Components\Placeholder::make('Snapshot')
+                Placeholder::make('Snapshot')
                     ->content(function ($record) {
                         $image = $record->configuration()->lastSnapshot;
                         if (is_null($image)) {
@@ -75,35 +82,35 @@ class PetkitYumshareSolo
             ])->collapsible()
                 ->hidden(fn($record) => is_null($record->configuration()->ipAddress) || !$record->mqtt_connected),
 
-            Forms\Components\Section::make('Camera Settings')->columns(2)->schema([
-                Forms\Components\Toggle::make('configuration.settings.camera')
+            Section::make('Camera Settings')->columns(2)->schema([
+                Toggle::make('configuration.settings.camera')
                     ->helperText('Turning off the camera will not affect food dispensing, bit it will disable live streaming, playback, remaining food detection in the bowl, and other video releated functions')
                     ->label('Camera Switch'),
 
-                Forms\Components\Toggle::make('configuration.settings.microphone')
+                Toggle::make('configuration.settings.microphone')
                     ->helperText('Enable/Disable sound collection')
                     ->label('Microphone'),
 
-                Forms\Components\Toggle::make('configuration.settings.night')
+                Toggle::make('configuration.settings.night')
                     ->helperText('Enable infrared night vision in dark environment')
                     ->label('Night Vision'),
 
-                Forms\Components\Toggle::make('configuration.settings.timeDisplay')
+                Toggle::make('configuration.settings.timeDisplay')
                     ->label('Timestamp Display'),
 
-                Forms\Components\Toggle::make('configuration.settings.eatVideo')
+                Toggle::make('configuration.settings.eatVideo')
                     ->helperText('Feature not Available: YUMSHARE video/photo will not be uploaded to the cloud after turning off')
                     ->label('YUMSHARE Video/Photo Upload'),
 
-                Forms\Components\Toggle::make('configuration.settings.smartFrame')
+                Toggle::make('configuration.settings.smartFrame')
                     ->label('Pet Tracking')
                     ->helperText('Highlight the pet when it is detected'),
 
-                Forms\Components\Fieldset::make('Detection')->schema([
-                    Forms\Components\Toggle::make('configuration.settings.petDetection')
+                Fieldset::make('Detection')->schema([
+                    Toggle::make('configuration.settings.petDetection')
                         ->helperText('For events of pet visiting the feeder')
                         ->label('Pet Visit Detection'),
-                    Forms\Components\Select::make('configuration.settings.petSensitivity')
+                    Select::make('configuration.settings.petSensitivity')
                         ->label('Pet Visit Sensitivity')
                         ->helperText('Sensitivity events of pet visiting the feeder')
                         ->options([
@@ -114,10 +121,10 @@ class PetkitYumshareSolo
                             4 => 4,
                         ]),
 
-                    Forms\Components\Toggle::make('configuration.settings.eatDetection')
+                    Toggle::make('configuration.settings.eatDetection')
                         ->helperText('For events of pet eating before the camera')
                         ->label('Pet Eat Detection'),
-                    Forms\Components\Select::make('configuration.settings.eatSensitivity')
+                    Select::make('configuration.settings.eatSensitivity')
                         ->label('Pet Eat Sensitivity')
                         ->helperText('Sensitivity events of pet eating before the camera')
                         ->options([
@@ -128,10 +135,10 @@ class PetkitYumshareSolo
                             4 => 4
                         ]),
 
-                    Forms\Components\Toggle::make('configuration.settings.moveDetection')
+                    Toggle::make('configuration.settings.moveDetection')
                         ->helperText('For events of pet moving before the camera')
                         ->label('Pet Move Detection'),
-                    Forms\Components\Select::make('configuration.settings.moveSensitivity')
+                    Select::make('configuration.settings.moveSensitivity')
                         ->helperText('Sensitivity events of pet moving before the camera')
                         ->label('Pet Move Sensitivity')->options([
                             0 => 0,
@@ -187,7 +194,7 @@ class PetkitYumshareSolo
                                                 $set('time_display', $time);
                                             }
                                         }),
-                                    Forms\Components\Hidden::make('id')
+                                    Hidden::make('id')
                                         ->label('id')
                                         ->required(),
 
@@ -199,7 +206,7 @@ class PetkitYumshareSolo
                                         ->dehydrateStateUsing(fn($state) => (int)$state)
                                         ->suffix('amount'),
 
-                                    Forms\Components\Hidden::make('t')
+                                    Hidden::make('t')
                                         ->label('Time (seconds)')
                                         ->required(),
                                 ])
@@ -266,8 +273,8 @@ class PetkitYumshareSolo
                         }),
                 ])->collapsible(),
 
-            Forms\Components\Section::make('Voice Settings')->columns(2)->schema([
-                Forms\Components\Select::make('configuration.settings.volume')->columnSpanFull()->label('Volume')->options([
+            Section::make('Voice Settings')->columns(2)->schema([
+                Select::make('configuration.settings.volume')->columnSpanFull()->label('Volume')->options([
                     1 => 1,
                     2 => 2,
                     3 => 3,
@@ -278,12 +285,12 @@ class PetkitYumshareSolo
                     8 => 8,
                     9 => 9
                 ]),
-                Forms\Components\Toggle::make('configuration.settings.systemSoundEnable')->label('Voice Prompt'),
-                Forms\Components\Toggle::make('configuration.settings.soundEnable')->label('Voice for Food Dispensing'),
+                Toggle::make('configuration.settings.systemSoundEnable')->label('Voice Prompt'),
+                Toggle::make('configuration.settings.soundEnable')->label('Voice for Food Dispensing'),
 
-                Forms\Components\Fieldset::make('Do not Disturb')->columns(1)->schema([
-                    Forms\Components\Toggle::make('configuration.settings.toneMode')->label('Do not disturb'),
-                    Forms\Components\Hidden::make('configuration.settings.toneMultiRange.name')->default('toneMultiRange'),
+                Fieldset::make('Do not Disturb')->columns(1)->schema([
+                    Toggle::make('configuration.settings.toneMode')->label('Do not disturb'),
+                    Hidden::make('configuration.settings.toneMultiRange.name')->default('toneMultiRange'),
                     Repeater::make('configuration.settings.toneMultiRange.ranges')
                         ->columns(2)
                         ->label('Undisturbed Period')
@@ -312,12 +319,12 @@ class PetkitYumshareSolo
                         })
                 ])
             ]),
-            Forms\Components\Section::make('Settings')->columns(2)->schema([
-                Forms\Components\Toggle::make('configuration.settings.foodWarn')
+            Section::make('Settings')->columns(2)->schema([
+                Toggle::make('configuration.settings.foodWarn')
                     ->helperText('Activate the sound alarm when the food container runs empty. To end the alarm press the dispense button')
                     ->label('Refill Alarm'),
 
-                Forms\Components\Section::make('Alarm Period')->schema([
+                Section::make('Alarm Period')->schema([
                     TimePicker::make('from')
                         ->formatStateUsing(function ($state) {
                             return Time::toTimeFromMinutes((int)$state);
@@ -341,11 +348,11 @@ class PetkitYumshareSolo
                     })
                     ->columns(2)
                     ->columnSpanFull(),
-                Forms\Components\Toggle::make('configuration.settings.manualLock')
+                Toggle::make('configuration.settings.manualLock')
                     ->helperText('Activate Child Lock to disable the control panel')
                     ->label('Child Lock'),
 
-                Forms\Components\Toggle::make('configuration.settings.lightMode')
+                Toggle::make('configuration.settings.lightMode')
                     ->helperText('Indicator light work within the following period')
                     ->label('Indicator Light'),
 
@@ -379,19 +386,19 @@ class PetkitYumshareSolo
                     ),
 
             ]),
-            Forms\Components\Section::make('AI LAB')->schema([
-                Forms\Components\Select::make('configuration.settings.surplusControl')->options([
+            Section::make('AI LAB')->schema([
+                Select::make('configuration.settings.surplusControl')->options([
                     0 => 'off',
                 ])
             ]),
 
-            Forms\Components\Section::make('Unknown')->columns(3)->schema([
-                Forms\Components\ViewField::make('UnknownWarning')
+            Section::make('Unknown')->columns(3)->schema([
+                ViewField::make('UnknownWarning')
                     ->columnSpanFull()
                     ->view('filament.forms.warning')
                     ->viewData(['message' => 'Its Unknown, because the changes are not verified']),
-                Forms\Components\Toggle::make('configuration.settings.shareOpen')->label('Share Open'),
-                Forms\Components\Toggle::make('configuration.settings.multiConfig')->label('Multi Config'),
+                Toggle::make('configuration.settings.shareOpen')->label('Share Open'),
+                Toggle::make('configuration.settings.multiConfig')->label('Multi Config'),
             ]),
 
 

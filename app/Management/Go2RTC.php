@@ -2,6 +2,7 @@
 
 namespace App\Management;
 
+use Throwable;
 use App\Models\Device;
 use Illuminate\Support\Facades\Http;
 
@@ -41,7 +42,7 @@ class Go2RTC
             }
 
             return array_keys($response->json() ?? []);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             return [];
         }
     }

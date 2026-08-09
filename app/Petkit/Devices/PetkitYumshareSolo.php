@@ -2,6 +2,7 @@
 
 namespace App\Petkit\Devices;
 
+use stdClass;
 use App\DTOs\PetkitDTOInterface;
 use App\Helpers\JsonHelper;
 use App\Helpers\Time;
@@ -62,13 +63,13 @@ class PetkitYumshareSolo implements DeviceDefinition, Snapshot, BluetoothProxyIn
     public function stateTopics(): array
     {
         return [
-            sprintf('/sys/%s/%s/thing/event/ble_response/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/ble_response/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
                 $content = json_decode($message?->params?->content, false);
                 Message::handleProxyMessage($content);
 
                 $this->reply($topic, $message);
             },
-            sprintf('/sys/%s/%s/thing/event/feed_stop/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/feed_stop/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
                 $state = json_decode($message?->params?->state, false);
                 $device->update([
                     'working_state' => DeviceStates::IDLE->value,
@@ -76,7 +77,7 @@ class PetkitYumshareSolo implements DeviceDefinition, Snapshot, BluetoothProxyIn
                     'configuration' => $this->updateConfiguration($state)
                 ]);
             },
-            sprintf('/sys/%s/%s/thing/event/property_post/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/property_post/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
                 $state = json_decode($message?->params?->state, false);
                 $device->update([
                     'working_state' => DeviceStates::IDLE->value,
@@ -84,7 +85,7 @@ class PetkitYumshareSolo implements DeviceDefinition, Snapshot, BluetoothProxyIn
                     'configuration' => $this->updateConfiguration($state)
                 ]);
             },
-            sprintf('/sys/%s/%s/thing/event/feed_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/feed_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
 
                 $state = json_decode($message?->params?->state, false);
                 $device->update([
@@ -93,7 +94,7 @@ class PetkitYumshareSolo implements DeviceDefinition, Snapshot, BluetoothProxyIn
                     'configuration' => $this->updateConfiguration($state)
                 ]);
             },
-            sprintf('/sys/%s/%s/thing/event/eat_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/eat_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
                 $state = json_decode($message?->params?->state, false);
                 $device->update([
                     'working_state' => DeviceStates::IDLE->value,
@@ -101,7 +102,7 @@ class PetkitYumshareSolo implements DeviceDefinition, Snapshot, BluetoothProxyIn
                     'configuration' => $this->updateConfiguration($state)
                 ]);
             },
-            sprintf('/sys/%s/%s/thing/event/eat_start/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/eat_start/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
 
                 $state = json_decode($message?->params?->state, false);
                 $device->update([
@@ -110,7 +111,7 @@ class PetkitYumshareSolo implements DeviceDefinition, Snapshot, BluetoothProxyIn
                     'configuration' => $this->updateConfiguration($state)
                 ]);
             },
-            sprintf('/sys/%s/%s/thing/event/move_detect/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/move_detect/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
 
                 $state = json_decode($message?->params?->state, false);
                 $state->moveDetected = 1;
@@ -126,7 +127,7 @@ class PetkitYumshareSolo implements DeviceDefinition, Snapshot, BluetoothProxyIn
                     'configuration' => $this->updateConfiguration($state)
                 ]);
             },
-            sprintf('/sys/%s/%s/thing/event/pet_detect/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/pet_detect/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
 
                 $state = json_decode($message?->params?->state, false);
                 $state->petDetected = 1;
@@ -143,7 +144,7 @@ class PetkitYumshareSolo implements DeviceDefinition, Snapshot, BluetoothProxyIn
                 ]);
 
             },
-            sprintf('/sys/%s/%s/thing/event/feed_start/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, \stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/feed_start/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
                 $content = json_decode($message?->params?->content, false);
                 $state = json_decode($message?->params?->state, false);
 
@@ -164,13 +165,13 @@ class PetkitYumshareSolo implements DeviceDefinition, Snapshot, BluetoothProxyIn
         ];
     }
 
-    private function reply(string $topic, ?\stdClass $message)
+    private function reply(string $topic, ?stdClass $message)
     {
         $generic = GenericReply::reply($topic, $message);
         MQTT::connection('publisher')->publish($generic->getTopic(), $generic->getMessage());
     }
 
-    private function updateDevice(?\stdClass $message)
+    private function updateDevice(?stdClass $message)
     {
         $hasError = $message->params->food == 0;
         $isFeeding = $message->params->feeding == 1;
@@ -292,7 +293,7 @@ class PetkitYumshareSolo implements DeviceDefinition, Snapshot, BluetoothProxyIn
     }
 
     #[HomeassistantTopic(topic: 'setting/set')]
-    public function settings(\stdClass $message)
+    public function settings(stdClass $message)
     {
         $configuration = $this->configurationDefinition();
         $keys = get_object_vars($message);
@@ -304,7 +305,7 @@ class PetkitYumshareSolo implements DeviceDefinition, Snapshot, BluetoothProxyIn
     }
 
     #[HomeassistantTopic('action/start')]
-    public function action(\stdClass $message): void
+    public function action(stdClass $message): void
     {
         $action = $message->action;
         switch ($action) {

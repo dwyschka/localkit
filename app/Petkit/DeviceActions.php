@@ -2,6 +2,9 @@
 
 namespace App\Petkit;
 
+use Filament\Actions\Action;
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Utilities\Get;
 use App\Helpers\OTAHelper;
 use App\Jobs\ServiceEnd;
 use App\Jobs\ServiceStart;
@@ -14,11 +17,8 @@ use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
-use Filament\Forms\Get;
 use Filament\Notifications\Notification;
 use Filament\Support\Exceptions\Halt;
-use Filament\Tables\Actions\Action;
 use Illuminate\Database\Eloquent\Model;
 
 class DeviceActions
@@ -61,7 +61,7 @@ class DeviceActions
             Action::make('Check OTA')
                 ->label('Check OTA')
 //                ->visible(fn(Device $record) => $record->mqtt_connected)
-                ->mountUsing(function (Form $form, Device $record) {
+                ->mountUsing(function (Schema $schema, Device $record) {
                     $available = app(OTA::class)->getAvailable($record);
 
                     if (!$available) {
@@ -77,9 +77,9 @@ class DeviceActions
                         'available_version' => $available['version'],
                     ]);
 
-                    $form->fill(['version' => $available['version']]);
+                    $schema->fill(['version' => $available['version']]);
                 })
-                ->form([
+                ->schema([
                     Placeholder::make('version_display')
                         ->label('Update Available')
                         ->content(fn(Get $get): string => $get('version') ?? ''),
@@ -190,7 +190,7 @@ class DeviceActions
                 ->visible(function (Device $record) {
                     return $record->definition()->hasAction(self::START_FEEDING);
                 })
-                ->form(function (Device $record) {
+                ->schema(function (Device $record) {
                     $settings = $record->configuration['settings'] ?? [];
 
                     if ($record->definition() instanceof PetkitYumshareDual) {
