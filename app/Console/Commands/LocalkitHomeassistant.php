@@ -38,10 +38,11 @@ class LocalkitHomeassistant extends Command
         }
         $mqtt = MQTT::connection('homeassistant');
 
-        $devices = Device::whereProxyMode(0)->get();
+        $devices = Device::all();
         $bluetoothDevices = BluetoothDevice::all();
 
         $devices = collect($devices)->merge($bluetoothDevices);
+
 
         $devices->each(function (Device|BluetoothDevice $device) use ($mqtt) {
 
