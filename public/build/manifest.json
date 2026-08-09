@@ -1,12 +1,7 @@
 {
   "resources/css/app.css": {
-    "file": "assets/app-DNl9wROC.css",
+    "file": "assets/app-Cy0mXE_9.css",
     "src": "resources/css/app.css",
-    "isEntry": true
-  },
-  "resources/css/filament/petkit/theme.css": {
-    "file": "assets/theme-Cwg0lWIt.css",
-    "src": "resources/css/filament/petkit/theme.css",
     "isEntry": true
   },
   "resources/js/app.js": {
