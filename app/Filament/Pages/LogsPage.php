@@ -11,6 +11,8 @@ class LogsPage extends Page
 
     protected string $view = 'filament.pages.logs-page';
 
+    protected static ?string $slug = 'logs';
+
     protected static string | \UnitEnum | null $navigationGroup = 'System';
 
     protected static ?int $navigationSort = 1;
