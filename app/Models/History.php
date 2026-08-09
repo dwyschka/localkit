@@ -51,7 +51,8 @@ class History extends Model
 
         return __('petkit.history.in_use', [
             'name' => $this->pet?->name ?? __('petkit.unknown'),
-            'weight' => $params['pet_weight'],
+            // pet_weight is reported in grams by the device — show it in kg.
+            'weight' => number_format($params['pet_weight'] / 1000, 2),
             'duration' => $duration,
         ]);
     }

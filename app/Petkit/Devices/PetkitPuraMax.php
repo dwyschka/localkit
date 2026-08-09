@@ -160,9 +160,12 @@ class PetkitPuraMax implements DeviceDefinition, BluetoothProxyInterface
                 $this->reply($topic, $message);
 
                 $content = json_decode($message->params->content, true);
+                // The device reports pet_weight in grams (e.g. 4209), while pets store their
+                // weight in kg — convert before matching, and store the pet's id (not the model).
+                $pet = Pet::nearestWeight($content['pet_weight'] / 1000);
                 History::create([
                     'messageId' => $message->params->event_id,
-                    'pet_id' => Pet::nearestWeight($content['pet_weight']) ?? null,
+                    'pet_id' => $pet?->id,
                     'parameters' => $content,
                     'type' => 'IN_USE',
                     'device_id' => $device->id
