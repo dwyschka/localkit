@@ -158,7 +158,7 @@ class Device extends Model
             return null;
         }
 
-        return $this->definition() instanceof HasCamera;
+        return $this->configuration() instanceof HasCamera;
     }
 
     public function bleLinked()
