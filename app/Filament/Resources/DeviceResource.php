@@ -8,8 +8,10 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Fieldset;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ViewColumn;
 use Filament\Support\Enums\TextSize;
 use Filament\Tables\Columns\IconColumn;
+use App\Management\Go2RTC;
 use Filament\Actions\EditAction;
 use Filament\Actions\Action;
 use App\Filament\Resources\DeviceResource\Pages\ListDevices;
@@ -83,6 +85,7 @@ class DeviceResource extends Resource
 
                 Fieldset::make('Device Configuration')
                     ->columnSpanFull()
+                    ->columns(1)
                     ->schema([
                         ...$schema->getModelInstance()->ui()->formFields(),
                     ])
@@ -155,6 +158,13 @@ class DeviceResource extends Resource
                     IconColumn::make('ota_available')
                         ->label('OTA')
                         ->boolean(),
+
+                    ViewColumn::make('camera_stream_tile')
+                        ->view('tables.columns.camera-stream-tile')
+                        ->viewData(fn (Device $record) => [
+                            'streams' => app(Go2RTC::class)->streamUrls($record),
+                        ])
+                        ->visible(fn (Device $record) => $record->isNextGen()),
                 ])->space(3),
             ])
             ->filters([
