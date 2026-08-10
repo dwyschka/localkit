@@ -143,8 +143,8 @@ class PetkitEversweetUltra extends DeviceConfigurationDTO implements Configurati
     public bool $taryF;
 
     #[BinarySensor(
-        technicalName: 'tray_overflow',
-        name: 'Waste Tray Overflow',
+        technicalName: 'water_tank_empty',
+        name: 'Fresh Water Tank Empty',
         valueTemplate: '{{ value_json.states.taryO }}',
         entityCategory: 'diagnostic',
         deviceClass: 'problem',

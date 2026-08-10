@@ -18,7 +18,7 @@ return [
         'full' =>'The bin is full',
         'food_empty' => 'The food bin is empty',
         'wastebin_full' => 'The waste water tank is full',
-        'tray_overflow' => 'The waste tray has overflowed',
+        'water_tank_empty' => 'The fresh water tank is empty',
         'valve_error' => 'The lift valve has a fault',
         'pump_malfunction' => 'The circulation pump has a fault',
         'heater_malfunction' => 'The heater has a fault',

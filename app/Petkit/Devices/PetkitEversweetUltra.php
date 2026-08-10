@@ -105,7 +105,14 @@ class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxy
             sprintf('/sys/%s/%s/thing/event/property/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
                 // Unlike the other event topics, property/post carries the device
                 // state directly as `params` - not wrapped in a `state` string.
-                $this->applyState($device, $message->params);
+                // `workState` is only present on `params` while a work cycle is
+                // running, so its presence/absence directly tracks working/idle.
+                $workingState = isset($message->params->workState) && is_object($message->params->workState)
+                    ? DeviceStates::WORKING->value
+                    : DeviceStates::IDLE->value;
+
+                $this->applyState($device, $message->params, $workingState);
+                $this->applyErrorState($device, $message->params);
             },
             sprintf('/sys/%s/%s/thing/event/add_water_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
                 $this->parseState($device, $message);
@@ -115,15 +122,11 @@ class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxy
                 $this->recordErrorEvent($device, json_decode($message?->params?->content ?? 'null', false));
             },
             sprintf('/sys/%s/%s/thing/event/error_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+                // parseState() re-syncs `error` from the state's `err` flags via
+                // applyErrorState(), which read all-clear on this event - no
+                // manual override needed here anymore.
                 $this->parseState($device, $message);
                 $this->recordErrorEvent($device, json_decode($message?->params?->content ?? 'null', false));
-
-                // error_over signals the fault named in `content.err` has ended
-                // (the accompanying state's `err` flags read all-clear), so drop
-                // the surfaced error state if one is still set.
-                if (filled($device->error)) {
-                    $device->update(['error' => null]);
-                }
             },
             sprintf('/sys/%s/%s/thing/event/work_start/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
                 $this->parseState($device, $message, DeviceStates::WORKING->value);
@@ -172,6 +175,7 @@ class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxy
         }
 
         $this->applyState($device, $state, $workingState);
+        $this->applyErrorState($device, $state);
 
         if ($mutate !== null) {
             $mutate($state);
@@ -182,9 +186,20 @@ class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxy
     {
         $device->update([
             'working_state' => $workingState,
-            'error' => $this->prepareErrorReporting($state),
             'configuration' => $this->updateConfiguration($state)
         ]);
+    }
+
+    /**
+     * Syncs the `err` fault flags from a decoded state payload onto the device -
+     * surfacing the mapped error code, or clearing a previously surfaced error
+     * once none of the flags are still set anymore. Called explicitly from
+     * every state-bearing topic (property/post directly, everything else via
+     * parseState()) so the error field never goes stale.
+     */
+    private function applyErrorState(Device $device, stdClass $state): void
+    {
+        $device->update(['error' => $this->prepareErrorReporting($state)]);
     }
 
     /**
@@ -194,6 +209,8 @@ class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxy
      * heater, valve = lift valve, cyc = circulation pump) and are only
      * mapped here where the name unambiguously indicates a fault
      * (…F = full, …O = overflow, …E = error, …M = malfunction).
+     * taryO is the exception: on this device it's repurposed to flag the
+     * fresh water tank being empty, not a tray overflow.
      */
     private function prepareErrorReporting(stdClass $state): ?string
     {
@@ -201,7 +218,7 @@ class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxy
         $err = $state->err ?? null;
 
         if (($err->taryO ?? null) == 1) {
-            return 'tray_overflow';
+            return 'water_tank_empty';
         }
 
         if (($err->taryF ?? null) == 1 || ($state->wtState ?? null) == 2) {
