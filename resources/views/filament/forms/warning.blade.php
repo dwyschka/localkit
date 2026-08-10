@@ -1,4 +1,4 @@
-<div class="rounded-lg border border-warning-300 bg-warning-50 p-4 text-warning-800">
+<div class="rounded-lg border border-danger-300 bg-danger-50 p-4 text-danger-800">
     <div class="flex items-start gap-2">
         <x-filament::icon icon="heroicon-o-exclamation-triangle" class="h-5 w-5 mt-0.5" />
         <div class="text-sm">

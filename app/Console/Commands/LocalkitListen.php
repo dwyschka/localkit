@@ -44,7 +44,7 @@ class LocalkitListen extends Command
             $mqtt->interrupt();
         });
 
-        $definitions = Device::whereProxyMode(0)->get()->map(fn(Device $device) => $device->definition());
+        $definitions = Device::all()->map(fn(Device $device) => $device->definition());
 
         // Every device name (d_<type>_<serial>) we know about, and every topic we
         // already handle for them. Anything that carries a device name but isn't in
