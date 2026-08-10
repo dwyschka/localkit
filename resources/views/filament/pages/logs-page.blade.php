@@ -46,6 +46,15 @@
                 >
                     Refresh
                 </x-filament::button>
+
+                <x-filament::button
+                    color="gray"
+                    icon="heroicon-m-arrow-down-tray"
+                    wire:click="download"
+                    size="sm"
+                >
+                    Download
+                </x-filament::button>
             </div>
 
             @if (trim($content) === '')
