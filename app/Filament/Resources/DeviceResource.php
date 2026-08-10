@@ -121,6 +121,11 @@ class DeviceResource extends Resource
                         TextColumn::make('working_state')
                             ->badge()
                             ->grow(false),
+                        IconColumn::make('ota_available')
+                            ->label('OTA')
+                            ->icon(fn(bool $state): ?string => $state ? 'heroicon-m-arrow-down-tray' : null)
+                            ->color('warning')
+                            ->grow(false),
                     ]),
 
                     TextColumn::make('name')
@@ -154,10 +159,6 @@ class DeviceResource extends Resource
                             return __('petkit.error.' . $state);
                         })
                         ->color(fn(string $state): string => 'danger'),
-
-                    IconColumn::make('ota_available')
-                        ->label('OTA')
-                        ->boolean(),
 
                     ViewColumn::make('camera_stream_tile')
                         ->view('tables.columns.camera-stream-tile')
