@@ -162,9 +162,10 @@ class DeviceResource extends Resource
                     ViewColumn::make('camera_stream_tile')
                         ->view('tables.columns.camera-stream-tile')
                         ->viewData(fn (Device $record) => [
-                            'streams' => app(Go2RTC::class)->streamUrls($record),
-                        ])
-                        ->visible(fn (Device $record) => $record->isNextGen()),
+                            'streams' => ($record->isNextGen() ?? false)
+                                ? app(Go2RTC::class)->streamUrls($record)
+                                : [],
+                        ]),
                 ])->space(3),
             ])
             ->filters([

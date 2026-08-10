@@ -239,7 +239,7 @@ class DeviceActions
                     $record->definition()->takeSnapshot($record);
                 }),
             Action::make('Watch Stream')
-                ->visible(fn (Device $record) => $record->isNextGen())
+                ->visible(fn (Device $record) => $record->isNextGen() ?? false)
                 ->modalHeading(fn (Device $record) => "Live Stream — {$record->name}")
                 ->modalContent(fn (Device $record) => view('camera_stream', [
                     'streams' => app(Go2RTC::class)->streamUrls($record),

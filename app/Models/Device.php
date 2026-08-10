@@ -152,8 +152,12 @@ class Device extends Model
         };
     }
 
-    public function isNextGen()
+    public function isNextGen(): ?bool
     {
+        if ($this->device_type === null) {
+            return null;
+        }
+
         return $this->definition() instanceof HasCamera;
     }
 
