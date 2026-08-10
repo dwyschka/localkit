@@ -105,14 +105,8 @@ class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxy
             sprintf('/sys/%s/%s/thing/event/property/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
                 // Unlike the other event topics, property/post carries the device
                 // state directly as `params` - not wrapped in a `state` string.
-                // `workState` is only present on `params` while a work cycle is
-                // running, so its presence/absence directly tracks working/idle.
-                $workingState = isset($message->params->workState) && is_object($message->params->workState)
-                    ? DeviceStates::WORKING->value
-                    : DeviceStates::IDLE->value;
-
-                $this->applyState($device, $message->params, $workingState);
-                $this->applyErrorState($device, $message->params);
+                $this->applyState($device, $message->params);
+                $this->applyDerivedState($device, $message->params);
             },
             sprintf('/sys/%s/%s/thing/event/add_water_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
                 $this->parseState($device, $message);
@@ -123,13 +117,13 @@ class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxy
             },
             sprintf('/sys/%s/%s/thing/event/error_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
                 // parseState() re-syncs `error` from the state's `err` flags via
-                // applyErrorState(), which read all-clear on this event - no
+                // applyDerivedState(), which read all-clear on this event - no
                 // manual override needed here anymore.
                 $this->parseState($device, $message);
                 $this->recordErrorEvent($device, json_decode($message?->params?->content ?? 'null', false));
             },
             sprintf('/sys/%s/%s/thing/event/work_start/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
-                $this->parseState($device, $message, DeviceStates::WORKING->value);
+                $this->parseState($device, $message);
             },
             sprintf('/sys/%s/%s/thing/event/pet_detect/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
                 $this->parseState($device, $message, mutate: function (stdClass $state) use ($device) {
@@ -162,7 +156,7 @@ class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxy
      * @param callable(stdClass):void|null $mutate Optional hook applied to the
      *         decoded state after the base update (used for transient detection flags).
      */
-    private function parseState(Device $device, ?stdClass $message, string $workingState = DeviceStates::IDLE->value, ?callable $mutate = null): void
+    private function parseState(Device $device, ?stdClass $message, ?callable $mutate = null): void
     {
         if (!isset($message->params->state)) {
             return;
@@ -174,32 +168,40 @@ class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxy
             return;
         }
 
-        $this->applyState($device, $state, $workingState);
-        $this->applyErrorState($device, $state);
+        $this->applyState($device, $state);
+        $this->applyDerivedState($device, $state);
 
         if ($mutate !== null) {
             $mutate($state);
         }
     }
 
-    private function applyState(Device $device, stdClass $state, string $workingState = DeviceStates::IDLE->value): void
+    private function applyState(Device $device, stdClass $state): void
     {
         $device->update([
-            'working_state' => $workingState,
             'configuration' => $this->updateConfiguration($state)
         ]);
     }
 
     /**
-     * Syncs the `err` fault flags from a decoded state payload onto the device -
-     * surfacing the mapped error code, or clearing a previously surfaced error
-     * once none of the flags are still set anymore. Called explicitly from
-     * every state-bearing topic (property/post directly, everything else via
-     * parseState()) so the error field never goes stale.
+     * Derives `working_state` and `error` from a decoded state payload and
+     * applies both to the device in one write:
+     * - `workState` is only present on the payload while a work cycle is
+     *   running, so its presence/absence tracks working/idle directly.
+     * - `err` carries the fault flags mapped by prepareErrorReporting(),
+     *   surfacing an error code or clearing a previously surfaced one once
+     *   none of the flags are still set.
+     * Called explicitly from every state-bearing topic (property/post
+     * directly, everything else via parseState()) so both fields are
+     * derived the same way everywhere, instead of each topic guessing its
+     * own working_state and only some of them touching error.
      */
-    private function applyErrorState(Device $device, stdClass $state): void
+    private function applyDerivedState(Device $device, stdClass $state): void
     {
-        $device->update(['error' => $this->prepareErrorReporting($state)]);
+        $device->update([
+            'working_state' => isset($state->workState) ? DeviceStates::WORKING->value : DeviceStates::IDLE->value,
+            'error' => $this->prepareErrorReporting($state),
+        ]);
     }
 
     /**
