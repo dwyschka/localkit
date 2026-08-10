@@ -47,6 +47,8 @@ class PetResource extends Resource
                     ->appendFiles()
                     ->imageEditor()
                     ->imageEditorAspectRatios(['1:1'])
+                    ->imageEditorViewportWidth('360')
+                    ->imageEditorViewportHeight('360')
                     ->imageResizeMode('cover')
                     ->imageResizeTargetWidth(360)
                     ->imageResizeTargetHeight(360)
