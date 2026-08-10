@@ -14,8 +14,6 @@ use Filament\Support\Enums\TextSize;
 use Filament\Support\Enums\FontWeight;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
 use App\Filament\Resources\BluetoothDeviceResource\Pages\ListBluetoothDevices;
 use App\Filament\Resources\BluetoothDeviceResource\Pages\CreateBluetoothDevice;
 use App\Filament\Resources\BluetoothDeviceResource\Pages\EditBluetoothDevice;
@@ -50,7 +48,7 @@ class BluetoothDeviceResource extends Resource
                 TextInput::make('petkit_id')->required()->columnSpan('half'),
                 TextInput::make('serial_number')->columnSpan('half'),
 
-                Fieldset::make('Proxy Settings')->schema([
+                Fieldset::make('Proxy Settings')->columnSpanFull()->schema([
                     TextInput::make('interval')
                         ->helperText('The interval in minutes to check the device status')
                         ->numeric(true)->minValue(10)
@@ -71,7 +69,7 @@ class BluetoothDeviceResource extends Resource
                         )
                 ]),
 
-                Fieldset::make('Device Configuration')->schema([
+                Fieldset::make('Device Configuration')->columnSpanFull()->schema([
                     ...$schema->getModelInstance()->ui()?->formFields() ?? [],
                 ])->hiddenOn('create')
             ]);
@@ -141,12 +139,7 @@ class BluetoothDeviceResource extends Resource
                     Actions::actions()
                 ),
             ])
-            ->recordActionsAlignment('start')
-            ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                ]),
-            ]);
+            ->recordActionsAlignment('start');
     }
 
     public static function getRelations(): array
