@@ -143,6 +143,19 @@ class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxy
                     $state->drinkDetected = 0;
                 });
             },
+            // pet_discern/drink_start/drink_over: payload shape not confirmed yet
+            // (not in IMPLEMENT/w7h_*.csv), so just keep working_state/error/
+            // configuration in sync via parseState() like add_water_over does,
+            // without any topic-specific field handling.
+            sprintf('/sys/%s/%s/thing/event/pet_discern/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+                $this->parseState($device, $message);
+            },
+            sprintf('/sys/%s/%s/thing/event/drink_start/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+                $this->parseState($device, $message);
+            },
+            sprintf('/sys/%s/%s/thing/event/drink_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+                $this->parseState($device, $message);
+            },
         ];
     }
 
