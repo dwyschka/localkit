@@ -8,8 +8,12 @@ use Filament\Forms\Components\Select;
 use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\Layout\Split;
+use Filament\Tables\Columns\Layout\Stack;
+use Filament\Support\Enums\TextSize;
+use Filament\Support\Enums\FontWeight;
+use Filament\Actions\Action;
 use Filament\Actions\EditAction;
-use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use App\Filament\Resources\BluetoothDeviceResource\Pages\ListBluetoothDevices;
@@ -76,35 +80,68 @@ class BluetoothDeviceResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->contentGrid([
+                'md' => 2,
+                'xl' => 3,
+            ])
             ->columns([
-                TextColumn::make('name')->searchable(),
-                TextColumn::make('type')->searchable()->formatStateUsing(function(?string $state) {
-                    if($state === 'k3') {
-                        return 'K3 Spray';
-                    }
-                    return $state;
-                }),
-                TextColumn::make('mac')->searchable(),
-                TextColumn::make('link_with')
-                    ->badge()
-                    ->formatStateUsing(function (?int $state) {
-                        if(empty($state)) {
-                            return 'None';
-                        }
-                        return Device::find($state)->name ?? 'None';
+                Stack::make([
+                    Split::make([
+                        TextColumn::make('type')
+                            ->weight(FontWeight::Bold)
+                            ->size(TextSize::Large)
+                            ->formatStateUsing(function (?string $state) {
+                                return match ($state) {
+                                    'k3' => 'K3 Spray',
+                                    'w5' => 'Eversweet Fountain',
+                                    default => $state,
+                                };
+                            }),
+                        TextColumn::make('link_with')
+                            ->badge()
+                            ->grow(false)
+                            ->formatStateUsing(function (?int $state) {
+                                if(empty($state)) {
+                                    return 'None';
+                                }
+                                return Device::find($state)->name ?? 'None';
 
-                    })
-                    ->color('info')
+                            })
+                            ->color('info'),
+                    ]),
+
+                    TextColumn::make('name')
+                        ->searchable()
+                        ->color('gray')
+                        ->icon('heroicon-m-tag'),
+
+                    Split::make([
+                        TextColumn::make('mac')
+                            ->searchable()
+                            ->color('gray')
+                            ->icon('heroicon-m-cpu-chip')
+                            ->copyable(),
+                        TextColumn::make('serial_number')
+                            ->color('gray')
+                            ->icon('heroicon-m-hashtag')
+                            ->copyable(),
+                    ]),
+                ])->space(3),
             ])
             ->filters([
                 //
             ])
             ->recordActions([
-                EditAction::make(),
-                ActionGroup::make(
+                EditAction::make()
+                    ->button()
+                    ->color('gray')
+                    ->size('sm'),
+                ...array_map(
+                    fn (Action $action) => $action->button()->size('sm')->color('primary'),
                     Actions::actions()
-                )
+                ),
             ])
+            ->recordActionsAlignment('start')
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),

@@ -54,6 +54,7 @@ class DeviceResource extends Resource
             ->components([
                 TextInput::make('name')->columnSpan('full'),
                 TextInput::make('firmware')->columnSpan('half')->readOnly(),
+                TextInput::make('serial_number')->columnSpan('half')->readOnly(),
                 TextInput::make('mac')->columnSpan('half')->readOnly(),
                 Select::make('device_type')->options([
                     't4' => PetkitPuraMax::deviceName(),
@@ -151,16 +152,9 @@ class DeviceResource extends Resource
                         })
                         ->color(fn(string $state): string => 'danger'),
 
-                    Split::make([
-                        TextColumn::make('serial_number')
-                            ->color('gray')
-                            ->icon('heroicon-m-hashtag')
-                            ->copyable(),
-                        IconColumn::make('ota_available')
-                            ->label('OTA')
-                            ->boolean()
-                            ->grow(false),
-                    ]),
+                    IconColumn::make('ota_available')
+                        ->label('OTA')
+                        ->boolean(),
                 ])->space(3),
             ])
             ->filters([

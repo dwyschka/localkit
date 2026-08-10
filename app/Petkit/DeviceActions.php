@@ -9,6 +9,7 @@ use App\Helpers\OTAHelper;
 use App\Jobs\ServiceEnd;
 use App\Jobs\ServiceStart;
 use App\Localkit\OTA;
+use App\Management\Go2RTC;
 use App\Models\BluetoothDevice;
 use App\Models\Device;
 use App\Petkit\Devices\PetkitYumshareDual;
@@ -237,6 +238,15 @@ class DeviceActions
                 ->action(function (Device $record) {
                     $record->definition()->takeSnapshot($record);
                 }),
+            Action::make('Watch Stream')
+                ->visible(fn (Device $record) => $record->isNextGen())
+                ->modalHeading(fn (Device $record) => "Live Stream — {$record->name}")
+                ->modalContent(fn (Device $record) => view('camera_stream', [
+                    'streams' => app(Go2RTC::class)->streamUrls($record),
+                ]))
+                ->modalSubmitAction(false)
+                ->modalCancelActionLabel('Close')
+                ->modalWidth('2xl'),
             Action::make('Reset Add Water')
                 ->visible(function (Device $record) {
                     return $record->definition()->hasAction(self::RESET_ADD_WATER);
