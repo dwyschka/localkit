@@ -212,7 +212,6 @@ class PetkitFreshElementSolo
                                         'a' => $s['a'],
                                         'id' => $s['id'],
                                         't' => $s['t'] + 1,
-                                        'time_display' => $s['time_display']
                                     ])->toArray();
                                 })
                                 ->itemLabel(function (array $state): ?string {
