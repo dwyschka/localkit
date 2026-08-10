@@ -80,9 +80,11 @@ class DeviceResource extends Resource
                     ->columnSpan('half')
                     ->helperText('Logs all incoming HTTP requests from this device to storage/logs/device_{serial}.log'),
 
-                Fieldset::make('Device Configuration')->schema([
-                    ...$schema->getModelInstance()->ui()->formFields(),
-                ])
+                Fieldset::make('Device Configuration')
+                    ->columnSpanFull()
+                    ->schema([
+                        ...$schema->getModelInstance()->ui()->formFields(),
+                    ])
 
             ]);
     }
