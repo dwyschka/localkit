@@ -135,7 +135,7 @@ class PetkitEversweetUltra
                 TimePicker::make('configuration.settings.waterChangeTime')
                     ->label('Drain & Refill Time')
                     ->seconds(false)
-                    ->formatStateUsing(fn(?int $state) => Time::toTimeFromSeconds($state ?? 0))
+                    ->formatStateUsing(fn($state) => Time::toTimeFromSeconds((int) ($state ?? 0)))
                     ->dehydrateStateUsing(fn($state) => Time::toSeconds($state)),
 
                 Toggle::make('configuration.settings.cleanWaterLackLight')
@@ -169,7 +169,7 @@ class PetkitEversweetUltra
                 TimePicker::make('configuration.settings.flushTime')
                     ->label('Drain & Flush Time')
                     ->seconds(false)
-                    ->formatStateUsing(fn(?int $state) => Time::toTimeFromSeconds($state ?? 0))
+                    ->formatStateUsing(fn($state) => Time::toTimeFromSeconds((int) ($state ?? 0)))
                     ->dehydrateStateUsing(fn($state) => Time::toSeconds($state)),
 
                 TextInput::make('configuration.settings.flushCycle')
