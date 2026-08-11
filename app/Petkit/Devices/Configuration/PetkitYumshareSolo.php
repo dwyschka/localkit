@@ -430,16 +430,6 @@ class PetkitYumshareSolo extends DeviceConfigurationDTO implements Configuration
     )]
     private $actionFeed = 1;
 
-    #[Button(
-        technicalName: 'action_snapshot',
-        name: 'Take Snapshot',
-        commandTopic: 'action/start',
-        icon: 'mdi:information-outline',
-        commandTemplate: '{"action": "snapshot"}',
-        availabilityTemplate: 'online',
-    )]
-    private $actionSnapshot = 1;
-
     #[Number(
         technicalName: 'desiccant_durability',
         name: 'Desiccant Durability',

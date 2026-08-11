@@ -1107,16 +1107,6 @@ class PetkitEversweetUltra extends DeviceConfigurationDTO implements Configurati
 
     // Buttons
     #[Button(
-        technicalName: 'action_snapshot',
-        name: 'Take Snapshot',
-        commandTopic: 'action/start',
-        icon: 'mdi:camera',
-        commandTemplate: '{"action": "snapshot"}',
-        availabilityTemplate: 'online',
-    )]
-    private $actionSnapshot = 1;
-
-    #[Button(
         technicalName: 'action_add_water_reset',
         name: 'Reset Add Water',
         commandTopic: 'action/start',

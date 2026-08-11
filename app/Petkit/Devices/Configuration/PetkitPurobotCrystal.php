@@ -606,16 +606,6 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
 
     // Actions
     #[Button(
-        technicalName: 'action_snapshot',
-        name: 'Take Snapshot',
-        commandTopic: 'action/start',
-        icon: 'mdi:camera',
-        commandTemplate: '{"action": "snapshot"}',
-        availabilityTemplate: 'online',
-    )]
-    private $actionSnapshot = 1;
-
-    #[Button(
         technicalName: 'action_cleaning_start',
         name: 'Start Cleaning',
         commandTopic: 'action/start',
