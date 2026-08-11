@@ -17,7 +17,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->validateCsrfTokens(except: [
-           't6/*'
+           't6/*',
+           'oci/*'
         ]);
         $middleware->appendToGroup('api', \App\Http\Middleware\LogDeviceHttpRequests::class);
     })

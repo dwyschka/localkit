@@ -13,6 +13,7 @@
         "laravel/framework": "^13.0",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^3.0",
+        "league/flysystem-aws-s3-v3": "^3.0",
         "php-mqtt/laravel-client": "^1.5",
         "symfony/yaml": "^7.3 || ^8.0",
         "wendelladriel/laravel-validated-dto": "^4.4"

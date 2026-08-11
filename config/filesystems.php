@@ -73,6 +73,21 @@ return [
             'report' => false,
         ],
 
+        // Object storage backing the OCI/S3 emulation that PetKit camera
+        // devices (e.g. the D4s) upload their event images and clips to.
+        // Backed by the bundled Garage S3 service (see docker-compose.yml).
+        'localkit_storage' => [
+            'driver' => env('LOCALKIT_S3_DRIVER', 's3'),
+            'key' => env('LOCALKIT_S3_KEY'),
+            'secret' => env('LOCALKIT_S3_SECRET'),
+            'region' => env('LOCALKIT_S3_REGION', 'garage'),
+            'bucket' => env('LOCALKIT_S3_BUCKET', 'localkit'),
+            'endpoint' => env('LOCALKIT_S3_ENDPOINT', 'http://localkit-storage:3900'),
+            'use_path_style_endpoint' => env('LOCALKIT_S3_PATH_STYLE', true),
+            'throw' => false,
+            'report' => false,
+        ],
+
     ],
 
     /*
