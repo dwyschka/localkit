@@ -24,11 +24,23 @@ class Go2RTC
 
     /**
      * MJPEG stream URL, embeddable directly in an <img> tag - lighter than the
-     * full WebRTC player and used for the device preview snapshots.
+     * full WebRTC player. Used as the ffmpeg input for the cached thumbnail.
      */
     public function mjpegUrl(Device $device, ?string $stream = null): string
     {
         return $this->url($device, '/api/stream.mjpeg', $stream ?? config('go2rtc.stream'));
+    }
+
+    /**
+     * Root-relative URL of the cached still-frame thumbnail served by localkit.
+     * Relative so it resolves against whatever host serves the panel.
+     */
+    public function thumbnailUrl(Device $device, ?string $stream = null): string
+    {
+        return route('camera.thumbnail', [
+            'device' => $device->getKey(),
+            'stream' => $stream ?? config('go2rtc.stream'),
+        ], absolute: false);
     }
 
     /**
@@ -57,15 +69,16 @@ class Go2RTC
     }
 
     /**
-     * Map every stream on the device to its embeddable player URL.
+     * Map every stream on the device to its cached thumbnail URL. Camera
+     * previews show this still frame instead of a live stream.
      *
      * @return array<string, string>
      */
-    public function streamUrls(Device $device): array
+    public function thumbnailUrls(Device $device): array
     {
         $urls = [];
         foreach ($this->streams($device) as $stream) {
-            $urls[$stream] = $this->mjpegUrl($device, $stream);
+            $urls[$stream] = $this->thumbnailUrl($device, $stream);
         }
 
         return $urls;

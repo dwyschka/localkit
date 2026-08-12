@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CameraThumbnailController;
 use App\Http\Controllers\Petkit\ObjectStorageController;
 use App\Http\Controllers\Petkit\RepositoryController;
 use Illuminate\Support\Facades\Route;
@@ -8,6 +9,10 @@ use Illuminate\Support\Facades\Route;
 if (config('localkit.firmware_proxy')) {
     Route::any('repository/{path}', RepositoryController::class)->where('path', '.*');
 }
+
+// Cached still-frame thumbnail (ffmpeg) for a device's camera stream.
+Route::get('camera/{device}/thumbnail/{stream?}', CameraThumbnailController::class)
+    ->name('camera.thumbnail');
 
 /*
  * OCI-compatible object storage emulation used by PetKit cameras.

@@ -60,7 +60,7 @@ class PetkitYumshareSolo
             ]),
             Section::make('Media')->schema([
                 View::make('camera_stream')->viewData(fn($record): array => [
-                    'streams' => app(Go2RTC::class)->streamUrls($record)
+                    'streams' => app(Go2RTC::class)->thumbnailUrls($record)
                 ])
                     ->hidden(fn($record) => is_null($record->configuration()->ipAddress))
                     ->columnSpan('full'),
