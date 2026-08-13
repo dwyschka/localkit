@@ -6,19 +6,20 @@ use App\Management\Go2RTC;
 use App\Models\Device;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Symfony\Component\Process\Process;
 use Throwable;
 
 /**
- * Serves a still-frame thumbnail for a device's video stream.
+ * Serves a still-frame JPEG thumbnail for a device's video stream.
  *
- * Pulled from go2rtc's own `/api/frame.jpeg` endpoint, which transcodes a
- * keyframe to JPEG internally regardless of the source codec (H264/H265/
- * already-JPEG) - unlike `/api/stream.mjpeg`, whose consumer only negotiates
- * JPEG/RAW and silently fails against H264 sources (see
- * AlexxIT/go2rtc pkg/mjpeg/consumer.go). The result is cached (default 30s)
- * so repeated views and the device list table don't re-request per view.
+ * ffmpeg grabs a single frame from go2rtc's `/api/frame.mp4` endpoint and
+ * converts it to JPEG. frame.mp4 is used as the source (rather than feeding
+ * ffmpeg the raw device stream, or using go2rtc's own `/api/frame.jpeg`)
+ * because it reliably repackages whatever codec the stream has (H264/H265)
+ * into a minimal fMP4 fragment with no transcoding on go2rtc's side - see
+ * AlexxIT/go2rtc internal/mp4/mp4.go. The result is cached (default 10s) so
+ * repeated views and the device list table don't re-run ffmpeg per request.
  */
 class CameraThumbnailController extends Controller
 {
@@ -29,7 +30,7 @@ class CameraThumbnailController extends Controller
     public function __invoke(Device $device, ?string $stream = null): Response
     {
         $stream ??= (string) config('go2rtc.stream');
-        $ttl = (int) config('go2rtc.thumbnail.ttl', 30);
+        $ttl = (int) config('go2rtc.thumbnail.ttl', 10);
 
         // Cache base64 so the payload is safe across cache drivers (the JPEG is
         // binary). Failures return null, which Cache::remember does not store,
@@ -55,17 +56,30 @@ class CameraThumbnailController extends Controller
     }
 
     /**
-     * Grab a single frame via go2rtc's own keyframe endpoint, returning the
-     * raw JPEG bytes or null when the stream is unavailable.
+     * Grab a single frame from go2rtc's frame.mp4 endpoint with ffmpeg,
+     * returning the raw JPEG bytes or null when the stream is unavailable.
      */
     private function capture(Device $device, string $stream): ?string
     {
-        $url = $this->go2rtc->frameUrl($device, $stream);
+        $source = $this->go2rtc->frameMp4Url($device, $stream);
+
+        $process = new Process([
+            (string) config('go2rtc.thumbnail.ffmpeg', 'ffmpeg'),
+            '-hide_banner', '-loglevel', 'error',
+            '-y',
+            '-i', $source,
+            '-frames:v', '1',
+            '-q:v', '3',
+            '-f', 'image2pipe',
+            '-vcodec', 'mjpeg',
+            'pipe:1',
+        ]);
+        $process->setTimeout((float) config('go2rtc.thumbnail.timeout', 10));
 
         try {
-            $response = Http::timeout((float) config('go2rtc.thumbnail.timeout', 10))->get($url);
+            $process->run();
         } catch (Throwable $e) {
-            Log::warning('Camera thumbnail request failed', [
+            Log::warning('Camera thumbnail ffmpeg error', [
                 'device' => $device->getKey(),
                 'error' => $e->getMessage(),
             ]);
@@ -73,17 +87,17 @@ class CameraThumbnailController extends Controller
             return null;
         }
 
-        if (! $response->successful()) {
-            Log::warning('Camera thumbnail request unsuccessful', [
+        if (! $process->isSuccessful()) {
+            Log::warning('Camera thumbnail ffmpeg failed', [
                 'device' => $device->getKey(),
-                'status' => $response->status(),
+                'stderr' => $process->getErrorOutput(),
             ]);
 
             return null;
         }
 
-        $body = $response->body();
+        $output = $process->getOutput();
 
-        return $body !== '' ? $body : null;
+        return $output !== '' ? $output : null;
     }
 }

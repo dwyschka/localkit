@@ -23,6 +23,17 @@ class Go2RTC
     }
 
     /**
+     * A single keyframe wrapped in a minimal fMP4 fragment (video/mp4) - no
+     * transcoding involved, go2rtc just repackages whatever codec the stream
+     * already has. Used for thumbnails where /api/frame.jpeg's internal
+     * H264->JPEG transcode isn't reliable.
+     */
+    public function frameMp4Url(Device $device, ?string $stream = null): string
+    {
+        return $this->url($device, '/api/frame.mp4', $stream ?? config('go2rtc.stream'));
+    }
+
+    /**
      * Root-relative URL of the cached still-frame thumbnail served by localkit.
      * Relative so it resolves against whatever host serves the panel.
      */
