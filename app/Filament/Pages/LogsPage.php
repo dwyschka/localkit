@@ -16,7 +16,7 @@ class LogsPage extends Page
 
     protected static string | \UnitEnum | null $navigationGroup = 'System';
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 4;
 
     protected static ?string $title = 'Logs';
 

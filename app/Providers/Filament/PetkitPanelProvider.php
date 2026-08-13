@@ -31,6 +31,7 @@ class PetkitPanelProvider extends PanelProvider
             ->path('')
             ->login()
             ->topNavigation()
+            ->breadcrumbs(false)
             ->colors([
                 'primary' => Color::Amber,
                 'purple' => Color::Purple,
@@ -70,6 +71,12 @@ class PetkitPanelProvider extends PanelProvider
                     }
                     .fi-ta-content-ctn .fi-ta-actions > * { width: 100%; }
                     .fi-ta-content-ctn .fi-ta-actions .fi-btn { width: 100%; justify-content: center; }
+
+                    /* Center the top navigation between the logo and the user menu. */
+                    .fi-topbar-nav-groups {
+                        flex: 1;
+                        justify-content: center;
+                    }
                 </style>
                 HTML,
             )
