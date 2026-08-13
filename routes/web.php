@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CameraThumbnailController;
+use App\Http\Controllers\LogDownloadController;
 use App\Http\Controllers\Petkit\ObjectStorageController;
 use App\Http\Controllers\Petkit\RepositoryController;
 use Illuminate\Support\Facades\Route;
@@ -9,6 +10,12 @@ use Illuminate\Support\Facades\Route;
 if (config('localkit.firmware_proxy')) {
     Route::any('repository/{path}', RepositoryController::class)->where('path', '.*');
 }
+
+// Plain (non-Livewire) route so the file streams instead of being read fully
+// into memory and base64-encoded through the Livewire AJAX payload.
+Route::get('logs/{file}/download', LogDownloadController::class)
+    ->middleware('auth')
+    ->name('logs.download');
 
 // Cached still-frame thumbnail (ffmpeg) for a device's camera stream.
 Route::get('camera/{device}/thumbnail/{stream?}', CameraThumbnailController::class)

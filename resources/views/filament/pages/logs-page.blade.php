@@ -50,7 +50,8 @@
                 <x-filament::button
                     color="gray"
                     icon="heroicon-m-arrow-down-tray"
-                    wire:click="download"
+                    tag="a"
+                    href="{{ route('logs.download', ['file' => $this->logFile]) }}"
                     size="sm"
                 >
                     Download

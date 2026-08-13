@@ -4,7 +4,6 @@ namespace App\Filament\Pages;
 
 use Filament\Pages\Page;
 use Illuminate\Support\Collection;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class LogsPage extends Page
 {
@@ -64,21 +63,6 @@ class LogsPage extends Page
         $content = $this->tail($path, $this->lines);
 
         return trim($content) === '' ? '' : $content;
-    }
-
-    /**
-     * Streams the full, selected log file to the browser as a download -
-     * unlike getLogContent(), this isn't limited to the trailing $lines.
-     */
-    public function download(): ?BinaryFileResponse
-    {
-        $path = $this->availableFiles()->get($this->logFile);
-
-        if (! $path || ! is_readable($path)) {
-            return null;
-        }
-
-        return response()->download($path, $this->logFile);
     }
 
     private function tail(string $path, int $lines): string
