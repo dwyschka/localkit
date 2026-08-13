@@ -3,14 +3,15 @@
     @forelse($streams as $name => $url)
         <div>
             <p class="text-sm font-medium mb-1">{{ $name }}</p>
-            <img
+            <iframe
                 style="margin: 0 auto"
                 src="{{ $url }}"
                 width="640"
                 height="360"
-                alt="{{ $name }}"
+                allow="autoplay; encrypted-media"
+                allowfullscreen
                 class="rounded-lg shadow-lg"
-            />
+            ></iframe>
         </div>
     @empty
         <p class="text-sm text-gray-500">No streams available on this device</p>

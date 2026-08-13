@@ -71,8 +71,8 @@ class Go2RTC
     }
 
     /**
-     * Map every stream on the device to its cached thumbnail URL. Camera
-     * previews show this still frame instead of a live stream.
+     * Map every stream on the device to its cached thumbnail URL. Used for
+     * lightweight previews (e.g. the device list tile) instead of a live stream.
      *
      * @return array<string, string>
      */
@@ -81,6 +81,22 @@ class Go2RTC
         $urls = [];
         foreach ($this->streams($device) as $stream) {
             $urls[$stream] = $this->thumbnailUrl($device, $stream);
+        }
+
+        return $urls;
+    }
+
+    /**
+     * Map every stream on the device to its live go2rtc player URL
+     * (/stream.html, WebRTC). Used in the edit view's Media section.
+     *
+     * @return array<string, string>
+     */
+    public function streamUrls(Device $device): array
+    {
+        $urls = [];
+        foreach ($this->streams($device) as $stream) {
+            $urls[$stream] = $this->streamUrl($device, $stream);
         }
 
         return $urls;
