@@ -30,6 +30,7 @@ class PetkitPanelProvider extends PanelProvider
             ->id('petkit')
             ->path('')
             ->login()
+            ->topNavigation()
             ->colors([
                 'primary' => Color::Amber,
                 'purple' => Color::Purple,
