@@ -7,7 +7,6 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Fieldset;
-use Filament\Schemas\Components\Section;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ViewColumn;
 use Filament\Support\Enums\TextSize;
@@ -57,7 +56,7 @@ class DeviceResource extends Resource
     {
         return $schema
             ->components([
-                Section::make('Device')
+                Fieldset::make('Device')
                     ->columnSpanFull()
                     ->columns(2)
                     ->schema([
@@ -84,7 +83,7 @@ class DeviceResource extends Resource
                             ->helperText('Logs all incoming HTTP requests from this device to storage/logs/device_{serial}.log'),
                     ]),
 
-                Section::make('OTA')
+                Fieldset::make('OTA')
                     ->columnSpanFull()
                     ->columns(2)
                     ->schema([

@@ -77,6 +77,12 @@ class PetkitPanelProvider extends PanelProvider
                         flex: 1;
                         justify-content: center;
                     }
+
+                    /* Redundant with the top navigation right above it - keep the
+                       header's action buttons (Create/Save/...), drop the heading. */
+                    .fi-header-heading {
+                        display: none;
+                    }
                 </style>
                 HTML,
             )
