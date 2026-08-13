@@ -6,16 +6,19 @@ use App\Management\Go2RTC;
 use App\Models\Device;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Symfony\Component\Process\Process;
 use Throwable;
 
 /**
  * Serves a still-frame thumbnail for a device's video stream.
  *
- * ffmpeg grabs a single JPEG frame from the device's go2rtc MJPEG feed. The
- * result is cached (default 30s) so repeated views and the device list table
- * don't re-run ffmpeg per request.
+ * Pulled from go2rtc's own `/api/frame.jpeg` endpoint, which transcodes a
+ * keyframe to JPEG internally regardless of the source codec (H264/H265/
+ * already-JPEG) - unlike `/api/stream.mjpeg`, whose consumer only negotiates
+ * JPEG/RAW and silently fails against H264 sources (see
+ * AlexxIT/go2rtc pkg/mjpeg/consumer.go). The result is cached (default 30s)
+ * so repeated views and the device list table don't re-request per view.
  */
 class CameraThumbnailController extends Controller
 {
@@ -52,30 +55,17 @@ class CameraThumbnailController extends Controller
     }
 
     /**
-     * Grab a single frame from the stream with ffmpeg, returning the raw JPEG
-     * bytes or null when the stream is unavailable.
+     * Grab a single frame via go2rtc's own keyframe endpoint, returning the
+     * raw JPEG bytes or null when the stream is unavailable.
      */
     private function capture(Device $device, string $stream): ?string
     {
-        $source = $this->go2rtc->mjpegUrl($device, $stream);
-
-        $process = new Process([
-            (string) config('go2rtc.thumbnail.ffmpeg', 'ffmpeg'),
-            '-hide_banner', '-loglevel', 'error',
-            '-y',
-            '-i', $source,
-            '-frames:v', '1',
-            '-q:v', '3',
-            '-f', 'image2pipe',
-            '-vcodec', 'mjpeg',
-            'pipe:1',
-        ]);
-        $process->setTimeout((float) config('go2rtc.thumbnail.timeout', 10));
+        $url = $this->go2rtc->frameUrl($device, $stream);
 
         try {
-            $process->run();
+            $response = Http::timeout((float) config('go2rtc.thumbnail.timeout', 10))->get($url);
         } catch (Throwable $e) {
-            Log::warning('Camera thumbnail ffmpeg error', [
+            Log::warning('Camera thumbnail request failed', [
                 'device' => $device->getKey(),
                 'error' => $e->getMessage(),
             ]);
@@ -83,17 +73,17 @@ class CameraThumbnailController extends Controller
             return null;
         }
 
-        if (! $process->isSuccessful()) {
-            Log::warning('Camera thumbnail ffmpeg failed', [
+        if (! $response->successful()) {
+            Log::warning('Camera thumbnail request unsuccessful', [
                 'device' => $device->getKey(),
-                'stderr' => $process->getErrorOutput(),
+                'status' => $response->status(),
             ]);
 
             return null;
         }
 
-        $output = $process->getOutput();
+        $body = $response->body();
 
-        return $output !== '' ? $output : null;
+        return $body !== '' ? $body : null;
     }
 }

@@ -23,15 +23,6 @@ class Go2RTC
     }
 
     /**
-     * MJPEG stream URL, embeddable directly in an <img> tag - lighter than the
-     * full WebRTC player. Used as the ffmpeg input for the cached thumbnail.
-     */
-    public function mjpegUrl(Device $device, ?string $stream = null): string
-    {
-        return $this->url($device, '/api/stream.mjpeg', $stream ?? config('go2rtc.stream'));
-    }
-
-    /**
      * Root-relative URL of the cached still-frame thumbnail served by localkit.
      * Relative so it resolves against whatever host serves the panel.
      */
