@@ -97,6 +97,7 @@ class DeviceResource extends Resource
     {
         return $table
             ->poll('10s')
+            ->paginated(false)
             ->contentGrid([
                 'md' => 2,
                 'xl' => 3,
@@ -129,7 +130,6 @@ class DeviceResource extends Resource
                     ]),
 
                     TextColumn::make('name')
-                        ->searchable()
                         ->color('gray')
                         ->icon('heroicon-m-tag'),
 
