@@ -7,6 +7,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Fieldset;
+use Filament\Schemas\Components\Section;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ViewColumn;
 use Filament\Support\Enums\TextSize;
@@ -56,34 +57,45 @@ class DeviceResource extends Resource
     {
         return $schema
             ->components([
-                TextInput::make('name')->columnSpan('full'),
-                TextInput::make('firmware')->columnSpan('half')->readOnly(),
-                TextInput::make('serial_number')->columnSpan('half')->readOnly(),
-                TextInput::make('mac')->columnSpan('half')->readOnly(),
-                Select::make('device_type')->options([
-                    't4' => PetkitPuraMax::deviceName(),
-                    'd3' => PetkitFreshElement3::deviceName(),
-                    'd4' => PetkitFreshElementSolo::deviceName(),
-                    'd4h' => PetkitYumshareSolo::deviceName(),
-                    'd4sh' => PetkitYumshareDual::deviceName(),
-                    't7' => PetkitPurobotCrystal::deviceName(),
-                    'w7h' => PetkitEversweetUltra::deviceName(),
-                ])
-                    ->columnSpan('half')->disabled(),
+                Section::make('Device')
+                    ->columnSpanFull()
+                    ->columns(2)
+                    ->schema([
+                        TextInput::make('name')->columnSpan('full'),
+                        TextInput::make('firmware')->columnSpan('half')->readOnly(),
+                        TextInput::make('serial_number')->columnSpan('half')->readOnly(),
+                        TextInput::make('mac')->columnSpan('half')->readOnly(),
+                        Select::make('device_type')->options([
+                            't4' => PetkitPuraMax::deviceName(),
+                            'd3' => PetkitFreshElement3::deviceName(),
+                            'd4' => PetkitFreshElementSolo::deviceName(),
+                            'd4h' => PetkitYumshareSolo::deviceName(),
+                            'd4sh' => PetkitYumshareDual::deviceName(),
+                            't7' => PetkitPurobotCrystal::deviceName(),
+                            'w7h' => PetkitEversweetUltra::deviceName(),
+                        ])
+                            ->columnSpan('half')->disabled(),
 
-                TextInput::make('secret')->columnSpan('half'),
-                TextInput::make('petkit_id')->columnSpan('half')->readOnly(),
-                TextInput::make('mqtt_subdomain')->columnSpan('half'),
-                Toggle::make('ota_state')
-                    ->helperText('If enabled, the MQTT Connection to Aliyun needs to be disabled')
-                    ->columnSpan('half'),
-                Toggle::make('ota_available')
-                    ->helperText('Set by the device firmware — indicates whether an OTA update is available')
-                    ->columnSpan('half')
-                    ->disabled(),
-                Toggle::make('debug_mode')
-                    ->columnSpan('half')
-                    ->helperText('Logs all incoming HTTP requests from this device to storage/logs/device_{serial}.log'),
+                        TextInput::make('secret')->columnSpan('half'),
+                        TextInput::make('petkit_id')->columnSpan('half')->readOnly(),
+                        TextInput::make('mqtt_subdomain')->columnSpan('half'),
+                        Toggle::make('debug_mode')
+                            ->columnSpan('half')
+                            ->helperText('Logs all incoming HTTP requests from this device to storage/logs/device_{serial}.log'),
+                    ]),
+
+                Section::make('OTA')
+                    ->columnSpanFull()
+                    ->columns(2)
+                    ->schema([
+                        Toggle::make('ota_state')
+                            ->helperText('If enabled, the MQTT Connection to Aliyun needs to be disabled')
+                            ->columnSpan('half'),
+                        Toggle::make('ota_available')
+                            ->helperText('Set by the device firmware — indicates whether an OTA update is available')
+                            ->columnSpan('half')
+                            ->disabled(),
+                    ]),
 
                 Fieldset::make('Device Configuration')
                     ->columnSpanFull()
