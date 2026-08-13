@@ -108,11 +108,64 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
     public ?string $stream;
 
     // Device meta (kept for signup / device info payloads)
+    #[BinarySensor(
+        technicalName: 'share_open',
+        name: 'Share Open',
+        icon: 'mdi:toggle-switch',
+        entityCategory: 'diagnostic',
+        valueTemplate: '{{ value_json.settings.shareOpen }}',
+        payloadOn: true,
+        payloadOff: false
+    )]
     public bool $shareOpen;
+
+    #[BinarySensor(
+        technicalName: 'multi_config',
+        name: 'Multi Config',
+        icon: 'mdi:toggle-switch',
+        entityCategory: 'diagnostic',
+        valueTemplate: '{{ value_json.settings.multiConfig }}',
+        payloadOn: true,
+        payloadOff: false
+    )]
     public bool $multiConfig;
+
+    #[BinarySensor(
+        technicalName: 'auto_upgrade',
+        name: 'Auto Upgrade',
+        icon: 'mdi:cloud-download',
+        entityCategory: 'diagnostic',
+        valueTemplate: '{{ value_json.settings.autoUpgrade }}',
+        payloadOn: true,
+        payloadOff: false
+    )]
     public bool $autoUpgrade;
+
+    #[Sensor(
+        technicalName: 'type_code',
+        name: 'Type Code',
+        icon: 'mdi:identifier',
+        entityCategory: 'diagnostic',
+        valueTemplate: '{{ value_json.settings.typeCode }}'
+    )]
     public int $typeCode;
+
+    #[Sensor(
+        technicalName: 'service_status',
+        name: 'Service Status',
+        icon: 'mdi:information-outline',
+        entityCategory: 'diagnostic',
+        valueTemplate: '{{ value_json.settings.serviceStatus }}'
+    )]
     public int $serviceStatus;
+
+    #[Sensor(
+        technicalName: 'hertz',
+        name: 'Hertz',
+        icon: 'mdi:repeat',
+        entityCategory: 'diagnostic',
+        valueTemplate: '{{ value_json.settings.hertz }}'
+    )]
     public int $hertz;
 
     // Display / camera settings
@@ -391,6 +444,13 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
     )]
     public int $sandTrayStandardDay;
 
+    #[Sensor(
+        technicalName: 'sand_tray_standard_day_max',
+        name: 'Litter Tray Standard Days Max',
+        icon: 'mdi:calendar-range',
+        entityCategory: 'diagnostic',
+        valueTemplate: '{{ value_json.settings.sandTrayStandardDayMax }}'
+    )]
     public int $sandTrayStandardDayMax;
 
     // Desiccant (deodorant crystal)
@@ -513,6 +573,19 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
     )]
     public bool $softMode;
 
+    #[HASwitch(
+        technicalName: 'soft_mode_clean',
+        name: 'Soft Mode Clean',
+        commandTopic: 'setting/set',
+        icon: 'mdi:broom',
+        valueTemplate: '{{ value_json.settings.softModeClean }}',
+        commandTemplate: '{"softModeClean":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
     public bool $softModeClean;
 
     #[HASwitch(

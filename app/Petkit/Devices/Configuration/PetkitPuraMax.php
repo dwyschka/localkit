@@ -5,6 +5,7 @@ namespace App\Petkit\Devices\Configuration;
 use App\DTOs\DeviceConfigurationDTO;
 use App\DTOs\MultiRangeDTO;
 use App\DTOs\SandFullWeightDTO;
+use App\Homeassistant\BinarySensor;
 use App\Homeassistant\Button;
 use App\Homeassistant\HASwitch;
 use App\Homeassistant\Number;
@@ -68,7 +69,28 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
     )]
     public int $litterPercent;
 
+    #[HASwitch(
+        technicalName: 'share_open',
+        name: 'Share Open',
+        commandTopic: 'setting/set',
+        icon: 'mdi:toggle-switch',
+        valueTemplate: '{{ value_json.settings.shareOpen }}',
+        commandTemplate: '{"shareOpen":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
     public bool $shareOpen;
+
+    #[Sensor(
+        technicalName: 'type_code',
+        name: 'Type Code',
+        icon: 'mdi:identifier',
+        entityCategory: 'diagnostic',
+        valueTemplate: '{{ value_json.settings.typeCode }}'
+    )]
     public int $typeCode;
 
     #[Select(
@@ -117,6 +139,20 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
         entityCategory: 'config'
     )]
     public bool $manualLock;
+
+    #[HASwitch(
+        technicalName: 'click_ok_enable',
+        name: 'Click OK Enable',
+        commandTopic: 'setting/set',
+        icon: 'mdi:toggle-switch',
+        valueTemplate: '{{ value_json.settings.clickOkEnable }}',
+        commandTemplate: '{"clickOkEnable":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
     public bool $clickOkEnable;
 
     #[HASwitch(
@@ -148,6 +184,14 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
         entityCategory: 'config'
     )]
     public bool $autoWork;
+
+    #[Sensor(
+        technicalName: 'fixed_time_clear',
+        name: 'Scheduled Cleaning',
+        icon: 'mdi:calendar-clock',
+        entityCategory: 'diagnostic',
+        valueTemplate: '{{ value_json.settings.fixedTimeClear }}'
+    )]
     public int $fixedTimeClear;
 
     #[HASwitch(
@@ -164,8 +208,39 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
         entityCategory: 'config'
     )]
     public bool $downpos;
+    #[BinarySensor(
+        technicalName: 'deep_refresh',
+        name: 'Deep Refresh',
+        icon: 'mdi:refresh',
+        entityCategory: 'diagnostic',
+        valueTemplate: '{{ value_json.settings.deepRefresh }}',
+        payloadOn: true,
+        payloadOff: false
+    )]
     public bool $deepRefresh;
+
+    #[Select(
+        technicalName: 'auto_interval_min',
+        name: 'Time Interval Of Each Cleaning',
+        options: ['0', '30', '60', '300', '600', '900', '1800', '3600'],
+        commandTopic: 'setting/set',
+        icon: 'mdi:timer-outline',
+        valueTemplate: '{{ value_json.settings.autoIntervalMin }}',
+        commandTemplate: '{"autoIntervalMin": {{value}}}',
+        entityCategory: 'config'
+    )]
     public int $autoIntervalMin;
+
+    #[Select(
+        technicalName: 'still_time',
+        name: 'Delayed Cleaning',
+        options: ['0', '30', '60', '300', '600', '900', '1800', '3600'],
+        commandTopic: 'setting/set',
+        icon: 'mdi:timer-outline',
+        valueTemplate: '{{ value_json.settings.stillTime }}',
+        commandTemplate: '{"stillTime": {{value}}}',
+        entityCategory: 'config'
+    )]
     public int $stillTime;
 
     #[Select(
@@ -321,7 +396,19 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
         entityCategory: 'config'
     )]
     public bool $sandSaving;
+
+    #[Select(
+        technicalName: 'stop_time',
+        name: 'Stop Time',
+        options: ['0', '30', '60', '300', '600', '900', '1800', '3600'],
+        commandTopic: 'setting/set',
+        icon: 'mdi:timer-outline',
+        valueTemplate: '{{ value_json.settings.stopTime }}',
+        commandTemplate: '{"stopTime": {{value}}}',
+        entityCategory: 'config'
+    )]
     public int $stopTime;
+
     public SandFullWeightDTO $sandFullWeight;
 
     #[HASwitch(
@@ -344,6 +431,18 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
 
 
     public array $sandSetUseConfig;
+    #[Number(
+        technicalName: 'lightest',
+        name: 'Minimum Weight',
+        commandTopic: 'setting/set',
+        icon: 'mdi:scale',
+        valueTemplate: '{{ value_json.settings.lightest }}',
+        commandTemplate: '{"lightest":{{ value }}}',
+        entityCategory: 'config',
+        min: 0,
+        max: 10000,
+        step: 1
+    )]
     public int $lightest;
 
     #[HASwitch(
@@ -360,6 +459,19 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
         entityCategory: 'config'
     )]
     public bool $deepClean;
+    #[HASwitch(
+        technicalName: 'remove_sand',
+        name: 'Remove Sand',
+        commandTopic: 'setting/set',
+        icon: 'mdi:broom',
+        valueTemplate: '{{ value_json.settings.removeSand }}',
+        commandTemplate: '{"removeSand":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
     public bool $removeSand;
 
     #[HASwitch(
@@ -376,6 +488,18 @@ class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInter
         entityCategory: 'config'
     )]
     public bool $bury;
+    #[Number(
+        technicalName: 'pet_in_tip_limit',
+        name: 'Pet In Tip Limit',
+        commandTopic: 'setting/set',
+        icon: 'mdi:scale',
+        valueTemplate: '{{ value_json.settings.petInTipLimit }}',
+        commandTemplate: '{"petInTipLimit":{{ value }}}',
+        entityCategory: 'config',
+        min: 0,
+        max: 10000,
+        step: 1
+    )]
     public int $petInTipLimit;
 
     #[Number(

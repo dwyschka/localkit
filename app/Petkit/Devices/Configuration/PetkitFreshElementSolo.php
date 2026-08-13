@@ -23,6 +23,13 @@ use WendellAdriel\ValidatedDTO\Casting\ArrayCast;
 class PetkitFreshElementSolo extends DeviceConfigurationDTO implements ConfigurationInterface
 {
 
+    #[Sensor(
+        technicalName: 'factor',
+        name: 'Calibration Factor',
+        icon: 'mdi:tune-variant',
+        entityCategory: 'diagnostic',
+        valueTemplate: '{{ value_json.settings.factor }}'
+    )]
     public int $factor;
 
     #[Sensor(
@@ -73,12 +80,38 @@ class PetkitFreshElementSolo extends DeviceConfigurationDTO implements Configura
     )]
     public bool $feedSound;
 
+    #[HASwitch(
+        technicalName: 'multi_config',
+        name: 'Multi Config',
+        commandTopic: 'setting/set',
+        icon: 'mdi:toggle-switch',
+        valueTemplate: '{{ value_json.settings.multiConfig }}',
+        commandTemplate: '{"multiConfig":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
     public bool $multiConfig;
 
     public RangeDTO $foodWarnRange;
 
     public RangeDTO $lightRange;
 
+    #[HASwitch(
+        technicalName: 'share_open',
+        name: 'Share Open',
+        commandTopic: 'setting/set',
+        icon: 'mdi:toggle-switch',
+        valueTemplate: '{{ value_json.settings.shareOpen }}',
+        commandTemplate: '{"shareOpen":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
     public bool $shareOpen;
 
     #[HASwitch(

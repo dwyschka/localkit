@@ -187,9 +187,51 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
     )]
     public bool $manualLock;
 
+    #[HASwitch(
+        technicalName: 'light_mode',
+        name: 'Indicator Light',
+        commandTopic: 'setting/set',
+        icon: 'mdi:lightbulb',
+        valueTemplate: '{{ value_json.settings.lightMode }}',
+        commandTemplate: '{"lightMode":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
     public bool $lightMode;
+
     public array $lightMultiRange;
+
+    #[HASwitch(
+        technicalName: 'multi_config',
+        name: 'Multi Config',
+        commandTopic: 'setting/set',
+        icon: 'mdi:toggle-switch',
+        valueTemplate: '{{ value_json.settings.multiConfig }}',
+        commandTemplate: '{"multiConfig":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
     public bool $multiConfig;
+
+    #[HASwitch(
+        technicalName: 'share_open',
+        name: 'Share Open',
+        commandTopic: 'setting/set',
+        icon: 'mdi:toggle-switch',
+        valueTemplate: '{{ value_json.settings.shareOpen }}',
+        commandTemplate: '{"shareOpen":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
     public bool $shareOpen;
 
     // Schedule
@@ -208,6 +250,13 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
     )]
     public bool $sche_enable;
 
+    #[Sensor(
+        technicalName: 'c_time',
+        name: 'Schedule Change Time',
+        icon: 'mdi:clock-outline',
+        entityCategory: 'diagnostic',
+        valueTemplate: '{{ value_json.settings.CTime }}'
+    )]
     public int $CTime;
 
     // Camera settings
@@ -274,6 +323,15 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
     )]
     public bool $timeDisplay;
 
+    #[BinarySensor(
+        technicalName: 'eat_video',
+        name: 'YUMSHARE Video/Photo Upload',
+        icon: 'mdi:cloud-upload',
+        entityCategory: 'diagnostic',
+        valueTemplate: '{{ value_json.settings.eatVideo }}',
+        payloadOn: true,
+        payloadOff: false
+    )]
     public bool $eatVideo;
 
     // Hopper calibration factors (bowl 1 / bowl 2)
@@ -393,11 +451,39 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
     )]
     public int $eatSensitivity;
 
+    #[Number(
+        technicalName: 'detect_interval',
+        name: 'Detection Interval',
+        commandTopic: 'setting/set',
+        icon: 'mdi:timer-outline',
+        unitOfMeasurement: 's',
+        valueTemplate: '{{ value_json.settings.detectInterval }}',
+        commandTemplate: '{"detectInterval":{{ value }}}',
+        entityCategory: 'config',
+        min: 0,
+        max: 300,
+        step: 1
+    )]
     public int $detectInterval;
+
     public array $detectMultiRange;
 
     // Sound settings
+    #[HASwitch(
+        technicalName: 'tone_mode',
+        name: 'Do Not Disturb',
+        commandTopic: 'setting/set',
+        icon: 'mdi:volume-off',
+        valueTemplate: '{{ value_json.settings.toneMode }}',
+        commandTemplate: '{"toneMode":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
     public bool $toneMode;
+
     public array $toneMultiRange;
 
     #[HASwitch(
@@ -459,10 +545,37 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
     )]
     public int $volume;
 
+    #[Sensor(
+        technicalName: 'selected_sound',
+        name: 'Selected Sound',
+        icon: 'mdi:music-note',
+        entityCategory: 'diagnostic',
+        valueTemplate: '{{ value_json.settings.selectedSound }}'
+    )]
     public int $selectedSound;
 
     // AI and other settings
+    #[Sensor(
+        technicalName: 'surplus_control',
+        name: 'Surplus Food Control',
+        icon: 'mdi:food-off',
+        entityCategory: 'diagnostic',
+        valueTemplate: '{{ value_json.settings.surplusControl }}'
+    )]
     public int $surplusControl;
+
+    #[Number(
+        technicalName: 'surplus_standard',
+        name: 'Surplus Food Standard',
+        commandTopic: 'setting/set',
+        icon: 'mdi:food-off',
+        valueTemplate: '{{ value_json.settings.surplusStandard }}',
+        commandTemplate: '{"surplusStandard":{{ value }}}',
+        entityCategory: 'config',
+        min: 0,
+        max: 100,
+        step: 1
+    )]
     public int $surplusStandard;
 
     #[HASwitch(
@@ -480,13 +593,83 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
     )]
     public bool $smartFrame;
 
+    #[HASwitch(
+        technicalName: 'upload',
+        name: 'Cloud Recording',
+        commandTopic: 'setting/set',
+        icon: 'mdi:cloud-upload',
+        valueTemplate: '{{ value_json.settings.upload }}',
+        commandTemplate: '{"upload":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
     public bool $upload;
+
+    #[Sensor(
+        technicalName: 'service_status',
+        name: 'Service Status',
+        icon: 'mdi:information-outline',
+        entityCategory: 'diagnostic',
+        valueTemplate: '{{ value_json.settings.serviceStatus }}'
+    )]
     public int $serviceStatus;
+
+    #[HASwitch(
+        technicalName: 'feed_picture',
+        name: 'Feeding Photo',
+        commandTopic: 'setting/set',
+        icon: 'mdi:camera',
+        valueTemplate: '{{ value_json.settings.feedPicture }}',
+        commandTemplate: '{"feedPicture":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
     public bool $feedPicture;
+
+    #[Sensor(
+        technicalName: 'attire_id',
+        name: 'Attire ID',
+        icon: 'mdi:identifier',
+        entityCategory: 'diagnostic',
+        valueTemplate: '{{ value_json.settings.attireId }}'
+    )]
     public int $attireId;
+
+    #[Sensor(
+        technicalName: 'logo_cn',
+        name: 'Logo CN',
+        icon: 'mdi:identifier',
+        entityCategory: 'diagnostic',
+        valueTemplate: '{{ value_json.settings.logo_cn }}'
+    )]
     public int $logo_cn;
+
+    #[BinarySensor(
+        technicalName: 'auto_upgrade',
+        name: 'Auto Upgrade',
+        icon: 'mdi:cloud-download',
+        entityCategory: 'diagnostic',
+        valueTemplate: '{{ value_json.settings.autoUpgrade }}',
+        payloadOn: true,
+        payloadOff: false
+    )]
     public bool $autoUpgrade;
+
     public array $capacity;
+
+    #[Sensor(
+        technicalName: 'type_code',
+        name: 'Type Code',
+        icon: 'mdi:identifier',
+        entityCategory: 'diagnostic',
+        valueTemplate: '{{ value_json.settings.typeCode }}'
+    )]
     public int $typeCode;
 
     #[Sensor(

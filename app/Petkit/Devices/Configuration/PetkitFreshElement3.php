@@ -114,8 +114,25 @@ class PetkitFreshElement3 extends DeviceConfigurationDTO implements Configuratio
     )]
     public int $volume;
 
+    #[Sensor(
+        technicalName: 'selected_sound',
+        name: 'Selected Sound',
+        icon: 'mdi:music-note',
+        entityCategory: 'diagnostic',
+        valueTemplate: '{{ value_json.settings.selectedSound }}'
+    )]
     public int $selectedSound;
 
+    #[Select(
+        technicalName: 'language',
+        name: 'Language',
+        options: ['en_US', 'zh_CN'],
+        commandTopic: 'setting/set',
+        icon: 'mdi:translate',
+        valueTemplate: '{{ value_json.settings.language }}',
+        commandTemplate: '{"language": "{{value}}"}',
+        entityCategory: 'config'
+    )]
     public string $language;
 
     #[HASwitch(
@@ -166,6 +183,13 @@ class PetkitFreshElement3 extends DeviceConfigurationDTO implements Configuratio
 
     public array $d3SoundFirmware;
 
+    #[Sensor(
+        technicalName: 'num_limit',
+        name: 'Num Limit',
+        icon: 'mdi:information-outline',
+        entityCategory: 'diagnostic',
+        valueTemplate: '{{ value_json.settings.numLimit }}'
+    )]
     public int $numLimit;
 
     #[Select(
