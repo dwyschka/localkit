@@ -64,12 +64,6 @@ return [
             'level' => 'debug',
         ],
 
-        'http' => [
-            'driver' => 'single',
-            'path' => storage_path('logs/http.log'),
-            'level' => 'debug',
-        ],
-
         'single' => [
             'driver' => 'single',
             'path' => storage_path('logs/laravel.log'),

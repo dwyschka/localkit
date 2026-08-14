@@ -23,7 +23,6 @@ return Application::configure(basePath: dirname(__DIR__))
            'oci/*'
         ]);
         $middleware->appendToGroup('api', \App\Http\Middleware\LogDeviceHttpRequests::class);
-        $middleware->append(\App\Http\Middleware\LogHttpRequests::class);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         // Petkit devices choke on Laravel's HTML error pages (no Accept
