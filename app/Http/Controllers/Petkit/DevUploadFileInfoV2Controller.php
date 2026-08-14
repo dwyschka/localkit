@@ -73,7 +73,7 @@ class DevUploadFileInfoV2Controller extends Controller
             // (e.g. after a network hiccup) for a file we already decrypted in
             // place, and running AES-CBC decryption again on already-plaintext
             // bytes would corrupt them beyond recovery.
-            if (! $media->decrypted && ! empty($fileInfo['aesIv'])) {
+            if (config('localkit.storage.decrypt_on_upload') && ! $media->decrypted && ! empty($fileInfo['aesIv'])) {
                 $this->decryptInPlace($media, $objectKey, (string) $fileInfo['aesIv']);
             }
         }
