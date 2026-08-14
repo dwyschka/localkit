@@ -3,6 +3,7 @@
 use App\Http\Controllers\CameraThumbnailController;
 use App\Http\Controllers\LogDownloadController;
 use App\Http\Controllers\MediaDownloadController;
+use App\Http\Controllers\MediaFileController;
 use App\Http\Controllers\Petkit\ObjectStorageController;
 use App\Http\Controllers\Petkit\RepositoryController;
 use Illuminate\Support\Facades\Route;
@@ -24,6 +25,12 @@ Route::get('media/download/{path}', MediaDownloadController::class)
     ->middleware('auth')
     ->where('path', '.*')
     ->name('media.download');
+
+// Decrypted camera capture, looked up by the fileId reported via
+// dev_upload_file_info_v2 (see DevUploadFileInfoV2Controller / MediaFile).
+Route::get('media/file/{fileId}', MediaFileController::class)
+    ->middleware('auth')
+    ->name('media.file');
 
 // Cached still-frame thumbnail (ffmpeg) for a device's camera stream.
 Route::get('camera/{device}/thumbnail/{stream?}', CameraThumbnailController::class)

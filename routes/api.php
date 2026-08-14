@@ -22,6 +22,7 @@ use App\Http\Controllers\Petkit\DevSignupController;
 use App\Http\Controllers\Petkit\DevSoundGetController;
 use App\Http\Controllers\Petkit\DevStateReportController;
 use App\Http\Controllers\Petkit\DevSyncTimeController;
+use App\Http\Controllers\Petkit\DevUploadFileInfoV2Controller;
 use App\Http\Controllers\Petkit\DevVideoDeviceInfoController;
 use App\Http\Controllers\Petkit\HeartbeatController;
 use App\Http\Controllers\Petkit\RepositoryController;
@@ -55,6 +56,7 @@ Route::prefix('{deviceType}')->group(function () {
     Route::get('dev_only_iot_device_info', DevOnlyIotDeviceInfoController::class);
     Route::get('dev_video_device_info', DevVideoDeviceInfoController::class);
     Route::get('dev_oss_sts_info_new_v2', DevOssStsInfoNewV2Controller::class);
+    Route::post('dev_upload_file_info_v2', DevUploadFileInfoV2Controller::class);
     Route::get('dev_multi_config', DevMultiConfigController::class);
     Route::get('dev_ble_device', DevBleDeviceController::class);
     Route::get('dev_sound_get', DevSoundGetController::class);
