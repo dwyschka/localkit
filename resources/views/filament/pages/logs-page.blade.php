@@ -59,7 +59,7 @@
 
                 <x-filament::button
                     color="warning"
-                    icon="heroicon-m-eraser"
+                    icon="heroicon-m-backspace"
                     wire:click="clear"
                     wire:confirm="Clear the contents of {{ $this->logFile }}? The file itself is kept."
                     size="sm"
