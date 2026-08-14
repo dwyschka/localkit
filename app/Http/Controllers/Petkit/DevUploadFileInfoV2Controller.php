@@ -40,6 +40,8 @@ class DevUploadFileInfoV2Controller extends Controller
 
         $fileInfos = json_decode((string) $request->input('fileInfos', '[]'), true) ?: [];
 
+        Log::info('dev_upload_file_info_v2 received', ['deviceId' => $deviceId, 'fileInfos' => $fileInfos]);
+
         foreach ($fileInfos as $fileInfo) {
             if (empty($fileInfo['fileId'])) {
                 continue;
