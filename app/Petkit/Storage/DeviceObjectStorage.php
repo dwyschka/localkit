@@ -37,6 +37,18 @@ class DeviceObjectStorage
         $aesKeyStr = (string) config('localkit.storage.aes_key');
         $aesKeyUri = $this->aesKeyObject($pathPrefix, $aesKeyStr);
 
+        // The firmware's upload routine always speaks Aliyun's OSS protocol
+        // (Authorization: OSS <key>:<sig>, x-oss-security-token,
+        // x-oss-object-acl) regardless of whether it's addressing "primary"
+        // or "standby" - both need non-empty credentials or the client-side
+        // STS response parsing fails before it even attempts the upload.
+        // ObjectStorageController never verifies these, so they're opaque
+        // per-request placeholders, not real credentials - the actual
+        // Garage/S3 key/secret never leave the server.
+        $accessKeyId = 'STS.' . Str::random(20);
+        $accessKeySecret = Str::random(30);
+        $securityToken = Str::random(64);
+
         $capabilities = [];
         foreach ((array) config('localkit.storage.cycle_types') as $cycleType) {
             $capabilities[] = [
@@ -52,12 +64,18 @@ class DeviceObjectStorage
                 'primaryDomain' => $domain,
                 'primaryParUrl' => $parUrl,
                 'primaryParExpiration' => $parExpirationMs,
+                'primaryAccessKeyId' => $accessKeyId,
+                'primaryAccessKeySecret' => $accessKeySecret,
+                'primarySecurityToken' => $securityToken,
                 'standbyBucketName' => $bucket,
                 'standbyDomain' => $domain,
                 'standbyParUrl' => $parUrl,
                 'standbyParExpiration' => $parExpirationMs,
                 'standbyAesKeyStr' => $aesKeyStr,
                 'standbyAesKeyUri' => $aesKeyUri,
+                'standbyAccessKeyId' => $accessKeyId,
+                'standbyAccessKeySecret' => $accessKeySecret,
+                'standbySecurityToken' => $securityToken,
                 'isHD' => 0,
             ];
         }

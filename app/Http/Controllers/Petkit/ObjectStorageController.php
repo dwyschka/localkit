@@ -11,13 +11,16 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
 
 /**
- * OCI-compatible object storage emulation.
+ * OSS-protocol object storage emulation.
  *
- * PetKit cameras upload their captures with a plain HTTP PUT against the
- * pre-authenticated URL handed out by `dev_oss_sts_info_new_v2`, and read them
- * back with a GET against the domain URL. Both funnel through here and are
- * persisted to the configured Garage S3 disk. The `{namespace}`/`{bucket}`
- * path segments are cosmetic; every object is keyed by its full path.
+ * PetKit cameras upload their captures with a plain HTTP PUT carrying Aliyun
+ * OSS-style headers (Authorization: OSS <key>:<sig>, x-oss-security-token,
+ * x-oss-object-acl) against the pre-authenticated URL handed out by
+ * `dev_oss_sts_info_new_v2`, and read them back with a GET against the
+ * domain URL. We don't verify those headers - the URL's random token is the
+ * only thing that gates access here - so any well-formed PUT is accepted.
+ * The `{namespace}`/`{bucket}` path segments are cosmetic; every object is
+ * keyed by its full path.
  */
 class ObjectStorageController extends Controller
 {
@@ -27,13 +30,16 @@ class ObjectStorageController extends Controller
 
     /**
      * Store an uploaded object (PUT/POST to the pre-authenticated URL).
+     *
+     * Proxies the request body straight through to the backing disk as a
+     * stream, so the upload isn't buffered fully into memory.
      */
     public function put(Request $request, string $object): Response
     {
         $contents = $request->getContent(asResource: true);
 
         try {
-            $stored = $this->storage->disk()->put($object, $contents);
+            $stored = $contents !== false && $this->storage->disk()->put($object, $contents);
         } catch (Throwable $e) {
             $stored = false;
             Log::error('Object storage upload failed', ['object' => $object, 'error' => $e->getMessage()]);
