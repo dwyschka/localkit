@@ -4,18 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Filament\Pages\MediaPage;
 use App\Models\MediaFile;
+use App\Petkit\Storage\VideoRemuxer;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use Symfony\Component\Process\Process;
 use Throwable;
 
 /**
  * Serves a camera capture by the `fileId` reported in
  * `dev_upload_file_info_v2` (see DevUploadFileInfoV2Controller). The object
  * on disk is already plaintext - DevUploadFileInfoV2Controller decrypts it
- * in place as soon as the report carrying its IV arrives.
+ * in place as soon as the report carrying its IV arrives, and remuxes video
+ * to MP4 at the same time (see VideoRemuxer::mp4Key()).
  */
 class MediaFileController extends Controller
 {
@@ -25,49 +26,31 @@ class MediaFileController extends Controller
 
         $disk = Storage::disk(MediaPage::DISK);
 
-        abort_unless($disk->exists($media->object_key), 404);
-
         if (! $media->isVideo()) {
+            abort_unless($disk->exists($media->object_key), 404);
+
             return $disk->response($media->object_key, null, [
                 'Content-Type' => 'image/jpeg',
             ]);
         }
 
-        return $this->remuxToMp4($disk->get($media->object_key));
-    }
+        $mp4Key = VideoRemuxer::mp4Key($media->object_key);
 
-    /**
-     * The device's .ts segments are raw MPEG-TS, which Chrome won't play in
-     * a <video> tag. Remux (not re-encode - `-c copy`, so this is fast and
-     * lossless) into a fragmented MP4 container carrying the same H.264
-     * bytes, which every browser plays natively.
-     */
-    private function remuxToMp4(string $ts): Response
-    {
-        $process = new Process([
-            env('FFMPEG_BINARY', 'ffmpeg'),
-            '-hide_banner', '-loglevel', 'error',
-            '-i', 'pipe:0',
-            '-c', 'copy',
-            '-f', 'mp4',
-            '-movflags', 'frag_keyframe+empty_moov+default_base_moof',
-            'pipe:1',
-        ]);
-        $process->setInput($ts);
-        $process->setTimeout(30);
+        if ($disk->exists($mp4Key)) {
+            return $disk->response($mp4Key, null, ['Content-Type' => 'video/mp4']);
+        }
+
+        // Fallback for captures decrypted before the upload-time remux
+        // existed - convert on the fly instead of 404ing.
+        abort_unless($disk->exists($media->object_key), 404);
 
         try {
-            $process->run();
+            $mp4 = VideoRemuxer::toMp4($disk->get($media->object_key));
         } catch (Throwable $e) {
-            Log::warning('TS to MP4 remux failed', ['error' => $e->getMessage()]);
+            Log::warning('TS to MP4 remux failed', ['object' => $media->object_key, 'error' => $e->getMessage()]);
             abort(502, 'Video conversion failed');
         }
 
-        if (! $process->isSuccessful() || $process->getOutput() === '') {
-            Log::warning('TS to MP4 remux failed', ['stderr' => $process->getErrorOutput()]);
-            abort(502, 'Video conversion failed');
-        }
-
-        return response($process->getOutput(), 200, ['Content-Type' => 'video/mp4']);
+        return response($mp4, 200, ['Content-Type' => 'video/mp4']);
     }
 }

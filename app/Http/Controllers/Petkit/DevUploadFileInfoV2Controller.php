@@ -8,6 +8,8 @@ use App\Models\Device;
 use App\Models\MediaFile;
 use App\Petkit\Storage\DeviceObjectStorage;
 use App\Petkit\Storage\MediaDecryptor;
+use App\Petkit\Storage\VideoRemuxer;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -102,9 +104,35 @@ class DevUploadFileInfoV2Controller extends Controller
 
             $disk->put($objectKey, $plain);
             $media->update(['decrypted' => true]);
+
+            // Keep the original .ts alongside the remux, for comparison -
+            // not just for playback, also so a bad remux can be diagnosed
+            // against the source it came from.
+            if (str_ends_with($objectKey, '.ts')) {
+                $this->remuxToMp4($disk, $objectKey, $plain);
+            }
         } catch (Throwable $e) {
             Log::warning('Media decrypt-in-place failed, object left encrypted', [
                 'object' => $objectKey,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Remuxes the just-decrypted .ts to MP4 and stores it under the sibling
+     * key (see VideoRemuxer::mp4Key()), so MediaFileController can serve it
+     * straight from disk instead of converting on every request. Failure
+     * here doesn't affect $media->decrypted - the .ts itself is already
+     * safely stored, this is a bonus.
+     */
+    private function remuxToMp4(Filesystem $disk, string $tsObjectKey, string $plainTs): void
+    {
+        try {
+            $disk->put(VideoRemuxer::mp4Key($tsObjectKey), VideoRemuxer::toMp4($plainTs));
+        } catch (Throwable $e) {
+            Log::warning('TS to MP4 remux failed at upload time', [
+                'object' => $tsObjectKey,
                 'error' => $e->getMessage(),
             ]);
         }
