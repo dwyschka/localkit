@@ -120,6 +120,15 @@ class MediaPage extends Page
         return route('media.download', ['path' => $path]);
     }
 
+    public function delete(string $path): void
+    {
+        try {
+            Storage::disk(self::DISK)->delete($path);
+        } catch (Throwable $e) {
+            $this->error = 'Storage backend unavailable: ' . $e->getMessage();
+        }
+    }
+
     public function formatBytes(int $bytes): string
     {
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];

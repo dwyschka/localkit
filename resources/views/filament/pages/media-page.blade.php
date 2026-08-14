@@ -105,6 +105,14 @@
                             label="Download"
                             size="sm"
                         />
+                        <x-filament::icon-button
+                            icon="heroicon-m-trash"
+                            color="danger"
+                            wire:click="delete('{{ $file['path'] }}')"
+                            wire:confirm="Delete {{ $file['name'] }}? This cannot be undone."
+                            label="Delete"
+                            size="sm"
+                        />
                     </div>
                 @endforeach
             </div>
