@@ -17,9 +17,9 @@ class SuccessResource extends JsonResource
         return [
             'code' => 200,
             'data' => $data,
-            'id' => $this->id,
+            'id' => $this->resource->id ?? null,
             'message' => "success",
-            'method' => $this->method,
+            'method' => $this->resource->method ?? null,
             'version' => "1.0.0"
         ];
     }
