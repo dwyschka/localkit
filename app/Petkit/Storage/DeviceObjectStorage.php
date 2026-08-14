@@ -35,7 +35,7 @@ class DeviceObjectStorage
         $domain = $this->domainUrl();
         $parUrl = $this->parUrl();
         $aesKeyStr = (string) config('localkit.storage.aes_key');
-        $aesKeyUri = $this->aesKeyObject($pathPrefix, $aesKeyStr);
+        $aesKeyUri = $this->aesKeyObject((string) $device->serial_number, $aesKeyStr);
 
         // The firmware's upload routine always speaks Aliyun's OSS protocol
         // (Authorization: OSS <key>:<sig>, x-oss-security-token,
@@ -126,14 +126,14 @@ class DeviceObjectStorage
      * Doesn't matter to us (we never read it back), but the real PetKit
      * cloud apparently keys its own layout on it, so mirror it.
      */
-    protected const AES_KEYS_FOLDER = 'aeskeys';
+    protected const AES_KEYS_FOLDER = 'AESKEY';
 
     /**
      * Store the AES key alongside the objects and return the URL to read it.
      */
-    protected function aesKeyObject(string $pathPrefix, string $aesKeyStr): string
+    protected function aesKeyObject(string $serialNumber, string $aesKeyStr): string
     {
-        $object = sprintf('%s/%s/%s/%d.txt', self::AES_KEYS_FOLDER, $pathPrefix, Str::random(19), now()->timestamp * 1000);
+        $object = sprintf('%s/%s.txt', self::AES_KEYS_FOLDER, $serialNumber);
 
         $this->disk()->put($object, $aesKeyStr);
 
