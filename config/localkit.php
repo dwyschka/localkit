@@ -41,11 +41,10 @@ return [
         'aes_key' => env('LOCALKIT_STORAGE_AES_KEY', 'ea8e77e149818f72'),
 
         // Decrypt objects in place as soon as dev_upload_file_info_v2 reports
-        // their IV (see DevUploadFileInfoV2Controller). Off for now while the
-        // object-key correlation (PUT upload -> fileId) is unreliable -
-        // leaves objects encrypted on disk rather than risk decrypting the
-        // wrong one.
-        'decrypt_on_upload' => env('LOCALKIT_STORAGE_DECRYPT_ON_UPLOAD', false),
+        // their IV (see DevUploadFileInfoV2Controller). The object key is
+        // computed as pathPrefix/fileId, confirmed against the device's
+        // upload_file_by_oci (snprintf("%s%s/%s", parUrl, pathPrefix, fileId)).
+        'decrypt_on_upload' => env('LOCALKIT_STORAGE_DECRYPT_ON_UPLOAD', true),
 
         // PetKit product type number echoed back when the device does not
         // report a numeric type itself (25 = YumShare Dual / d4sh).
