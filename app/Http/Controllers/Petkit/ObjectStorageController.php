@@ -36,11 +36,6 @@ class ObjectStorageController extends Controller
      */
     public function put(Request $request, string $token, string $namespace, string $bucket, string $object): Response
     {
-        Log::info('Put Called', [
-                  'request' => $request,
-                  'obj' => $object
-        ]);
-        
         $contents = $request->getContent(asResource: true);
 
         try {
