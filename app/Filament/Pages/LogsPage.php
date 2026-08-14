@@ -65,6 +65,34 @@ class LogsPage extends Page
         return trim($content) === '' ? '' : $content;
     }
 
+    /**
+     * Truncates the selected log file to empty, keeping the file itself
+     * (so anything still writing to it, e.g. debug_mode, doesn't need to
+     * reopen a new handle).
+     */
+    public function clear(): void
+    {
+        $path = $this->availableFiles()->get($this->logFile);
+
+        if ($path && is_writable($path)) {
+            file_put_contents($path, '');
+        }
+    }
+
+    /**
+     * Deletes the selected log file entirely and selects the next one.
+     */
+    public function delete(): void
+    {
+        $path = $this->availableFiles()->get($this->logFile);
+
+        if ($path && is_file($path)) {
+            unlink($path);
+        }
+
+        $this->logFile = $this->availableFiles()->keys()->first() ?? '';
+    }
+
     private function tail(string $path, int $lines): string
     {
         $file = new \SplFileObject($path, 'r');

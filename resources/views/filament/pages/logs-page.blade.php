@@ -56,6 +56,26 @@
                 >
                     Download
                 </x-filament::button>
+
+                <x-filament::button
+                    color="warning"
+                    icon="heroicon-m-eraser"
+                    wire:click="clear"
+                    wire:confirm="Clear the contents of {{ $this->logFile }}? The file itself is kept."
+                    size="sm"
+                >
+                    Clear
+                </x-filament::button>
+
+                <x-filament::button
+                    color="danger"
+                    icon="heroicon-m-trash"
+                    wire:click="delete"
+                    wire:confirm="Delete {{ $this->logFile }}? This cannot be undone."
+                    size="sm"
+                >
+                    Delete
+                </x-filament::button>
             </div>
 
             @if (trim($content) === '')
