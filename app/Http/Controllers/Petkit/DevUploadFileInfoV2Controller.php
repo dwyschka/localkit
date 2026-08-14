@@ -85,6 +85,10 @@ class DevUploadFileInfoV2Controller extends Controller
 
         try {
             if (! $disk->exists($objectKey)) {
+                Log::warning('Media decrypt-in-place skipped, object not found on disk', [
+                    'object' => $objectKey,
+                ]);
+
                 return;
             }
 
