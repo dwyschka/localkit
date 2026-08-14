@@ -34,7 +34,7 @@ class ObjectStorageController extends Controller
      * Proxies the request body straight through to the backing disk as a
      * stream, so the upload isn't buffered fully into memory.
      */
-    public function put(Request $request, string $object): Response
+    public function put(Request $request, string $token, string $namespace, string $bucket, string $object): Response
     {
         Log::info('Put Called', [
                   'request' => $request,
@@ -67,7 +67,7 @@ class ObjectStorageController extends Controller
     /**
      * Serve a stored object (GET against the domain URL).
      */
-    public function get(string $object): StreamedResponse|Response
+    public function get(string $namespace, string $bucket, string $object): StreamedResponse|Response
     {
         $disk = $this->storage->disk();
 
