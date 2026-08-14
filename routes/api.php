@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\TopicController;
 use App\Http\Controllers\Petkit\DevAttireOverController;
 use App\Http\Controllers\Petkit\DevBleDeviceController;
 use App\Http\Controllers\Petkit\DevDeviceInfoController;
+use App\Http\Controllers\Petkit\DevDiscernPicController;
 use App\Http\Controllers\Petkit\DevEventReportController;
 use App\Http\Controllers\Petkit\DevFallbackController;
 use App\Http\Controllers\Petkit\DevFeedGetController;
@@ -69,6 +70,9 @@ Route::prefix('{deviceType}')->group(function () {
     //Sandtray t7
     Route::get('dev_sand_tray_auth', DevSandtrayAuthController::class);
     Route::get('dev_upload_log_token', DevUploadLogTokenController::class);
+
+    //Eversweet Ultra w7h
+    Route::get('dev_discern_pic', DevDiscernPicController::class);
 
 
 });
