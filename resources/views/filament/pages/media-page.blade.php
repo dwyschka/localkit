@@ -51,6 +51,16 @@
             >
                 Refresh
             </x-filament::button>
+
+            <x-filament::button
+                color="danger"
+                icon="heroicon-m-trash"
+                wire:click="deleteAll"
+                wire:confirm="Delete EVERYTHING on this disk - all folders and files? This cannot be undone."
+                size="sm"
+            >
+                Delete all
+            </x-filament::button>
         </div>
 
         <div class="petkit-media__breadcrumbs" style="margin-bottom:0.75rem;">

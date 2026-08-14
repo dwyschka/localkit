@@ -129,6 +129,26 @@ class MediaPage extends Page
         }
     }
 
+    /**
+     * Wipes every file and folder on the disk, not just the current path.
+     */
+    public function deleteAll(): void
+    {
+        $disk = Storage::disk(self::DISK);
+
+        try {
+            $disk->delete($disk->allFiles());
+
+            foreach ($disk->directories() as $directory) {
+                $disk->deleteDirectory($directory);
+            }
+
+            $this->path = '';
+        } catch (Throwable $e) {
+            $this->error = 'Storage backend unavailable: ' . $e->getMessage();
+        }
+    }
+
     public function formatBytes(int $bytes): string
     {
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
