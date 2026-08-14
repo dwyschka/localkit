@@ -122,11 +122,18 @@ class DeviceObjectStorage
     }
 
     /**
+     * Hardcoded top-level bucket folder AES key objects are stored under.
+     * Doesn't matter to us (we never read it back), but the real PetKit
+     * cloud apparently keys its own layout on it, so mirror it.
+     */
+    protected const AES_KEYS_FOLDER = 'aeskeys';
+
+    /**
      * Store the AES key alongside the objects and return the URL to read it.
      */
     protected function aesKeyObject(string $pathPrefix, string $aesKeyStr): string
     {
-        $object = sprintf('%s/%s/%d.txt', $pathPrefix, Str::random(19), now()->timestamp * 1000);
+        $object = sprintf('%s/%s/%s/%d.txt', self::AES_KEYS_FOLDER, $pathPrefix, Str::random(19), now()->timestamp * 1000);
 
         $this->disk()->put($object, $aesKeyStr);
 
