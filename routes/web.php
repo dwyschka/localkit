@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CameraThumbnailController;
 use App\Http\Controllers\LogDownloadController;
+use App\Http\Controllers\MediaDownloadController;
 use App\Http\Controllers\Petkit\ObjectStorageController;
 use App\Http\Controllers\Petkit\RepositoryController;
 use Illuminate\Support\Facades\Route;
@@ -16,6 +17,13 @@ if (config('localkit.firmware_proxy')) {
 Route::get('logs/{file}/download', LogDownloadController::class)
     ->middleware('auth')
     ->name('logs.download');
+
+// Same reasoning as logs.download - streams straight from the disk instead
+// of through Livewire's memory-buffering file-download support.
+Route::get('media/download/{path}', MediaDownloadController::class)
+    ->middleware('auth')
+    ->where('path', '.*')
+    ->name('media.download');
 
 // Cached still-frame thumbnail (ffmpeg) for a device's camera stream.
 Route::get('camera/{device}/thumbnail/{stream?}', CameraThumbnailController::class)
