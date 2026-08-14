@@ -315,7 +315,7 @@ class PetkitFreshElementSolo implements DeviceDefinition, BluetoothProxyInterfac
     public function toFeed(Device $device): string
     {
         $latest = Time::calculateLatest($device->configuration['schedule']);
-        $nextTick = last($latest);
+        $nextTick = last($latest) ?: ['a' => 0, 'id' => '', 't' => 0];
 
         return json_encode([
             'schedule' => $device->configuration['schedule'],

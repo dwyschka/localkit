@@ -257,7 +257,7 @@ class PetkitYumshareDual implements DeviceDefinition, Snapshot, BluetoothProxyIn
     {
 
         $latest = Time::calculateLatest($device->configuration['schedule']);
-        $nextTick = last($latest);
+        $nextTick = last($latest) ?: ['a' => 0, 'id' => '', 't' => 0];
 
         return json_encode([
             'schedule' => $device->configuration['schedule'],
@@ -434,7 +434,7 @@ class PetkitYumshareDual implements DeviceDefinition, Snapshot, BluetoothProxyIn
     {
         $unusedDays = [1,2,3,4,5,6,7];
         $latest = Time::calculateLatest($this->device->configuration['schedule']);
-        $nextTick = last($latest);
+        $nextTick = last($latest) ?: ['a' => 0, 'id' => '', 't' => 0];
         $schedules = $this->device->configuration['schedule'];
 
         foreach($schedules as &$schedule) {
