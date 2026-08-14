@@ -45,6 +45,12 @@ class ObjectStorageController extends Controller
             Log::error('Object storage upload failed', ['object' => $object, 'error' => $e->getMessage()]);
         }
 
+        Log::info('Object storage upload', [
+            'object' => $object,
+            'stored' => $stored,
+            'size' => $request->header('Content-Length'),
+        ]);
+
         if (! $stored) {
             return response('Storage backend unavailable', Response::HTTP_BAD_GATEWAY);
         }
