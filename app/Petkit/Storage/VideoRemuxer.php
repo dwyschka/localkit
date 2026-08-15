@@ -18,6 +18,13 @@ class VideoRemuxer
         $process = new Process([
             env('FFMPEG_BINARY', 'ffmpeg'),
             '-hide_banner', '-loglevel', 'error',
+            // Each concatenated segment restarts its own PTS/DTS near zero -
+            // raw byte-concatenation preserves those jumps, which players
+            // read as a hard reset at every segment boundary (a 16-segment
+            // event looks like 16 separate clips instead of one). Regenerate
+            // continuous presentation timestamps from packet order instead
+            // of trusting the original (discontinuous) ones.
+            '-fflags', '+genpts+igndts',
             '-i', 'pipe:0',
             '-c', 'copy',
             // The device's AAC audio is raw ADTS, which MP4 can't mux
@@ -25,6 +32,7 @@ class VideoRemuxer
             // still lossless) into what MP4 expects. Harmless no-op if a
             // clip has no audio stream at all.
             '-bsf:a', 'aac_adtstoasc',
+            '-avoid_negative_ts', 'make_zero',
             '-f', 'mp4',
             '-movflags', 'frag_keyframe+empty_moov+default_base_moof',
             'pipe:1',
