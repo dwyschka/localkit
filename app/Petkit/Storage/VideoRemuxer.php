@@ -20,6 +20,11 @@ class VideoRemuxer
             '-hide_banner', '-loglevel', 'error',
             '-i', 'pipe:0',
             '-c', 'copy',
+            // The device's AAC audio is raw ADTS, which MP4 can't mux
+            // directly - repackage the bitstream framing (not a re-encode,
+            // still lossless) into what MP4 expects. Harmless no-op if a
+            // clip has no audio stream at all.
+            '-bsf:a', 'aac_adtstoasc',
             '-f', 'mp4',
             '-movflags', 'frag_keyframe+empty_moov+default_base_moof',
             'pipe:1',
