@@ -12,6 +12,11 @@ return [
         'working_title' => 'Feeding',
         'error' => 'Error',
         'error_title' => 'Error',
+        'eat_title' => 'Eating',
+        'eat' => 'Ate for :duration seconds',
+        'detect_title' => 'Motion detected',
+        'detect' => 'Pet detected near the camera',
+        'detect_count' => ':count pet(s) detected near the camera',
     ],
     'error' => [
         'hallT' =>'The lid is not closed',

@@ -81,9 +81,21 @@ class PetkitYumshareDual implements DeviceDefinition, Snapshot, BluetoothProxyIn
                 $this->parseState($device, $message);
             },
             sprintf('/sys/%s/%s/thing/event/eat_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+                $this->mergeHistory($message?->params?->event_id, $message?->params?->content);
+
                 $this->parseState($device, $message);
             },
             sprintf('/sys/%s/%s/thing/event/eat_start/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+                if (isset($message->params->event_id)) {
+                    History::create([
+                        'messageId' => $message->params->event_id,
+                        'pet_id' => null,
+                        'type' => 'EAT',
+                        'parameters' => json_decode($message->params->content ?? '{}', true),
+                        'device_id' => $device->id,
+                    ]);
+                }
+
                 $this->parseState($device, $message);
             },
             sprintf('/sys/%s/%s/thing/event/move_detect/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
@@ -96,6 +108,16 @@ class PetkitYumshareDual implements DeviceDefinition, Snapshot, BluetoothProxyIn
                 });
             },
             sprintf('/sys/%s/%s/thing/event/pet_detect/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+                if (isset($message->params->event_id)) {
+                    History::create([
+                        'messageId' => $message->params->event_id,
+                        'pet_id' => null,
+                        'type' => 'DETECT',
+                        'parameters' => json_decode($message->params->content ?? '{}', true),
+                        'device_id' => $device->id,
+                    ]);
+                }
+
                 $this->parseState($device, $message, mutate: function (stdClass $state) use ($device) {
                     $state->petDetected = 1;
                     $device->update([
@@ -103,6 +125,13 @@ class PetkitYumshareDual implements DeviceDefinition, Snapshot, BluetoothProxyIn
                     ]);
                     $state->petDetected = 0;
                 });
+            },
+            sprintf('/sys/%s/%s/thing/event/pet_discern/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+                $content = json_decode($message?->params?->content ?? '{}', true);
+
+                $this->mergeHistory($content['related_event'] ?? null, $message?->params?->content);
+
+                $this->parseState($device, $message);
             },
             sprintf('/sys/%s/%s/thing/event/feed_start/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
                 $content = json_decode($message?->params?->content, false);
@@ -118,6 +147,36 @@ class PetkitYumshareDual implements DeviceDefinition, Snapshot, BluetoothProxyIn
                 $this->parseState($device, $message, DeviceStates::WORKING->value);
             },
         ];
+    }
+
+    /**
+     * Merges a follow-up event's content into the History row created for
+     * the event it belongs to (found by messageId - either the same
+     * event_id for start/over pairs like eat_start/eat_over, or a
+     * related_event back-reference like pet_discern -> pet_detect).
+     * Silently does nothing if there's no matching row (e.g. the start
+     * event arrived before this code existed, or was never sent).
+     */
+    private function mergeHistory(?string $messageId, ?string $rawContent): void
+    {
+        if ($messageId === null) {
+            return;
+        }
+
+        $history = History::where('messageId', $messageId)->first();
+
+        if ($history === null) {
+            return;
+        }
+
+        $content = json_decode($rawContent ?? '{}', true) ?? [];
+
+        $history->update([
+            'parameters' => [
+                ...$history->parameters,
+                ...$content,
+            ],
+        ]);
     }
 
     /**

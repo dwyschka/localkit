@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 
@@ -18,6 +19,17 @@ class History extends Model
 
     public function pet(): HasOne {
         return $this->hasOne(Pet::class, 'id', 'pet_id');
+    }
+
+    /**
+     * Camera captures uploaded under the same eventId this entry's messageId
+     * carries (see DevUploadFileInfoV2Controller / PetkitYumshareDual's
+     * pet_detect/eat_start handlers - both use the device's own event_id as
+     * the messageId, which the camera later tags every clip from the same
+     * event with).
+     */
+    public function media(): HasMany {
+        return $this->hasMany(MediaFile::class, 'event_id', 'messageId');
     }
 
     public function duration(): float {
@@ -35,6 +47,10 @@ class History extends Model
                 return $this->createMaintenanceMessage();
             case 'ERROR':
                 return $this->createErrorMessage();
+            case 'EAT':
+                return $this->createEatMessage();
+            case 'DETECT':
+                return $this->createDetectMessage();
         }
         return '';
     }
@@ -82,6 +98,22 @@ class History extends Model
         return __('petkit.history.maintenance', [
             'duration' => $duration
         ]);
+    }
+
+    private function createEatMessage()
+    {
+        return __('petkit.history.eat', [
+            'duration' => (int) $this->duration(),
+        ]);
+    }
+
+    private function createDetectMessage()
+    {
+        $count = $this->parameters['count'] ?? 0;
+
+        return $count > 0
+            ? __('petkit.history.detect_count', ['count' => $count])
+            : __('petkit.history.detect');
     }
 }
 

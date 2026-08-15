@@ -31,7 +31,7 @@ class PetkitActivities extends Page
      */
     public function getHistories(): Collection
     {
-        return $this->record->histories()->latest()->limit(50)->get();
+        return $this->record->histories()->with('media')->latest()->limit(50)->get();
     }
 
     /**
@@ -46,6 +46,8 @@ class PetkitActivities extends Page
             'CLEANING' => ['icon' => 'heroicon-m-arrow-path-rounded-square', 'color' => 'info'],
             'MAINTENANCE' => ['icon' => 'heroicon-m-wrench-screwdriver', 'color' => 'info'],
             'ERROR' => ['icon' => 'heroicon-m-exclamation-circle', 'color' => 'danger'],
+            'EAT' => ['icon' => 'heroicon-m-cake', 'color' => 'success'],
+            'DETECT' => ['icon' => 'heroicon-m-camera', 'color' => 'primary'],
             default => ['icon' => 'heroicon-m-bolt', 'color' => 'gray'],
         };
     }

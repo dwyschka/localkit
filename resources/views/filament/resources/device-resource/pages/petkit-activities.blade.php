@@ -32,6 +32,15 @@
         .petkit-timeline__title { font-weight: 600; font-size: 0.95rem; }
         .petkit-timeline__desc { color: var(--gray-500); font-size: 0.875rem; margin-top: 0.125rem; }
         .petkit-timeline__date { color: var(--gray-400); font-size: 0.75rem; margin-top: 0.25rem; }
+        .petkit-timeline__media { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.625rem; }
+        .petkit-timeline__media img,
+        .petkit-timeline__media video {
+            width: 10rem;
+            aspect-ratio: 16 / 9;
+            object-fit: cover;
+            border-radius: 0.5rem;
+            background: var(--gray-950);
+        }
     </style>
 
     @if ($histories->isEmpty())
@@ -55,6 +64,20 @@
                         <div class="petkit-timeline__date">
                             {{ $history->created_at?->timezone('Europe/Berlin')?->format('F j, Y · H:i') }}
                         </div>
+
+                        @if ($history->media->isNotEmpty())
+                            <div class="petkit-timeline__media">
+                                @foreach ($history->media as $clip)
+                                    @if ($clip->isVideo())
+                                        <video src="{{ route('media.file', ['fileId' => $clip->file_id]) }}" controls preload="none"></video>
+                                    @else
+                                        <a href="{{ route('media.file', ['fileId' => $clip->file_id]) }}" target="_blank">
+                                            <img src="{{ route('media.file', ['fileId' => $clip->file_id]) }}" alt="Capture" loading="lazy" />
+                                        </a>
+                                    @endif
+                                @endforeach
+                            </div>
+                        @endif
                     </div>
                 @endforeach
             </div>
