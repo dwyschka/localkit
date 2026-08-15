@@ -36,6 +36,21 @@ class History extends Model
         return $this->created_at->diffInSeconds($this->updated_at);
     }
 
+    /**
+     * event_start/event_end (when the follow-up event's payload carries
+     * them - confirmed on W7H's drink_over) are the device's own precise
+     * timestamps for the event, not MQTT-arrival timestamps - prefer them
+     * over duration()'s created_at/updated_at, which has processing/network
+     * latency baked in on both ends.
+     */
+    public function eventDuration(): int {
+        if (isset($this->parameters['event_start'], $this->parameters['event_end'])) {
+            return $this->parameters['event_end'] - $this->parameters['event_start'];
+        }
+
+        return (int) $this->duration();
+    }
+
     public function message(): string {
 
         switch($this->type) {
@@ -105,14 +120,14 @@ class History extends Model
     private function createEatMessage()
     {
         return __('petkit.history.eat', [
-            'duration' => (int) $this->duration(),
+            'duration' => $this->eventDuration(),
         ]);
     }
 
     private function createDrinkMessage()
     {
         return __('petkit.history.drink', [
-            'duration' => (int) $this->duration(),
+            'duration' => $this->eventDuration(),
         ]);
     }
 

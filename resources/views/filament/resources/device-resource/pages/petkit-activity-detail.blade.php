@@ -89,7 +89,7 @@
         </div>
         <div class="petkit-detail__row">
             <div class="petkit-detail__label">Duration</div>
-            <div class="petkit-detail__value">{{ (int) $history->duration() }} seconds</div>
+            <div class="petkit-detail__value">{{ $history->eventDuration() }} seconds</div>
         </div>
     </x-filament::section>
 
