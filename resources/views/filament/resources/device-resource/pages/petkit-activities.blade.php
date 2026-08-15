@@ -80,7 +80,7 @@
 
                         @if ($history->media->isNotEmpty())
                             <div class="petkit-timeline__media">
-                                @foreach ($history->media as $clip)
+                                @foreach (\App\Filament\Resources\DeviceResource\Pages\PetkitActivities::sortMediaForListing($history->media) as $clip)
                                     @if ($clip->isVideo())
                                         <video src="{{ route('media.file', ['fileId' => $clip->file_id]) }}" controls preload="none"></video>
                                     @else
@@ -111,7 +111,7 @@
             </x-slot>
 
             <div class="petkit-timeline__media">
-                @foreach ($unlinkedMedia as $clip)
+                @foreach (\App\Filament\Resources\DeviceResource\Pages\PetkitActivities::sortMediaForListing($unlinkedMedia) as $clip)
                     @if ($clip->isVideo())
                         <video src="{{ route('media.file', ['fileId' => $clip->file_id]) }}" controls preload="none"></video>
                     @else

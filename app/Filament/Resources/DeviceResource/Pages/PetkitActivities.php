@@ -62,6 +62,23 @@ class PetkitActivities extends Page
     }
 
     /**
+     * Display order for the media thumbnails in the timeline/unlinked
+     * listings (not the per-activity detail page, which shows everything in
+     * a table) - the still preview image first, then the video.
+     *
+     * @param Collection<int, MediaFile> $media
+     * @return Collection<int, MediaFile>
+     */
+    public static function sortMediaForListing(Collection $media): Collection
+    {
+        return $media->sortBy(fn (MediaFile $clip) => match ($clip->module_type) {
+            'EVENT_PREVIEW' => 0,
+            'CLOUD_STORAGE' => 1,
+            default => 2,
+        })->values();
+    }
+
+    /**
      * Heroicon + colour for a given history type.
      *
      * @return array{icon: string, color: string}
