@@ -14,6 +14,7 @@ use App\Jobs\SetProperty;
 use App\Jobs\TakeSnapshot;
 use App\Models\BluetoothDevice;
 use App\Models\Device;
+use App\Models\History;
 use App\MQTT\GenericReply;
 use App\Petkit\BluetoothDevices\BluetoothProxyInterface;
 use App\Petkit\BluetoothDevices\Message;
@@ -126,6 +127,16 @@ class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxy
                 $this->parseState($device, $message);
             },
             sprintf('/sys/%s/%s/thing/event/pet_detect/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+                if (isset($message->params->event_id)) {
+                    History::create([
+                        'messageId' => $message->params->event_id,
+                        'pet_id' => null,
+                        'type' => 'DETECT',
+                        'parameters' => json_decode($message->params->content ?? '{}', true),
+                        'device_id' => $device->id,
+                    ]);
+                }
+
                 $this->parseState($device, $message, mutate: function (stdClass $state) use ($device) {
                     $state->petDetected = 1;
                     $device->update([
@@ -143,20 +154,65 @@ class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxy
                     $state->drinkDetected = 0;
                 });
             },
-            // pet_discern/drink_start/drink_over: payload shape not confirmed yet
-            // (not in IMPLEMENT/w7h_*.csv), so just keep working_state/error/
-            // configuration in sync via parseState() like add_water_over does,
-            // without any topic-specific field handling.
+            // Confirmed from live W7H MQTT capture: drink_start/drink_over
+            // share one event_id (like D4SH's eat_start/eat_over), while
+            // pet_discern gets its own event_id and points back at
+            // pet_detect's via content.related_event.
             sprintf('/sys/%s/%s/thing/event/pet_discern/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+                $content = json_decode($message?->params?->content ?? '{}', true);
+
+                $this->mergeHistory($content['related_event'] ?? null, $message?->params?->content);
+
                 $this->parseState($device, $message);
             },
             sprintf('/sys/%s/%s/thing/event/drink_start/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+                if (isset($message->params->event_id)) {
+                    History::create([
+                        'messageId' => $message->params->event_id,
+                        'pet_id' => null,
+                        'type' => 'DRINK',
+                        'parameters' => json_decode($message->params->content ?? '{}', true),
+                        'device_id' => $device->id,
+                    ]);
+                }
+
                 $this->parseState($device, $message);
             },
             sprintf('/sys/%s/%s/thing/event/drink_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+                $this->mergeHistory($message?->params?->event_id, $message?->params?->content);
+
                 $this->parseState($device, $message);
             },
         ];
+    }
+
+    /**
+     * Merges a follow-up event's content into the History row created for
+     * the event it belongs to (found by messageId - either the same
+     * event_id for start/over pairs like drink_start/drink_over, or a
+     * related_event back-reference like pet_discern -> pet_detect).
+     * Silently does nothing if there's no matching row.
+     */
+    private function mergeHistory(?string $messageId, ?string $rawContent): void
+    {
+        if ($messageId === null) {
+            return;
+        }
+
+        $history = History::where('messageId', $messageId)->first();
+
+        if ($history === null) {
+            return;
+        }
+
+        $content = json_decode($rawContent ?? '{}', true) ?? [];
+
+        $history->update([
+            'parameters' => [
+                ...$history->parameters,
+                ...$content,
+            ],
+        ]);
     }
 
     /**

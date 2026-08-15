@@ -49,6 +49,8 @@ class History extends Model
                 return $this->createErrorMessage();
             case 'EAT':
                 return $this->createEatMessage();
+            case 'DRINK':
+                return $this->createDrinkMessage();
             case 'DETECT':
                 return $this->createDetectMessage();
         }
@@ -103,6 +105,13 @@ class History extends Model
     private function createEatMessage()
     {
         return __('petkit.history.eat', [
+            'duration' => (int) $this->duration(),
+        ]);
+    }
+
+    private function createDrinkMessage()
+    {
+        return __('petkit.history.drink', [
             'duration' => (int) $this->duration(),
         ]);
     }

@@ -49,6 +49,7 @@ class PetkitActivities extends Page
             'MAINTENANCE' => ['icon' => 'heroicon-m-wrench-screwdriver', 'color' => 'info'],
             'ERROR' => ['icon' => 'heroicon-m-exclamation-circle', 'color' => 'danger'],
             'EAT' => ['icon' => 'heroicon-m-cake', 'color' => 'success'],
+            'DRINK' => ['icon' => 'heroicon-m-beaker', 'color' => 'info'],
             'DETECT' => ['icon' => 'heroicon-m-camera', 'color' => 'primary'],
             default => ['icon' => 'heroicon-m-bolt', 'color' => 'gray'],
         };
