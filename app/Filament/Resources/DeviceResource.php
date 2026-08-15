@@ -176,15 +176,8 @@ class DeviceResource extends Resource
                     ViewColumn::make('camera_stream_tile')
                         ->view('tables.columns.camera-stream-tile')
                         ->viewData(fn (Device $record) => [
-                            // Table render must stay fast: thumbnailUrls() would
-                            // hit each device's go2rtc /api/streams synchronously
-                            // (up to a 3s timeout apiece) to discover streams
-                            // before the page even renders. Just point at the
-                            // default configured stream instead - no HTTP call,
-                            // the <img> tag itself loads (and can fail/cache)
-                            // asynchronously in the browser like any other image.
                             'streams' => ($record->isNextGen() ?? false)
-                                ? [app(Go2RTC::class)->thumbnailUrl($record)]
+                                ? app(Go2RTC::class)->thumbnailUrls($record)
                                 : [],
                         ]),
                 ])->space(3),
