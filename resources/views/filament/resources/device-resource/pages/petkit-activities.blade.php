@@ -1,5 +1,6 @@
 <x-filament-panels::page>
     @php($histories = $this->getHistories())
+    @php($unlinkedMedia = $this->getUnlinkedMedia())
 
     <style>
         .petkit-timeline { position: relative; padding-left: 2.75rem; }
@@ -96,6 +97,29 @@
 
             <div style="margin-top:1.5rem;">
                 {{ $histories->links() }}
+            </div>
+        </x-filament::section>
+    @endif
+
+    @if ($unlinkedMedia->isNotEmpty())
+        <x-filament::section style="margin-top:1.5rem;">
+            <x-slot name="heading">Unlinked recordings ({{ $unlinkedMedia->count() }})</x-slot>
+            <x-slot name="description">
+                Files that exist on disk but couldn't be matched to an activity - the device's
+                pet_detect/drink_start/eat_start event either never arrived or arrived before
+                this device was tracking that topic.
+            </x-slot>
+
+            <div class="petkit-timeline__media">
+                @foreach ($unlinkedMedia as $clip)
+                    @if ($clip->isVideo())
+                        <video src="{{ route('media.file', ['fileId' => $clip->file_id]) }}" controls preload="none"></video>
+                    @else
+                        <a href="{{ route('media.file', ['fileId' => $clip->file_id]) }}" target="_blank">
+                            <img src="{{ route('media.file', ['fileId' => $clip->file_id]) }}" alt="Capture" loading="lazy" />
+                        </a>
+                    @endif
+                @endforeach
             </div>
         </x-filament::section>
     @endif
