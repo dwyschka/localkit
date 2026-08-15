@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use Filament\Schemas\Schema;
+use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DatePicker;
@@ -60,6 +61,8 @@ class PetResource extends Resource
                     ->columnSpanFull(),
 
                 TextInput::make('name')->columnSpan('half')->required(),
+                ColorPicker::make('color')->columnSpan('half'),
+
                 TextInput::make('weight')->numeric(true)->columnSpan('half')->required(),
 
                 DatePicker::make('birthdate')->columnSpan('half')->required(),

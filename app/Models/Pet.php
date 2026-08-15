@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\DB;
 
 class Pet extends Model
 {
-    protected $fillable = ['name', 'images', 'weight', 'birthdate', 'species', 'gender', 'sterilised'];
+    protected $fillable = ['name', 'color', 'images', 'weight', 'birthdate', 'species', 'gender', 'sterilised'];
 
     protected $casts = [
         'images' => 'array',

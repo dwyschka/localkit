@@ -10,8 +10,9 @@ use Illuminate\Http\Request;
 
 /**
  * Pet recognition reference pictures (per-pet "discern" training images) the
- * device shows/matches against. Always answers an empty list for now - no
- * pets have recognition images configured yet.
+ * device matches captures against. One entry per Pet with photos uploaded
+ * (see PetResource), not scoped to this specific device - pets are shared
+ * across the household's devices.
  */
 class DevDiscernPicController extends Controller
 {
