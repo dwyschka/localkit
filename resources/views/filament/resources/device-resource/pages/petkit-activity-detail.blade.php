@@ -7,6 +7,7 @@
         .dark .petkit-detail__row + .petkit-detail__row { border-top-color: var(--gray-700); }
         .petkit-detail__label { width: 9rem; flex-shrink: 0; color: var(--gray-500); }
         .petkit-detail__value { flex: 1; word-break: break-word; }
+        .petkit-detail__icon svg { width: 1.25rem; height: 1.25rem; }
         .petkit-detail__params {
             font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
             font-size: 0.8rem;
@@ -55,8 +56,8 @@
     <x-filament::section>
         <x-slot name="heading">
             <span style="display:inline-flex;align-items:center;gap:0.5rem;">
-                <span style="{{ \Filament\Support\get_color_css_variables($meta['color'], shades: [500]) }}; color: var(--color-500);">
-                    @svg($meta['icon'], style: 'width:1.25rem;height:1.25rem;')
+                <span class="petkit-detail__icon" style="{{ \Filament\Support\get_color_css_variables($meta['color'], shades: [500]) }}; color: var(--color-500);">
+                    @svg($meta['icon'])
                 </span>
                 {{ $history->title() }}
             </span>

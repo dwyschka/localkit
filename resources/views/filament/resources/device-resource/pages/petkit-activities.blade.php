@@ -32,6 +32,7 @@
         .petkit-timeline__title { font-weight: 600; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 0.375rem; }
         .petkit-timeline__info { color: var(--gray-400); }
         .petkit-timeline__info:hover { color: var(--primary-500); }
+        .petkit-timeline__info svg { width: 1.1rem; height: 1.1rem; }
         .petkit-timeline__desc { color: var(--gray-500); font-size: 0.875rem; margin-top: 0.125rem; }
         .petkit-timeline__date { color: var(--gray-400); font-size: 0.75rem; margin-top: 0.25rem; }
         .petkit-timeline__media { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.625rem; }
@@ -68,7 +69,7 @@
                                 class="petkit-timeline__info"
                                 title="View details"
                             >
-                                @svg('heroicon-m-information-circle', style: 'width:1.1rem;height:1.1rem;')
+                                @svg('heroicon-m-information-circle')
                             </a>
                         </div>
                         <div class="petkit-timeline__desc">{!! $history->message() !!}</div>
