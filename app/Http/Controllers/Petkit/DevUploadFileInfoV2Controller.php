@@ -49,6 +49,21 @@ class DevUploadFileInfoV2Controller extends Controller
                 continue;
             }
 
+            // CLOUD_STORAGE segments are ~4s chunks of one continuous
+            // recording (each segment's startTime == the previous one's
+            // endTime) that arrive spread across several of these reports
+            // over time, not all at once - EVENT_PREVIEW/EVENT_VIDEO are
+            // standalone files and go through the normal per-file path below.
+            if (config('localkit.storage.decrypt_on_upload')
+                && ($fileInfo['moduleType'] ?? null) === 'CLOUD_STORAGE'
+                && ! empty($fileInfo['eventId'])
+                && ! empty($fileInfo['aesIv'])
+            ) {
+                $this->appendCloudStorageSegment($deviceType, $deviceId, $device, $fileInfo);
+
+                continue;
+            }
+
             $objectKey = sprintf('%s/%s/%s', $deviceType, $deviceId, $fileInfo['fileId']);
 
             $media = MediaFile::updateOrCreate(
@@ -81,6 +96,75 @@ class DevUploadFileInfoV2Controller extends Controller
         }
 
         return new JsonResponse(['result' => []]);
+    }
+
+    /**
+     * Decrypts one CLOUD_STORAGE segment and appends it (plain MPEG-TS
+     * concatenates byte-for-byte, no container-level merge needed) onto the
+     * running combined stream for its event, replacing whatever MP4 was
+     * remuxed from the combined stream so far. One MediaFile row per event
+     * (file_id "event_{eventId}"), not one per ~4s segment.
+     */
+    private function appendCloudStorageSegment(string $deviceType, string $deviceId, Device $device, array $fileInfo): void
+    {
+        $disk = $this->storage->disk();
+        $segmentKey = sprintf('%s/%s/%s', $deviceType, $deviceId, $fileInfo['fileId']);
+
+        if (! $disk->exists($segmentKey)) {
+            Log::warning('Media decrypt-in-place skipped, object not found on disk', [
+                'object' => $segmentKey,
+            ]);
+
+            return;
+        }
+
+        try {
+            $plain = MediaDecryptor::decrypt(
+                $disk->get($segmentKey),
+                (string) config('localkit.storage.aes_key'),
+                (string) $fileInfo['aesIv'],
+            );
+        } catch (Throwable $e) {
+            Log::warning('Media decrypt-in-place failed, object left encrypted', [
+                'object' => $segmentKey,
+                'error' => $e->getMessage(),
+            ]);
+
+            return;
+        }
+
+        $combinedFileId = 'event_' . $fileInfo['eventId'];
+        $combinedTsKey = sprintf('%s/%s/%s.ts', $deviceType, $deviceId, $combinedFileId);
+
+        $combined = $disk->exists($combinedTsKey) ? $disk->get($combinedTsKey) . $plain : $plain;
+        $disk->put($combinedTsKey, $combined);
+        $disk->delete($segmentKey);
+
+        $media = MediaFile::firstOrNew(['file_id' => $combinedFileId]);
+        $media->fill([
+            'device_id' => $device->id,
+            'event_id' => $fileInfo['eventId'],
+            'module_type' => 'CLOUD_STORAGE',
+            'file_type' => $fileInfo['fileType'] ?? 'video/x-mpg',
+            'object_key' => $combinedTsKey,
+            'start_time' => $media->start_time ?? ($fileInfo['startTime'] ?? null),
+            'end_time' => $fileInfo['endTime'] ?? $media->end_time,
+            'duration' => ($media->duration ?? 0) + (int) ($fileInfo['duration'] ?? 0),
+            'size' => strlen($combined),
+            'decrypted' => true,
+        ]);
+        $media->save();
+
+        try {
+            $mp4Key = VideoRemuxer::mp4Key($combinedTsKey);
+            $disk->put($mp4Key, VideoRemuxer::toMp4($combined));
+            $media->update(['object_key' => $mp4Key]);
+        } catch (Throwable $e) {
+            Log::warning('TS to MP4 remux failed at upload time', [
+                'object' => $combinedTsKey,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     private function decryptInPlace(MediaFile $media, string $objectKey, string $aesIv): void
