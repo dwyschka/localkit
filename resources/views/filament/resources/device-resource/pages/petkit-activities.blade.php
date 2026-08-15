@@ -65,7 +65,7 @@
                         <div class="petkit-timeline__title">
                             {{ $history->title() }}
                             <a
-                                href="{{ \App\Filament\Resources\DeviceResource::getUrl('activity', ['record' => $this->record, 'history' => $history]) }}"
+                                href="{{ \App\Filament\Resources\DeviceResource::getUrl('activity', ['record' => $this->record, 'historyId' => $history->id]) }}"
                                 class="petkit-timeline__info"
                                 title="View details"
                             >

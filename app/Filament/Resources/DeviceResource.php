@@ -252,7 +252,7 @@ class DeviceResource extends Resource
             'index' => ListDevices::route('/'),
             'edit' => EditDevice::route('/{record}/edit'),
             'activities' => Pages\PetkitActivities::route('/{record}/activities'),
-            'activity' => Pages\PetkitActivityDetail::route('/{record}/activities/{history}'),
+            'activity' => Pages\PetkitActivityDetail::route('/{record}/activities/{historyId}'),
         ];
     }
 }

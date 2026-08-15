@@ -6,8 +6,6 @@ use App\Filament\Resources\DeviceResource;
 use App\Models\History;
 use Filament\Resources\Pages\Concerns\InteractsWithRecord;
 use Filament\Resources\Pages\Page;
-use Illuminate\Support\Facades\Log;
-use Throwable;
 
 class PetkitActivityDetail extends Page
 {
@@ -19,35 +17,13 @@ class PetkitActivityDetail extends Page
 
     public History $history;
 
-    public function mount(int|string $record, int|string $history): void
+    public function mount(int|string $record, int|string $historyId): void
     {
-        Log::info('PetkitActivityDetail mount', ['record' => $record, 'history' => $history]);
+        $this->record = $this->resolveRecord($record);
 
-        try {
-            $this->record = $this->resolveRecord($record);
-        } catch (Throwable $e) {
-            Log::error('PetkitActivityDetail: resolveRecord failed', [
-                'record' => $record,
-                'error' => $e->getMessage(),
-            ]);
-
-            throw $e;
-        }
-
-        try {
-            $this->history = History::with('media')
-                ->where('device_id', $this->record->id)
-                ->findOrFail($history);
-        } catch (Throwable $e) {
-            Log::error('PetkitActivityDetail: History lookup failed', [
-                'record' => $record,
-                'resolved_device_id' => $this->record->id,
-                'history' => $history,
-                'error' => $e->getMessage(),
-            ]);
-
-            throw $e;
-        }
+        $this->history = History::with('media')
+            ->where('device_id', $this->record->id)
+            ->findOrFail($historyId);
     }
 
     public function getTitle(): string
