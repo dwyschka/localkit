@@ -105,11 +105,8 @@ class DevUploadFileInfoV2Controller extends Controller
             $disk->put($objectKey, $plain);
             $media->update(['decrypted' => true]);
 
-            // Keep the original .ts alongside the remux, for comparison -
-            // not just for playback, also so a bad remux can be diagnosed
-            // against the source it came from.
             if (str_ends_with($objectKey, '.ts')) {
-                $this->remuxToMp4($disk, $objectKey, $plain);
+                $this->remuxToMp4($disk, $media, $objectKey, $plain);
             }
         } catch (Throwable $e) {
             Log::warning('Media decrypt-in-place failed, object left encrypted', [
@@ -120,16 +117,21 @@ class DevUploadFileInfoV2Controller extends Controller
     }
 
     /**
-     * Remuxes the just-decrypted .ts to MP4 and stores it under the sibling
-     * key (see VideoRemuxer::mp4Key()), so MediaFileController can serve it
-     * straight from disk instead of converting on every request. Failure
-     * here doesn't affect $media->decrypted - the .ts itself is already
-     * safely stored, this is a bonus.
+     * Remuxes the just-decrypted .ts to MP4, stores it under the sibling key
+     * (see VideoRemuxer::mp4Key()), deletes the original .ts, and repoints
+     * $media->object_key at the MP4 - MediaFileController and everything
+     * that links to a clip (PetkitActivities) reference the MP4 from here
+     * on, not the .ts. Failure here doesn't affect $media->decrypted or
+     * object_key - the .ts is left in place if the remux didn't succeed.
      */
-    private function remuxToMp4(Filesystem $disk, string $tsObjectKey, string $plainTs): void
+    private function remuxToMp4(Filesystem $disk, MediaFile $media, string $tsObjectKey, string $plainTs): void
     {
         try {
-            $disk->put(VideoRemuxer::mp4Key($tsObjectKey), VideoRemuxer::toMp4($plainTs));
+            $mp4Key = VideoRemuxer::mp4Key($tsObjectKey);
+
+            $disk->put($mp4Key, VideoRemuxer::toMp4($plainTs));
+            $disk->delete($tsObjectKey);
+            $media->update(['object_key' => $mp4Key]);
         } catch (Throwable $e) {
             Log::warning('TS to MP4 remux failed at upload time', [
                 'object' => $tsObjectKey,

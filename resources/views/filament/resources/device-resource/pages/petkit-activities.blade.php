@@ -81,6 +81,10 @@
                     </div>
                 @endforeach
             </div>
+
+            <div style="margin-top:1.5rem;">
+                {{ $histories->links() }}
+            </div>
         </x-filament::section>
     @endif
 </x-filament-panels::page>

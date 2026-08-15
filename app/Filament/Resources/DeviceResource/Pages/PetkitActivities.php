@@ -6,11 +6,13 @@ use App\Filament\Resources\DeviceResource;
 use App\Models\History;
 use Filament\Resources\Pages\Concerns\InteractsWithRecord;
 use Filament\Resources\Pages\Page;
-use Illuminate\Support\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Livewire\WithPagination;
 
 class PetkitActivities extends Page
 {
     use InteractsWithRecord;
+    use WithPagination;
 
     protected static string $resource = DeviceResource::class;
 
@@ -27,11 +29,11 @@ class PetkitActivities extends Page
     }
 
     /**
-     * @return Collection<int, History>
+     * @return LengthAwarePaginator<int, History>
      */
-    public function getHistories(): Collection
+    public function getHistories(): LengthAwarePaginator
     {
-        return $this->record->histories()->with('media')->latest()->limit(50)->get();
+        return $this->record->histories()->with('media')->latest()->paginate(10);
     }
 
     /**
