@@ -39,6 +39,13 @@
             border-radius: 0.375rem;
             background: var(--gray-950);
         }
+        .petkit-segments-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+        .petkit-segments-table th, .petkit-segments-table td {
+            text-align: left;
+            padding: 0.25rem 0.5rem;
+            color: var(--gray-500);
+        }
+        .petkit-segments-table th { font-weight: 500; }
     </style>
 
     <div style="margin-bottom:1rem;">
@@ -145,6 +152,40 @@
                                 </td>
                                 <td><code>{{ $clip->object_key }}</code></td>
                             </tr>
+                            @if (!empty($clip->segments))
+                                <tr>
+                                    <td></td>
+                                    <td colspan="7">
+                                        <details>
+                                            <summary style="cursor:pointer;color:var(--gray-500);">
+                                                {{ count($clip->segments) }} merged segment(s)
+                                            </summary>
+                                            <table class="petkit-segments-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Segment file ID</th>
+                                                        <th>Start</th>
+                                                        <th>End</th>
+                                                        <th>Duration</th>
+                                                        <th>Size</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach ($clip->segments as $segment)
+                                                        <tr>
+                                                            <td><code>{{ $segment['fileId'] ?? '—' }}</code></td>
+                                                            <td>{{ isset($segment['startTime']) ? \Illuminate\Support\Carbon::createFromTimestamp($segment['startTime'])->timezone('Europe/Berlin')->format('H:i:s') : '—' }}</td>
+                                                            <td>{{ isset($segment['endTime']) ? \Illuminate\Support\Carbon::createFromTimestamp($segment['endTime'])->timezone('Europe/Berlin')->format('H:i:s') : '—' }}</td>
+                                                            <td>{{ isset($segment['duration']) ? number_format($segment['duration'] / 1000, 1) . 's' : '—' }}</td>
+                                                            <td>{{ $this->formatBytes($segment['size'] ?? null) }}</td>
+                                                        </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </details>
+                                    </td>
+                                </tr>
+                            @endif
                         @endforeach
                     </tbody>
                 </table>

@@ -123,6 +123,8 @@ class DevUploadFileInfoV2Controller extends Controller
      */
     private function appendCloudStorageSegment(string $deviceType, string $deviceId, Device $device, array $fileInfo): void
     {
+        Log::info('CLOUD_STORAGE segment received', $fileInfo);
+
         $disk = $this->storage->disk();
         $segmentKey = sprintf('%s/%s/%s', $deviceType, $deviceId, $fileInfo['fileId']);
 
@@ -174,6 +176,16 @@ class DevUploadFileInfoV2Controller extends Controller
             'module_type' => 'CLOUD_STORAGE',
             'file_type' => $fileInfo['fileType'] ?? 'video/x-mpg',
             'object_key' => $combinedTsKey,
+            'segments' => [
+                ...($media->segments ?? []),
+                [
+                    'fileId' => $fileInfo['fileId'],
+                    'startTime' => $fileInfo['startTime'] ?? null,
+                    'endTime' => $fileInfo['endTime'] ?? null,
+                    'duration' => $fileInfo['duration'] ?? null,
+                    'size' => $fileInfo['storageSpace'] ?? null,
+                ],
+            ],
             'start_time' => $media->start_time ?? ($fileInfo['startTime'] ?? null),
             'end_time' => $fileInfo['endTime'] ?? $media->end_time,
             'duration' => ($media->duration ?? 0) + (int) ($fileInfo['duration'] ?? 0),
