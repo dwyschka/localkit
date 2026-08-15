@@ -49,53 +49,69 @@ class DevUploadFileInfoV2Controller extends Controller
                 continue;
             }
 
-            // CLOUD_STORAGE segments are ~4s chunks of one continuous
-            // recording (each segment's startTime == the previous one's
-            // endTime) that arrive spread across several of these reports
-            // over time, not all at once - EVENT_PREVIEW/EVENT_VIDEO are
-            // standalone files and go through the normal per-file path below.
-            if (config('localkit.storage.decrypt_on_upload')
-                && ($fileInfo['moduleType'] ?? null) === 'CLOUD_STORAGE'
-                && ! empty($fileInfo['eventId'])
-                && ! empty($fileInfo['aesIv'])
-            ) {
-                $this->appendCloudStorageSegment($deviceType, $deviceId, $device, $fileInfo);
-
-                continue;
-            }
-
-            $objectKey = sprintf('%s/%s/%s', $deviceType, $deviceId, $fileInfo['fileId']);
-
-            $media = MediaFile::updateOrCreate(
-                ['file_id' => $fileInfo['fileId']],
-                [
-                    'device_id' => $device->id,
-                    'event_id' => $fileInfo['eventId'] ?? null,
-                    'module_type' => $fileInfo['moduleType'] ?? null,
-                    'file_type' => $fileInfo['fileType'] ?? null,
-                    'object_key' => $objectKey,
-                    'aes_iv' => $fileInfo['aesIv'] ?? null,
-                    'pet_score' => $fileInfo['petScore'] ?? null,
-                    'eat_score' => $fileInfo['eatScore'] ?? null,
-                    'move_score' => $fileInfo['moveScore'] ?? null,
-                    'feed_score' => $fileInfo['feedScore'] ?? null,
-                    'start_time' => $fileInfo['startTime'] ?? null,
-                    'end_time' => $fileInfo['endTime'] ?? null,
-                    'duration' => $fileInfo['duration'] ?? null,
-                    'size' => $fileInfo['storageSpace'] ?? null,
-                ]
-            );
-
-            // Guard against decrypting twice: the device can retry this report
-            // (e.g. after a network hiccup) for a file we already decrypted in
-            // place, and running AES-CBC decryption again on already-plaintext
-            // bytes would corrupt them beyond recovery.
-            if (config('localkit.storage.decrypt_on_upload') && ! $media->decrypted && ! empty($fileInfo['aesIv'])) {
-                $this->decryptInPlace($media, $objectKey, (string) $fileInfo['aesIv']);
+            // One bad file (ffmpeg hiccup, decrypt failure, whatever) must
+            // not abort the rest of the batch - this endpoint has to answer
+            // 200 no matter what, or the device treats the *entire* report
+            // as lost and won't retry any of it (see class docblock).
+            try {
+                $this->processFileInfo($deviceType, $deviceId, $device, $fileInfo);
+            } catch (Throwable $e) {
+                Log::error('dev_upload_file_info_v2 entry failed, skipping', [
+                    'fileId' => $fileInfo['fileId'],
+                    'error' => $e->getMessage(),
+                ]);
             }
         }
 
         return new JsonResponse(['result' => []]);
+    }
+
+    private function processFileInfo(string $deviceType, string $deviceId, Device $device, array $fileInfo): void
+    {
+        // CLOUD_STORAGE segments are ~4s chunks of one continuous recording
+        // (each segment's startTime == the previous one's endTime) that
+        // arrive spread across several of these reports over time, not all
+        // at once - EVENT_PREVIEW/EVENT_VIDEO are standalone files and go
+        // through the normal per-file path below.
+        if (config('localkit.storage.decrypt_on_upload')
+            && ($fileInfo['moduleType'] ?? null) === 'CLOUD_STORAGE'
+            && ! empty($fileInfo['eventId'])
+            && ! empty($fileInfo['aesIv'])
+        ) {
+            $this->appendCloudStorageSegment($deviceType, $deviceId, $device, $fileInfo);
+
+            return;
+        }
+
+        $objectKey = sprintf('%s/%s/%s', $deviceType, $deviceId, $fileInfo['fileId']);
+
+        $media = MediaFile::updateOrCreate(
+            ['file_id' => $fileInfo['fileId']],
+            [
+                'device_id' => $device->id,
+                'event_id' => $fileInfo['eventId'] ?? null,
+                'module_type' => $fileInfo['moduleType'] ?? null,
+                'file_type' => $fileInfo['fileType'] ?? null,
+                'object_key' => $objectKey,
+                'aes_iv' => $fileInfo['aesIv'] ?? null,
+                'pet_score' => $fileInfo['petScore'] ?? null,
+                'eat_score' => $fileInfo['eatScore'] ?? null,
+                'move_score' => $fileInfo['moveScore'] ?? null,
+                'feed_score' => $fileInfo['feedScore'] ?? null,
+                'start_time' => $fileInfo['startTime'] ?? null,
+                'end_time' => $fileInfo['endTime'] ?? null,
+                'duration' => $fileInfo['duration'] ?? null,
+                'size' => $fileInfo['storageSpace'] ?? null,
+            ]
+        );
+
+        // Guard against decrypting twice: the device can retry this report
+        // (e.g. after a network hiccup) for a file we already decrypted in
+        // place, and running AES-CBC decryption again on already-plaintext
+        // bytes would corrupt them beyond recovery.
+        if (config('localkit.storage.decrypt_on_upload') && ! $media->decrypted && ! empty($fileInfo['aesIv'])) {
+            $this->decryptInPlace($media, $objectKey, (string) $fileInfo['aesIv']);
+        }
     }
 
     /**
@@ -136,9 +152,20 @@ class DevUploadFileInfoV2Controller extends Controller
         $combinedFileId = 'event_' . $fileInfo['eventId'];
         $combinedTsKey = sprintf('%s/%s/%s.ts', $deviceType, $deviceId, $combinedFileId);
 
-        $combined = $disk->exists($combinedTsKey) ? $disk->get($combinedTsKey) . $plain : $plain;
+        $existed = $disk->exists($combinedTsKey);
+        $previousSize = $existed ? $disk->size($combinedTsKey) : 0;
+
+        $combined = $existed ? $disk->get($combinedTsKey) . $plain : $plain;
         $disk->put($combinedTsKey, $combined);
         $disk->delete($segmentKey);
+
+        Log::info('CLOUD_STORAGE segment appended', [
+            'event' => $combinedFileId,
+            'segment' => $fileInfo['fileId'],
+            'started_new' => ! $existed,
+            'previous_size' => $previousSize,
+            'combined_size' => strlen($combined),
+        ]);
 
         $media = MediaFile::firstOrNew(['file_id' => $combinedFileId]);
         $media->fill([
