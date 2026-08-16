@@ -83,6 +83,15 @@ class PetkitPanelProvider extends PanelProvider
                     .fi-header-heading {
                         display: none;
                     }
+
+                    /* The image editor modal sizes itself to the source image - a
+                       tall portrait photo can push the Save/Cancel toolbar off
+                       screen on a phone. Cap the window height and let it scroll
+                       instead of overflowing past the viewport. */
+                    .fi-fo-file-upload-editor-window {
+                        max-height: 90dvh;
+                        overflow-y: auto;
+                    }
                 </style>
                 HTML,
             )

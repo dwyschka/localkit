@@ -50,8 +50,12 @@ class PetResource extends Resource
                     ->appendFiles()
                     ->imageEditor()
                     ->imageEditorAspectRatioOptions(['1:1'])
-                    ->imageEditorViewportWidth(512)
-                    ->imageEditorViewportHeight(512)
+                    // Just the on-screen crop box size in the editor UI, not the
+                    // exported resolution (that's the resize target below) - kept
+                    // small so the modal (and its Save button) still fits on a
+                    // phone screen instead of overflowing off-screen.
+                    ->imageEditorViewportWidth(200)
+                    ->imageEditorViewportHeight(200)
                     ->automaticallyResizeImagesMode('cover')
                     ->automaticallyResizeImagesToWidth(512)
                     ->automaticallyResizeImagesToHeight(512)
