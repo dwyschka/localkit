@@ -42,7 +42,10 @@ class DevDiscernPicResource extends PetkitHttpResource
                                 '0',
                                 STR_PAD_LEFT
                             )),
-                            'url' => $endpoint . Storage::disk('public')->url($path),
+                            // The device can't do TLS, so this must be http
+                            // regardless of what scheme $endpoint or the
+                            // disk's own URL happen to carry.
+                            'url' => preg_replace('/^https:\/\//', 'http://', $endpoint . Storage::disk('public')->url($path)),
                         ])
                         ->all(),
                 ])
