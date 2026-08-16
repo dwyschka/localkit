@@ -93,6 +93,44 @@ class VideoRemuxer
     }
 
     /**
+     * Re-encodes (not a remux - full decode/encode) a .ts whose discontinuous
+     * per-segment timestamps are already baked in, e.g. one combined with the
+     * old raw-byte-concat method before VideoRemuxer::concatTs() existed.
+     * `-c copy` alone can't fix this: it's a stream copy, so the original
+     * (broken) PTS/DTS pass through mostly unchanged - only actually decoding
+     * every frame and letting the encoder re-timestamp them in presentation
+     * order produces a genuinely continuous timeline. Slower and lossy
+     * (re-encode), so this is only for the manual "fix this clip" action,
+     * not the routine per-segment append path.
+     */
+    public static function reencodeMp4(string $ts): string
+    {
+        $process = new Process([
+            env('FFMPEG_BINARY', 'ffmpeg'),
+            '-hide_banner', '-loglevel', 'error',
+            '-fflags', '+genpts',
+            '-i', 'pipe:0',
+            '-c:v', 'libx264',
+            '-preset', 'veryfast',
+            '-crf', '20',
+            '-c:a', 'aac',
+            '-avoid_negative_ts', 'make_zero',
+            '-f', 'mp4',
+            '-movflags', 'frag_keyframe+empty_moov+default_base_moof',
+            'pipe:1',
+        ]);
+        $process->setInput($ts);
+        $process->setTimeout(120);
+        $process->run();
+
+        if (! $process->isSuccessful() || $process->getOutput() === '') {
+            throw new RuntimeException('ffmpeg re-encode failed: ' . $process->getErrorOutput());
+        }
+
+        return $process->getOutput();
+    }
+
+    /**
      * The sibling object key an original .ts key's remuxed MP4 is stored
      * under (see DevUploadFileInfoV2Controller).
      */

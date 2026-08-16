@@ -39,17 +39,18 @@ class PetkitActivityDetail extends Page
     }
 
     /**
-     * Recomputes duration from the segment metadata and re-remuxes the
-     * combined .ts (if it's still on disk) to MP4 with the current
-     * VideoRemuxer settings.
+     * Recomputes duration from the segment metadata and re-encodes the
+     * combined .ts (if it's still on disk) to MP4.
      *
-     * Honest limitation: the individual segments are deleted once merged,
-     * so this can't retroactively fix timestamp discontinuities baked into
-     * a .ts that was combined with the old raw-byte-concat method (see
-     * VideoRemuxer::concatTs()) - only duration gets corrected in that case.
-     * For a .ts combined with the current concat-demuxer method, re-remuxing
-     * picks up any VideoRemuxer improvements (e.g. the AAC bitstream filter)
-     * made since it was first converted.
+     * A straight remux (-c copy) can't fix this: it's a stream copy, so
+     * whatever discontinuous per-segment PTS/DTS got baked in when this was
+     * combined with the old raw-byte-concat method (see VideoRemuxer::concatTs())
+     * pass through mostly unchanged. Actually decoding and re-encoding
+     * (VideoRemuxer::reencodeMp4()) forces the encoder to assign fresh,
+     * monotonically increasing timestamps in presentation order, which is
+     * the only way to retroactively fix an already-broken combined file
+     * (the individual segments are long gone, so re-joining them isn't an
+     * option here - see PetkitYumshareDual/PetkitEversweetUltra).
      */
     public function fixVideo(int $mediaId): void
     {
@@ -69,14 +70,14 @@ class PetkitActivityDetail extends Page
         if ($disk->exists($tsKey)) {
             try {
                 $mp4Key = VideoRemuxer::mp4Key($tsKey);
-                $disk->put($mp4Key, VideoRemuxer::toMp4($disk->get($tsKey)));
+                $disk->put($mp4Key, VideoRemuxer::reencodeMp4($disk->get($tsKey)));
                 $media->object_key = $mp4Key;
 
-                Notification::make()->success()->title('Duration recalculated, video re-remuxed')->send();
+                Notification::make()->success()->title('Duration recalculated, video re-encoded')->send();
             } catch (Throwable $e) {
-                Log::warning('Manual video fix remux failed', ['media_id' => $media->id, 'error' => $e->getMessage()]);
+                Log::warning('Manual video fix re-encode failed', ['media_id' => $media->id, 'error' => $e->getMessage()]);
 
-                Notification::make()->warning()->title('Duration recalculated, but remux failed')->body($e->getMessage())->send();
+                Notification::make()->warning()->title('Duration recalculated, but re-encode failed')->body($e->getMessage())->send();
             }
         } else {
             Notification::make()->warning()->title('Duration recalculated - original .ts is gone, video itself could not be re-remuxed')->send();
