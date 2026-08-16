@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\TopicController;
 use App\Http\Controllers\Petkit\DevAttireOverController;
 use App\Http\Controllers\Petkit\DevBleDeviceController;
 use App\Http\Controllers\Petkit\DevDeviceInfoController;
+use App\Http\Controllers\Petkit\DevDiscernConfigController;
 use App\Http\Controllers\Petkit\DevDiscernPicController;
 use App\Http\Controllers\Petkit\DevEventReportController;
 use App\Http\Controllers\Petkit\DevFallbackController;
@@ -71,8 +72,9 @@ Route::prefix('{deviceType}')->group(function () {
     Route::get('dev_sand_tray_auth', DevSandtrayAuthController::class);
     Route::get('dev_upload_log_token', DevUploadLogTokenController::class);
 
-    //Eversweet Ultra w7h
+    //Pet recognition (NextGen camera devices - confirmed on both D4SH and W7H)
     Route::get('dev_discern_pic', DevDiscernPicController::class);
+    Route::get('dev_discern_config', DevDiscernConfigController::class);
 
 
 });
