@@ -1,6 +1,5 @@
 <x-filament-panels::page>
     @php($histories = $this->getHistories())
-    @php($unlinkedMedia = $this->getUnlinkedMedia())
 
     <style>
         .petkit-timeline { position: relative; padding-left: 2.75rem; }
@@ -95,31 +94,31 @@
                 @endforeach
             </div>
 
-            <div style="margin-top:1.5rem;">
-                {{ $histories->links() }}
-            </div>
-        </x-filament::section>
-    @endif
-
-    @if ($unlinkedMedia->isNotEmpty())
-        <x-filament::section style="margin-top:1.5rem;">
-            <x-slot name="heading">Unlinked recordings ({{ $unlinkedMedia->count() }})</x-slot>
-            <x-slot name="description">
-                Files that exist on disk but couldn't be matched to an activity - the device's
-                pet_detect/drink_start/eat_start event either never arrived or arrived before
-                this device was tracking that topic.
-            </x-slot>
-
-            <div class="petkit-timeline__media">
-                @foreach (\App\Filament\Resources\DeviceResource\Pages\PetkitActivities::sortMediaForListing($unlinkedMedia) as $clip)
-                    @if ($clip->isVideo())
-                        <video src="{{ route('media.file', ['fileId' => $clip->file_id]) }}" controls preload="none"></video>
-                    @else
-                        <a href="{{ route('media.file', ['fileId' => $clip->file_id]) }}" target="_blank">
-                            <img src="{{ route('media.file', ['fileId' => $clip->file_id]) }}" alt="Capture" loading="lazy" />
-                        </a>
-                    @endif
-                @endforeach
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:1.5rem;gap:1rem;flex-wrap:wrap;">
+                <div style="font-size:0.8125rem;color:var(--gray-500);">
+                    Showing {{ $histories->firstItem() }}–{{ $histories->lastItem() }} of {{ $histories->total() }}
+                </div>
+                <div style="display:flex;gap:0.5rem;">
+                    <x-filament::button
+                        color="gray"
+                        size="sm"
+                        icon="heroicon-m-chevron-left"
+                        wire:click="previousPage"
+                        :disabled="$histories->onFirstPage()"
+                    >
+                        Previous
+                    </x-filament::button>
+                    <x-filament::button
+                        color="gray"
+                        size="sm"
+                        icon="heroicon-m-chevron-right"
+                        icon-position="after"
+                        wire:click="nextPage"
+                        :disabled="! $histories->hasMorePages()"
+                    >
+                        Next
+                    </x-filament::button>
+                </div>
             </div>
         </x-filament::section>
     @endif

@@ -39,29 +39,6 @@ class PetkitActivities extends Page
     }
 
     /**
-     * Recordings that exist on disk but whose event_id doesn't match any
-     * History row's messageId - e.g. the pet_detect/drink_start MQTT event
-     * never arrived, or arrived before that topic's History::create() was
-     * deployed. Surfaced separately so a clip is never just invisible
-     * because the correlation happened to miss.
-     *
-     * @return Collection<int, MediaFile>
-     */
-    public function getUnlinkedMedia(): Collection
-    {
-        $linkedEventIds = History::where('device_id', $this->record->id)
-            ->whereNotNull('messageId')
-            ->pluck('messageId');
-
-        return MediaFile::where('device_id', $this->record->id)
-            ->whereNotNull('event_id')
-            ->whereNotIn('event_id', $linkedEventIds)
-            ->latest()
-            ->limit(20)
-            ->get();
-    }
-
-    /**
      * Display order for the media thumbnails in the timeline/unlinked
      * listings (not the per-activity detail page, which shows everything in
      * a table) - the still preview image first, then the video.
