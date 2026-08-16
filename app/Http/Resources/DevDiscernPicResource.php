@@ -28,7 +28,7 @@ class DevDiscernPicResource extends PetkitHttpResource
                 ->reject(fn (Pet $pet) => empty($pet->images))
                 ->map(fn (Pet $pet) => [
                     'id' => $pet->id,
-                    'color' => $pet->color ?? '#808080',
+                    'color' => strtoupper($pet->color ?? '#808080'),
                     'discern' => collect($pet->images)
                         ->values()
                         ->map(fn (string $path, int $index) => [
