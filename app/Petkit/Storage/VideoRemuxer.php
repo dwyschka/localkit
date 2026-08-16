@@ -100,4 +100,15 @@ class VideoRemuxer
     {
         return preg_replace('/\.ts$/', '.mp4', $tsObjectKey);
     }
+
+    /**
+     * The reverse of mp4Key() - the combined .ts an object key's MP4 was
+     * remuxed from (see DevUploadFileInfoV2Controller::appendCloudStorageSegment,
+     * which keeps the accumulator .ts around alongside the remuxed MP4).
+     * A no-op if the key is already a .ts.
+     */
+    public static function tsKey(string $objectKey): string
+    {
+        return preg_replace('/\.mp4$/', '.ts', $objectKey);
+    }
 }
