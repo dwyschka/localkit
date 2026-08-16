@@ -20,6 +20,8 @@ use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Support\Exceptions\Halt;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class DeviceActions
 {
@@ -254,6 +256,67 @@ class DeviceActions
                 ->requiresConfirmation()
                 ->action(function (Device $record) {
                     $record->definition()->reboot($record);
+                }),
+            // NextGen devices don't have an MQTT reboot RPC implemented (or
+            // possibly at all - it's never been reverse-engineered), so this
+            // falls back to the device's own telnetd instead. Deliberately
+            // NOT gated on mqtt_connected like everything else here - it's a
+            // different transport, and this is exactly the recovery path
+            // you'd reach for when the device is stuck/unresponsive over
+            // MQTT but still reachable on the network.
+            Action::make('Reboot (Telnet)')
+                ->label('Reboot')
+                ->visible(fn(Device $record) => (bool) ($record->isNextGen() ?? false))
+                ->requiresConfirmation()
+                ->modalDescription('Reboots the device over telnet using its built-in root credentials.')
+                ->action(function (Device $record) {
+                    $ipAddress = $record->configuration()->ipAddress ?? null;
+
+                    if (empty($ipAddress)) {
+                        Notification::make()
+                            ->danger()
+                            ->title('No IP address known for this device')
+                            ->send();
+
+                        return;
+                    }
+
+                    $username = config('petkit.telnet_username');
+                    $password = config('petkit.telnet_password');
+
+                    if (empty($username) || empty($password)) {
+                        Notification::make()
+                            ->danger()
+                            ->title('Telnet credentials not configured')
+                            ->body('Set DEVICE_TELNET_USERNAME / DEVICE_TELNET_PASSWORD in .env')
+                            ->send();
+
+                        return;
+                    }
+
+                    try {
+                        $telnet = new TelnetClient($ipAddress);
+                        $telnet->login($username, $password);
+                        $telnet->exec('reboot');
+                        $telnet->close();
+
+                        Notification::make()
+                            ->success()
+                            ->title('Reboot command sent via Telnet')
+                            ->send();
+                    } catch (Throwable $e) {
+                        Log::warning('Telnet reboot failed', [
+                            'device_id' => $record->id,
+                            'ip' => $ipAddress,
+                            'error' => $e->getMessage(),
+                        ]);
+
+                        Notification::make()
+                            ->danger()
+                            ->title('Telnet reboot failed')
+                            ->body($e->getMessage())
+                            ->send();
+                    }
                 }),
             Action::make('Reset State')
                 ->visible(fn(Device $record) => self::visible($record, self::RESET_WORKING_STATE))

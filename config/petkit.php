@@ -8,4 +8,10 @@ return [
     'homeassistant' => [
         'enabled' => env('HOMEASSISTANT_ENABLED', false),
     ],
+
+    // Root telnet credentials for NextGen devices' built-in telnetd (see
+    // DeviceActions::actions()'s "Reboot (Telnet)" action) - no default
+    // here deliberately, set these in your own untracked .env.
+    'telnet_username' => env('DEVICE_TELNET_USERNAME'),
+    'telnet_password' => env('DEVICE_TELNET_PASSWORD'),
 ];
