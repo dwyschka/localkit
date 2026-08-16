@@ -310,7 +310,7 @@ class PetkitYumshareSolo implements DeviceDefinition, Snapshot, BluetoothProxyIn
         $action = $message->action;
         switch ($action) {
             case 'feed':
-                $this->startFeeding($this->getDevice(), $message->amount ?? null);
+                $this->startFeeding($this->getDevice());
                 break;
             case 'snapshot':
                 $this->takeSnapshot($this->getDevice());

@@ -4,6 +4,7 @@ namespace App\Petkit\Devices\Configuration;
 
 use App\DTOs\DeviceConfigurationDTO;
 use App\DTOs\RangeDTO;
+use App\Homeassistant\Button;
 use App\Homeassistant\HASwitch;
 use App\Homeassistant\Number;
 use App\Homeassistant\Select;
@@ -215,10 +216,16 @@ class PetkitFreshElement3 extends DeviceConfigurationDTO implements Configuratio
 
     public array $schedule;
 
-    // Feed is a service call, not a Button entity - call HA's mqtt.publish
-    // with {"action":"feed","amount":N} on the action/start topic instead
-    // (see PetkitFreshElement3::action()), so the amount can be set per
-    // call rather than always using whatever's configured.
+
+    #[Button(
+        technicalName: 'action_feed',
+        name: 'Feed',
+        commandTopic: 'action/start',
+        icon: 'mdi:information-outline',
+        commandTemplate: '{"action": "feed"}',
+        availabilityTemplate: 'online',
+    )]
+    private $actionFeed = 1;
 
     #[Number(
         technicalName: 'desiccant_durability',

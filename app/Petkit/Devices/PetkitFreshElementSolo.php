@@ -238,7 +238,7 @@ class PetkitFreshElementSolo implements DeviceDefinition, BluetoothProxyInterfac
         $action = $message->action;
         switch ($action) {
             case 'feed':
-                $this->startFeeding($this->getDevice(), $message->amount ?? null);
+                $this->startFeeding($this->getDevice());
                 break;
         }
     }
