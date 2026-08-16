@@ -54,13 +54,24 @@ class DeviceActions
     public const DRAIN = 'drain';
     public const DEEP_CLEAN = 'deep_clean';
 
+    /**
+     * Every action here sends a command over MQTT, so none of them do
+     * anything useful (and would just sit forever waiting for a reply) if
+     * the device isn't currently connected - gate all of them on
+     * mqtt_connected in one place rather than repeating the check in every
+     * action's own visible() closure.
+     */
+    private static function visible(Device $record, string $action): bool
+    {
+        return (bool) $record->mqtt_connected && $record->definition()->hasAction($action);
+    }
 
     public static function actions()
     {
         return [
             Action::make('Check OTA')
                 ->label('Check OTA')
-                ->visible(fn(Device $record) => !($record->isNextGen() ?? false))
+                ->visible(fn(Device $record) => (bool) $record->mqtt_connected && !($record->isNextGen() ?? false))
                 ->mountUsing(function (Schema $schema, Device $record) {
                     $available = app(OTA::class)->getAvailable($record);
 
@@ -95,101 +106,73 @@ class DeviceActions
                     ]);
                 }),
             Action::make('Start Cleaning')
-                ->visible(function (Device $record) {
-                    return $record->definition()->hasAction(self::START_CLEAN);
-                })
+                ->visible(fn(Device $record) => self::visible($record, self::START_CLEAN))
                 ->action(function (Device $record) {
                     $record->definition()->startCleaning($record);
                 }),
             Action::make('Deodorize')
-                ->visible(function (Device $record) {
-                    return $record->definition()->hasAction(self::DEODORIZE);
-                })
+                ->visible(fn(Device $record) => self::visible($record, self::DEODORIZE))
                 ->action(function (Device $record) {
                     $record->definition()->deodorize($record);
                 }),
             Action::make('Level')
-                ->visible(function (Device $record) {
-                    return $record->definition()->hasAction(self::LEVEL);
-                })
+                ->visible(fn(Device $record) => self::visible($record, self::LEVEL))
                 ->action(function (Device $record) {
                     $record->definition()->level($record);
                 }),
             Action::make('Start Maintenance')
-                ->visible(function (Device $record) {
-                    return $record->definition()->hasAction(self::START_MAINTENANCE);
-                })
+                ->visible(fn(Device $record) => self::visible($record, self::START_MAINTENANCE))
                 ->action(function (Device $record) {
                     $record->definition()->startMaintenance($record);
                 }),
             Action::make('Stop Maintenance')
-                ->visible(function (Device $record) {
-                    return $record->definition()->hasAction(self::STOP_MAINTENANCE);
-                })
+                ->visible(fn(Device $record) => self::visible($record, self::STOP_MAINTENANCE))
                 ->action(function (Device $record) {
                     $record->definition()->stopMaintenance($record);
                 }),
             Action::make('Dump Litter')
-                ->visible(function (Device $record) {
-                    return $record->definition()->hasAction(self::CLEAN_LITTER);
-                })
+                ->visible(fn(Device $record) => self::visible($record, self::CLEAN_LITTER))
                 ->action(function (Device $record) {
                     $record->definition()->cleanLitter($record);
                 }),
             Action::make('Reset N50')
-                ->visible(function (Device $record) {
-                    return $record->definition()->hasAction(self::RESET_N50);
-                })
+                ->visible(fn(Device $record) => self::visible($record, self::RESET_N50))
                 ->action(function (Device $record) {
                     $record->definition()->resetN50($record);
                 }),
             Action::make('Reset N60')
-                ->visible(function (Device $record) {
-                    return $record->definition()->hasAction(self::RESET_N60);
-                })
+                ->visible(fn(Device $record) => self::visible($record, self::RESET_N60))
                 ->action(function (Device $record) {
                     $record->definition()->resetN60($record);
                 }),
             Action::make('Reset Cardboard')
-                ->visible(function (Device $record) {
-                    return $record->definition()->hasAction(self::RESET_CARDBOARD);
-                })
+                ->visible(fn(Device $record) => self::visible($record, self::RESET_CARDBOARD))
                 ->action(function (Device $record) {
                     $record->definition()->resetCardboard($record);
                 }),
             Action::make('Reset Desiccant')
-                ->visible(function (Device $record) {
-                    return $record->definition()->hasAction(self::RESET_DESICCANT);
-                })
+                ->visible(fn(Device $record) => self::visible($record, self::RESET_DESICCANT))
                 ->requiresConfirmation()
                 ->action(function (Device $record) {
                     $record->definition()->resetDesiccant($record);
                 }),
             Action::make('Start Odour')
-                ->visible(function (Device $record) {
-                    return $record->definition()->hasAction(self::START_ODOUR);
-                })
+                ->visible(fn(Device $record) => self::visible($record, self::START_ODOUR))
                 ->action(function (Device $record) {
                     $record->definition()->startOdour($record);
                 }),
             Action::make('Start Lightning')
-                ->visible(function (Device $record) {
-                    return $record->definition()->hasAction(self::START_LIGHTNING);
-                })
+                ->visible(fn(Device $record) => self::visible($record, self::START_LIGHTNING))
                 ->action(function (Device $record) {
                     $record->definition()->startLightning($record);
                 }),
             Action::make('Stop Lightning')
-                ->visible(function (Device $record) {
-                    return $record->definition()->hasAction(self::STOP_LIGHTNING);
-                })
+                ->visible(fn(Device $record) => self::visible($record, self::STOP_LIGHTNING))
                 ->action(function (Device $record) {
                     $record->definition()->stopLightning($record);
                 }),
             Action::make('Start Feeding')
-                ->visible(function (Device $record) {
-                    return $record->definition()->hasAction(self::START_FEEDING);
-                })
+                ->visible(fn(Device $record) => self::visible($record, self::START_FEEDING))
                 ->schema(function (Device $record) {
                     $settings = $record->configuration['settings'] ?? [];
 
@@ -231,65 +214,49 @@ class DeviceActions
                     }
                 }),
             Action::make('Reset Add Water')
-                ->visible(function (Device $record) {
-                    return $record->definition()->hasAction(self::RESET_ADD_WATER);
-                })
+                ->visible(fn(Device $record) => self::visible($record, self::RESET_ADD_WATER))
                 ->requiresConfirmation()
                 ->action(function (Device $record) {
                     $record->definition()->resetAddWater($record);
                 }),
             Action::make('Reset Cube')
-                ->visible(function (Device $record) {
-                    return $record->definition()->hasAction(self::RESET_CUBE);
-                })
+                ->visible(fn(Device $record) => self::visible($record, self::RESET_CUBE))
                 ->requiresConfirmation()
                 ->action(function (Device $record) {
                     $record->definition()->resetCube($record);
                 }),
             Action::make('Drain and Flush')
-                ->visible(function (Device $record) {
-                    return $record->definition()->hasAction(self::DRAIN_AND_FLUSH);
-                })
+                ->visible(fn(Device $record) => self::visible($record, self::DRAIN_AND_FLUSH))
                 ->requiresConfirmation()
                 ->action(function (Device $record) {
                     $record->definition()->drainAndFlush($record);
                 }),
             Action::make('Refill')
-                ->visible(function (Device $record) {
-                    return $record->definition()->hasAction(self::REFILL);
-                })
+                ->visible(fn(Device $record) => self::visible($record, self::REFILL))
                 ->requiresConfirmation()
                 ->action(function (Device $record) {
                     $record->definition()->refill($record);
                 }),
             Action::make('Drain')
-                ->visible(function (Device $record) {
-                    return $record->definition()->hasAction(self::DRAIN);
-                })
+                ->visible(fn(Device $record) => self::visible($record, self::DRAIN))
                 ->requiresConfirmation()
                 ->action(function (Device $record) {
                     $record->definition()->drain($record);
                 }),
             Action::make('Deep Clean')
-                ->visible(function (Device $record) {
-                    return $record->definition()->hasAction(self::DEEP_CLEAN);
-                })
+                ->visible(fn(Device $record) => self::visible($record, self::DEEP_CLEAN))
                 ->requiresConfirmation()
                 ->action(function (Device $record) {
                     $record->definition()->deepClean($record);
                 }),
             Action::make('Reboot')
-                ->visible(function (Device $record) {
-                    return $record->definition()->hasAction(self::REBOOT);
-                })
+                ->visible(fn(Device $record) => self::visible($record, self::REBOOT))
                 ->requiresConfirmation()
                 ->action(function (Device $record) {
                     $record->definition()->reboot($record);
                 }),
             Action::make('Reset State')
-                ->visible(function (Device $record) {
-                    return $record->definition()->hasAction(self::RESET_WORKING_STATE);
-                })
+                ->visible(fn(Device $record) => self::visible($record, self::RESET_WORKING_STATE))
                 ->requiresConfirmation()
                 ->action(function (Device $record) {
                     $record->definition()->resetWorkingState($record);
@@ -299,7 +266,7 @@ class DeviceActions
             // per-device logic. Shown only while there is an error to clear.
             Action::make('Reset Error')
                 ->label('Reset Error')
-                ->visible(fn(Device $record) => filled($record->error))
+                ->visible(fn(Device $record) => (bool) $record->mqtt_connected && filled($record->error))
                 ->requiresConfirmation()
                 ->action(function (Device $record) {
                     $record->update(['error' => null]);
