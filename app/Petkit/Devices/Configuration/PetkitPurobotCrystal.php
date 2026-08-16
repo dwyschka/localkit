@@ -365,9 +365,6 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
     )]
     public bool $autoWork;
 
-    public int $autoIntervalMin;
-    public int $fixedTimeClear;
-
     #[HASwitch(
         technicalName: 'avoid_repeat',
         name: 'Avoid Repeated Cleaning',
@@ -382,6 +379,27 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
         entityCategory: 'config'
     )]
     public bool $avoidRepeat;
+
+    #[Select(
+        technicalName: 'auto_interval_min',
+        name: 'Time Interval Of Each Cleaning',
+        options: ['0', '30', '60', '300', '600', '900', '1800', '3600'],
+        commandTopic: 'setting/set',
+        icon: 'mdi:timer-outline',
+        valueTemplate: '{{ value_json.settings.autoIntervalMin }}',
+        commandTemplate: '{"autoIntervalMin": {{value}}}',
+        entityCategory: 'config'
+    )]
+    public int $autoIntervalMin;
+
+    #[Sensor(
+        technicalName: 'fixed_time_clear',
+        name: 'Scheduled Cleaning',
+        icon: 'mdi:calendar-clock',
+        entityCategory: 'diagnostic',
+        valueTemplate: '{{ value_json.settings.fixedTimeClear }}'
+    )]
+    public int $fixedTimeClear;
 
     // Not in Localkit UI - not exposed to HA
     public bool $underweight;
@@ -420,7 +438,31 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
         entityCategory: 'config'
     )]
     public bool $tumbling;
+
+    #[Number(
+        technicalName: 'lightest',
+        name: 'Minimum Weight',
+        commandTopic: 'setting/set',
+        icon: 'mdi:scale',
+        valueTemplate: '{{ value_json.settings.lightest }}',
+        commandTemplate: '{"lightest":{{ value }}}',
+        entityCategory: 'config',
+        min: 0,
+        max: 10000,
+        step: 1
+    )]
     public int $lightest;
+
+    #[Select(
+        technicalName: 'still_time',
+        name: 'Delayed Cleaning',
+        options: ['0', '30', '60', '300', '600', '900', '1800', '3600'],
+        commandTopic: 'setting/set',
+        icon: 'mdi:timer-outline',
+        valueTemplate: '{{ value_json.settings.stillTime }}',
+        commandTemplate: '{"stillTime": {{value}}}',
+        entityCategory: 'config'
+    )]
     public int $stillTime;
 
     // Litter Type - not exposed to HA
@@ -662,7 +704,21 @@ class PetkitPurobotCrystal extends DeviceConfigurationDTO implements Configurati
     )]
     public int $petSensitivity;
 
+    #[Number(
+        technicalName: 'detect_interval',
+        name: 'Detection Interval',
+        commandTopic: 'setting/set',
+        icon: 'mdi:timer-outline',
+        unitOfMeasurement: 's',
+        valueTemplate: '{{ value_json.settings.detectInterval }}',
+        commandTemplate: '{"detectInterval":{{ value }}}',
+        entityCategory: 'config',
+        min: 0,
+        max: 300,
+        step: 1
+    )]
     public int $detectInterval;
+
     public array $detectMultiRange;
 
     // Sound (no speaker on this device - not exposed to HA)
