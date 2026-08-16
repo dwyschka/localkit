@@ -109,7 +109,7 @@ class PetkitEversweetUltra
                     Toggle::make('configuration.settings.drinkDetection')
                         ->helperText('Detect when a pet is drinking')
                         ->label('Drinking Detection'),
-                ])
+                ])->columnSpanFull(),
             ]),
 
             Section::make('Water Management')->columns(2)->schema([

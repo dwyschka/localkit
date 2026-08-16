@@ -170,7 +170,7 @@ class PetkitYumshareDual
                         ->numeric()
                         ->minValue(0)
                         ->suffix('sec'),
-                ])
+                ])->columnSpanFull(),
             ]),
 
             Section::make('Feeding Plan')

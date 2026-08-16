@@ -147,7 +147,7 @@ class PetkitYumshareSolo
                             3 => 3,
                             4 => 4
                         ])
-                ])
+                ])->columnSpanFull()
             ]),
 
             Section::make('Feeding Plan')
