@@ -316,7 +316,7 @@ class PetkitYumshareSolo
                         ->dehydrateStateUsing(function ($state) {
                             return $state;
                         })
-                ])
+                ])->columnSpanFull(),
             ]),
             Section::make('Settings')->columns(2)->schema([
                 Toggle::make('configuration.settings.foodWarn')

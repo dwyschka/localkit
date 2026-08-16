@@ -281,7 +281,7 @@ class PetkitEversweetUltra
                                 ->formatStateUsing(fn($state) => Time::toTimeFromMinutes((int)$state))
                                 ->dehydrateStateUsing(fn($state) => Time::toMinutes($state)),
                         ]),
-                ])
+                ])->columnSpanFull(),
             ]),
 
             Section::make('Settings')->columns(2)->schema([
