@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Petkit\UI;
+namespace App\Petkit\Devices\YumshareDual;
 
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\View;
@@ -27,7 +27,7 @@ use PhpMqtt\Client\Facades\MQTT;
 use Filament\Forms;
 use Filament\Forms\Form;
 
-class PetkitYumshareSolo
+class UI
 {
 
     public function formFields(): array
@@ -52,11 +52,27 @@ class PetkitYumshareSolo
 
                 })->readOnly()->disabled(true),
             ]),
-            Section::make('Feeding')->schema([
-                TextInput::make('configuration.settings.amount')
-                    ->label('Feeding Amount')
+            Section::make('Feeding')->columns(2)->schema([
+                TextInput::make('configuration.settings.amount1')
+                    ->label('Feed Amount Hopper 1')
                     ->helperText('Default amount for manual feeding')
-                    ->numeric(),
+                    ->numeric()
+                    ->minValue(0),
+                TextInput::make('configuration.settings.amount2')
+                    ->label('Feed Amount Hopper 2')
+                    ->helperText('Default amount for manual feeding')
+                    ->numeric()
+                    ->minValue(0),
+                TextInput::make('configuration.settings.factor1')
+                    ->label('Hopper 1 Calibration Factor')
+                    ->helperText('Calibration factor for the first hopper')
+                    ->numeric()
+                    ->minValue(1),
+                TextInput::make('configuration.settings.factor2')
+                    ->label('Hopper 2 Calibration Factor')
+                    ->helperText('Calibration factor for the second hopper')
+                    ->numeric()
+                    ->minValue(1),
             ]),
             Section::make('Media')->schema([
                 View::make('camera_stream')->viewData(fn($record): array => [
@@ -98,13 +114,13 @@ class PetkitYumshareSolo
                 Toggle::make('configuration.settings.timeDisplay')
                     ->label('Timestamp Display'),
 
-                Toggle::make('configuration.settings.eatVideo')
-                    ->helperText('Feature not Available: YUMSHARE video/photo will not be uploaded to the cloud after turning off')
-                    ->label('YUMSHARE Video/Photo Upload'),
-
                 Toggle::make('configuration.settings.smartFrame')
                     ->label('Pet Tracking')
                     ->helperText('Highlight the pet when it is detected'),
+
+                Toggle::make('configuration.settings.feedPicture')
+                    ->label('Feeding Photo')
+                    ->helperText('Save a photo to the cloud when food is dispensed'),
 
                 Fieldset::make('Detection')->schema([
                     Toggle::make('configuration.settings.petDetection')
@@ -146,12 +162,23 @@ class PetkitYumshareSolo
                             2 => 2,
                             3 => 3,
                             4 => 4
-                        ])
-                ])->columnSpanFull()
+                        ]),
+
+                    TextInput::make('configuration.settings.detectInterval')
+                        ->label('Detection Interval')
+                        ->helperText('Minimum time between detection notifications (seconds)')
+                        ->numeric()
+                        ->minValue(0)
+                        ->suffix('sec'),
+                ])->columnSpanFull(),
             ]),
 
             Section::make('Feeding Plan')
                 ->schema([
+                    Toggle::make('configuration.settings.sche_enable')
+                        ->helperText('Enable the feeding schedule below')
+                        ->label('Feeding Schedule Enabled'),
+
                     Repeater::make('configuration.schedule')
                         ->schema([
                             CheckboxList::make('re')
@@ -286,16 +313,18 @@ class PetkitYumshareSolo
                 ]),
                 Toggle::make('configuration.settings.systemSoundEnable')->label('Voice Prompt'),
                 Toggle::make('configuration.settings.soundEnable')->label('Voice for Food Dispensing'),
+                Toggle::make('configuration.settings.feedSound')->label('Feed Completion Sound'),
+
 
                 Fieldset::make('Do not Disturb')->columns(1)->schema([
                     Toggle::make('configuration.settings.toneMode')->label('Do not disturb'),
-                    Hidden::make('configuration.settings.toneMultiRange.name')->default('toneMultiRange'),
-                    Repeater::make('configuration.settings.toneMultiRange.ranges')
+                    Repeater::make('configuration.settings.toneMultiRange')
                         ->columns(2)
                         ->label('Undisturbed Period')
                         ->reorderableWithButtons()
                         ->schema([
-                            TimePicker::make('from')
+                            TimePicker::make('0')
+                                ->label('From')
                                 ->formatStateUsing(function ($state) {
                                     return Time::toTimeFromMinutes((int)$state);
                                 })
@@ -304,7 +333,8 @@ class PetkitYumshareSolo
                                 })
                                 ->seconds(false),
 
-                            TimePicker::make('till')
+                            TimePicker::make('1')
+                                ->label('Till')
                                 ->formatStateUsing(function ($state) {
                                     return Time::toTimeFromMinutes((int)$state);
                                 })
@@ -313,9 +343,6 @@ class PetkitYumshareSolo
                                 })
                                 ->seconds(false)
                         ])
-                        ->dehydrateStateUsing(function ($state) {
-                            return $state;
-                        })
                 ])->columnSpanFull(),
             ]),
             Section::make('Settings')->columns(2)->schema([
@@ -355,12 +382,13 @@ class PetkitYumshareSolo
                     ->helperText('Indicator light work within the following period')
                     ->label('Indicator Light'),
 
-                Repeater::make('configuration.settings.lightMultiRange.ranges')
+                Repeater::make('configuration.settings.lightMultiRange')
                     ->columns(2)
+                    ->columnSpanFull()
                     ->label('Screen Period')
                     ->schema(
                         [
-                            TimePicker::make('from')
+                            TimePicker::make('0')
                                 ->label('From')
                                 ->seconds(false)
                                 ->required()
@@ -371,7 +399,7 @@ class PetkitYumshareSolo
                                     fn ($state) => Time::toMinutes($state)
                                 ),
 
-                            TimePicker::make('till')
+                            TimePicker::make('1')
                                 ->label('Till')
                                 ->seconds(false)
                                 ->required()
@@ -385,10 +413,23 @@ class PetkitYumshareSolo
                     ),
 
             ]),
-            Section::make('AI LAB')->schema([
-                Select::make('configuration.settings.surplusControl')->options([
-                    0 => 'off',
-                ])
+            Section::make('AI LAB')->columns(2)->schema([
+                Toggle::make('configuration.settings.vomitDetection')
+                    ->label('Vomit Detection')
+                    ->helperText('Uses AI behavior recognition to detect signs of vomiting in cats and sends an instant notification'),
+
+                Select::make('configuration.settings.surplusControl')
+                    ->label('Surplus Food Control')
+                    ->helperText('Pause feeding while surplus food remains in the bowl')
+                    ->options([
+                        0 => 'off',
+                    ]),
+
+                TextInput::make('configuration.settings.surplusStandard')
+                    ->label('Surplus Food Standard')
+                    ->helperText('Minimum amount of surplus food in the bowl before feeding pauses')
+                    ->numeric()
+                    ->minValue(0),
             ]),
 
             Section::make('Unknown')->columns(3)->schema([
@@ -398,6 +439,11 @@ class PetkitYumshareSolo
                     ->viewData(['message' => 'Its Unknown, because the changes are not verified']),
                 Toggle::make('configuration.settings.shareOpen')->label('Share Open'),
                 Toggle::make('configuration.settings.multiConfig')->label('Multi Config'),
+
+                Toggle::make('configuration.settings.upload')
+                    ->label('Upload')
+                    ->helperText('Enable cloud upload (unverified)'),
+
             ]),
 
 

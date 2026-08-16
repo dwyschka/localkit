@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Petkit\Devices\Configuration;
+namespace App\Petkit\Devices\YumshareSolo;
 
 use App\DTOs\DeviceConfigurationDTO;
 use App\DTOs\RangeDTO;
@@ -11,9 +11,11 @@ use App\Homeassistant\Image;
 use App\Homeassistant\Interfaces\Snapshot;
 use App\Homeassistant\Interfaces\Video;
 use App\Homeassistant\Number;
+use App\Homeassistant\Select;
 use App\Homeassistant\Sensor;
 use App\Models\BluetoothDevice;
 use App\Models\Device;
+use App\Petkit\Devices\Configuration\ConfigurationInterface;
 use App\Petkit\Interfaces\HasCamera;
 use Illuminate\Support\Facades\Storage;
 use WendellAdriel\ValidatedDTO\Casting\ArrayCast;
@@ -22,45 +24,30 @@ use WendellAdriel\ValidatedDTO\Casting\DTOCast;
 use WendellAdriel\ValidatedDTO\Casting\IntegerCast;
 use WendellAdriel\ValidatedDTO\Casting\StringCast;
 
-/**
- * Configuration for the PetKit YumShare Dual (d4sh) - a dual-hopper feeder.
- *
- * NOTE: the property names must match the device's setting keys exactly, since
- * {@see \App\Petkit\Devices\PetkitYumshareDual::propertyChange()} diffs the
- * stored `settings` array and forwards the changed keys straight to the device.
- * The real device uses a mix of snake_case (e.g. sche_enable) and
- * camelCase (e.g. moveDetection) setting keys - both are kept verbatim below.
- */
-class PetkitYumshareDual extends DeviceConfigurationDTO implements ConfigurationInterface, Video, Snapshot, HasCamera
+class Configuration extends DeviceConfigurationDTO implements ConfigurationInterface, Video, Snapshot, HasCamera
 {
     // Basic settings
-    #[Number(
-        technicalName: 'amount1',
-        name: 'Feed Amount Hopper 1',
-        commandTopic: 'setting/set',
-        icon: 'mdi:information-outline',
-        valueTemplate: '{{ value_json.settings.amount1 }}',
-        commandTemplate: '{"amount1": {{value}}}',
-        entityCategory: 'config',
-        min: 0,
-        max: 50,
-        step: 1
+    #[Sensor(
+        technicalName: 'factor',
+        name: 'Calibration Factor',
+        icon: 'mdi:tune-variant',
+        entityCategory: 'diagnostic',
+        valueTemplate: '{{ value_json.settings.factor }}'
     )]
-    public int $amount1;
+    public int $factor;
 
-    #[Number(
-        technicalName: 'amount2',
-        name: 'Feed Amount Hopper 2',
+    #[Select(
+        technicalName: 'amount',
+        name: 'Feed Amount',
+        options: ['10', '15', '20', '25', '30', '35', '40', '45', '50'],
         commandTopic: 'setting/set',
         icon: 'mdi:information-outline',
-        valueTemplate: '{{ value_json.settings.amount2 }}',
-        commandTemplate: '{"amount2": {{value}}}',
-        entityCategory: 'config',
-        min: 0,
-        max: 50,
-        step: 1
+        valueTemplate: '{{ value_json.settings.amount }}',
+        commandTemplate: '{"amount": {{value}}}',
+        entityCategory: 'config'
     )]
-    public int $amount2;
+    public int $amount;
+
     public array $schedule;
 
     // States
@@ -146,6 +133,15 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
     )]
     public int $bowl;
 
+    #[BinarySensor(
+        technicalName: 'infrared',
+        name: 'Infrared',
+        valueTemplate: '{{ value_json.states.infrared ? "on": "off" }}',
+        payloadOn: true,
+        payloadOff: false
+    )]
+    public bool $infrared;
+
     #[Image(
         technicalName: 'last_snapshot',
         name: 'Snapshot',
@@ -202,8 +198,6 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
     )]
     public bool $lightMode;
 
-    public array $lightMultiRange;
-
     #[HASwitch(
         technicalName: 'multi_config',
         name: 'Multi Config',
@@ -234,31 +228,6 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
     )]
     public bool $shareOpen;
 
-    // Schedule
-    #[HASwitch(
-        technicalName: 'sche_enable',
-        name: 'Feeding Schedule',
-        commandTopic: 'setting/set',
-        icon: 'mdi:calendar-clock',
-        valueTemplate: '{{ value_json.settings.sche_enable }}',
-        commandTemplate: '{"sche_enable":{{ value }}}',
-        payloadOn: true,
-        payloadOff: false,
-        stateOn: true,
-        stateOff: false,
-        entityCategory: 'config'
-    )]
-    public bool $sche_enable;
-
-    #[Sensor(
-        technicalName: 'c_time',
-        name: 'Schedule Change Time',
-        icon: 'mdi:clock-outline',
-        entityCategory: 'diagnostic',
-        valueTemplate: '{{ value_json.settings.CTime }}'
-    )]
-    public int $CTime;
-
     // Camera settings
     #[HASwitch(
         technicalName: 'camera',
@@ -274,9 +243,6 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
         entityCategory: 'config'
     )]
     public bool $camera;
-
-    public array $cameraMultiRange;
-    public array $cameraRangeTable;
 
     #[HASwitch(
         technicalName: 'microphone',
@@ -309,7 +275,7 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
     public bool $night;
 
     #[HASwitch(
-        technicalName: 'timeDisplay',
+        technicalName: 'time_display',
         name: 'Timestamp Display',
         commandTopic: 'setting/set',
         icon: 'mdi:toggle-switch',
@@ -323,45 +289,20 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
     )]
     public bool $timeDisplay;
 
-    #[BinarySensor(
+    #[HASwitch(
         technicalName: 'eat_video',
         name: 'YUMSHARE Video/Photo Upload',
+        commandTopic: 'setting/set',
         icon: 'mdi:cloud-upload',
-        entityCategory: 'diagnostic',
         valueTemplate: '{{ value_json.settings.eatVideo }}',
+        commandTemplate: '{"eatVideo":{{ value }}}',
         payloadOn: true,
-        payloadOff: false
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
     )]
     public bool $eatVideo;
-
-    // Hopper calibration factors (bowl 1 / bowl 2)
-    #[Number(
-        technicalName: 'factor1',
-        name: 'Hopper 1 Calibration Factor',
-        commandTopic: 'setting/set',
-        icon: 'mdi:tune-variant',
-        valueTemplate: '{{ value_json.settings.factor1 }}',
-        commandTemplate: '{"factor1":{{ value }}}',
-        entityCategory: 'config',
-        min: 1,
-        max: 100,
-        step: 1
-    )]
-    public int $factor1;
-
-    #[Number(
-        technicalName: 'factor2',
-        name: 'Hopper 2 Calibration Factor',
-        commandTopic: 'setting/set',
-        icon: 'mdi:tune-variant',
-        valueTemplate: '{{ value_json.settings.factor2 }}',
-        commandTemplate: '{"factor2":{{ value }}}',
-        entityCategory: 'config',
-        min: 1,
-        max: 100,
-        step: 1
-    )]
-    public int $factor2;
 
     // Detection settings
     #[HASwitch(
@@ -451,22 +392,15 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
     )]
     public int $eatSensitivity;
 
-    #[Number(
+    #[Sensor(
         technicalName: 'detect_interval',
         name: 'Detection Interval',
-        commandTopic: 'setting/set',
         icon: 'mdi:timer-outline',
         unitOfMeasurement: 's',
-        valueTemplate: '{{ value_json.settings.detectInterval }}',
-        commandTemplate: '{"detectInterval":{{ value }}}',
-        entityCategory: 'config',
-        min: 0,
-        max: 300,
-        step: 1
+        entityCategory: 'diagnostic',
+        valueTemplate: '{{ value_json.settings.detectInterval }}'
     )]
     public int $detectInterval;
-
-    public array $detectMultiRange;
 
     // Sound settings
     #[HASwitch(
@@ -483,8 +417,6 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
         entityCategory: 'config'
     )]
     public bool $toneMode;
-
-    public array $toneMultiRange;
 
     #[HASwitch(
         technicalName: 'sound_enable',
@@ -516,21 +448,6 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
     )]
     public bool $systemSoundEnable;
 
-    #[HASwitch(
-        technicalName: 'feed_sound',
-        name: 'Feed Completion Sound',
-        commandTopic: 'setting/set',
-        icon: 'mdi:volume-high',
-        valueTemplate: '{{ value_json.settings.feedSound }}',
-        commandTemplate: '{"feedSound":{{ value }}}',
-        payloadOn: true,
-        payloadOff: false,
-        stateOn: true,
-        stateOff: false,
-        entityCategory: 'config'
-    )]
-    public bool $feedSound;
-
     #[Number(
         technicalName: 'volume',
         name: 'Volume',
@@ -556,6 +473,15 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
 
     // AI and other settings
     #[Sensor(
+        technicalName: 'num_limit',
+        name: 'Num Limit',
+        icon: 'mdi:information-outline',
+        entityCategory: 'diagnostic',
+        valueTemplate: '{{ value_json.settings.numLimit }}'
+    )]
+    public int $numLimit;
+
+    #[Sensor(
         technicalName: 'surplus_control',
         name: 'Surplus Food Control',
         icon: 'mdi:food-off',
@@ -564,17 +490,12 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
     )]
     public int $surplusControl;
 
-    #[Number(
+    #[Sensor(
         technicalName: 'surplus_standard',
         name: 'Surplus Food Standard',
-        commandTopic: 'setting/set',
         icon: 'mdi:food-off',
-        valueTemplate: '{{ value_json.settings.surplusStandard }}',
-        commandTemplate: '{"surplusStandard":{{ value }}}',
-        entityCategory: 'config',
-        min: 0,
-        max: 100,
-        step: 1
+        entityCategory: 'diagnostic',
+        valueTemplate: '{{ value_json.settings.surplusStandard }}'
     )]
     public int $surplusStandard;
 
@@ -593,18 +514,14 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
     )]
     public bool $smartFrame;
 
-    #[HASwitch(
+    #[BinarySensor(
         technicalName: 'upload',
-        name: 'Cloud Recording',
-        commandTopic: 'setting/set',
+        name: 'Cloud Upload',
         icon: 'mdi:cloud-upload',
+        entityCategory: 'diagnostic',
         valueTemplate: '{{ value_json.settings.upload }}',
-        commandTemplate: '{"upload":{{ value }}}',
         payloadOn: true,
-        payloadOff: false,
-        stateOn: true,
-        stateOff: false,
-        entityCategory: 'config'
+        payloadOff: false
     )]
     public bool $upload;
 
@@ -617,38 +534,18 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
     )]
     public int $serviceStatus;
 
-    #[HASwitch(
+    #[BinarySensor(
         technicalName: 'feed_picture',
         name: 'Feeding Photo',
-        commandTopic: 'setting/set',
         icon: 'mdi:camera',
+        entityCategory: 'diagnostic',
         valueTemplate: '{{ value_json.settings.feedPicture }}',
-        commandTemplate: '{"feedPicture":{{ value }}}',
         payloadOn: true,
-        payloadOff: false,
-        stateOn: true,
-        stateOff: false,
-        entityCategory: 'config'
+        payloadOff: false
     )]
     public bool $feedPicture;
 
-    #[Sensor(
-        technicalName: 'attire_id',
-        name: 'Attire ID',
-        icon: 'mdi:identifier',
-        entityCategory: 'diagnostic',
-        valueTemplate: '{{ value_json.settings.attireId }}'
-    )]
-    public int $attireId;
-
-    #[Sensor(
-        technicalName: 'logo_cn',
-        name: 'Logo CN',
-        icon: 'mdi:identifier',
-        entityCategory: 'diagnostic',
-        valueTemplate: '{{ value_json.settings.logo_cn }}'
-    )]
-    public int $logo_cn;
+    public array $attire;
 
     #[BinarySensor(
         technicalName: 'auto_upgrade',
@@ -722,12 +619,13 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
     protected function rules(): array
     {
         return [
-            'amount1' => ['integer', 'min:0', 'max:50'],
-            'amount2' => ['integer', 'min:0', 'max:50'],
+            'factor' => ['integer', 'min:1', 'max:100'],
+            'amount' => ['integer', 'in:10,15,20,25,30,35,40,45,50'],
             'schedule' => ['array'],
 
+
             'desiccantDurability' => ['integer', 'min:0', 'max:90'],
-            'desiccantNextChange' => ['integer', 'min:0'],
+            'desiccantNextChange' => [ 'integer', 'min:0'],
 
             // States
             'ipAddress' => ['string'],
@@ -738,6 +636,7 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
             'petDetected' => ['bool'],
             'door' => ['bool'],
             'bowl' => ['integer'],
+            'infrared' => ['bool'],
             'lastSnapshot' => ['nullable', 'string'],
             'stream' => ['nullable', 'string'],
 
@@ -746,26 +645,15 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
             'foodWarnRange' => [],
             'manualLock' => ['bool'],
             'lightMode' => ['bool'],
-            'lightMultiRange' => ['array'],
             'multiConfig' => ['bool'],
             'shareOpen' => ['bool'],
 
-            // Schedule
-            'sche_enable' => ['bool'],
-            'CTime' => ['integer'],
-
             // Camera
             'camera' => ['bool'],
-            'cameraMultiRange' => ['array'],
-            'cameraRangeTable' => ['array'],
             'microphone' => ['bool'],
             'night' => ['bool'],
             'timeDisplay' => ['bool'],
             'eatVideo' => ['bool'],
-
-            // Hopper factors
-            'factor1' => ['integer', 'min:1', 'max:100'],
-            'factor2' => ['integer', 'min:1', 'max:100'],
 
             // Detection
             'moveDetection' => ['bool'],
@@ -775,26 +663,23 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
             'eatDetection' => ['bool'],
             'eatSensitivity' => ['integer', 'min:1', 'max:9'],
             'detectInterval' => ['integer', 'min:0'],
-            'detectMultiRange' => ['array'],
 
             // Sound
             'toneMode' => ['bool'],
-            'toneMultiRange' => ['array'],
             'soundEnable' => ['bool'],
             'systemSoundEnable' => ['bool'],
-            'feedSound' => ['bool'],
             'volume' => ['integer', 'min:0', 'max:9'],
             'selectedSound' => ['integer'],
 
             // AI and other
+            'numLimit' => ['integer'],
             'surplusControl' => ['integer'],
             'surplusStandard' => ['integer'],
             'smartFrame' => ['bool'],
             'upload' => ['bool'],
             'serviceStatus' => ['integer'],
             'feedPicture' => ['bool'],
-            'attireId' => ['integer'],
-            'logo_cn' => ['integer'],
+            'attire' => ['array'],
             'autoUpgrade' => ['bool'],
             'capacity' => ['array'],
             'typeCode' => ['integer'],
@@ -805,8 +690,8 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
     protected function defaults(): array
     {
         return [
-            'amount1' => 1,
-            'amount2' => 1,
+            'factor' => 10,
+            'amount' => 10,
             'schedule' => [],
 
             'desiccantDurability' => 30,
@@ -821,6 +706,7 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
             'petDetected' => false,
             'door' => false,
             'bowl' => -1,
+            'infrared' => false,
             'lastSnapshot' => null,
             'stream' => null,
 
@@ -828,62 +714,55 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
             'foodWarn' => false,
             'foodWarnRange' => ['from' => 480, 'till' => 1200],
             'manualLock' => false,
-            'lightMode' => true,
-            'lightMultiRange' => [[0, 1440]],
+            'lightMode' => false,
             'multiConfig' => true,
             'shareOpen' => false,
 
-            // Schedule
-            'sche_enable' => false,
-            'CTime' => 0,
-
             // Camera
             'camera' => true,
-            'cameraMultiRange' => [[0, 1440]],
-            'cameraRangeTable' => $this->defaultRangeTable(),
             'microphone' => true,
             'night' => true,
             'timeDisplay' => true,
-            'eatVideo' => true,
-
-            // Hopper factors
-            'factor1' => 1,
-            'factor2' => 1,
+            'eatVideo' => false,
 
             // Detection
-            'moveDetection' => false,
+            'moveDetection' => true,
             'moveSensitivity' => 1,
             'petDetection' => true,
             'petSensitivity' => 3,
             'eatDetection' => true,
             'eatSensitivity' => 3,
             'detectInterval' => 0,
-            'detectMultiRange' => [[0, 1440]],
 
             // Sound
             'toneMode' => false,
-            'toneMultiRange' => [[1320, 360]],
             'soundEnable' => false,
-            'systemSoundEnable' => true,
-            'feedSound' => true,
-            'volume' => 3,
+            'systemSoundEnable' => false,
+            'volume' => 4,
             'selectedSound' => -1,
 
             // AI and other
-            'surplusControl' => 0,
+            'numLimit' => 5,
+            'surplusControl' => 60,
             'surplusStandard' => 2,
             'smartFrame' => true,
-            'upload' => true,
+            'upload' => false,
             'serviceStatus' => 2,
-            'feedPicture' => true,
-            'attireId' => -1,
-            'logo_cn' => 0,
+            'feedPicture' => false,
+            'attire' => [
+                'id' => -1,
+                'binFile' => '',
+                'binEncrypt' => '',
+                'indate' => 4102415999,
+                'binFile2' => '',
+                'binEncrypt2' => ''
+            ],
             'autoUpgrade' => false,
             'capacity' => [
-                ['name' => 'fullVideo', 'workTime' => 0, 'indate' => 0],
-                ['name' => 'eventImage', 'workTime' => 0, 'indate' => 0],
-                ['name' => 'highLight', 'workTime' => 0, 'indate' => 0],
-                ['name' => 'dynamicVideo', 'workTime' => 0, 'indate' => 0],
+                ['name' => 'fullVideo'],
+                ['name' => 'eventImage'],
+                ['name' => 'highLight'],
+                ['name' => 'dynamicVideo']
             ],
             'typeCode' => 0,
             'hertz' => 50,
@@ -893,8 +772,9 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
     protected function casts(): array
     {
         return [
-            'amount1' => new IntegerCast(),
-            'amount2' => new IntegerCast(),
+            // Basic types
+            'factor' => new IntegerCast(),
+            'amount' => new IntegerCast(),
             'schedule' => new ArrayCast(),
 
             // States
@@ -906,6 +786,7 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
             'petDetected' => new BooleanCast(),
             'door' => new BooleanCast(),
             'bowl' => new IntegerCast(),
+            'infrared' => new BooleanCast(),
             'lastSnapshot' => new StringCast(),
             'stream' => new StringCast(),
 
@@ -914,26 +795,15 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
             'foodWarnRange' => new DTOCast(RangeDTO::class),
             'manualLock' => new BooleanCast(),
             'lightMode' => new BooleanCast(),
-            'lightMultiRange' => new ArrayCast(),
             'multiConfig' => new BooleanCast(),
             'shareOpen' => new BooleanCast(),
 
-            // Schedule
-            'sche_enable' => new BooleanCast(),
-            'CTime' => new IntegerCast(),
-
             // Camera
             'camera' => new BooleanCast(),
-            'cameraMultiRange' => new ArrayCast(),
-            'cameraRangeTable' => new ArrayCast(),
             'microphone' => new BooleanCast(),
             'night' => new BooleanCast(),
             'timeDisplay' => new BooleanCast(),
             'eatVideo' => new BooleanCast(),
-
-            // Hopper factors
-            'factor1' => new IntegerCast(),
-            'factor2' => new IntegerCast(),
 
             // Detection
             'moveDetection' => new BooleanCast(),
@@ -943,26 +813,23 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
             'eatDetection' => new BooleanCast(),
             'eatSensitivity' => new IntegerCast(),
             'detectInterval' => new IntegerCast(),
-            'detectMultiRange' => new ArrayCast(),
 
             // Sound
             'toneMode' => new BooleanCast(),
-            'toneMultiRange' => new ArrayCast(),
             'soundEnable' => new BooleanCast(),
             'systemSoundEnable' => new BooleanCast(),
-            'feedSound' => new BooleanCast(),
             'volume' => new IntegerCast(),
             'selectedSound' => new IntegerCast(),
 
             // AI and other
+            'numLimit' => new IntegerCast(),
             'surplusControl' => new IntegerCast(),
             'surplusStandard' => new IntegerCast(),
             'smartFrame' => new BooleanCast(),
             'upload' => new BooleanCast(),
             'serviceStatus' => new IntegerCast(),
             'feedPicture' => new BooleanCast(),
-            'attireId' => new IntegerCast(),
-            'logo_cn' => new IntegerCast(),
+            'attire' => new ArrayCast(),
             'autoUpgrade' => new BooleanCast(),
             'capacity' => new ArrayCast(),
             'typeCode' => new IntegerCast(),
@@ -990,6 +857,7 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
             $data['petDetected'] = $states['petDetected'] ?? null;
             $data['door'] = $states['door'] ?? null;
             $data['bowl'] = $states['bowl'] ?? null;
+            $data['infrared'] = $states['infrared'] ?? null;
             $data['lastSnapshot'] = $states['lastSnapshot'] ?? null;
             $data['stream'] = $states['stream'] ?? null;
         }
@@ -999,11 +867,10 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
             $settings = $config['settings'];
 
             $data['shareOpen'] = $settings['shareOpen'] ?? null;
-            $data['amount1'] = $settings['amount1'] ?? null;
-            $data['amount2'] = $settings['amount2'] ?? null;
+            $data['factor'] = $settings['factor'] ?? null;
+            $data['amount'] = $settings['amount'] ?? null;
             $data['multiConfig'] = $settings['multiConfig'] ?? null;
             $data['lightMode'] = $settings['lightMode'] ?? null;
-            $data['lightMultiRange'] = $settings['lightMultiRange'] ?? null;
             $data['manualLock'] = $settings['manualLock'] ?? null;
             $data['foodWarnRange'] = $settings['foodWarnRange'] ?? null;
             $data['foodWarn'] = $settings['foodWarn'] ?? null;
@@ -1011,22 +878,12 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
             $data['autoUpgrade'] = $settings['autoUpgrade'] ?? null;
             $data['hertz'] = $settings['hertz'] ?? null;
 
-            // Schedule
-            $data['sche_enable'] = $settings['sche_enable'] ?? null;
-            $data['CTime'] = $settings['CTime'] ?? null;
-
             // Camera settings
             $data['camera'] = $settings['camera'] ?? null;
-            $data['cameraMultiRange'] = $settings['cameraMultiRange'] ?? null;
-            $data['cameraRangeTable'] = $settings['cameraRangeTable'] ?? null;
             $data['microphone'] = $settings['microphone'] ?? null;
             $data['night'] = $settings['night'] ?? null;
             $data['timeDisplay'] = $settings['timeDisplay'] ?? null;
             $data['eatVideo'] = $settings['eatVideo'] ?? null;
-
-            // Hopper factors
-            $data['factor1'] = $settings['factor1'] ?? null;
-            $data['factor2'] = $settings['factor2'] ?? null;
 
             // Detection settings
             $data['moveDetection'] = $settings['moveDetection'] ?? null;
@@ -1036,24 +893,21 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
             $data['eatDetection'] = $settings['eatDetection'] ?? null;
             $data['eatSensitivity'] = $settings['eatSensitivity'] ?? null;
             $data['detectInterval'] = $settings['detectInterval'] ?? null;
-            $data['detectMultiRange'] = $settings['detectMultiRange'] ?? null;
 
             // Sound settings
             $data['toneMode'] = $settings['toneMode'] ?? null;
-            $data['toneMultiRange'] = $settings['toneMultiRange'] ?? null;
             $data['soundEnable'] = $settings['soundEnable'] ?? null;
             $data['systemSoundEnable'] = $settings['systemSoundEnable'] ?? null;
-            $data['feedSound'] = $settings['feedSound'] ?? null;
             $data['volume'] = $settings['volume'] ?? null;
             $data['selectedSound'] = $settings['selectedSound'] ?? null;
 
             // AI and other settings
+            $data['numLimit'] = $settings['numLimit'] ?? null;
             $data['surplusControl'] = $settings['surplusControl'] ?? null;
             $data['surplusStandard'] = $settings['surplusStandard'] ?? null;
             $data['smartFrame'] = $settings['smartFrame'] ?? null;
             $data['upload'] = $settings['upload'] ?? null;
-            $data['attireId'] = $settings['attireId'] ?? null;
-            $data['logo_cn'] = $settings['logo_cn'] ?? null;
+            $data['attire'] = $settings['attire'] ?? null;
             $data['feedPicture'] = $settings['feedPicture'] ?? null;
             $data['serviceStatus'] = $settings['serviceStatus'] ?? null;
         }
@@ -1084,14 +938,14 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
                 'moveDetected' => $this->moveDetected,
                 'eatDetected' => $this->eatDetected,
                 'petDetected' => $this->petDetected,
+                'infrared' => $this->infrared,
             ],
             'settings' => [
                 'shareOpen' => $this->shareOpen,
-                'amount1' => $this->amount1,
-                'amount2' => $this->amount2,
+                'factor' => $this->factor,
+                'amount' => $this->amount,
                 'multiConfig' => $this->multiConfig,
                 'lightMode' => $this->lightMode,
-                'lightMultiRange' => $this->lightMultiRange,
                 'manualLock' => $this->manualLock,
                 'foodWarnRange' => $this->foodWarnRange->toArray(),
                 'foodWarn' => $this->foodWarn,
@@ -1099,22 +953,12 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
                 'autoUpgrade' => $this->autoUpgrade,
                 'hertz' => $this->hertz,
 
-                // Schedule
-                'sche_enable' => $this->sche_enable,
-                'CTime' => $this->CTime,
-
                 // Camera settings
                 'camera' => $this->camera,
-                'cameraMultiRange' => $this->cameraMultiRange,
-                'cameraRangeTable' => $this->cameraRangeTable,
                 'microphone' => $this->microphone,
                 'night' => $this->night,
                 'timeDisplay' => $this->timeDisplay,
                 'eatVideo' => $this->eatVideo,
-
-                // Hopper factors
-                'factor1' => $this->factor1,
-                'factor2' => $this->factor2,
 
                 // Detection settings
                 'moveDetection' => $this->moveDetection,
@@ -1124,24 +968,21 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
                 'eatDetection' => $this->eatDetection,
                 'eatSensitivity' => $this->eatSensitivity,
                 'detectInterval' => $this->detectInterval,
-                'detectMultiRange' => $this->detectMultiRange,
 
                 // Sound settings
                 'toneMode' => $this->toneMode,
-                'toneMultiRange' => $this->toneMultiRange,
                 'soundEnable' => $this->soundEnable,
                 'systemSoundEnable' => $this->systemSoundEnable,
-                'feedSound' => $this->feedSound,
                 'volume' => $this->volume,
                 'selectedSound' => $this->selectedSound,
 
                 // AI and other settings
+                'numLimit' => $this->numLimit,
                 'surplusControl' => $this->surplusControl,
                 'surplusStandard' => $this->surplusStandard,
                 'smartFrame' => $this->smartFrame,
                 'upload' => $this->upload,
-                'attireId' => $this->attireId,
-                'logo_cn' => $this->logo_cn,
+                'attire' => $this->attire,
                 'feedPicture' => $this->feedPicture,
                 'serviceStatus' => $this->serviceStatus,
             ],
@@ -1156,10 +997,5 @@ class PetkitYumshareDual extends DeviceConfigurationDTO implements Configuration
             return null;
         }
         return base64_encode(Storage::disk('snapshots')->get($this->lastSnapshot));
-    }
-
-    private function defaultRangeTable(): array
-    {
-        return array_map(fn (int $wday) => ['wday' => $wday, 'rangeSub' => [0]], range(0, 6));
     }
 }

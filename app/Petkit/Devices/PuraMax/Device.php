@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Petkit\Devices;
+namespace App\Petkit\Devices\PuraMax;
 
 use stdClass;
 use Exception;
@@ -14,7 +14,7 @@ use App\Jobs\ServiceEnd;
 use App\Jobs\ServiceStart;
 use App\Jobs\SetProperty;
 use App\Models\BluetoothDevice;
-use App\Models\Device;
+use App\Models\Device as DeviceModel;
 use App\Models\History;
 use App\Models\Pet;
 use App\MQTT\GenericReply;
@@ -33,7 +33,7 @@ use Illuminate\Support\Facades\Log;
 use PhpMqtt\Client\Facades\MQTT;
 use WendellAdriel\ValidatedDTO\SimpleDTO;
 
-class PetkitPuraMax implements DeviceDefinition, BluetoothProxyInterface
+class Device implements DeviceDefinition, BluetoothProxyInterface
 {
     protected array $actions = [
         DeviceActions::START_CLEAN,
@@ -52,7 +52,7 @@ class PetkitPuraMax implements DeviceDefinition, BluetoothProxyInterface
         DeviceStates::WORKING, DeviceStates::IDLE, DeviceStates::PET_IN, DeviceStates::CLEANING, DeviceStates::MAINTENANCE,
     ];
 
-    public function __construct(protected Device $device)
+    public function __construct(protected DeviceModel $device)
     {
 
 
@@ -73,13 +73,13 @@ class PetkitPuraMax implements DeviceDefinition, BluetoothProxyInterface
     public function stateTopics(): array
     {
         return [
-            sprintf('/sys/%s/%s/thing/event/ble_response/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/ble_response/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $content = json_decode($message?->params?->content, false);
                 Message::handleProxyMessage($content);
 
                 $this->reply($topic, $message);
             },
-            sprintf('/sys/%s/%s/thing/event/work_continue/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/work_continue/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $device->refresh();
                 $content = json_decode($message?->params?->content, false);
                 $deviceStatus = $this->deviceStatus($content?->action);
@@ -90,7 +90,7 @@ class PetkitPuraMax implements DeviceDefinition, BluetoothProxyInterface
 
                 $this->reply($topic, $message);
             },
-            sprintf('/sys/%s/%s/thing/event/work_suspend/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/work_suspend/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $device->refresh();
                 $device->update([
                     'working_state' => DeviceStates::IDLE->value
@@ -98,7 +98,7 @@ class PetkitPuraMax implements DeviceDefinition, BluetoothProxyInterface
                 $this->reply($topic, $message);
 
             },
-            sprintf('/sys/%s/%s/thing/event/work_start/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/work_start/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $device->refresh();
 
                 $content = json_decode($message?->params?->content, false);
@@ -121,7 +121,7 @@ class PetkitPuraMax implements DeviceDefinition, BluetoothProxyInterface
                 $this->reply($topic, $message);
 
             },
-            sprintf('/sys/%s/%s/thing/event/clean_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/clean_over/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $device->refresh();
                 $device->update([
                     'working_state' => DeviceStates::IDLE->value
@@ -129,7 +129,7 @@ class PetkitPuraMax implements DeviceDefinition, BluetoothProxyInterface
                 $this->reply($topic, $message);
 
             },
-            sprintf('/sys/%s/%s/thing/event/dump_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/dump_over/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $device->refresh();
                 $device->update([
                     'working_state' => DeviceStates::IDLE->value
@@ -137,7 +137,7 @@ class PetkitPuraMax implements DeviceDefinition, BluetoothProxyInterface
                 $this->reply($topic, $message);
 
             },
-            sprintf('/sys/%s/%s/thing/event/reset_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/reset_over/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $device->refresh();
                 $device->update([
                     'working_state' => DeviceStates::IDLE->value
@@ -147,14 +147,14 @@ class PetkitPuraMax implements DeviceDefinition, BluetoothProxyInterface
                 $this->reply($topic, $message);
 
             },
-            sprintf('/sys/%s/%s/thing/event/pet_in/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/pet_in/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $device->refresh();
                 $device->update([
                     'working_state' => DeviceStates::PET_IN->value
                 ]);
                 $this->reply($topic, $message);
             },
-            sprintf('/sys/%s/%s/thing/event/pet_out/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/pet_out/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $device->refresh();
                 $device->update([
                     'working_state' => DeviceStates::IDLE->value
@@ -173,7 +173,7 @@ class PetkitPuraMax implements DeviceDefinition, BluetoothProxyInterface
                     'device_id' => $device->id
                 ]);
             },
-            sprintf('/sys/%s/%s/thing/event/error_start/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/error_start/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $device->refresh();
                 $msg = $message->params->content;
                 $msg = json_decode($msg, false);
@@ -193,7 +193,7 @@ class PetkitPuraMax implements DeviceDefinition, BluetoothProxyInterface
                 ]);
                 $this->reply($topic, $message);
             },
-            sprintf('/sys/%s/%s/thing/event/error_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/error_over/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $device->refresh();
                 $device->update([
                     'working_state' => DeviceStates::IDLE->value,
@@ -201,11 +201,11 @@ class PetkitPuraMax implements DeviceDefinition, BluetoothProxyInterface
                 ]);
                 $this->reply($topic, $message);
             },
-            sprintf('/ota/device/inform/%s/%s', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+            sprintf('/ota/device/inform/%s/%s', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $message = OtaMessage::send($device);
                 MQTT::connection('publisher')->publish($message->getTopic(), $message->getMessage());
             },
-            sprintf('/sys/%s/%s/thing/event/data_get/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/data_get/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $this->reply($topic, $message);
                 try {
                     $msg = UserGet::reply($device->productKey(), $device->deviceName(), $message);
@@ -216,12 +216,12 @@ class PetkitPuraMax implements DeviceDefinition, BluetoothProxyInterface
                 }
                 MQTT::connection('publisher')->publish($msg->getTopic(), $msg->getMessage());
             },
-            sprintf('/sys/%s/%s/thing/event/property/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/property/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $device->refresh();
 
                 $this->reply($topic, $message);
 
-                /** @var \App\Petkit\Devices\Configuration\PetkitPuraMax $configuration */
+                /** @var Configuration $configuration */
                 $configuration = $device->configuration();
                 $workingState = $device->working_state;
 
@@ -247,7 +247,7 @@ class PetkitPuraMax implements DeviceDefinition, BluetoothProxyInterface
         ];
     }
 
-    public function getDevice(): Device
+    public function getDevice(): DeviceModel
     {
         return $this->device;
     }
@@ -296,42 +296,42 @@ class PetkitPuraMax implements DeviceDefinition, BluetoothProxyInterface
         MQTT::connection('publisher')->publish($generic->getTopic(), $generic->getMessage());
     }
 
-    public function startCleaning(Device $record)
+    public function startCleaning(DeviceModel $record)
     {
         ServiceStart::dispatchSync($record, 0);
     }
 
-    public function startMaintenance(Device $record)
+    public function startMaintenance(DeviceModel $record)
     {
         ServiceStart::dispatchSync($record, 9);
     }
 
-    public function stopMaintenance(Device $record)
+    public function stopMaintenance(DeviceModel $record)
     {
         ServiceEnd::dispatchSync($record, 9);
     }
 
-    public function cleanLitter(Device $record)
+    public function cleanLitter(DeviceModel $record)
     {
         ServiceStart::dispatchSync($record, 1);
     }
 
-    public function startOdour(Device $record)
+    public function startOdour(DeviceModel $record)
     {
         ServiceStart::dispatchSync($record, 2);
     }
 
-    public function startLightning(Device $record)
+    public function startLightning(DeviceModel $record)
     {
         ServiceStart::dispatchSync($record, 7);
     }
 
-    public function stopLightning(Device $record)
+    public function stopLightning(DeviceModel $record)
     {
         ServiceStart::dispatchSync($record, 7);
     }
 
-    public function resetN50(Device $record) {
+    public function resetN50(DeviceModel $record) {
         $configuration = $this->configurationDefinition();
         $durability = $configuration->n50Durability;
         $nextChange = Carbon::now()->addDays((int)$durability);
@@ -344,7 +344,7 @@ class PetkitPuraMax implements DeviceDefinition, BluetoothProxyInterface
     }
 
 
-    public function reboot(Device $record): void
+    public function reboot(DeviceModel $record): void
     {
         Reboot::dispatchSync($record);
     }
@@ -359,7 +359,7 @@ class PetkitPuraMax implements DeviceDefinition, BluetoothProxyInterface
         return $this->configurationDefinition()->toArray();
     }
 
-    public function propertyChange(Device $device): void
+    public function propertyChange(DeviceModel $device): void
     {
         $difference = JsonHelper::difference($device->configuration['settings'], $device->getOriginal('configuration')['settings']);
 
@@ -423,7 +423,7 @@ class PetkitPuraMax implements DeviceDefinition, BluetoothProxyInterface
     }
 
     public function configurationDefinition(): ConfigurationInterface {
-        return \App\Petkit\Devices\Configuration\PetkitPuraMax::fromDevice($this->getDevice());
+        return Configuration::fromDevice($this->getDevice());
     }
 
     #[HomeassistantTopic(topic: 'setting/set')]
@@ -470,7 +470,7 @@ class PetkitPuraMax implements DeviceDefinition, BluetoothProxyInterface
         }
     }
 
-    private function updateLitter(Device $device, ?stdClass $message)
+    private function updateLitter(DeviceModel $device, ?stdClass $message)
     {
         if (is_null($message)) {
             return;

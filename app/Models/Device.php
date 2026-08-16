@@ -3,21 +3,33 @@
 namespace App\Models;
 
 use Exception;
-use App\Petkit\Devices\PetkitPuraMax;
-use App\Petkit\Devices\PetkitFreshElement3;
-use App\Petkit\Devices\PetkitFreshElementSolo;
-use App\Petkit\Devices\PetkitYumshareSolo;
-use App\Petkit\Devices\PetkitYumshareDual;
-use App\Petkit\Devices\PetkitPurobotCrystal;
-use App\Petkit\Devices\PetkitEversweetUltra;
+use App\Petkit\Devices\PuraMax\Device as PuraMaxDevice;
+use App\Petkit\Devices\PuraMax\UI as PuraMaxUI;
+use App\Petkit\Devices\PuraMax\Configuration as PuraMaxConfiguration;
+use App\Petkit\Devices\FreshElement3\Device as FreshElement3Device;
+use App\Petkit\Devices\FreshElement3\UI as FreshElement3UI;
+use App\Petkit\Devices\FreshElement3\Configuration as FreshElement3Configuration;
+use App\Petkit\Devices\FreshElementSolo\Device as FreshElementSoloDevice;
+use App\Petkit\Devices\FreshElementSolo\UI as FreshElementSoloUI;
+use App\Petkit\Devices\FreshElementSolo\Configuration as FreshElementSoloConfiguration;
+use App\Petkit\Devices\YumshareSolo\Device as YumshareSoloDevice;
+use App\Petkit\Devices\YumshareSolo\UI as YumshareSoloUI;
+use App\Petkit\Devices\YumshareSolo\Configuration as YumshareSoloConfiguration;
+use App\Petkit\Devices\YumshareDual\Device as YumshareDualDevice;
+use App\Petkit\Devices\YumshareDual\UI as YumshareDualUI;
+use App\Petkit\Devices\YumshareDual\Configuration as YumshareDualConfiguration;
+use App\Petkit\Devices\PurobotCrystal\Device as PurobotCrystalDevice;
+use App\Petkit\Devices\PurobotCrystal\UI as PurobotCrystalUI;
+use App\Petkit\Devices\PurobotCrystal\Configuration as PurobotCrystalConfiguration;
+use App\Petkit\Devices\EversweetUltra\Device as EversweetUltraDevice;
+use App\Petkit\Devices\EversweetUltra\UI as EversweetUltraUI;
+use App\Petkit\Devices\EversweetUltra\Configuration as EversweetUltraConfiguration;
 use App\Helpers\HomeassistantHelper;
 use App\Helpers\JsonHelper;
 use App\Homeassistant\Interfaces\Snapshot;
 use App\Jobs\SetProperty;
 use App\Petkit\DeviceDefinition;
-use App\Petkit\Devices;
 use App\Petkit\Interfaces\HasCamera;
-use App\Petkit\UI;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -114,13 +126,13 @@ class Device extends Model
     {
 
         return match ($this->device_type) {
-            't4' => new PetkitPuraMax($this),
-            'd3' => new PetkitFreshElement3($this),
-            'd4' => new PetkitFreshElementSolo($this),
-            'd4h' => new PetkitYumshareSolo($this),
-            'd4sh' => new PetkitYumshareDual($this),
-            't7' => new PetkitPurobotCrystal($this),
-            'w7h' => new PetkitEversweetUltra($this),
+            't4' => new PuraMaxDevice($this),
+            'd3' => new FreshElement3Device($this),
+            'd4' => new FreshElementSoloDevice($this),
+            'd4h' => new YumshareSoloDevice($this),
+            'd4sh' => new YumshareDualDevice($this),
+            't7' => new PurobotCrystalDevice($this),
+            'w7h' => new EversweetUltraDevice($this),
         };
     }
 
@@ -128,13 +140,13 @@ class Device extends Model
     {
 
         return match ($this->device_type) {
-            't4' => Devices\Configuration\PetkitPuraMax::fromDevice($this),
-            'd3' => Devices\Configuration\PetkitFreshElement3::fromDevice($this),
-            'd4' => Devices\Configuration\PetkitFreshElementSolo::fromDevice($this),
-            'd4h' => Devices\Configuration\PetkitYumshareSolo::fromDevice($this),
-            'd4sh' => Devices\Configuration\PetkitYumshareDual::fromDevice($this),
-            't7' => Devices\Configuration\PetkitPurobotCrystal::fromDevice($this),
-            'w7h' => Devices\Configuration\PetkitEversweetUltra::fromDevice($this),
+            't4' => PuraMaxConfiguration::fromDevice($this),
+            'd3' => FreshElement3Configuration::fromDevice($this),
+            'd4' => FreshElementSoloConfiguration::fromDevice($this),
+            'd4h' => YumshareSoloConfiguration::fromDevice($this),
+            'd4sh' => YumshareDualConfiguration::fromDevice($this),
+            't7' => PurobotCrystalConfiguration::fromDevice($this),
+            'w7h' => EversweetUltraConfiguration::fromDevice($this),
         };
     }
 
@@ -142,13 +154,13 @@ class Device extends Model
     {
 
         return match ($this->device_type) {
-            't4' => new UI\PetkitPuraMax($this),
-            'd3' => new UI\PetkitFreshElement3($this),
-            'd4' => new UI\PetkitFreshElementSolo($this),
-            'd4h' => new UI\PetkitYumshareSolo($this),
-            'd4sh' => new UI\PetkitYumshareDual($this),
-            't7' => new UI\PetkitPurobotCrystal($this),
-            'w7h' => new UI\PetkitEversweetUltra($this),
+            't4' => new PuraMaxUI($this),
+            'd3' => new FreshElement3UI($this),
+            'd4' => new FreshElementSoloUI($this),
+            'd4h' => new YumshareSoloUI($this),
+            'd4sh' => new YumshareDualUI($this),
+            't7' => new PurobotCrystalUI($this),
+            'w7h' => new EversweetUltraUI($this),
         };
     }
 

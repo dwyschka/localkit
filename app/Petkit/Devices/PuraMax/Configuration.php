@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Petkit\Devices\Configuration;
+namespace App\Petkit\Devices\PuraMax;
 
 use App\DTOs\DeviceConfigurationDTO;
 use App\DTOs\MultiRangeDTO;
@@ -13,13 +13,14 @@ use App\Homeassistant\Select;
 use App\Homeassistant\Sensor;
 use App\Models\BluetoothDevice;
 use App\Models\Device;
+use App\Petkit\Devices\Configuration\ConfigurationInterface;
 use WendellAdriel\ValidatedDTO\Casting\BooleanCast;
 use WendellAdriel\ValidatedDTO\Casting\DTOCast;
 use WendellAdriel\ValidatedDTO\Casting\IntegerCast;
 use WendellAdriel\ValidatedDTO\Casting\StringCast;
 use WendellAdriel\ValidatedDTO\Casting\ArrayCast;
 
-class PetkitPuraMax extends DeviceConfigurationDTO implements ConfigurationInterface
+class Configuration extends DeviceConfigurationDTO implements ConfigurationInterface
 {
 
     #[Sensor(

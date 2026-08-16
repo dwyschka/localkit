@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Petkit\Devices\Configuration\PetkitYumshareSolo;
+use App\Petkit\Devices\YumshareSolo\Configuration as PetkitYumshareSolo;
 use App\Management\Go2RTC;
 use App\Models\Device;
 use App\MQTT\FeedRealtimeMessage;

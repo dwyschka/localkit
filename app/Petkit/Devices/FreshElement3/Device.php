@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Petkit\Devices;
+namespace App\Petkit\Devices\FreshElement3;
 
 use stdClass;
 use App\DTOs\PetkitDTOInterface;
@@ -14,7 +14,7 @@ use App\Jobs\ServiceEnd;
 use App\Jobs\ServiceStart;
 use App\Jobs\SetProperty;
 use App\Models\BluetoothDevice;
-use App\Models\Device;
+use App\Models\Device as DeviceModel;
 use App\Models\History;
 use App\Models\Pet;
 use App\MQTT\GenericReply;
@@ -31,7 +31,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use PhpMqtt\Client\Facades\MQTT;
 
-class PetkitFreshElementSolo implements DeviceDefinition, BluetoothProxyInterface
+class Device implements DeviceDefinition, BluetoothProxyInterface
 {
     protected array $actions = [
         DeviceActions::START_FEEDING,
@@ -42,7 +42,7 @@ class PetkitFreshElementSolo implements DeviceDefinition, BluetoothProxyInterfac
         DeviceStates::WORKING, DeviceStates::IDLE,
     ];
 
-    public function __construct(protected Device $device)
+    public function __construct(protected DeviceModel $device)
     {
 
     }
@@ -61,27 +61,27 @@ class PetkitFreshElementSolo implements DeviceDefinition, BluetoothProxyInterfac
     public function stateTopics(): array
     {
         return [
-            sprintf('/sys/%s/%s/thing/event/ble_response/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/ble_response/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $content = json_decode($message?->params?->content, false);
                 Message::handleProxyMessage($content);
 
                 $this->reply($topic, $message);
             },
-            sprintf('/sys/%s/%s/thing/event/feed_stop/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/feed_stop/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $device->update([
                     'working_state' => DeviceStates::IDLE->value
                 ]);
                 $this->reply($topic, $message);
 
             },
-            sprintf('/sys/%s/%s/thing/event/feed_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/feed_over/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $device->update([
                     'working_state' => DeviceStates::IDLE->value
                 ]);
                 $this->reply($topic, $message);
 
             },
-            sprintf('/sys/%s/%s/thing/event/feed_start/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/feed_start/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
 
                 $content = json_decode($message?->params?->content, false);
 
@@ -100,16 +100,16 @@ class PetkitFreshElementSolo implements DeviceDefinition, BluetoothProxyInterfac
                 $this->reply($topic, $message);
 
             },
-            sprintf('/ota/device/inform/%s/%s', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+            sprintf('/ota/device/inform/%s/%s', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $message = OtaMessage::send($device);
                 MQTT::connection('publisher')->publish($message->getTopic(), $message->getMessage());
             },
-            sprintf('/sys/%s/%s/thing/event/data_get/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/data_get/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $this->reply($topic, $message);
                 $msg = UserGet::reply($device->productKey(), $device->deviceName(), $message);
                 MQTT::connection('publisher')->publish($msg->getTopic(), $msg->getMessage());
             },
-            sprintf('/sys/%s/%s/thing/event/property/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+            sprintf('/sys/%s/%s/thing/event/property/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $this->reply($topic, $message);
                 $this->updateDevice($message);
                 $msg = UserGet::replyToState($device->productKey(), $device->deviceName(), $message);
@@ -118,7 +118,7 @@ class PetkitFreshElementSolo implements DeviceDefinition, BluetoothProxyInterfac
         ];
     }
 
-    public function getDevice(): Device
+    public function getDevice(): DeviceModel
     {
         return $this->device;
     }
@@ -127,6 +127,7 @@ class PetkitFreshElementSolo implements DeviceDefinition, BluetoothProxyInterfac
     public function hasAction(string $action): bool
     {
         $hasAction = in_array($action, $this->actions);
+
         switch ($action) {
             case DeviceActions::START_FEEDING:
                 return $hasAction;
@@ -143,12 +144,12 @@ class PetkitFreshElementSolo implements DeviceDefinition, BluetoothProxyInterfac
         MQTT::connection('publisher')->publish($generic->getTopic(), $generic->getMessage());
     }
 
-    public function reboot(Device $record): void
+    public function reboot(DeviceModel $record): void
     {
         Reboot::dispatchSync($record);
     }
 
-    public function startFeeding(Device $record, ?int $amount = null): void
+    public function startFeeding(DeviceModel $record, ?int $amount = null): void
     {
         $amount ??= $this->device->configuration['settings']['amount'] ?? 10;
 
@@ -157,7 +158,7 @@ class PetkitFreshElementSolo implements DeviceDefinition, BluetoothProxyInterfac
     }
     public static function deviceName()
     {
-        return 'Petkit FreshElement Solo';
+        return 'Petkit Fresh Element 3';
     }
 
     public function configuration()
@@ -165,7 +166,7 @@ class PetkitFreshElementSolo implements DeviceDefinition, BluetoothProxyInterfac
         return $this->configurationDefinition()->toArray();
     }
 
-    public function propertyChange(Device $device): void
+    public function propertyChange(DeviceModel $device): void
     {
         $scheduleChange = false;
         $difference = JsonHelper::difference($device->configuration['settings'], $device->getOriginal('configuration')['settings']);
@@ -206,10 +207,10 @@ class PetkitFreshElementSolo implements DeviceDefinition, BluetoothProxyInterfac
     }
 
     public function configurationDefinition(): ConfigurationInterface {
-        return \App\Petkit\Devices\Configuration\PetkitFreshElementSolo::fromDevice($this->getDevice());
+        return Configuration::fromDevice($this->getDevice());
     }
 
-    public function resetDesiccant(Device $record): void
+    public function resetDesiccant(DeviceModel $record): void
     {
         $configuration = $this->configurationDefinition();
         $durability = $configuration->desiccantDurability;
@@ -275,18 +276,23 @@ class PetkitFreshElementSolo implements DeviceDefinition, BluetoothProxyInterfac
             'id' => $this->device->petkit_id,
             'locale' => $this->device->locale,
             'mac' => $this->device->mac,
-            'multiConfig' => (int)$config['multiConfig'],
             'secret' => $this->device->secret ?? '',
             'settings' => [
-                'factor' => (int)$config['factor'],
-                'feedSound' => (int)$config['feedSound'],
-                'foodWarn' => (int)$config['foodWarn'],
-                'foodWarnRange' => [$config['foodWarnRange']['from'], $config['foodWarnRange']['till']],
+                'manualLock' => (int)$config['manualLock'],
                 'lightMode' => (int)$config['lightMode'],
                 'lightRange' => [$config['lightRange']['from'], $config['lightRange']['till']],
-                'manualLock' => (int)$config['manualLock'],
+                'soundEnable' => (int)$config['soundEnable'],
+                'systemSoundEnable' => (int)$config['systemSoundEnable'],
+                'volume' => (int)$config['volume'],
+                'selectedSound' => (int)$config['selectedSound'],
+                'language' => $config['language'],
+                'surplusControl' => (int)$config['surplusControl'],
+                'surplus' => (int)$config['surplus'],
+                'disturbMode' => (int)$config['disturbMode'],
+                'disturbRange' => [$config['disturbRange']['from'], $config['disturbRange']['till']],
+                'd3SoundFirmware' => $config['d3SoundFirmware'],
+                'numLimit' => (int)$config['numLimit'],
             ],
-            'shareOpen' => $config['shareOpen'],
             'signupAt' => Carbon::now()->format('Y-m-d\TH:i:s.v\Z'),
             'sn' => $this->device->serial_number,
             'timezone' => $this->device->timezone,
@@ -312,7 +318,7 @@ class PetkitFreshElementSolo implements DeviceDefinition, BluetoothProxyInterfac
 
     }
 
-    public function toFeed(Device $device): string
+    public function toFeed(DeviceModel $device): string
     {
         $latest = Time::calculateLatest($device->configuration['schedule']);
         $nextTick = last($latest) ?: ['a' => 0, 'id' => '', 't' => 0];

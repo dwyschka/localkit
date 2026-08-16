@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Petkit\Devices\Configuration;
+namespace App\Petkit\Devices\EversweetUltra;
 
 use App\DTOs\DeviceConfigurationDTO;
 use App\Homeassistant\BinarySensor;
@@ -14,6 +14,7 @@ use App\Homeassistant\Select;
 use App\Homeassistant\Sensor;
 use App\Models\BluetoothDevice;
 use App\Models\Device;
+use App\Petkit\Devices\Configuration\ConfigurationInterface;
 use App\Petkit\Interfaces\HasCamera;
 use Illuminate\Support\Facades\Storage;
 use WendellAdriel\ValidatedDTO\Casting\ArrayCast;
@@ -27,7 +28,7 @@ use WendellAdriel\ValidatedDTO\Casting\StringCast;
  * with camera, auto water change and a heater.
  *
  * NOTE: the property names must match the device's setting keys exactly, since
- * {@see \App\Petkit\Devices\PetkitEversweetUltra::propertyChange()} diffs the stored
+ * {@see \App\Petkit\Devices\EversweetUltra\Device::propertyChange()} diffs the stored
  * `settings` array and forwards the changed keys straight to the device.
  * Keys marked "(local file only)" in `IMPLEMENT/w7h_config_keys.csv` are not
  * remotely settable over property_set - they are still kept here for parity
@@ -46,7 +47,7 @@ use WendellAdriel\ValidatedDTO\Casting\StringCast;
  * dead/shared-SDK leftovers from other device families (D4sh, T6, T7, AQ1S)
  * and are never exposed to W7H users.
  */
-class PetkitEversweetUltra extends DeviceConfigurationDTO implements ConfigurationInterface, Video, Snapshot, HasCamera
+class Configuration extends DeviceConfigurationDTO implements ConfigurationInterface, Video, Snapshot, HasCamera
 {
     // States
     #[Sensor(

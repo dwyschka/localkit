@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Petkit\UI;
+namespace App\Petkit\Devices\PuraMax;
 
 use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\TextInput;
@@ -15,7 +15,7 @@ use Filament\Forms\Components\TimePicker;
 use Illuminate\Support\Carbon;
 use Filament\Forms;
 
-class PetkitPuraMax
+class UI
 {
 
     public function formFields(): array

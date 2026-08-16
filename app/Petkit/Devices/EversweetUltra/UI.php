@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Petkit\UI;
+namespace App\Petkit\Devices\EversweetUltra;
 
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\View;
@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\HtmlString;
 use Filament\Forms;
 
-class PetkitEversweetUltra
+class UI
 {
 
     public function formFields(): array

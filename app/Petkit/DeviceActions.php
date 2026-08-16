@@ -11,7 +11,7 @@ use App\Jobs\ServiceStart;
 use App\Localkit\OTA;
 use App\Models\BluetoothDevice;
 use App\Models\Device;
-use App\Petkit\Devices\PetkitYumshareDual;
+use App\Petkit\Devices\YumshareDual\Device as PetkitYumshareDual;
 use Filament\Actions\ActionGroup;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;

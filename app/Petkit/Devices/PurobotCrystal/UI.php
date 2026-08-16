@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Petkit\UI;
+namespace App\Petkit\Devices\PurobotCrystal;
 
 use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\TextInput;
@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\HtmlString;
 use Filament\Forms;
 
-class PetkitPurobotCrystal
+class UI
 {
 
     public function formFields(): array

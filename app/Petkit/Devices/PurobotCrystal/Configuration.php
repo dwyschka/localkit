@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Petkit\Devices\Configuration;
+namespace App\Petkit\Devices\PurobotCrystal;
 
 use App\DTOs\DeviceConfigurationDTO;
 use App\DTOs\MultiRangeDTO;
@@ -15,6 +15,7 @@ use App\Homeassistant\Select;
 use App\Homeassistant\Sensor;
 use App\Models\BluetoothDevice;
 use App\Models\Device;
+use App\Petkit\Devices\Configuration\ConfigurationInterface;
 use App\Petkit\Interfaces\HasCamera;
 use Illuminate\Support\Facades\Storage;
 use WendellAdriel\ValidatedDTO\Casting\ArrayCast;
@@ -28,10 +29,10 @@ use WendellAdriel\ValidatedDTO\Casting\StringCast;
  * self-cleaning litter box using crystal litter with a spray/deodorant unit.
  *
  * NOTE: the property names must match the device's setting keys exactly, since
- * {@see \App\Petkit\Devices\PetkitPurobotCrystal::propertyChange()} diffs the
+ * {@see \App\Petkit\Devices\PurobotCrystal\Device::propertyChange()} diffs the
  * stored `settings` array and forwards the changed keys straight to the device.
  */
-class PetkitPurobotCrystal extends DeviceConfigurationDTO implements ConfigurationInterface, Video, Snapshot, HasCamera
+class Configuration extends DeviceConfigurationDTO implements ConfigurationInterface, Video, Snapshot, HasCamera
 {
     public array $schedule;
 
