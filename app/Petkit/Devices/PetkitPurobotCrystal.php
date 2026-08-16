@@ -7,6 +7,7 @@ use Throwable;
 use App\DTOs\PetkitDTOInterface;
 use App\Helpers\JsonHelper;
 use App\Helpers\Time;
+use App\Homeassistant\EventPublisher;
 use App\Homeassistant\HomeassistantTopic;
 use App\Homeassistant\Interfaces\Snapshot;
 use App\Jobs\ServiceConnect;
@@ -16,6 +17,7 @@ use App\Jobs\SetProperty;
 use App\Jobs\TakeSnapshot;
 use App\Models\BluetoothDevice;
 use App\Models\Device;
+use App\Models\History;
 use App\MQTT\GenericReply;
 use App\Petkit\BluetoothDevices\BluetoothProxyInterface;
 use App\Petkit\BluetoothDevices\Message;
@@ -101,6 +103,16 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
                 ]);
             },
             sprintf('/sys/%s/%s/thing/event/pet_detect/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+                if (isset($message->params->event_id)) {
+                    History::create([
+                        'messageId' => $message->params->event_id,
+                        'pet_id' => null,
+                        'type' => 'DETECT',
+                        'parameters' => json_decode($message->params->content ?? '{}', true),
+                        'device_id' => $device->id,
+                    ]);
+                    EventPublisher::publish($device, 'detect');
+                }
 
                 $state = json_decode($message?->params?->state, false);
                 $state->petDetected = 1;
@@ -116,7 +128,21 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
                 ]);
 
             },
+            // pet_in/pet_out share one event_id (like D4SH's eat_start/
+            // eat_over) - no weight sensor on this device, so unlike
+            // PuraMax's pet_out this can't match a pet by weight.
             sprintf('/sys/%s/%s/thing/event/pet_in/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+                if (isset($message->params->event_id)) {
+                    History::create([
+                        'messageId' => $message->params->event_id,
+                        'pet_id' => null,
+                        'type' => 'IN_USE',
+                        'parameters' => json_decode($message->params->content ?? '{}', true),
+                        'device_id' => $device->id,
+                    ]);
+                    EventPublisher::publish($device, 'in_use_start');
+                }
+
                 $configuration = $this->configurationDefinition();
                 $configuration->petDetected = true;
 
@@ -125,6 +151,9 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
                 ]);
             },
             sprintf('/sys/%s/%s/thing/event/pet_out/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+                $this->mergeHistory($message?->params?->event_id, $message?->params?->content);
+                EventPublisher::publish($device, 'in_use_over');
+
                 $configuration = $this->configurationDefinition();
                 $configuration->petDetected = false;
 
@@ -133,6 +162,23 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
                 ]);
             },
             sprintf('/sys/%s/%s/thing/event/work_start/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+                $content = json_decode($message?->params?->content ?? '{}', true);
+
+                // action 0 is the same "start cleaning" code used when we send
+                // the command ourselves (see startCleaning()) - other action
+                // codes (2 = deodorize, 4 = level, 7 = lightning) are already
+                // reported through their own dedicated *_over topics.
+                if (isset($message->params->event_id) && ($content['action'] ?? null) === 0) {
+                    History::create([
+                        'messageId' => $message->params->event_id,
+                        'pet_id' => null,
+                        'type' => 'CLEANING',
+                        'parameters' => $content,
+                        'device_id' => $device->id,
+                    ]);
+                    EventPublisher::publish($device, 'cleaning');
+                }
+
                 $state = json_decode($message?->params?->state, false);
 
                 $device->update([
@@ -159,7 +205,74 @@ class PetkitPurobotCrystal implements DeviceDefinition, Snapshot, BluetoothProxy
                     'configuration' => $this->updateConfiguration($state)
                 ]);
             },
+            // Deodorize-cycle completion. No dedicated History type fits this
+            // (it's not one of IN_USE/CLEANING/MAINTENANCE/ERROR/DETECT), so
+            // this just clears working_state the same way clean_over does -
+            // otherwise a deodorize cycle (work_start action 2) would leave
+            // working_state stuck on CLEANING (see property/post's comment:
+            // it's the only topic driving working_state, and it can't tell
+            // "cleaning" and "deodorizing" apart on its own).
+            sprintf('/sys/%s/%s/thing/event/spray_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+                $state = json_decode($message?->params?->state, false);
+
+                $device->update([
+                    'error' => $this->prepareErrorReporting($state),
+                    'configuration' => $this->updateConfiguration($state)
+                ]);
+            },
+            // error_start/error_over share one event_id, like drink_start/
+            // drink_over on the W7H.
+            sprintf('/sys/%s/%s/thing/event/error_start/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+                $content = json_decode($message?->params?->content ?? '{}', true);
+
+                if (isset($message->params->event_id)) {
+                    History::create([
+                        'messageId' => $message->params->event_id,
+                        'pet_id' => null,
+                        'type' => 'ERROR',
+                        'parameters' => $content,
+                        'device_id' => $device->id,
+                    ]);
+                    EventPublisher::publish($device, 'error_start');
+                }
+
+                $device->update(['error' => $content['err'] ?? null]);
+            },
+            sprintf('/sys/%s/%s/thing/event/error_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
+                $this->mergeHistory($message?->params?->event_id, $message?->params?->content);
+                EventPublisher::publish($device, 'error_over');
+
+                $device->update(['error' => null]);
+            },
         ];
+    }
+
+    /**
+     * Merges a follow-up event's content into the History row created for
+     * the event it belongs to (found by messageId - the same event_id for
+     * start/over pairs like pet_in/pet_out or error_start/error_over).
+     * Silently does nothing if there's no matching row.
+     */
+    private function mergeHistory(?string $messageId, ?string $rawContent): void
+    {
+        if ($messageId === null) {
+            return;
+        }
+
+        $history = History::where('messageId', $messageId)->first();
+
+        if ($history === null) {
+            return;
+        }
+
+        $content = json_decode($rawContent ?? '{}', true) ?? [];
+
+        $history->update([
+            'parameters' => [
+                ...$history->parameters,
+                ...$content,
+            ],
+        ]);
     }
 
     private function reply(string $topic, ?stdClass $message)

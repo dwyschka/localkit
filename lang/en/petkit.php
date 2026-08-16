@@ -4,6 +4,9 @@ return [
     'unknown' => 'Unknown',
     'history' => [
         'in_use' => 'In use by :name (:weight kg) for :duration seconds',
+        // No weight sensor on some devices (e.g. Purobot Crystal) - falls
+        // back to this when parameters carry no pet_weight.
+        'in_use_no_weight' => 'In use for :duration seconds',
         'in_use_title' => 'Cat pooping',
         'cleaning' => 'Manual Cleaning',
         'cleaning_title' => 'Manual Cleaning',

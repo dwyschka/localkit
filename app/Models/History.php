@@ -82,6 +82,14 @@ class History extends Model
 
         $duration = $params['time_out'] - $params['time_in'];
 
+        // Not every litter box reports pet_weight (e.g. Purobot Crystal has
+        // no weight sensor), so there's no pet to match by weight either.
+        if (!isset($params['pet_weight'])) {
+            return __('petkit.history.in_use_no_weight', [
+                'duration' => $duration,
+            ]);
+        }
+
         return __('petkit.history.in_use', [
             'name' => $this->pet?->name ?? __('petkit.unknown'),
             // pet_weight is reported in grams by the device — show it in kg.

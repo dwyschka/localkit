@@ -24,7 +24,7 @@ class EventPublisher
         $event = new Event(
             technicalName: 'history_event',
             name: 'Activity',
-            eventTypes: ['eat_start', 'eat_over', 'drink_start', 'drink_over', 'detect', 'in_use', 'cleaning', 'maintenance', 'error'],
+            eventTypes: ['eat_start', 'eat_over', 'drink_start', 'drink_over', 'detect', 'in_use_start', 'in_use_over', 'cleaning', 'maintenance', 'error_start', 'error_over'],
             icon: 'mdi:history',
         );
         $event->setDevice($device);
