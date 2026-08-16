@@ -5,6 +5,7 @@ namespace App\Petkit\Devices;
 use stdClass;
 use App\DTOs\PetkitDTOInterface;
 use App\Helpers\JsonHelper;
+use App\Homeassistant\EventPublisher;
 use App\Homeassistant\HomeassistantTopic;
 use App\Homeassistant\Interfaces\Snapshot;
 use App\Jobs\AddWaterReset;
@@ -174,12 +175,14 @@ class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxy
                         'parameters' => json_decode($message->params->content ?? '{}', true),
                         'device_id' => $device->id,
                     ]);
+                    EventPublisher::publish($device, 'drink_start');
                 }
 
                 $this->parseState($device, $message);
             },
             sprintf('/sys/%s/%s/thing/event/drink_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
                 $this->mergeHistory($message?->params?->event_id, $message?->params?->content);
+                EventPublisher::publish($device, 'drink_over');
 
                 $this->parseState($device, $message);
             },
