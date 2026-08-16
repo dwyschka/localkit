@@ -31,10 +31,11 @@ class DevDiscernPicResource extends PetkitHttpResource
                     'color' => $pet->color ?? '#808080',
                     'discern' => collect($pet->images)
                         ->values()
-                        ->map(fn (string $path, int $index) => [
-                            // Stable per pet+image, so the device can tell
-                            // whether it already has a given picture cached.
-                            'id' => $pet->id * 1000 + $index,
+                        ->map(fn (string $path) => [
+                            // The device correlates discern pictures back to
+                            // a pet by this id - it must be the pet's real
+                            // id, not a synthesized per-image value.
+                            'id' => $pet->id,
                             'url' => $endpoint . Storage::disk('public')->url($path),
                         ])
                         ->all(),
