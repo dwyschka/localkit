@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Homeassistant\Event;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
+use PhpMqtt\Client\Facades\MQTT;
 
 class History extends Model
 {
@@ -16,6 +19,54 @@ class History extends Model
     protected $casts = [
         'parameters' => 'array',
     ];
+
+    /**
+     * Every type message()/typeMeta() know about (IN_USE, CLEANING,
+     * MAINTENANCE, ERROR, EAT, DRINK, DETECT) - declared as HA Event's
+     * event_types up front for every device, since a given device only
+     * ever fires a subset of these but discovery needs the full list
+     * regardless of which device it's attached to.
+     */
+    public const HA_EVENT_TYPES = ['in_use', 'cleaning', 'maintenance', 'error', 'eat', 'drink', 'detect'];
+
+    protected static function booted(): void
+    {
+        self::created(function (History $history) {
+            if (! config('app.enable.homeassistant')) {
+                return;
+            }
+
+            $device = $history->device;
+            if (! $device) {
+                return;
+            }
+
+            $event = new Event(
+                technicalName: 'history_event',
+                name: 'Activity',
+                eventTypes: self::HA_EVENT_TYPES,
+                icon: 'mdi:history',
+            );
+            $event->setDevice($device);
+            $payload = $event->payload();
+
+            $mqtt = MQTT::connection('homeassistant-publisher');
+            // Discovery is retained (so the entity survives a HA restart even
+            // between activities), but the event itself is not - a stale
+            // retained "last event" would just refire on every reconnect.
+            $mqtt->publish($event->toTopic(), json_encode($payload), 0, true);
+            $mqtt->publish($payload['state_topic'], json_encode([
+                'event_type' => Str::lower($history->type),
+                'message' => $history->message(),
+                'pet' => $history->pet?->name,
+            ]), 0, false);
+            $mqtt->disconnect();
+        });
+    }
+
+    public function device(): BelongsTo {
+        return $this->belongsTo(Device::class);
+    }
 
     public function pet(): HasOne {
         return $this->hasOne(Pet::class, 'id', 'pet_id');
