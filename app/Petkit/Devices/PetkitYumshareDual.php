@@ -6,6 +6,7 @@ use stdClass;
 use App\DTOs\PetkitDTOInterface;
 use App\Helpers\JsonHelper;
 use App\Helpers\Time;
+use App\Homeassistant\EventPublisher;
 use App\Homeassistant\HomeassistantTopic;
 use App\Homeassistant\Interfaces\Snapshot;
 use App\Jobs\FeedRealtime;
@@ -82,6 +83,7 @@ class PetkitYumshareDual implements DeviceDefinition, Snapshot, BluetoothProxyIn
             },
             sprintf('/sys/%s/%s/thing/event/eat_over/post', $this->device->productKey(), $this->device->deviceName()) => function (Device $device, string $topic, stdClass|null $message) {
                 $this->mergeHistory($message?->params?->event_id, $message?->params?->content);
+                EventPublisher::publish($device, 'eat_over');
 
                 $this->parseState($device, $message);
             },
@@ -94,6 +96,7 @@ class PetkitYumshareDual implements DeviceDefinition, Snapshot, BluetoothProxyIn
                         'parameters' => json_decode($message->params->content ?? '{}', true),
                         'device_id' => $device->id,
                     ]);
+                    EventPublisher::publish($device, 'eat_start');
                 }
 
                 $this->parseState($device, $message);
@@ -116,6 +119,7 @@ class PetkitYumshareDual implements DeviceDefinition, Snapshot, BluetoothProxyIn
                         'parameters' => json_decode($message->params->content ?? '{}', true),
                         'device_id' => $device->id,
                     ]);
+                    EventPublisher::publish($device, 'detect');
                 }
 
                 $this->parseState($device, $message, mutate: function (stdClass $state) use ($device) {

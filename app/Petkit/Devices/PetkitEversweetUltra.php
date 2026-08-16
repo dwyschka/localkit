@@ -136,6 +136,7 @@ class PetkitEversweetUltra implements DeviceDefinition, Snapshot, BluetoothProxy
                         'parameters' => json_decode($message->params->content ?? '{}', true),
                         'device_id' => $device->id,
                     ]);
+                    EventPublisher::publish($device, 'detect');
                 }
 
                 $this->parseState($device, $message, mutate: function (stdClass $state) use ($device) {
