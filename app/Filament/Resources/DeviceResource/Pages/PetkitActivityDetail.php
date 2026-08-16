@@ -19,6 +19,10 @@ class PetkitActivityDetail extends Page
 
     public function mount(int|string $record, int|string $historyId): void
     {
+        // Diagnostic page (raw MQTT parameters, per-file object keys,
+        // segment breakdown) - not meant for day-to-day use, only debugging.
+        abort_unless(config('app.debug'), 404);
+
         $this->record = $this->resolveRecord($record);
 
         $this->history = History::with('media')

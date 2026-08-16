@@ -64,30 +64,32 @@
 
                         <div class="petkit-timeline__title">
                             {{ $history->title() }}
-                            <a
-                                href="{{ \App\Filament\Resources\DeviceResource::getUrl('activity', ['record' => $this->record, 'historyId' => $history->id]) }}"
-                                class="petkit-timeline__info"
-                                title="View details"
-                            >
-                                @svg('heroicon-m-information-circle')
-                            </a>
+                            @if (config('app.debug'))
+                                <a
+                                    href="{{ \App\Filament\Resources\DeviceResource::getUrl('activity', ['record' => $this->record, 'historyId' => $history->id]) }}"
+                                    class="petkit-timeline__info"
+                                    title="View details"
+                                >
+                                    @svg('heroicon-m-information-circle')
+                                </a>
+                            @endif
                         </div>
                         <div class="petkit-timeline__desc">{!! $history->message() !!}</div>
                         <div class="petkit-timeline__date">
                             {{ $history->created_at?->timezone('Europe/Berlin')?->format('F j, Y · H:i') }}
                         </div>
 
-                        @if ($history->media->isNotEmpty())
+                        @php($listingMedia = \App\Filament\Resources\DeviceResource\Pages\PetkitActivities::mediaForListing($history->media))
+                        @if ($listingMedia['image'] || $listingMedia['video'])
                             <div class="petkit-timeline__media">
-                                @foreach (\App\Filament\Resources\DeviceResource\Pages\PetkitActivities::sortMediaForListing($history->media) as $clip)
-                                    @if ($clip->isVideo())
-                                        <video src="{{ route('media.file', ['fileId' => $clip->file_id]) }}" controls preload="none"></video>
-                                    @else
-                                        <a href="{{ route('media.file', ['fileId' => $clip->file_id]) }}" target="_blank">
-                                            <img src="{{ route('media.file', ['fileId' => $clip->file_id]) }}" alt="Capture" loading="lazy" />
-                                        </a>
-                                    @endif
-                                @endforeach
+                                @if ($listingMedia['image'])
+                                    <a href="{{ route('media.file', ['fileId' => $listingMedia['image']->file_id]) }}" target="_blank">
+                                        <img src="{{ route('media.file', ['fileId' => $listingMedia['image']->file_id]) }}" alt="Capture" loading="lazy" />
+                                    </a>
+                                @endif
+                                @if ($listingMedia['video'])
+                                    <video src="{{ route('media.file', ['fileId' => $listingMedia['video']->file_id]) }}" controls preload="none"></video>
+                                @endif
                             </div>
                         @endif
                     </div>

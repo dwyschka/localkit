@@ -39,9 +39,8 @@ class PetkitActivities extends Page
     }
 
     /**
-     * Display order for the media thumbnails in the timeline/unlinked
-     * listings (not the per-activity detail page, which shows everything in
-     * a table) - the still preview image first, then the video.
+     * Display order for the media thumbnails in the timeline listing - the
+     * still preview image first, then the video.
      *
      * @param Collection<int, MediaFile> $media
      * @return Collection<int, MediaFile>
@@ -53,6 +52,25 @@ class PetkitActivities extends Page
             'CLOUD_STORAGE' => 1,
             default => 2,
         })->values();
+    }
+
+    /**
+     * The timeline listing shows at most one preview image and one video per
+     * activity, not every linked file (that's what the detail page's Files
+     * table is for) - an event can have several CLOUD_STORAGE/EVENT_PREVIEW
+     * rows (segments, retries) and the listing only needs one of each kind.
+     *
+     * @param Collection<int, MediaFile> $media
+     * @return array{image: ?MediaFile, video: ?MediaFile}
+     */
+    public static function mediaForListing(Collection $media): array
+    {
+        $sorted = self::sortMediaForListing($media);
+
+        return [
+            'image' => $sorted->first(fn (MediaFile $clip) => ! $clip->isVideo()),
+            'video' => $sorted->first(fn (MediaFile $clip) => $clip->isVideo()),
+        ];
     }
 
     /**
