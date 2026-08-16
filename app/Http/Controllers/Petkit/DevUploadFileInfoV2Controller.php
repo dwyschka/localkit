@@ -157,7 +157,24 @@ class DevUploadFileInfoV2Controller extends Controller
         $existed = $disk->exists($combinedTsKey);
         $previousSize = $existed ? $disk->size($combinedTsKey) : 0;
 
-        $combined = $existed ? $disk->get($combinedTsKey) . $plain : $plain;
+        if ($existed) {
+            try {
+                $combined = VideoRemuxer::concatTs($disk->get($combinedTsKey), $plain);
+            } catch (Throwable $e) {
+                // Worse (this segment's timestamps won't line up), but still
+                // keeps the bytes rather than dropping the segment entirely.
+                Log::warning('ffmpeg concat failed, falling back to raw append', [
+                    'event' => $combinedFileId,
+                    'segment' => $fileInfo['fileId'],
+                    'error' => $e->getMessage(),
+                ]);
+
+                $combined = $disk->get($combinedTsKey) . $plain;
+            }
+        } else {
+            $combined = $plain;
+        }
+
         $disk->put($combinedTsKey, $combined);
         $disk->delete($segmentKey);
 
