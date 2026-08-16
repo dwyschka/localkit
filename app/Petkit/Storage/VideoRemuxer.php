@@ -93,15 +93,17 @@ class VideoRemuxer
     }
 
     /**
-     * Re-encodes (not a remux - full decode/encode) a .ts whose discontinuous
-     * per-segment timestamps are already baked in, e.g. one combined with the
-     * old raw-byte-concat method before VideoRemuxer::concatTs() existed.
-     * `-c copy` alone can't fix this: it's a stream copy, so the original
-     * (broken) PTS/DTS pass through mostly unchanged - only actually decoding
-     * every frame and letting the encoder re-timestamp them in presentation
-     * order produces a genuinely continuous timeline. Slower and lossy
-     * (re-encode), so this is only for the manual "fix this clip" action,
-     * not the routine per-segment append path.
+     * Re-encodes (not a remux - full decode/encode) a .ts to MP4, letting the
+     * encoder assign a fresh, monotonically increasing timeline instead of
+     * carrying through whatever PTS/DTS are already in the source bytes.
+     * `-c copy` alone can't do this: it's a stream copy, so discontinuous
+     * per-segment timestamps (or drift that compounds across many appended
+     * segments even with VideoRemuxer::concatTs() retiming each one) pass
+     * through mostly unchanged. This is the standard step used when
+     * decrypting and combining CLOUD_STORAGE segments (see
+     * DevUploadFileInfoV2Controller::appendCloudStorageSegment) - slower and
+     * lossy than a stream copy, but the only way to guarantee the MP4 in
+     * front of the user always plays as one continuous clip.
      */
     public static function reencodeMp4(string $ts): string
     {

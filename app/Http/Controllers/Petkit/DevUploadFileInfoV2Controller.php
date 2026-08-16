@@ -212,11 +212,18 @@ class DevUploadFileInfoV2Controller extends Controller
         $media->save();
 
         try {
+            // Re-encode, not a -c copy remux: a stream copy just passes
+            // through whatever PTS/DTS are already in $combined, and even
+            // with concatTs() retiming each append, tiny per-segment drift
+            // compounds over many segments. Actually decoding and
+            // re-encoding forces one fresh, monotonic timeline on every
+            // append, so the MP4 in front of the user is always correct
+            // rather than only "good so far".
             $mp4Key = VideoRemuxer::mp4Key($combinedTsKey);
-            $disk->put($mp4Key, VideoRemuxer::toMp4($combined));
+            $disk->put($mp4Key, VideoRemuxer::reencodeMp4($combined));
             $media->update(['object_key' => $mp4Key]);
         } catch (Throwable $e) {
-            Log::warning('TS to MP4 remux failed at upload time', [
+            Log::warning('TS to MP4 re-encode failed at upload time', [
                 'object' => $combinedTsKey,
                 'error' => $e->getMessage(),
             ]);

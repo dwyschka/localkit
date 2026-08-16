@@ -125,7 +125,6 @@
                             <th>Duration</th>
                             <th>Decrypted</th>
                             <th>Object key</th>
-                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -152,24 +151,11 @@
                                     />
                                 </td>
                                 <td><code>{{ $clip->object_key }}</code></td>
-                                <td>
-                                    @if (!empty($clip->segments))
-                                        <x-filament::button
-                                            color="gray"
-                                            size="xs"
-                                            icon="heroicon-m-wrench-screwdriver"
-                                            wire:click="fixVideo({{ $clip->id }})"
-                                            wire:confirm="Recalculate duration and re-remux this video from its combined .ts?"
-                                        >
-                                            Fix
-                                        </x-filament::button>
-                                    @endif
-                                </td>
                             </tr>
                             @if (!empty($clip->segments))
                                 <tr>
                                     <td></td>
-                                    <td colspan="8">
+                                    <td colspan="7">
                                         <details>
                                             <summary style="cursor:pointer;color:var(--gray-500);">
                                                 {{ count($clip->segments) }} merged segment(s)
