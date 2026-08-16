@@ -31,11 +31,17 @@ class DevDiscernPicResource extends PetkitHttpResource
                     'color' => $pet->color ?? '#808080',
                     'discern' => collect($pet->images)
                         ->values()
-                        ->map(fn (string $path) => [
-                            // The device correlates discern pictures back to
-                            // a pet by this id - it must be the pet's real
-                            // id, not a synthesized per-image value.
-                            'id' => $pet->id,
+                        ->map(fn (string $path, int $index) => [
+                            // Unique per image, but still traceable back to
+                            // the pet: 6 digits total, pet id first, then a
+                            // zero-padded ascending number (1, 2, 3, ...)
+                            // filling the rest.
+                            'id' => (int) ($pet->id . str_pad(
+                                (string) ($index + 1),
+                                max(1, 6 - strlen((string) $pet->id)),
+                                '0',
+                                STR_PAD_LEFT
+                            )),
                             'url' => $endpoint . Storage::disk('public')->url($path),
                         ])
                         ->all(),
