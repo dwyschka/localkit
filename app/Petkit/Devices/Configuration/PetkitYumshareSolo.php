@@ -5,7 +5,6 @@ namespace App\Petkit\Devices\Configuration;
 use App\DTOs\DeviceConfigurationDTO;
 use App\DTOs\RangeDTO;
 use App\Homeassistant\BinarySensor;
-use App\Homeassistant\Button;
 use App\Homeassistant\HASwitch;
 use App\Homeassistant\Image;
 use App\Homeassistant\Interfaces\Snapshot;
@@ -577,16 +576,10 @@ class PetkitYumshareSolo extends DeviceConfigurationDTO implements Configuration
     )]
     public int $hertz;
 
-    // Buttons
-    #[Button(
-        technicalName: 'action_feed',
-        name: 'Feed',
-        commandTopic: 'action/start',
-        icon: 'mdi:information-outline',
-        commandTemplate: '{"action": "feed"}',
-        availabilityTemplate: 'online',
-    )]
-    private $actionFeed = 1;
+    // Feed is a service call, not a Button entity - call HA's mqtt.publish
+    // with {"action":"feed","amount":N} on the action/start topic instead
+    // (see PetkitYumshareSolo::action()), so the amount can be set per call
+    // rather than always using whatever's configured.
 
     #[Number(
         technicalName: 'desiccant_durability',
