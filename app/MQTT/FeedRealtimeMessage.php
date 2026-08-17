@@ -12,9 +12,9 @@ class FeedRealtimeMessage
 {
 
     public static function send(Device $device, array $payload = ['amount' => 10]): AnswerDTO {
-        return new AnswerDTO([
-            'topic' => sprintf('/sys/%s/%s/thing/service/feed_realtime', $device->productKey(), $device->deviceName()),
-            'message' => (FeedRealtime::make($device))->setPayload($payload),
-        ]);
+        return new AnswerDTO(
+            topic: sprintf('/sys/%s/%s/thing/service/feed_realtime', $device->productKey(), $device->deviceName()),
+            message: (FeedRealtime::make($device))->setPayload($payload),
+        );
     }
 }

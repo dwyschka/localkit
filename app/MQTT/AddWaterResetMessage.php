@@ -18,9 +18,9 @@ use App\Models\Device;
 class AddWaterResetMessage
 {
     public static function send(Device $device): AnswerDTO {
-        return new AnswerDTO([
-            'topic' => sprintf('/sys/%s/%s/thing/service/add_water_reset', $device->productKey(), $device->deviceName()),
-            'message' => AddWaterReset::make($device),
-        ]);
+        return new AnswerDTO(
+            topic: sprintf('/sys/%s/%s/thing/service/add_water_reset', $device->productKey(), $device->deviceName()),
+            message: AddWaterReset::make($device),
+        );
     }
 }

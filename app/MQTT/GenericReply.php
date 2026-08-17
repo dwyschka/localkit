@@ -10,9 +10,9 @@ class GenericReply
 
     public static function reply(string $topic, mixed $message): AnswerDTO
     {
-        return new AnswerDTO([
-            'topic' => sprintf('%s_reply', $topic),
-            'message' => SuccessResource::make($message),
-        ]);
+        return new AnswerDTO(
+            topic: sprintf('%s_reply', $topic),
+            message: SuccessResource::make($message)
+        );
     }
 }

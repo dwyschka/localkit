@@ -3,33 +3,17 @@
 namespace App\MQTT;
 
 use Illuminate\Http\Resources\Json\JsonResource;
-use WendellAdriel\ValidatedDTO\Casting\StringCast;
-use WendellAdriel\ValidatedDTO\ValidatedDTO;
+use Illuminate\Support\Str;
 
-class AnswerDTO extends ValidatedDTO
+class AnswerDTO
 {
 
-    public string $topic;
-    public JsonResource $message;
 
-    protected function rules(): array
+    public function __construct(
+        protected string       $topic,
+        protected JsonResource $message
+    )
     {
-        return [
-            'topic' => ['required', 'string'],
-            'message' => ['required'],
-        ];
-    }
-
-    protected function defaults(): array
-    {
-        return [];
-    }
-
-    protected function casts(): array
-    {
-        return [
-            'topic' => new StringCast(),
-        ];
     }
 
     public function getTopic(): string

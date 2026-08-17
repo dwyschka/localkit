@@ -14,10 +14,10 @@ class OtaMessage
         $msg = OtaResource::make($device);
 
 
-        return new AnswerDTO([
-            'topic' => sprintf('/ota/device/upgrade/%s/%s', $device->productKey(), $device->deviceName()),
-            'message' => $msg,
-        ]);
+        return new AnswerDTO(
+            topic: sprintf('/ota/device/upgrade/%s/%s', $device->productKey(), $device->deviceName()),
+            message: $msg,
+        );
     }
 }
 

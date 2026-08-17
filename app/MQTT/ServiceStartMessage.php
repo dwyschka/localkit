@@ -15,9 +15,9 @@ class ServiceStartMessage
         $action = new stdClass();
         $action->start = $service;
 
-        return new AnswerDTO([
-            'topic' => sprintf('/sys/%s/%s/thing/service/start', $device->productKey(), $device->deviceName()),
-            'message' => (ServiceStart::make($device))->setPayload(['action' => $action]),
-        ]);
+        return new AnswerDTO(
+            topic: sprintf('/sys/%s/%s/thing/service/start', $device->productKey(), $device->deviceName()),
+            message: (ServiceStart::make($device))->setPayload(['action' => $action]),
+        );
     }
 }
