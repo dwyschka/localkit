@@ -16,9 +16,9 @@ class ServiceEndMessage
         $action = new stdClass();
         $action->end = $service;
 
-        return new AnswerDTO(
-            topic: sprintf('/sys/%s/%s/thing/service/end', $device->productKey(), $device->deviceName()),
-            message: (ServiceEnd::make($device))->setPayload(['action' => $action]),
-        );
+        return new AnswerDTO([
+            'topic' => sprintf('/sys/%s/%s/thing/service/end', $device->productKey(), $device->deviceName()),
+            'message' => (ServiceEnd::make($device))->setPayload(['action' => $action]),
+        ]);
     }
 }

@@ -21,10 +21,10 @@ class UserGet
 
         $message = self::toStateReply($message);
 
-        return new AnswerDTO(
-            topic: sprintf('/%s/%s/user/get', $deviceId, $deviceName),
-            message: $message,
-        );
+        return new AnswerDTO([
+            'topic' => sprintf('/%s/%s/user/get', $deviceId, $deviceName),
+            'message' => $message,
+        ]);
     }
 
     public static function reply(string $deviceId, string $deviceName, $message): ?AnswerDTO {
@@ -55,10 +55,10 @@ class UserGet
             'datatype' => $message?->params?->dataType ?? ''
         ]);
 
-        return new AnswerDTO(
-            topic: sprintf('/%s/%s/user/get', $deviceId, $deviceName),
-            message: $message,
-        );
+        return new AnswerDTO([
+            'topic' => sprintf('/%s/%s/user/get', $deviceId, $deviceName),
+            'message' => $message,
+        ]);
     }
 
     private static function toDevDeviceInfo($message): JsonResource

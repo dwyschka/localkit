@@ -14,9 +14,9 @@ class ServiceConnectMessage
 
         $action = new stdClass();
 
-        return new AnswerDTO(
-            topic: sprintf('/sys/%s/%s/thing/service/connect', $device->productKey(), $device->deviceName()),
-            message: (ServiceConnect::make($device))->setBluetoothDevice($btDevice),
-        );
+        return new AnswerDTO([
+            'topic' => sprintf('/sys/%s/%s/thing/service/connect', $device->productKey(), $device->deviceName()),
+            'message' => (ServiceConnect::make($device))->setBluetoothDevice($btDevice),
+        ]);
     }
 }
