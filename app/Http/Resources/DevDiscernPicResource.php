@@ -3,8 +3,8 @@
 namespace App\Http\Resources;
 
 use App\Models\Pet;
+use App\Models\PetImage;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class DevDiscernPicResource extends PetkitHttpResource
 {
@@ -23,30 +23,26 @@ class DevDiscernPicResource extends PetkitHttpResource
 
         return [
             'list' => Pet::query()
-                ->whereNotNull('images')
+                ->has('images')
+                ->with('images')
                 ->get()
-                ->reject(fn (Pet $pet) => empty($pet->images))
                 ->map(fn (Pet $pet) => [
                     'id' => $pet->id,
                     'color' => strtoupper($pet->color ?? '#808080'),
-                    'discern' => collect($pet->images)
-                        ->values()
-                        ->map(fn (string $path, int $index) => [
-                            // Unique per image, but still traceable back to
-                            // the pet: 6 digits total, pet id first, then a
-                            // zero-padded ascending number (1, 2, 3, ...)
-                            // filling the rest.
-                            'id' => (int) ($pet->id . str_pad(
-                                (string) ($index + 1),
-                                max(1, 6 - strlen((string) $pet->id)),
-                                '0',
-                                STR_PAD_LEFT
-                            )),
+                    'discern' => $pet->images
+                        ->map(fn (PetImage $image) => [
+                            // The PetImage row's own id - stable across
+                            // edits/reordering (see Pet::syncImages()) so a
+                            // device that's already cached this id keeps
+                            // matching the same photo.
+                            'id' => $image->id,
                             // The device can't do TLS, so this must be http
-                            // regardless of what scheme $endpoint or the
-                            // disk's own URL happen to carry.
-                            'url' => preg_replace('/^https:\/\//', 'http://', $endpoint . Storage::disk('public')->url($path)),
+                            // regardless of what scheme $endpoint happens to
+                            // carry. Extensionless on purpose (PetMediaController),
+                            // matching the real cloud's own discern URLs.
+                            'url' => preg_replace('/^https:\/\//', 'http://', $endpoint . '/pet/media/' . $image->id),
                         ])
+                        ->values()
                         ->all(),
                 ])
                 ->values()

@@ -4,6 +4,7 @@ use App\Http\Controllers\CameraThumbnailController;
 use App\Http\Controllers\LogDownloadController;
 use App\Http\Controllers\MediaDownloadController;
 use App\Http\Controllers\MediaFileController;
+use App\Http\Controllers\PetMediaController;
 use App\Http\Controllers\Petkit\ObjectStorageController;
 use App\Http\Controllers\Petkit\RepositoryController;
 use Illuminate\Support\Facades\Route;
@@ -35,6 +36,11 @@ Route::get('media/file/{fileId}', MediaFileController::class)
 // Cached still-frame thumbnail (ffmpeg) for a device's camera stream.
 Route::get('camera/{device}/thumbnail/{stream?}', CameraThumbnailController::class)
     ->name('camera.thumbnail');
+
+// Pet discern reference photo, fetched directly by the device (see
+// DevDiscernPicResource) - no auth, extensionless on purpose.
+Route::get('pet/media/{id}', PetMediaController::class)
+    ->name('pet.media');
 
 /*
  * OCI-compatible object storage emulation used by PetKit cameras.

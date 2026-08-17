@@ -90,6 +90,7 @@ class PetResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (Builder $query) => $query->with('images'))
             ->contentGrid([
                 'md' => 2,
                 'xl' => 3,
@@ -113,8 +114,8 @@ class PetResource extends Resource
                     ImageColumn::make('images')
                         ->label('Photo')
                         ->disk('public')
-                        // `images` is an array of paths — only show the first photo on the card.
-                        ->state(fn(Pet $record): ?string => $record->images[0] ?? null)
+                        // Only show the first photo on the card.
+                        ->state(fn(Pet $record): ?string => $record->images->first()?->path)
                         ->height(176)
                         ->extraImgAttributes(['class' => 'w-full rounded-lg object-cover'])
                         ->alignment('center')
