@@ -130,6 +130,8 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     )]
     public bool $lightMode;
 
+    public MultiRangeDTO $lightMultiRange;
+
     #[HASwitch(
         technicalName: 'manual_lock',
         name: 'Child lock',
@@ -221,6 +223,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'lightRange' => [],
             'shareOpen' => ['bool'],
             'lightMode' => ['bool'],
+            'lightMultiRange' => [],
             'manualLock' => ['bool'],
             'amount' => ['integer', 'min:1', 'max:100'],
             'schedule' => ['array']
@@ -238,6 +241,10 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'multiConfig' => true,
             'shareOpen' => false,
             'lightMode' => false,
+            'lightMultiRange' => [
+                'name' => 'lightMultiRange',
+                'ranges' => [['from' => 0, 'till' => 1440]],
+            ],
             'manualLock' => false,
             'desiccantDurability' => 30,
             'desiccantNextChange' => 0,
@@ -257,6 +264,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'multiConfig' => new BooleanCast(),
             'shareOpen' => new BooleanCast(),
             'lightMode' => new BooleanCast(),
+            'lightMultiRange' => new DTOCast(MultiRangeDTO::class),
             'manualLock' => new BooleanCast(),
             'foodWarn' => new BooleanCast(),
             'feedSound' => new BooleanCast(),
@@ -286,6 +294,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         $data['shareOpen'] = $config['settings']['shareOpen'] ?? null;
         $data['multiConfig'] = $config['settings']['multiConfig'] ?? null;
         $data['lightMode'] = $config['settings']['lightMode'] ?? null;
+        $data['lightMultiRange'] = $config['settings']['lightMultiRange'] ?? null;
         $data['manualLock'] = $config['settings']['manualLock'] ?? null;
         $data['foodWarn'] = $config['settings']['foodWarn'] ?? null;
         $data['feedSound'] = $config['settings']['feedSound'] ?? null;
@@ -316,6 +325,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
                 'shareOpen' => $this->shareOpen,
                 'multiConfig' => $this->multiConfig,
                 'lightMode' => $this->lightMode,
+                'lightMultiRange' => $this->lightMultiRange->toArray(),
                 'manualLock' => $this->manualLock,
                 'foodWarn' => $this->foodWarn,
                 'feedSound' => $this->feedSound,

@@ -3,6 +3,7 @@
 namespace App\Petkit\Devices\YumshareSolo;
 
 use App\DTOs\DeviceConfigurationDTO;
+use App\DTOs\MultiRangeDTO;
 use App\DTOs\RangeDTO;
 use App\Homeassistant\BinarySensor;
 use App\Homeassistant\Button;
@@ -197,6 +198,8 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         entityCategory: 'config'
     )]
     public bool $lightMode;
+
+    public MultiRangeDTO $lightMultiRange;
 
     #[HASwitch(
         technicalName: 'multi_config',
@@ -417,6 +420,8 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         entityCategory: 'config'
     )]
     public bool $toneMode;
+
+    public MultiRangeDTO $toneMultiRange;
 
     #[HASwitch(
         technicalName: 'sound_enable',
@@ -645,6 +650,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'foodWarnRange' => [],
             'manualLock' => ['bool'],
             'lightMode' => ['bool'],
+            'lightMultiRange' => [],
             'multiConfig' => ['bool'],
             'shareOpen' => ['bool'],
 
@@ -666,6 +672,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
 
             // Sound
             'toneMode' => ['bool'],
+            'toneMultiRange' => [],
             'soundEnable' => ['bool'],
             'systemSoundEnable' => ['bool'],
             'volume' => ['integer', 'min:0', 'max:9'],
@@ -715,6 +722,10 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'foodWarnRange' => ['from' => 480, 'till' => 1200],
             'manualLock' => false,
             'lightMode' => false,
+            'lightMultiRange' => [
+                'name' => 'lightMultiRange',
+                'ranges' => [['from' => 0, 'till' => 1440]],
+            ],
             'multiConfig' => true,
             'shareOpen' => false,
 
@@ -736,6 +747,10 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
 
             // Sound
             'toneMode' => false,
+            'toneMultiRange' => [
+                'name' => 'toneMultiRange',
+                'ranges' => [['from' => 0, 'till' => 1440]],
+            ],
             'soundEnable' => false,
             'systemSoundEnable' => false,
             'volume' => 4,
@@ -795,6 +810,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'foodWarnRange' => new DTOCast(RangeDTO::class),
             'manualLock' => new BooleanCast(),
             'lightMode' => new BooleanCast(),
+            'lightMultiRange' => new DTOCast(MultiRangeDTO::class),
             'multiConfig' => new BooleanCast(),
             'shareOpen' => new BooleanCast(),
 
@@ -816,6 +832,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
 
             // Sound
             'toneMode' => new BooleanCast(),
+            'toneMultiRange' => new DTOCast(MultiRangeDTO::class),
             'soundEnable' => new BooleanCast(),
             'systemSoundEnable' => new BooleanCast(),
             'volume' => new IntegerCast(),
@@ -871,6 +888,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             $data['amount'] = $settings['amount'] ?? null;
             $data['multiConfig'] = $settings['multiConfig'] ?? null;
             $data['lightMode'] = $settings['lightMode'] ?? null;
+            $data['lightMultiRange'] = $settings['lightMultiRange'] ?? null;
             $data['manualLock'] = $settings['manualLock'] ?? null;
             $data['foodWarnRange'] = $settings['foodWarnRange'] ?? null;
             $data['foodWarn'] = $settings['foodWarn'] ?? null;
@@ -896,6 +914,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
 
             // Sound settings
             $data['toneMode'] = $settings['toneMode'] ?? null;
+            $data['toneMultiRange'] = $settings['toneMultiRange'] ?? null;
             $data['soundEnable'] = $settings['soundEnable'] ?? null;
             $data['systemSoundEnable'] = $settings['systemSoundEnable'] ?? null;
             $data['volume'] = $settings['volume'] ?? null;
@@ -946,6 +965,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
                 'amount' => $this->amount,
                 'multiConfig' => $this->multiConfig,
                 'lightMode' => $this->lightMode,
+                'lightMultiRange' => $this->lightMultiRange->toArray(),
                 'manualLock' => $this->manualLock,
                 'foodWarnRange' => $this->foodWarnRange->toArray(),
                 'foodWarn' => $this->foodWarn,
@@ -971,6 +991,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
 
                 // Sound settings
                 'toneMode' => $this->toneMode,
+                'toneMultiRange' => $this->toneMultiRange->toArray(),
                 'soundEnable' => $this->soundEnable,
                 'systemSoundEnable' => $this->systemSoundEnable,
                 'volume' => $this->volume,

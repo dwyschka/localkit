@@ -602,6 +602,36 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     public bool $urine;
 
     #[HASwitch(
+        technicalName: 'auto_spray',
+        name: 'Auto Deodorizing',
+        commandTopic: 'setting/set',
+        icon: 'mdi:spray',
+        valueTemplate: '{{ value_json.settings.autoSpray }}',
+        commandTemplate: '{"autoSpray":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
+    public bool $autoSpray;
+
+    #[HASwitch(
+        technicalName: 'deep_spray',
+        name: 'Deep Deodorizing',
+        commandTopic: 'setting/set',
+        icon: 'mdi:spray',
+        valueTemplate: '{{ value_json.settings.deepSpray }}',
+        commandTemplate: '{"deepSpray":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
+    public bool $deepSpray;
+
+    #[HASwitch(
         technicalName: 'soft_mode',
         name: 'Loose Stool Recognition',
         commandTopic: 'setting/set',
@@ -865,6 +895,8 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             // Toilet
             'toiletDetection' => ['bool'],
             'urine' => ['bool'],
+            'autoSpray' => ['bool'],
+            'deepSpray' => ['bool'],
             'softMode' => ['bool'],
             'softModeClean' => ['bool'],
             'occult' => ['bool'],
@@ -990,6 +1022,8 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             // Toilet
             'toiletDetection' => true,
             'urine' => true,
+            'autoSpray' => true,
+            'deepSpray' => true,
             'softMode' => false,
             'softModeClean' => false,
             'occult' => false,
@@ -1096,6 +1130,8 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             // Toilet
             'toiletDetection' => new BooleanCast(),
             'urine' => new BooleanCast(),
+            'autoSpray' => new BooleanCast(),
+            'deepSpray' => new BooleanCast(),
             'softMode' => new BooleanCast(),
             'softModeClean' => new BooleanCast(),
             'occult' => new BooleanCast(),
@@ -1214,6 +1250,8 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             // Toilet
             $data['toiletDetection'] = $settings['toiletDetection'] ?? null;
             $data['urine'] = $settings['urine'] ?? null;
+            $data['autoSpray'] = $settings['autoSpray'] ?? null;
+            $data['deepSpray'] = $settings['deepSpray'] ?? null;
             $data['softMode'] = $settings['softMode'] ?? null;
             $data['softModeClean'] = $settings['softModeClean'] ?? null;
             $data['occult'] = $settings['occult'] ?? null;
@@ -1327,6 +1365,8 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
                 // Toilet
                 'toiletDetection' => $this->toiletDetection,
                 'urine' => $this->urine,
+                'autoSpray' => $this->autoSpray,
+                'deepSpray' => $this->deepSpray,
                 'softMode' => $this->softMode,
                 'softModeClean' => $this->softModeClean,
                 'occult' => $this->occult,

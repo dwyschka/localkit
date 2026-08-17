@@ -594,6 +594,8 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     )]
     public bool $smartFrame;
 
+    public bool $vomitDetection;
+
     #[HASwitch(
         technicalName: 'upload',
         name: 'Cloud Recording',
@@ -791,6 +793,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'surplusControl' => ['integer'],
             'surplusStandard' => ['integer'],
             'smartFrame' => ['bool'],
+            'vomitDetection' => ['bool'],
             'upload' => ['bool'],
             'serviceStatus' => ['integer'],
             'feedPicture' => ['bool'],
@@ -874,6 +877,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'surplusControl' => 0,
             'surplusStandard' => 2,
             'smartFrame' => true,
+            'vomitDetection' => false,
             'upload' => true,
             'serviceStatus' => 2,
             'feedPicture' => true,
@@ -959,6 +963,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'surplusControl' => new IntegerCast(),
             'surplusStandard' => new IntegerCast(),
             'smartFrame' => new BooleanCast(),
+            'vomitDetection' => new BooleanCast(),
             'upload' => new BooleanCast(),
             'serviceStatus' => new IntegerCast(),
             'feedPicture' => new BooleanCast(),
@@ -1052,6 +1057,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             $data['surplusControl'] = $settings['surplusControl'] ?? null;
             $data['surplusStandard'] = $settings['surplusStandard'] ?? null;
             $data['smartFrame'] = $settings['smartFrame'] ?? null;
+            $data['vomitDetection'] = $settings['vomitDetection'] ?? null;
             $data['upload'] = $settings['upload'] ?? null;
             $data['attireId'] = $settings['attireId'] ?? null;
             $data['logo_cn'] = $settings['logo_cn'] ?? null;
@@ -1140,6 +1146,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
                 'surplusControl' => $this->surplusControl,
                 'surplusStandard' => $this->surplusStandard,
                 'smartFrame' => $this->smartFrame,
+                'vomitDetection' => $this->vomitDetection,
                 'upload' => $this->upload,
                 'attireId' => $this->attireId,
                 'logo_cn' => $this->logo_cn,
