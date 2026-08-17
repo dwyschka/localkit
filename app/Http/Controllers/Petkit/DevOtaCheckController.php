@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Petkit;
 
+use stdClass;
 use App\Helpers\PetkitHeader;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\DevOtaCheckResource;
@@ -24,8 +25,8 @@ class DevOtaCheckController extends Controller
         }
 
 
-        $obj = new \stdClass();
-        $obj->result = new \stdClass();
+        $obj = new stdClass();
+        $obj->result = new stdClass();
         return new DevOtaCheckResource($obj);
     }
 }

@@ -3,79 +3,92 @@
 namespace App\Filament\Resources\DeviceResource\Pages;
 
 use App\Filament\Resources\DeviceResource;
-use App\Models\Device;
 use App\Models\History;
-use App\Models\User;
-use Filament\Infolists\Components\Section;
-use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Infolist;
+use App\Models\MediaFile;
 use Filament\Resources\Pages\Concerns\InteractsWithRecord;
 use Filament\Resources\Pages\Page;
-use JaOcero\ActivityTimeline\Components\ActivityDate;
-use JaOcero\ActivityTimeline\Components\ActivityDescription;
-use JaOcero\ActivityTimeline\Components\ActivityIcon;
-use JaOcero\ActivityTimeline\Components\ActivitySection;
-use JaOcero\ActivityTimeline\Components\ActivityTitle;
-use JaOcero\ActivityTimeline\Enums\IconAnimation;
-use JaOcero\ActivityTimeline\Pages\ActivityTimelinePage;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
+use Livewire\WithPagination;
 
 class PetkitActivities extends Page
 {
     use InteractsWithRecord;
+    use WithPagination;
 
     protected static string $resource = DeviceResource::class;
 
-    protected static string $view = 'filament.resources.device-resource.pages.petkit-activities';
+    protected string $view = 'filament.resources.device-resource.pages.petkit-activities';
 
-
-    public function mount(int|string $record)
+    public function mount(int|string $record): void
     {
-
         $this->record = $this->resolveRecord($record);
     }
 
-    public function infolist(Infolist $infolist): Infolist
+    public function getTitle(): string
     {
-        return $infolist
-            ->schema([
-                ActivitySection::make('histories')
-                    ->headingVisible(false)
-                    ->schema([
-                        ActivityTitle::make('title')
-                            ->state(fn(History $record): string => $record->title())
-                            ->label('Title')
-                            ->placeholder('No title is set')
-                            ->allowHtml(), // Be aware that you will need to ensure that the HTML is safe to render, otherwise your application will be vulnerable to XSS attacks.
-                        ActivityDescription::make('description')
-                            ->state(fn(History $record): string => $record->message())
-                            ->placeholder('No description is set')
-                            ->allowHtml(),
-                        ActivityDate::make('created_at')
-                            ->date('F j, Y', 'Europe/Berlin')
-                            ->placeholder('No date is set.'),
-                        ActivityIcon::make('type')
-                            ->icon(fn(string|null $state): string|null => match ($state) {
-                                'IN_USE' => 'heroicon-m-exclamation-triangle',
-                                'CLEANING' => 'heroicon-m-arrow-path-rounded-square',
-                                'MAINTENANCE' => 'heroicon-m-wrench-screwdriver',
-                                default => 'heroicon-m-exclamation-circle',
-                            })
-                            ->color(fn(string|null $state): string|null => match ($state) {
-                                'MAINTENANCE' => 'info',
-                                'CLEANING' => 'info',
-                                'IN_USE' => 'warning',
-                                default => 'gray',
-                            }),
-                    ])
-                    ->showItemsCount(16) // Show up to 2 items
-                    ->showItemsLabel('View Old') // Show "View Old" as link label
-                    ->showItemsIcon('heroicon-m-chevron-down') // Show button icon
-                    ->showItemsColor('gray') // Show button color and it supports all colors
-                    ->aside(false)
-                    ->headingVisible(false) // make heading visible or not
-                    ->extraAttributes(['class' => 'my-new-class']) // add extra class
-            ])
-            ->record($this->record);
+        return 'Activities — ' . ($this->record->name ?? $this->record->serial_number);
     }
 
+    /**
+     * @return LengthAwarePaginator<int, History>
+     */
+    public function getHistories(): LengthAwarePaginator
+    {
+        return $this->record->histories()->with('media')->latest()->paginate(10);
+    }
+
+    /**
+     * Display order for the media thumbnails in the timeline listing - the
+     * still preview image first, then the video.
+     *
+     * @param Collection<int, MediaFile> $media
+     * @return Collection<int, MediaFile>
+     */
+    public static function sortMediaForListing(Collection $media): Collection
+    {
+        return $media->sortBy(fn (MediaFile $clip) => match ($clip->module_type) {
+            'EVENT_PREVIEW' => 0,
+            'CLOUD_STORAGE' => 1,
+            default => 2,
+        })->values();
+    }
+
+    /**
+     * The timeline listing shows at most one preview image and one video per
+     * activity, not every linked file (that's what the detail page's Files
+     * table is for) - an event can have several CLOUD_STORAGE/EVENT_PREVIEW
+     * rows (segments, retries) and the listing only needs one of each kind.
+     *
+     * @param Collection<int, MediaFile> $media
+     * @return array{image: ?MediaFile, video: ?MediaFile}
+     */
+    public static function mediaForListing(Collection $media): array
+    {
+        $sorted = self::sortMediaForListing($media);
+
+        return [
+            'image' => $sorted->first(fn (MediaFile $clip) => ! $clip->isVideo()),
+            'video' => $sorted->first(fn (MediaFile $clip) => $clip->isVideo()),
+        ];
+    }
+
+    /**
+     * Heroicon + colour for a given history type.
+     *
+     * @return array{icon: string, color: string}
+     */
+    public static function typeMeta(?string $type): array
+    {
+        return match ($type) {
+            'IN_USE' => ['icon' => 'heroicon-m-exclamation-triangle', 'color' => 'warning'],
+            'CLEANING' => ['icon' => 'heroicon-m-arrow-path-rounded-square', 'color' => 'info'],
+            'MAINTENANCE' => ['icon' => 'heroicon-m-wrench-screwdriver', 'color' => 'info'],
+            'ERROR' => ['icon' => 'heroicon-m-exclamation-circle', 'color' => 'danger'],
+            'EAT' => ['icon' => 'heroicon-m-cake', 'color' => 'success'],
+            'DRINK' => ['icon' => 'heroicon-m-beaker', 'color' => 'info'],
+            'DETECT' => ['icon' => 'heroicon-m-camera', 'color' => 'primary'],
+            default => ['icon' => 'heroicon-m-bolt', 'color' => 'gray'],
+        };
+    }
 }

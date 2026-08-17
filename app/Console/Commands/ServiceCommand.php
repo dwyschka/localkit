@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use Exception;
 use App\Management\S6;
 use Illuminate\Console\Command;
 
@@ -47,7 +48,7 @@ class ServiceCommand extends Command
 
         try {
             $s6->running($serviceName);
-        }catch (\Exception $e) {
+        }catch (Exception $e) {
             $this->error($e->getMessage());
             return;
         }
@@ -67,7 +68,7 @@ class ServiceCommand extends Command
 
         try {
             $s6->running($serviceName);
-        }catch (\Exception $e) {
+        }catch (Exception $e) {
             $this->error($e->getMessage());
             return;
         }

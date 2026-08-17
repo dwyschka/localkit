@@ -25,6 +25,18 @@ services:
             - HOMEASSISTANT_CLIENT_ID=localkit_dev
             - BYPASS_AUTH=true
             - BYPASS_AUTH_ID=true
+            # Device object storage (dev_oss_sts_info_new_v2) backed by Garage S3
+            - LOCALKIT_STORAGE_ENABLE=true
+            # Base URL the camera uses to reach the OCI emulation. Must be the
+            # LAN address of this host as seen by the device.
+            - LOCALKIT_STORAGE_ENDPOINT=http://10.10.46.105
+            - LOCALKIT_S3_ENDPOINT=http://localkit-storage:3900
+            - LOCALKIT_S3_REGION=garage
+            - LOCALKIT_S3_BUCKET=localkit
+            - LOCALKIT_S3_KEY=GKe1fd06e4975f7148c6f4359fa9d50163
+            - LOCALKIT_S3_SECRET=b2ebda94643d392065f5381599e6db2a1a87367786742dfce9aac56e4904d9ab
+        depends_on:
+            - localkit-storage
         restart: always
 
     localkit-broker:
@@ -43,6 +55,11 @@ services:
         container_name: garage
         restart: unless-stopped
         command: /garage server --single-node --default-bucket
+        ports:
+            - 3900:3900   # S3 API
+            - 3903:3903   # Admin API
+        networks:
+            localkit:
         volumes:
             - ./s3/garage.toml:/etc/garage.toml:ro   # Config (Bind-Mount, read-only)
             - ./s3/meta:/var/lib/garage/meta    # Metadaten

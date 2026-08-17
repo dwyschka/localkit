@@ -15,9 +15,13 @@ class DevFallbackController extends Controller
             'url'     => $request->fullUrl(),
             'device'  => $deviceType,
             'headers' => $request->headers->all(),
-            'body'    => $request->all(),
+            // Raw content instead of all() - the body shape on an unmatched
+            // route is by definition unverified, and all() can throw on
+            // malformed JSON, which would fall through to Laravel's default
+            // HTML error page instead of a JSON response.
+            'body'    => $request->getContent(),
         ]);
 
-        return response()->json(['error' => 'not_found'], 404);
+        return response()->json([], 404);
     }
 }

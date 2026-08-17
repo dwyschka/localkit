@@ -19,6 +19,7 @@
     },
     "dependencies": {
         "aedes": "^0.51.3",
+        "puppeteer-core": "^25.5.0",
         "websocket-stream": "^5.5.2"
     }
 }

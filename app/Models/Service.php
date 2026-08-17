@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Management\S6;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Sushi\Sushi;
@@ -23,7 +24,7 @@ class Service extends Model
 
     public function getRows()
     {
-        $runningServices = app(\App\Management\S6::class)->listRunningServices();
+        $runningServices = app(S6::class)->listRunningServices();
         $services = collect($this->services)->map(function ($service) use($runningServices) {
             return [
                 'name' => $service,

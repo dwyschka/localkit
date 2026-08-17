@@ -5,6 +5,8 @@ use App\Http\Controllers\Api\TopicController;
 use App\Http\Controllers\Petkit\DevAttireOverController;
 use App\Http\Controllers\Petkit\DevBleDeviceController;
 use App\Http\Controllers\Petkit\DevDeviceInfoController;
+use App\Http\Controllers\Petkit\DevDiscernConfigController;
+use App\Http\Controllers\Petkit\DevDiscernPicController;
 use App\Http\Controllers\Petkit\DevEventReportController;
 use App\Http\Controllers\Petkit\DevFallbackController;
 use App\Http\Controllers\Petkit\DevFeedGetController;
@@ -22,6 +24,7 @@ use App\Http\Controllers\Petkit\DevSignupController;
 use App\Http\Controllers\Petkit\DevSoundGetController;
 use App\Http\Controllers\Petkit\DevStateReportController;
 use App\Http\Controllers\Petkit\DevSyncTimeController;
+use App\Http\Controllers\Petkit\DevUploadFileInfoV2Controller;
 use App\Http\Controllers\Petkit\DevVideoDeviceInfoController;
 use App\Http\Controllers\Petkit\HeartbeatController;
 use App\Http\Controllers\Petkit\RepositoryController;
@@ -55,6 +58,7 @@ Route::prefix('{deviceType}')->group(function () {
     Route::get('dev_only_iot_device_info', DevOnlyIotDeviceInfoController::class);
     Route::get('dev_video_device_info', DevVideoDeviceInfoController::class);
     Route::get('dev_oss_sts_info_new_v2', DevOssStsInfoNewV2Controller::class);
+    Route::post('dev_upload_file_info_v2', DevUploadFileInfoV2Controller::class);
     Route::get('dev_multi_config', DevMultiConfigController::class);
     Route::get('dev_ble_device', DevBleDeviceController::class);
     Route::get('dev_sound_get', DevSoundGetController::class);
@@ -67,6 +71,10 @@ Route::prefix('{deviceType}')->group(function () {
     //Sandtray t7
     Route::get('dev_sand_tray_auth', DevSandtrayAuthController::class);
     Route::get('dev_upload_log_token', DevUploadLogTokenController::class);
+
+    //Pet recognition (NextGen camera devices - confirmed on both D4SH and W7H)
+    Route::get('dev_discern_pic', DevDiscernPicController::class);
+    Route::get('dev_discern_config', DevDiscernConfigController::class);
 
 
 });

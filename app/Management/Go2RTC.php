@@ -2,6 +2,7 @@
 
 namespace App\Management;
 
+use Throwable;
 use App\Models\Device;
 use Illuminate\Support\Facades\Http;
 
@@ -19,6 +20,29 @@ class Go2RTC
     public function frameUrl(Device $device, ?string $stream = null): string
     {
         return $this->url($device, '/api/frame.jpeg', $stream ?? config('go2rtc.stream'));
+    }
+
+    /**
+     * A single keyframe wrapped in a minimal fMP4 fragment (video/mp4) - no
+     * transcoding involved, go2rtc just repackages whatever codec the stream
+     * already has. Used for thumbnails where /api/frame.jpeg's internal
+     * H264->JPEG transcode isn't reliable.
+     */
+    public function frameMp4Url(Device $device, ?string $stream = null): string
+    {
+        return $this->url($device, '/api/frame.mp4', $stream ?? config('go2rtc.stream'));
+    }
+
+    /**
+     * Root-relative URL of the cached still-frame thumbnail served by localkit.
+     * Relative so it resolves against whatever host serves the panel.
+     */
+    public function thumbnailUrl(Device $device, ?string $stream = null): string
+    {
+        return route('camera.thumbnail', [
+            'device' => $device->getKey(),
+            'stream' => $stream ?? config('go2rtc.stream'),
+        ], absolute: false);
     }
 
     /**
@@ -41,13 +65,30 @@ class Go2RTC
             }
 
             return array_keys($response->json() ?? []);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             return [];
         }
     }
 
     /**
-     * Map every stream on the device to its embeddable player URL.
+     * Map every stream on the device to its cached thumbnail URL. Used for
+     * lightweight previews (e.g. the device list tile) instead of a live stream.
+     *
+     * @return array<string, string>
+     */
+    public function thumbnailUrls(Device $device): array
+    {
+        $urls = [];
+        foreach ($this->streams($device) as $stream) {
+            $urls[$stream] = $this->thumbnailUrl($device, $stream);
+        }
+
+        return $urls;
+    }
+
+    /**
+     * Map every stream on the device to its live go2rtc player URL
+     * (/stream.html, WebRTC). Used in the edit view's Media section.
      *
      * @return array<string, string>
      */

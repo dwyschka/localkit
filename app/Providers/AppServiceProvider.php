@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Exception;
 use App\Localkit\OTA;
 use App\Management\Go2RTC;
 use App\Management\S6;
@@ -31,11 +32,11 @@ class AppServiceProvider extends ServiceProvider
                 $user = User::all()->first();
 
                 if(is_null($user)) {
-                    throw new \Exception('You need to create a User');
+                    throw new Exception('You need to create a User');
                 }
 
                 Auth::loginUsingId($user->id);
-            } catch (\Exception $e) {}
+            } catch (Exception $e) {}
         }
         Arr::macro('mergeRecursiveDistinct', function (array $array1, array $array2) {
             $merged = $array1;

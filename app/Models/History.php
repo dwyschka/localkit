@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 
@@ -20,8 +21,34 @@ class History extends Model
         return $this->hasOne(Pet::class, 'id', 'pet_id');
     }
 
+    /**
+     * Camera captures uploaded under the same eventId this entry's messageId
+     * carries (see DevUploadFileInfoV2Controller / PetkitYumshareDual's
+     * pet_detect/eat_start handlers - both use the device's own event_id as
+     * the messageId, which the camera later tags every clip from the same
+     * event with).
+     */
+    public function media(): HasMany {
+        return $this->hasMany(MediaFile::class, 'event_id', 'messageId');
+    }
+
     public function duration(): float {
         return $this->created_at->diffInSeconds($this->updated_at);
+    }
+
+    /**
+     * event_start/event_end (when the follow-up event's payload carries
+     * them - confirmed on W7H's drink_over) are the device's own precise
+     * timestamps for the event, not MQTT-arrival timestamps - prefer them
+     * over duration()'s created_at/updated_at, which has processing/network
+     * latency baked in on both ends.
+     */
+    public function eventDuration(): int {
+        if (isset($this->parameters['event_start'], $this->parameters['event_end'])) {
+            return $this->parameters['event_end'] - $this->parameters['event_start'];
+        }
+
+        return (int) $this->duration();
     }
 
     public function message(): string {
@@ -35,6 +62,12 @@ class History extends Model
                 return $this->createMaintenanceMessage();
             case 'ERROR':
                 return $this->createErrorMessage();
+            case 'EAT':
+                return $this->createEatMessage();
+            case 'DRINK':
+                return $this->createDrinkMessage();
+            case 'DETECT':
+                return $this->createDetectMessage();
         }
         return '';
     }
@@ -49,9 +82,18 @@ class History extends Model
 
         $duration = $params['time_out'] - $params['time_in'];
 
+        // Not every litter box reports pet_weight (e.g. Purobot Crystal has
+        // no weight sensor), so there's no pet to match by weight either.
+        if (!isset($params['pet_weight'])) {
+            return __('petkit.history.in_use_no_weight', [
+                'duration' => $duration,
+            ]);
+        }
+
         return __('petkit.history.in_use', [
             'name' => $this->pet?->name ?? __('petkit.unknown'),
-            'weight' => $params['pet_weight'],
+            // pet_weight is reported in grams by the device — show it in kg.
+            'weight' => number_format($params['pet_weight'] / 1000, 2),
             'duration' => $duration,
         ]);
     }
@@ -81,6 +123,29 @@ class History extends Model
         return __('petkit.history.maintenance', [
             'duration' => $duration
         ]);
+    }
+
+    private function createEatMessage()
+    {
+        return __('petkit.history.eat', [
+            'duration' => $this->eventDuration(),
+        ]);
+    }
+
+    private function createDrinkMessage()
+    {
+        return __('petkit.history.drink', [
+            'duration' => $this->eventDuration(),
+        ]);
+    }
+
+    private function createDetectMessage()
+    {
+        $count = $this->parameters['count'] ?? 0;
+
+        return $count > 0
+            ? __('petkit.history.detect_count', ['count' => $count])
+            : __('petkit.history.detect');
     }
 }
 

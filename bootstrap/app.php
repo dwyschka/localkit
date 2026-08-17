@@ -3,6 +3,8 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -17,10 +19,20 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->validateCsrfTokens(except: [
-           't6/*'
+           't6/*',
+           'oci/*'
         ]);
         $middleware->appendToGroup('api', \App\Http\Middleware\LogDeviceHttpRequests::class);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        // Petkit devices choke on Laravel's HTML error pages (no Accept
+        // header to trigger the default JSON-on-expectsJson() behavior), so
+        // force an empty JSON body for any error on the device API routes.
+        $exceptions->render(function (Throwable $e, Request $request) {
+            if ($request->is('6/*')) {
+                $status = $e instanceof HttpExceptionInterface ? $e->getStatusCode() : 500;
+
+                return response()->json([], $status);
+            }
+        });
     })->create();

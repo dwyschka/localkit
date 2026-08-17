@@ -3,6 +3,7 @@
 namespace App\Http\Resources\MQTT;
 
 //{"code":200,"data":{},"id":"107","message":"success","method":"thing.event.work_start.post","version":"1.0"}
+use stdClass;
 use App\Helpers\MQTTTopic;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -12,13 +13,13 @@ class SuccessResource extends JsonResource
 
     public function toArray(Request $request): array
     {
-        $data = new \stdClass();
+        $data = new stdClass();
         return [
             'code' => 200,
             'data' => $data,
-            'id' => $this->id,
+            'id' => $this->resource->id ?? null,
             'message' => "success",
-            'method' => $this->method,
+            'method' => $this->resource->method ?? null,
             'version' => "1.0.0"
         ];
     }

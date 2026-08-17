@@ -1,6 +1,9 @@
 <?php
 namespace App\Petkit\BluetoothDevices\W5;
 
+use InvalidArgumentException;
+use UnderflowException;
+
 /**
  * Petkit BLE Message Parser
  *
@@ -75,7 +78,7 @@ class Parser
             $cmd  = $forceCmd;
             $data = $bytes;
         } else {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'No FAFCFD header found. Provide $forceCmd to decode a raw payload.'
             );
         }
@@ -186,7 +189,7 @@ class Parser
     protected function parseDeviceStateCTW3(array $data): array
     {
         if (count($data) < 26) {
-            throw new \UnderflowException('Insufficient data for CTW3 device state (need 26 bytes, got ' . count($data) . ')');
+            throw new UnderflowException('Insufficient data for CTW3 device state (need 26 bytes, got ' . count($data) . ')');
         }
 
         return [
@@ -358,7 +361,7 @@ class Parser
         $hex = strtolower(preg_replace('/\s+/', '', $hex));
 
         if (!ctype_xdigit($hex) || strlen($hex) % 2 !== 0) {
-            throw new \InvalidArgumentException('Invalid hex string');
+            throw new InvalidArgumentException('Invalid hex string');
         }
 
         return array_values(array_map('hexdec', str_split($hex, 2)));

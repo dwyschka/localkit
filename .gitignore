@@ -25,3 +25,4 @@ storage/localkit.sqlite
 /scripts/.build-cache
 /IMPLEMENT
 .DS_Store
+/s3
