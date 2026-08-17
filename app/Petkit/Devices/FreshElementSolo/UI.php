@@ -7,6 +7,7 @@ use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Forms\Components\ViewField;
+use App\Filament\StateCasts\IdentityStateCast;
 use App\Helpers\Time;
 use App\Jobs\ServiceEnd;
 use App\Jobs\ServiceStart;
@@ -142,6 +143,7 @@ class UI
                                 ])
                                 ->columns(4)
                                 ->required()
+                                ->stateCast(new IdentityStateCast())
                                 ->formatStateUsing(fn(string|array $state) => is_array($state) ? $state : explode(',', $state))
                                 ->dehydrateStateUsing(fn($state) => implode(',', Arr::sort(array_filter($state)))),
 

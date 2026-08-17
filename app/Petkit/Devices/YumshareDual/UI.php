@@ -12,6 +12,7 @@ use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\ViewField;
+use App\Filament\StateCasts\IdentityStateCast;
 use App\Helpers\Time;
 use App\Management\Go2RTC;
 use Filament\Forms\Components\CheckboxList;
@@ -194,6 +195,7 @@ class UI
                                 ])
                                 ->columns(4)
                                 ->required()
+                                ->stateCast(new IdentityStateCast())
                                 ->formatStateUsing(fn(string|array $state) => is_array($state) ? $state : explode(',', $state))
                                 ->dehydrateStateUsing(fn($state) => implode(',', Arr::sort(array_filter($state)))),
 
