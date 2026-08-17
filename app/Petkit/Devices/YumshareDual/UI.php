@@ -423,6 +423,7 @@ class UI
                     ->helperText('Pause feeding while surplus food remains in the bowl')
                     ->options([
                         0 => 'off',
+                        1 => 'on',
                     ]),
 
                 TextInput::make('configuration.settings.surplusStandard')

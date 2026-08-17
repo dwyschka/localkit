@@ -388,6 +388,7 @@ class UI
             Section::make('AI LAB')->schema([
                 Select::make('configuration.settings.surplusControl')->options([
                     0 => 'off',
+                    1 => 'on',
                 ])
             ]),
 
