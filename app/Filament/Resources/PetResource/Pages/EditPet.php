@@ -4,6 +4,7 @@ namespace App\Filament\Resources\PetResource\Pages;
 
 use Filament\Actions\DeleteAction;
 use App\Filament\Resources\PetResource;
+use App\Jobs\PublishDiscernUpdate;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 
@@ -40,6 +41,8 @@ class EditPet extends EditRecord
 
     protected function afterSave(): void
     {
-        $this->record->syncImages($this->pendingImages);
+        if ($this->record->syncImages($this->pendingImages)) {
+            PublishDiscernUpdate::dispatchForAllDevices();
+        }
     }
 }

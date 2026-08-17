@@ -21,12 +21,17 @@ class Pet extends Model
      * matching by path so an existing PetImage's id - and thus the discern
      * reference id a device already has cached - survives reordering or
      * unrelated field edits. Only additions/removals get new/deleted rows.
+     *
+     * @return bool Whether any new photo was added (existing devices need
+     *               telling to re-fetch discern references - see
+     *               PublishDiscernUpdate).
      */
-    public function syncImages(array $paths): void
+    public function syncImages(array $paths): bool
     {
         $paths = array_values($paths);
         $existing = $this->images()->get()->keyBy('path');
         $keepPaths = [];
+        $added = false;
 
         foreach ($paths as $index => $path) {
             $image = $existing->get($path);
@@ -37,12 +42,15 @@ class Pet extends Model
                 }
             } else {
                 $this->images()->create(['path' => $path, 'sort_order' => $index]);
+                $added = true;
             }
 
             $keepPaths[] = $path;
         }
 
         $this->images()->whereNotIn('path', $keepPaths)->delete();
+
+        return $added;
     }
 
     public static function nearestWeight(float $weight)

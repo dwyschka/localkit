@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\PetResource\Pages;
 
 use App\Filament\Resources\PetResource;
+use App\Jobs\PublishDiscernUpdate;
 use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 
@@ -25,6 +26,8 @@ class CreatePet extends CreateRecord
 
     protected function afterCreate(): void
     {
-        $this->record->syncImages($this->pendingImages);
+        if ($this->record->syncImages($this->pendingImages)) {
+            PublishDiscernUpdate::dispatchForAllDevices();
+        }
     }
 }
