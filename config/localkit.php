@@ -6,6 +6,23 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Cleanup Retention (see app:cleanup-activity-log)
+    |--------------------------------------------------------------------------
+    |
+    | How long the Activity Log (History rows) and recordings (MediaFile
+    | rows + their storage objects) are kept before the scheduled cleanup
+    | prunes them. Media is expected to have a shorter retention than the
+    | log itself, since recordings take up real disk space while a History
+    | row is tiny.
+    |
+    */
+    'retention' => [
+        'activity_days' => (int) env('LOCALKIT_ACTIVITY_RETENTION_DAYS', 30),
+        'media_days' => (int) env('LOCALKIT_MEDIA_RETENTION_DAYS', 7),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Device Object Storage (OCI / S3 emulation)
     |--------------------------------------------------------------------------
     |
