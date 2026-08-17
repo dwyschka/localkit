@@ -160,6 +160,12 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
      * related_event back-reference like pet_discern -> pet_detect).
      * Silently does nothing if there's no matching row (e.g. the start
      * event arrived before this code existed, or was never sent).
+     *
+     * pet_discern arrives asynchronously after pet_detect and carries the
+     * actually-identified pet in content.pet_id (0 means no match, per
+     * confirmed live capture) - that needs to land on the row's own pet_id
+     * column, not just get folded into parameters, or $history->pet stays
+     * null forever even once the device has resolved who it saw.
      */
     private function mergeHistory(?string $messageId, ?string $rawContent): void
     {
@@ -180,6 +186,7 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
                 ...$history->parameters,
                 ...$content,
             ],
+            ...(!empty($content['pet_id']) ? ['pet_id' => $content['pet_id']] : []),
         ]);
     }
 
