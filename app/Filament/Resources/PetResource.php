@@ -11,6 +11,7 @@ use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Support\Enums\TextSize;
 use Filament\Tables\Columns\ImageColumn;
+use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -18,7 +19,6 @@ use App\Filament\Resources\PetResource\Pages\ListPets;
 use App\Filament\Resources\PetResource\Pages\CreatePet;
 use App\Filament\Resources\PetResource\Pages\EditPet;
 use App\Filament\Resources\PetResource\Pages;
-use App\Filament\Resources\PetResource\RelationManagers;
 use App\Models\Pet;
 use Filament\Forms;
 use Filament\Resources\Resource;
@@ -143,6 +143,13 @@ class PetResource extends Resource
                 EditAction::make()
                     ->button()
                     ->size('sm'),
+                Action::make('view_activities')
+                    ->label('Activities')
+                    ->icon('heroicon-m-bolt')
+                    ->color('purple')
+                    ->button()
+                    ->size('sm')
+                    ->url(fn (Pet $record) => PetResource::getUrl('activities', ['record' => $record])),
             ])
             ->recordActionsAlignment('start')
             ->toolbarActions([
@@ -155,7 +162,7 @@ class PetResource extends Resource
     public static function getRelations(): array
     {
         return [
-            RelationManagers\HistoriesRelationManager::class,
+            //
         ];
     }
 
@@ -165,6 +172,7 @@ class PetResource extends Resource
             'index' => ListPets::route('/'),
             'create' => CreatePet::route('/create'),
             'edit' => EditPet::route('/{record}/edit'),
+            'activities' => Pages\PetActivities::route('/{record}/activities'),
         ];
     }
 }
