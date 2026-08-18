@@ -39,6 +39,20 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     )]
     public ?string $workingState;
 
+    // Internal only - not published to Home Assistant itself. This device
+    // has no weight sensor or pet_discern topic, so nothing currently
+    // resolves a real pet_id here; stays null until it does.
+    public ?int $lastUsedByPetId;
+
+    #[Sensor(
+        technicalName: 'last_used_by',
+        name: 'Last Used By',
+        icon: 'mdi:paw',
+        valueTemplate: '{{ value_json.states.lastUsedByName }}',
+        entityCategory: 'diagnostic'
+    )]
+    public ?string $lastUsedByName;
+
     #[HASwitch(
         technicalName: 'manual_lock',
         name: 'Child lock',
@@ -260,6 +274,8 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         return [
             'error' => ['nullable', 'string'],
             'workingState' => ['nullable', 'string'],
+            'lastUsedByPetId' => ['nullable', 'integer'],
+            'lastUsedByName' => ['nullable', 'string'],
             'manualLock' => ['bool'],
             'lightMode' => ['bool'],
             'lightRange' => [],
@@ -286,6 +302,8 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         return [
             'error' => null,
             'workingState' => 'IDLE',
+            'lastUsedByPetId' => null,
+            'lastUsedByName' => null,
             'manualLock' => false,
             'lightMode' => true,
             'soundEnable' => false,
@@ -325,6 +343,8 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'disturbMode' => new BooleanCast(),
             'error' => new StringCast(),
             'workingState' => new StringCast(),
+            'lastUsedByPetId' => new IntegerCast(),
+            'lastUsedByName' => new StringCast(),
             'language' => new StringCast(),
             'lightRange' => new DTOCast(RangeDTO::class),
             'disturbRange' => new DTOCast(RangeDTO::class),
@@ -344,6 +364,8 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         // Load states
         $data['workingState'] = $config['states']['state'] ?? null;
         $data['error'] = $config['states']['error'] ?? null;
+        $data['lastUsedByPetId'] = $config['states']['lastUsedByPetId'] ?? null;
+        $data['lastUsedByName'] = $config['states']['lastUsedByName'] ?? null;
 
         // Load settings
         $data['manualLock'] = $config['settings']['manualLock'] ?? null;
@@ -379,6 +401,8 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'states' => [
                 'state' => $this->workingState,
                 'error' => $this->error,
+                'lastUsedByPetId' => $this->lastUsedByPetId,
+                'lastUsedByName' => $this->lastUsedByName,
             ],
             'settings' => [
                 'manualLock' => $this->manualLock,

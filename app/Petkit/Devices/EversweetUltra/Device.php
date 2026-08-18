@@ -16,6 +16,7 @@ use App\Jobs\TakeSnapshot;
 use App\Models\BluetoothDevice;
 use App\Models\Device as DeviceModel;
 use App\Models\History;
+use App\Models\Pet;
 use App\MQTT\GenericReply;
 use App\Petkit\BluetoothDevices\BluetoothProxyInterface;
 use App\Petkit\BluetoothDevices\Message;
@@ -211,6 +212,26 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface, Has
                 ...$content,
             ],
             ...(!empty($content['pet_id']) ? ['pet_id' => $content['pet_id']] : []),
+        ]);
+
+        if (!empty($content['pet_id'])) {
+            $this->setLastUsedBy((int) $content['pet_id']);
+        }
+    }
+
+    /**
+     * "Last used by" is device state, not history - it reflects whichever
+     * pet was most recently resolved for this device, independent of which
+     * topic/event that resolution came from.
+     */
+    private function setLastUsedBy(int $petId): void
+    {
+        $configuration = $this->configurationDefinition();
+        $configuration->lastUsedByPetId = $petId;
+        $configuration->lastUsedByName = Pet::find($petId)?->name;
+
+        $this->getDevice()->update([
+            'configuration' => $configuration->toArray(),
         ]);
     }
 

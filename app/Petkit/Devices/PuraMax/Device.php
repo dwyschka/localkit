@@ -170,6 +170,10 @@ class Device implements DeviceDefinition, BluetoothProxyInterface
                     'type' => 'IN_USE',
                     'device_id' => $device->id
                 ]);
+
+                if ($pet !== null) {
+                    $this->setLastUsedBy($device, $pet);
+                }
             },
             sprintf('/sys/%s/%s/thing/event/error_start/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $device->refresh();
@@ -406,6 +410,21 @@ class Device implements DeviceDefinition, BluetoothProxyInterface
         }
     }
 
+
+    /**
+     * "Last used by" is device state, not history - it reflects whichever
+     * pet was most recently matched by weight on pet_out.
+     */
+    private function setLastUsedBy(DeviceModel $device, Pet $pet): void
+    {
+        $configuration = $this->configurationDefinition();
+        $configuration->lastUsedByPetId = $pet->id;
+        $configuration->lastUsedByName = $pet->name;
+
+        $device->update([
+            'configuration' => $configuration->toArray(),
+        ]);
+    }
 
     public function toHomeassistant()
     {

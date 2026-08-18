@@ -41,6 +41,20 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     )]
     public ?string $workingState;
 
+    // Internal only - not published to Home Assistant itself, but resolved
+    // to a name for lastUsedByName below whenever the weight sensor
+    // matches a pet on pet_out (see setLastUsedBy()).
+    public ?int $lastUsedByPetId;
+
+    #[Sensor(
+        technicalName: 'last_used_by',
+        name: 'Last Used By',
+        icon: 'mdi:paw',
+        valueTemplate: '{{ value_json.states.lastUsedByName }}',
+        entityCategory: 'diagnostic'
+    )]
+    public ?string $lastUsedByName;
+
     #[Sensor(
         technicalName: 'litter_weight',
         name: 'Litter Weight',
@@ -613,6 +627,8 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         return [
             'error' => ['nullable', 'string'],
             'workingState' => ['nullable', 'string'],
+            'lastUsedByPetId' => ['nullable', 'integer'],
+            'lastUsedByName' => ['nullable', 'string'],
             'litterWeight' => ['integer', 'min:0'],
             'litterUsedTimes' => ['integer', 'min:0'],
             'litterPercent' => ['integer', 'min:0', 'max:100'],
@@ -656,6 +672,8 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         return [
             'error' => null,
             'workingState' => 'IDLE',
+            'lastUsedByPetId' => null,
+            'lastUsedByName' => null,
             'litterWeight' => 0,
             'litterUsedTimes' => 0,
             'litterPercent' => 100,
@@ -713,6 +731,8 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         return [
             'error' => new StringCast(),
             'workingState' => new StringCast(),
+            'lastUsedByPetId' => new IntegerCast(),
+            'lastUsedByName' => new StringCast(),
             'litterWeight' => new IntegerCast(),
             'litterUsedTimes' => new IntegerCast(),
             'litterPercent' => new IntegerCast(),
@@ -761,6 +781,8 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
 
         $data['workingState'] = $device->working_state;
         $data['error'] = $device->error;
+        $data['lastUsedByPetId'] = $config['states']['lastUsedByPetId'] ?? null;
+        $data['lastUsedByName'] = $config['states']['lastUsedByName'] ?? null;
 
         // Load consumables
         $data['n50Durability'] = $config['consumables']['n50Durability'] ?? null;
@@ -820,6 +842,8 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'states' => [
                 'error' => $this->error,
                 'state' => $this->workingState,
+                'lastUsedByPetId' => $this->lastUsedByPetId,
+                'lastUsedByName' => $this->lastUsedByName,
             ],
             'litter' => [
                 'weight' => $this->litterWeight,

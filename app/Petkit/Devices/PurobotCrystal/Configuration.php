@@ -46,6 +46,20 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     )]
     public string $ipAddress;
 
+    // Internal only - not published to Home Assistant itself. This device
+    // has no weight sensor or pet_discern topic, so nothing currently
+    // resolves a real pet_id here; stays null until it does.
+    public ?int $lastUsedByPetId;
+
+    #[Sensor(
+        technicalName: 'last_used_by',
+        name: 'Last Used By',
+        icon: 'mdi:paw',
+        valueTemplate: '{{ value_json.states.lastUsedByName }}',
+        entityCategory: 'diagnostic'
+    )]
+    public ?string $lastUsedByName;
+
     #[Sensor(
         technicalName: 'device_status',
         name: 'Device Status',
@@ -798,6 +812,8 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
 
             // States
             'ipAddress' => ['string'],
+            'lastUsedByPetId' => ['nullable', 'integer'],
+            'lastUsedByName' => ['nullable', 'string'],
             'workingState' => ['nullable', 'string'],
             'error' => ['nullable', 'string'],
             'lightning' => ['bool'],
@@ -902,6 +918,8 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
 
             // States
             'ipAddress' => '',
+            'lastUsedByPetId' => null,
+            'lastUsedByName' => null,
             'workingState' => null,
             'error' => null,
             'lightning' => false,
@@ -1031,6 +1049,8 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
 
             // States
             'ipAddress' => new StringCast(),
+            'lastUsedByPetId' => new IntegerCast(),
+            'lastUsedByName' => new StringCast(),
             'workingState' => new StringCast(),
             'error' => new StringCast(),
             'lightning' => new BooleanCast(),
@@ -1149,6 +1169,8 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         if (isset($config['states'])) {
             $states = $config['states'];
             $data['ipAddress'] = $states['ipAddress'] ?? null;
+            $data['lastUsedByPetId'] = $states['lastUsedByPetId'] ?? null;
+            $data['lastUsedByName'] = $states['lastUsedByName'] ?? null;
             $data['lightning'] = $states['lightning'] ?? null;
             $data['lastSnapshot'] = $states['lastSnapshot'] ?? null;
             $data['stream'] = $states['stream'] ?? null;
@@ -1265,6 +1287,8 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
                 'state' => $this->workingState,
                 'error' => $this->error,
                 'ipAddress' => $this->ipAddress,
+                'lastUsedByPetId' => $this->lastUsedByPetId,
+                'lastUsedByName' => $this->lastUsedByName,
                 'lastSnapshot' => $this->lastSnapshot,
                 'stream' => $this->stream,
                 'lightning' => $this->lightning,
