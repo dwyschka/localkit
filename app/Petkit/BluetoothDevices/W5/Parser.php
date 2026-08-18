@@ -278,7 +278,12 @@ class Parser
         $tOn  = ($mode === 1) ? 1 : $smartTimeOn;
         $tOff = ($mode === 1) ? 0 : $smartTimeOff;
 
-        $filterTimeLeft     = $this->calculateRemainingFilterDays($filterPct, $tOn, $tOff);
+        // calculateRemainingFilterDays() expects a 0-1 fraction (matches
+        // slespersen/PetkitW5BLEMQTT's parsers.py, which always divides the
+        // raw percentage byte by 100 before this calculation) - filterPct
+        // itself stays the raw 0-100 value since that's what's published as
+        // the "Filter %" sensor.
+        $filterTimeLeft     = $this->calculateRemainingFilterDays($filterPct / 100, $tOn, $tOff);
         $purifiedWater      = $this->calculateWaterPurified($pumpRuntime);
         $purifiedWaterToday = $this->calculateWaterPurified($pumpRuntimeToday);
         $energyConsumed     = $this->calculateEnergyUsage($pumpRuntime);
