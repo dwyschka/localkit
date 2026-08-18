@@ -21,7 +21,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class ServiceBle extends JsonResource
 {
     protected BluetoothDevice $bluetoothDevice;
-    protected string $rawCommand;
+    protected string $commandBase64;
     protected int $cmd;
 
     public function setBluetoothDevice(BluetoothDevice $bluetoothDevice): self
@@ -30,9 +30,14 @@ class ServiceBle extends JsonResource
         return $this;
     }
 
-    public function setRawCommand(string $rawCommand, int $cmd): self
+    /**
+     * @param string $commandBase64 Already base64-encoded - the raw frame
+     *        bytes must never be held as a plain PHP string this far down
+     *        the pipeline (see App\Jobs\ServiceBle).
+     */
+    public function setCommand(string $commandBase64, int $cmd): self
     {
-        $this->rawCommand = $rawCommand;
+        $this->commandBase64 = $commandBase64;
         $this->cmd = $cmd;
         return $this;
     }
@@ -44,7 +49,7 @@ class ServiceBle extends JsonResource
             'id' => (string) random_int(100000000, 999999999),
             "params" => [
                 "payload" => [
-                    "data" => base64_encode($this->rawCommand),
+                    "data" => $this->commandBase64,
                     "cmd" => $this->cmd,
                 ],
                 "device" => [

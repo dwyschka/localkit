@@ -627,10 +627,10 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface, Has
         );
     }
 
-    public function btWrite(BluetoothDevice $btDevice, string $rawCommand, int $cmd): void
+    public function btWrite(BluetoothDevice $btDevice, string $commandBase64, int $cmd): void
     {
         ServiceBle::dispatchSync(
-            $this->getDevice(), $btDevice, $rawCommand, $cmd,
+            $this->getDevice(), $btDevice, $commandBase64, $cmd,
         );
     }
 }

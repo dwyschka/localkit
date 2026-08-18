@@ -111,7 +111,11 @@ class Device implements DeviceInterface, HasParserInterface
 
         $seq = $this->nextSequence();
 
-        $definition->btWrite($this->model, $buildFrame($seq), $cmd);
+        // Encode to base64 here, before the raw frame bytes (not valid
+        // UTF-8) ever touch a queued job - Laravel's payload builder
+        // json_encode()s the whole thing even for dispatchSync(), which
+        // chokes on raw binary.
+        $definition->btWrite($this->model, base64_encode($buildFrame($seq)), $cmd);
     }
 
     private function nextSequence(): int
