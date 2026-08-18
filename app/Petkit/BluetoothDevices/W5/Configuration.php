@@ -51,11 +51,48 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     )]
     public bool $runningStatus;
 
+    #[BinarySensor(
+        technicalName: 'dnd_state',
+        name: 'Do Not Disturb Active',
+        icon: 'mdi:cancel',
+        valueTemplate: '{{ value_json.states.dndState }}',
+        entityCategory: 'diagnostic',
+        payloadOn: 1,
+        payloadOff: 0
+    )]
     public bool $dndState;
+
+    #[BinarySensor(
+        technicalName: 'do_not_disturb_switch',
+        name: 'Do Not Disturb',
+        icon: 'mdi:bell-off-outline',
+        valueTemplate: '{{ value_json.settings.doNotDisturbSwitch }}',
+        entityCategory: 'diagnostic',
+        payloadOn: 1,
+        payloadOff: 0
+    )]
     public bool $doNotDisturbSwitch;
+
     public int $doNotDisturbTimeOn;
+
+    #[Sensor(
+        technicalName: 'do_not_disturb_time_on',
+        name: 'Do Not Disturb Time On',
+        icon: 'mdi:timer-check-outline',
+        valueTemplate: '{{ value_json.settings.doNotDisturbTimeOnReadable }}',
+        entityCategory: 'diagnostic'
+    )]
     public string $doNotDisturbTimeOnReadable;
+
     public int $doNotDisturbTimeOff;
+
+    #[Sensor(
+        technicalName: 'do_not_disturb_time_off',
+        name: 'Do Not Disturb Time Off',
+        icon: 'mdi:timer-cancel-outline',
+        valueTemplate: '{{ value_json.settings.doNotDisturbTimeOffReadable }}',
+        entityCategory: 'diagnostic'
+    )]
     public string $doNotDisturbTimeOffReadable;
 
     #[BinarySensor(
@@ -95,8 +132,25 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     public bool $warningFilter;
 
     public int $pumpRuntime;
+
+    #[Sensor(
+        technicalName: 'pump_runtime',
+        name: 'Pump Runtime',
+        icon: 'mdi:water-sync',
+        valueTemplate: '{{ value_json.stats.pumpRuntimeReadable }}',
+        entityCategory: 'diagnostic'
+    )]
     public string $pumpRuntimeReadable;
+
     public int $pumpRuntimeToday;
+
+    #[Sensor(
+        technicalName: 'pump_runtime_today',
+        name: 'Pump Runtime Today',
+        icon: 'mdi:water-sync',
+        valueTemplate: '{{ value_json.stats.pumpRuntimeTodayReadable }}',
+        entityCategory: 'diagnostic'
+    )]
     public string $pumpRuntimeTodayReadable;
 
     #[Sensor(
@@ -108,20 +162,109 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         entityCategory: 'diagnostic'
     )]
     public int $filterPercentage;
+
+    #[Sensor(
+        technicalName: 'filter_time_left',
+        name: 'Filter Time Left',
+        icon: 'mdi:timelapse',
+        unitOfMeasurement: 'd',
+        valueTemplate: '{{ value_json.consumables.filterTimeLeftDays }}',
+        entityCategory: 'diagnostic'
+    )]
     public int $filterTimeLeftDays;
 
+    #[Sensor(
+        technicalName: 'smart_time_on',
+        name: 'Smart Mode Time On',
+        icon: 'mdi:timer-check-outline',
+        unitOfMeasurement: 'min',
+        valueTemplate: '{{ value_json.settings.smartTimeOn }}',
+        entityCategory: 'diagnostic'
+    )]
     public int $smartTimeOn;
+
+    #[Sensor(
+        technicalName: 'smart_time_off',
+        name: 'Smart Mode Time Off',
+        icon: 'mdi:timer-cancel-outline',
+        unitOfMeasurement: 'min',
+        valueTemplate: '{{ value_json.settings.smartTimeOff }}',
+        entityCategory: 'diagnostic'
+    )]
     public int $smartTimeOff;
 
+    #[BinarySensor(
+        technicalName: 'led_switch',
+        name: 'LED Switch',
+        icon: 'mdi:lightbulb-outline',
+        valueTemplate: '{{ value_json.settings.ledSwitch }}',
+        entityCategory: 'diagnostic',
+        payloadOn: 1,
+        payloadOff: 0
+    )]
     public bool $ledSwitch;
+
+    #[Sensor(
+        technicalName: 'led_brightness',
+        name: 'LED Brightness',
+        icon: 'mdi:brightness-5',
+        valueTemplate: '{{ value_json.settings.ledBrightness }}',
+        entityCategory: 'diagnostic'
+    )]
     public int $ledBrightness;
+
     public int $ledLightTimeOn;
+
+    #[Sensor(
+        technicalName: 'led_light_time_on',
+        name: 'LED Light Time On',
+        icon: 'mdi:timer-check-outline',
+        valueTemplate: '{{ value_json.settings.ledLightTimeOnReadable }}',
+        entityCategory: 'diagnostic'
+    )]
     public string $ledLightTimeOnReadable;
+
     public int $ledLightTimeOff;
+
+    #[Sensor(
+        technicalName: 'led_light_time_off',
+        name: 'LED Light Time Off',
+        icon: 'mdi:timer-cancel-outline',
+        valueTemplate: '{{ value_json.settings.ledLightTimeOffReadable }}',
+        entityCategory: 'diagnostic'
+    )]
     public string $ledLightTimeOffReadable;
 
+    #[Sensor(
+        technicalName: 'purified_water',
+        name: 'Purified Water',
+        icon: 'mdi:air-filter',
+        deviceClass: 'water',
+        unitOfMeasurement: 'L',
+        valueTemplate: '{{ value_json.stats.purifiedWaterLiters }}',
+        entityCategory: 'diagnostic'
+    )]
     public float $purifiedWaterLiters;
+
+    #[Sensor(
+        technicalName: 'purified_water_today',
+        name: 'Purified Water Today',
+        icon: 'mdi:air-filter',
+        deviceClass: 'water',
+        unitOfMeasurement: 'L',
+        valueTemplate: '{{ value_json.stats.purifiedWaterTodayLiters }}',
+        entityCategory: 'diagnostic'
+    )]
     public float $purifiedWaterTodayLiters;
+
+    #[Sensor(
+        technicalName: 'energy_consumed',
+        name: 'Energy Consumption',
+        deviceClass: 'energy',
+        unitOfMeasurement: 'kWh',
+        valueTemplate: '{{ value_json.stats.energyConsumedKwh }}',
+        entityCategory: 'diagnostic'
+    )]
     public string $energyConsumedKwh;
 
     #[Sensor(
@@ -419,12 +562,18 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     {
         $toArray = $this->toArray();
 
-        $states = $toArray['states'];
-        foreach($states as $key => $value) {
-            $states[$key] = is_bool($value) ? ($value ? 'on' : 'off') : (string)$value;
+        // Every entity's payloadOn/payloadOff here expects 'on'/'off', not a
+        // raw JSON boolean (Jinja renders true/false as "True"/"False",
+        // which wouldn't match) - convert across every section, not just
+        // 'states', since BinarySensor fields live under 'settings' too
+        // (e.g. doNotDisturbSwitch, ledSwitch).
+        foreach ($toArray as $section => $values) {
+            foreach ($values as $key => $value) {
+                if (is_bool($value)) {
+                    $toArray[$section][$key] = $value ? 'on' : 'off';
+                }
+            }
         }
-        $toArray['states'] = $states;
-
 
         return $toArray;
     }
