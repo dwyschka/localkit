@@ -58,23 +58,26 @@ class History extends Model
 
     public function message(): string {
 
-        switch($this->type) {
-            case 'IN_USE':
-                return $this->createInUseMessage();
-            case 'CLEANING':
-                return $this->createCleaningMessage();
-            case 'MAINTENANCE':
-                return $this->createMaintenanceMessage();
-            case 'ERROR':
-                return $this->createErrorMessage();
-            case 'EAT':
-                return $this->createEatMessage();
-            case 'DRINK':
-                return $this->createDrinkMessage();
-            case 'DETECT':
-                return $this->createDetectMessage();
+        $message = match ($this->type) {
+            'IN_USE' => $this->createInUseMessage(),
+            'CLEANING' => $this->createCleaningMessage(),
+            'MAINTENANCE' => $this->createMaintenanceMessage(),
+            'ERROR' => $this->createErrorMessage(),
+            'EAT' => $this->createEatMessage(),
+            'DRINK' => $this->createDrinkMessage(),
+            'DETECT' => $this->createDetectMessage(),
+            default => '',
+        };
+
+        // pet_id can resolve after the fact (async pet_discern) and applies
+        // regardless of event type - surface the name whenever we have one,
+        // rather than only for the handful of message strings that embed it.
+        // Device faults (ERROR) aren't attributable to a specific pet.
+        if ($message !== '' && $this->type !== 'ERROR' && $this->pet) {
+            $message .= ' · ' . $this->pet->name;
         }
-        return '';
+
+        return $message;
     }
 
     public function title(): string {
@@ -96,7 +99,6 @@ class History extends Model
         }
 
         return __('petkit.history.in_use', [
-            'name' => $this->pet?->name ?? __('petkit.unknown'),
             // pet_weight is reported in grams by the device — show it in kg.
             'weight' => number_format($params['pet_weight'] / 1000, 2),
             'duration' => $duration,
@@ -105,9 +107,7 @@ class History extends Model
 
     private function createCleaningMessage()
     {
-        return __('petkit.history.cleaning', [
-            'name' => $this->pet?->name ?? __('petkit.unknown')
-        ]);
+        return __('petkit.history.cleaning');
     }
 
     private function createErrorMessage()
@@ -146,15 +146,6 @@ class History extends Model
 
     private function createDetectMessage()
     {
-        // pet_id is only filled in once the async pet_discern event resolves
-        // an identity, so a detection can start out anonymous and only later
-        // be attributable to a specific pet - prefer the name once we have one.
-        if ($this->pet) {
-            return __('petkit.history.detect_identified', [
-                'name' => $this->pet->name,
-            ]);
-        }
-
         $count = $this->parameters['count'] ?? 0;
 
         return $count > 0

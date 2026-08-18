@@ -3,7 +3,7 @@
 return [
     'unknown' => 'Unknown',
     'history' => [
-        'in_use' => 'In use by :name (:weight kg) for :duration seconds',
+        'in_use' => 'In use (:weight kg) for :duration seconds',
         // No weight sensor on some devices (e.g. Purobot Crystal) - falls
         // back to this when parameters carry no pet_weight.
         'in_use_no_weight' => 'In use for :duration seconds',
@@ -20,7 +20,6 @@ return [
         'detect_title' => 'Motion detected',
         'detect' => 'Pet detected near the camera',
         'detect_count' => ':count pet(s) detected near the camera',
-        'detect_identified' => ':name detected near the camera',
         'drink_title' => 'Drinking',
         'drink' => 'Drank for :duration seconds',
     ],
