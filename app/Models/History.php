@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
@@ -19,6 +20,10 @@ class History extends Model
 
     public function pet(): HasOne {
         return $this->hasOne(Pet::class, 'id', 'pet_id');
+    }
+
+    public function device(): BelongsTo {
+        return $this->belongsTo(Device::class);
     }
 
     /**

@@ -15,6 +15,11 @@ class Pet extends Model
         return $this->hasMany(PetImage::class)->orderBy('sort_order');
     }
 
+    public function histories(): HasMany
+    {
+        return $this->hasMany(History::class, 'pet_id')->latest();
+    }
+
     /**
      * Reconciles this pet's images with a plain ordered array of storage
      * paths (the shape the admin form's FileUpload field works with),
