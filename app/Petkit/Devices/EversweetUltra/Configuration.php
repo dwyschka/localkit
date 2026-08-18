@@ -76,29 +76,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     )]
     public ?string $error;
 
-    #[BinarySensor(
-        technicalName: 'pet_detected',
-        name: 'Pet Detected',
-        icon: 'mdi:cat',
-        deviceClass: 'motion',
-        valueTemplate: '{{ value_json.states.petDetected }}',
-        entityCategory: 'diagnostic',
-        payloadOn: true,
-        payloadOff: false
-    )]
-    public bool $petDetected;
-
-    #[BinarySensor(
-        technicalName: 'drink_detected',
-        name: 'Drink Detected',
-        icon: 'mdi:cup-water',
-        valueTemplate: '{{ value_json.states.drinkDetected }}',
-        entityCategory: 'diagnostic',
-        payloadOn: true,
-        payloadOff: false
-    )]
-    public bool $drinkDetected;
-
     // Not published to Home Assistant - the DTO still needs the property for
     // TakeSnapshot's bookkeeping and the Filament admin preview (UI.php).
     public ?string $lastSnapshot;
@@ -1145,8 +1122,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'ipAddress' => ['string'],
             'workingState' => ['nullable', 'string'],
             'error' => ['nullable', 'string'],
-            'petDetected' => ['bool'],
-            'drinkDetected' => ['bool'],
             'lastSnapshot' => ['nullable', 'string'],
             'stream' => ['nullable', 'string'],
 
@@ -1296,8 +1271,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'ipAddress' => '',
             'workingState' => null,
             'error' => null,
-            'petDetected' => false,
-            'drinkDetected' => false,
             'lastSnapshot' => null,
             'stream' => null,
 
@@ -1452,8 +1425,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'ipAddress' => new StringCast(),
             'workingState' => new StringCast(),
             'error' => new StringCast(),
-            'petDetected' => new BooleanCast(),
-            'drinkDetected' => new BooleanCast(),
             'lastSnapshot' => new StringCast(),
             'stream' => new StringCast(),
 
@@ -1608,8 +1579,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         if (isset($config['states'])) {
             $states = $config['states'];
             $data['ipAddress'] = $states['ipAddress'] ?? null;
-            $data['petDetected'] = $states['petDetected'] ?? null;
-            $data['drinkDetected'] = $states['drinkDetected'] ?? null;
             $data['lastSnapshot'] = $states['lastSnapshot'] ?? null;
             $data['stream'] = $states['stream'] ?? null;
 
@@ -1771,8 +1740,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
                 'ipAddress' => $this->ipAddress,
                 'lastSnapshot' => $this->lastSnapshot,
                 'stream' => $this->stream,
-                'petDetected' => $this->petDetected,
-                'drinkDetected' => $this->drinkDetected,
 
                 // Fault flags
                 'taryD' => $this->taryD,

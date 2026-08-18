@@ -65,30 +65,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     public ?string $error;
 
     #[BinarySensor(
-        technicalName: 'move_detected',
-        name: 'Move Detected',
-        icon: 'mdi:cursor-move',
-        deviceClass: 'motion',
-        valueTemplate: '{{ value_json.states.moveDetected }}',
-        entityCategory: 'diagnostic',
-        payloadOn: '1',
-        payloadOff: '0'
-    )]
-    public bool $moveDetected;
-
-    #[BinarySensor(
-        technicalName: 'pet_detected',
-        name: 'Pet Detected',
-        icon: 'mdi:cat',
-        deviceClass: 'motion',
-        valueTemplate: '{{ value_json.states.petDetected }}',
-        entityCategory: 'diagnostic',
-        payloadOn: '1',
-        payloadOff: '0'
-    )]
-    public bool $petDetected;
-
-    #[BinarySensor(
         technicalName: 'lightning',
         name: 'Light',
         icon: 'mdi:lightbulb',
@@ -824,8 +800,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'ipAddress' => ['string'],
             'workingState' => ['nullable', 'string'],
             'error' => ['nullable', 'string'],
-            'moveDetected' => ['bool'],
-            'petDetected' => ['bool'],
             'lightning' => ['bool'],
             'lastSnapshot' => ['nullable', 'string'],
             'stream' => ['nullable', 'string'],
@@ -930,8 +904,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'ipAddress' => '',
             'workingState' => null,
             'error' => null,
-            'moveDetected' => false,
-            'petDetected' => false,
             'lightning' => false,
             'lastSnapshot' => null,
             'stream' => null,
@@ -1061,8 +1033,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'ipAddress' => new StringCast(),
             'workingState' => new StringCast(),
             'error' => new StringCast(),
-            'moveDetected' => new BooleanCast(),
-            'petDetected' => new BooleanCast(),
             'lightning' => new BooleanCast(),
             'lastSnapshot' => new StringCast(),
             'stream' => new StringCast(),
@@ -1179,8 +1149,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         if (isset($config['states'])) {
             $states = $config['states'];
             $data['ipAddress'] = $states['ipAddress'] ?? null;
-            $data['moveDetected'] = $states['moveDetected'] ?? null;
-            $data['petDetected'] = $states['petDetected'] ?? null;
             $data['lightning'] = $states['lightning'] ?? null;
             $data['lastSnapshot'] = $states['lastSnapshot'] ?? null;
             $data['stream'] = $states['stream'] ?? null;
@@ -1299,8 +1267,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
                 'ipAddress' => $this->ipAddress,
                 'lastSnapshot' => $this->lastSnapshot,
                 'stream' => $this->stream,
-                'moveDetected' => $this->moveDetected,
-                'petDetected' => $this->petDetected,
                 'lightning' => $this->lightning,
             ],
             'settings' => [

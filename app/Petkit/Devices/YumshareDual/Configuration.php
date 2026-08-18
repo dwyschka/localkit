@@ -93,41 +93,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     public ?string $error;
 
     #[BinarySensor(
-        technicalName: 'move_detected',
-        name: 'Move Detected',
-        icon: 'mdi:cursor-move',
-        deviceClass: 'motion',
-        valueTemplate: '{{ value_json.states.moveDetected }}',
-        entityCategory: 'diagnostic',
-        payloadOn: true,
-        payloadOff: false
-    )]
-    public bool $moveDetected;
-
-    #[BinarySensor(
-        technicalName: 'eat_detected',
-        name: 'Eat Detected',
-        icon: 'mdi:food',
-        valueTemplate: '{{ value_json.states.eatDetected }}',
-        entityCategory: 'diagnostic',
-        payloadOn: true,
-        payloadOff: false
-    )]
-    public bool $eatDetected;
-
-    #[BinarySensor(
-        technicalName: 'pet_detected',
-        name: 'Pet Detected',
-        icon: 'mdi:cat',
-        deviceClass: 'motion',
-        valueTemplate: '{{ value_json.states.petDetected }}',
-        entityCategory: 'diagnostic',
-        payloadOn: true,
-        payloadOff: false
-    )]
-    public bool $petDetected;
-
-    #[BinarySensor(
         technicalName: 'door',
         name: 'Door',
         icon: 'mdi:door',
@@ -736,9 +701,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'ipAddress' => ['string'],
             'workingState' => ['nullable', 'string'],
             'error' => ['nullable', 'string'],
-            'moveDetected' => ['bool'],
-            'eatDetected' => ['bool'],
-            'petDetected' => ['bool'],
             'door' => ['bool'],
             'bowl' => ['integer'],
             'lastSnapshot' => ['nullable', 'string'],
@@ -820,9 +782,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'ipAddress' => '',
             'workingState' => null,
             'error' => null,
-            'moveDetected' => false,
-            'eatDetected' => false,
-            'petDetected' => false,
             'door' => false,
             'bowl' => -1,
             'lastSnapshot' => null,
@@ -906,9 +865,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'ipAddress' => new StringCast(),
             'workingState' => new StringCast(),
             'error' => new StringCast(),
-            'moveDetected' => new BooleanCast(),
-            'eatDetected' => new BooleanCast(),
-            'petDetected' => new BooleanCast(),
             'door' => new BooleanCast(),
             'bowl' => new IntegerCast(),
             'lastSnapshot' => new StringCast(),
@@ -991,9 +947,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         if (isset($config['states'])) {
             $states = $config['states'];
             $data['ipAddress'] = $states['ipAddress'] ?? null;
-            $data['moveDetected'] = $states['moveDetected'] ?? null;
-            $data['eatDetected'] = $states['eatDetected'] ?? null;
-            $data['petDetected'] = $states['petDetected'] ?? null;
             $data['door'] = $states['door'] ?? null;
             $data['bowl'] = $states['bowl'] ?? null;
             $data['lastSnapshot'] = $states['lastSnapshot'] ?? null;
@@ -1088,9 +1041,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
                 'bowl' => $this->bowl,
                 'lastSnapshot' => $this->lastSnapshot,
                 'stream' => $this->stream,
-                'moveDetected' => $this->moveDetected,
-                'eatDetected' => $this->eatDetected,
-                'petDetected' => $this->petDetected,
             ],
             'settings' => [
                 'shareOpen' => $this->shareOpen,

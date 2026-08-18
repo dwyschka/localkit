@@ -6,6 +6,7 @@ use stdClass;
 use App\DTOs\PetkitDTOInterface;
 use App\Helpers\JsonHelper;
 use App\Helpers\Time;
+use App\Homeassistant\EventPublisher;
 use App\Homeassistant\HomeassistantTopic;
 use App\Homeassistant\Interfaces\Snapshot;
 use App\Jobs\FeedRealtime;
@@ -112,37 +113,33 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
                 ]);
             },
             sprintf('/sys/%s/%s/thing/event/move_detect/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
-
                 $state = json_decode($message?->params?->state, false);
-                $state->moveDetected = 1;
 
                 $device->update([
                     'working_state' => DeviceStates::IDLE->value,
                     'error' => $this->prepareErrorReporting($state),
-                    'configuration' => $this->updateConfiguration($state)
-                ]);
-
-                $state->moveDetected = 0;
-                $device->update([
                     'configuration' => $this->updateConfiguration($state)
                 ]);
             },
             sprintf('/sys/%s/%s/thing/event/pet_detect/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
+                if (isset($message->params->event_id)) {
+                    History::create([
+                        'messageId' => $message->params->event_id,
+                        'pet_id' => null,
+                        'type' => 'DETECT',
+                        'parameters' => json_decode($message->params->content ?? '{}', true),
+                        'device_id' => $device->id,
+                    ]);
+                    EventPublisher::publish($device, 'detect');
+                }
 
                 $state = json_decode($message?->params?->state, false);
-                $state->petDetected = 1;
 
                 $device->update([
                     'working_state' => DeviceStates::IDLE->value,
                     'error' => $this->prepareErrorReporting($state),
                     'configuration' => $this->updateConfiguration($state)
                 ]);
-
-                $state->petDetected = 0;
-                $device->update([
-                    'configuration' => $this->updateConfiguration($state)
-                ]);
-
             },
             sprintf('/sys/%s/%s/thing/event/feed_start/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $content = json_decode($message?->params?->content, false);
@@ -480,7 +477,6 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
         $settings->infrared = $content->ir;
         $settings->bowl = $content->bowl;
         $settings->door = $content->door;
-        $settings->eatDetected = $content->eating;
 
         return $settings->toArray();
     }

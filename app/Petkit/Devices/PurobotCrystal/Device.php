@@ -88,17 +88,10 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
                 ]);
             },
             sprintf('/sys/%s/%s/thing/event/move_detect/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
-
                 $state = json_decode($message?->params?->state, false);
-                $state->moveDetected = 1;
 
                 $device->update([
                     'error' => $this->prepareErrorReporting($state),
-                    'configuration' => $this->updateConfiguration($state)
-                ]);
-
-                $state->moveDetected = 0;
-                $device->update([
                     'configuration' => $this->updateConfiguration($state)
                 ]);
             },
@@ -115,18 +108,11 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
                 }
 
                 $state = json_decode($message?->params?->state, false);
-                $state->petDetected = 1;
 
                 $device->update([
                     'error' => $this->prepareErrorReporting($state),
                     'configuration' => $this->updateConfiguration($state)
                 ]);
-
-                $state->petDetected = 0;
-                $device->update([
-                    'configuration' => $this->updateConfiguration($state)
-                ]);
-
             },
             // pet_in/pet_out share one event_id (like D4SH's eat_start/
             // eat_over) - no weight sensor on this device, so unlike
@@ -142,24 +128,10 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
                     ]);
                     EventPublisher::publish($device, 'in_use_start');
                 }
-
-                $configuration = $this->configurationDefinition();
-                $configuration->petDetected = true;
-
-                $device->update([
-                    'configuration' => $configuration->toArray()
-                ]);
             },
             sprintf('/sys/%s/%s/thing/event/pet_out/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $this->mergeHistory($message?->params?->event_id, $message?->params?->content);
                 EventPublisher::publish($device, 'in_use_over');
-
-                $configuration = $this->configurationDefinition();
-                $configuration->petDetected = false;
-
-                $device->update([
-                    'configuration' => $configuration->toArray()
-                ]);
             },
             sprintf('/sys/%s/%s/thing/event/work_start/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $content = json_decode($message?->params?->content ?? '{}', true);
@@ -374,10 +346,8 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
     {
         $data = $this->configurationDefinition()->toArray();
 
-        foreach (['moveDetected', 'petDetected', 'lightning'] as $state) {
-            if (array_key_exists($state, $data['states'])) {
-                $data['states'][$state] = (int)$data['states'][$state];
-            }
+        if (array_key_exists('lightning', $data['states'])) {
+            $data['states']['lightning'] = (int) $data['states']['lightning'];
         }
 
         // MultiRange configs are not exposed to Home Assistant - strip them from the base json.

@@ -102,13 +102,7 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
                 $this->parseState($device, $message);
             },
             sprintf('/sys/%s/%s/thing/event/move_detect/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
-                $this->parseState($device, $message, mutate: function (stdClass $state) use ($device) {
-                    $state->moveDetected = 1;
-                    $device->update([
-                        'configuration' => $this->updateConfiguration($state)
-                    ]);
-                    $state->moveDetected = 0;
-                });
+                $this->parseState($device, $message);
             },
             sprintf('/sys/%s/%s/thing/event/pet_detect/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 if (isset($message->params->event_id)) {
@@ -122,13 +116,7 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
                     EventPublisher::publish($device, 'detect');
                 }
 
-                $this->parseState($device, $message, mutate: function (stdClass $state) use ($device) {
-                    $state->petDetected = 1;
-                    $device->update([
-                        'configuration' => $this->updateConfiguration($state)
-                    ]);
-                    $state->petDetected = 0;
-                });
+                $this->parseState($device, $message);
             },
             sprintf('/sys/%s/%s/thing/event/pet_discern/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $content = json_decode($message?->params?->content ?? '{}', true);
@@ -546,7 +534,6 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
 
         $settings->bowl = $content->bowl;
         $settings->door = $content->door;
-        $settings->eatDetected = $content->eating;
 
         return $settings->toArray();
     }

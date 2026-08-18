@@ -139,22 +139,10 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface, Has
                     EventPublisher::publish($device, 'detect');
                 }
 
-                $this->parseState($device, $message, mutate: function (stdClass $state) use ($device) {
-                    $state->petDetected = 1;
-                    $device->update([
-                        'configuration' => $this->updateConfiguration($state)
-                    ]);
-                    $state->petDetected = 0;
-                });
+                $this->parseState($device, $message);
             },
             sprintf('/sys/%s/%s/thing/event/drink_detect/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
-                $this->parseState($device, $message, mutate: function (stdClass $state) use ($device) {
-                    $state->drinkDetected = 1;
-                    $device->update([
-                        'configuration' => $this->updateConfiguration($state)
-                    ]);
-                    $state->drinkDetected = 0;
-                });
+                $this->parseState($device, $message);
             },
             // Confirmed from live W7H MQTT capture: drink_start/drink_over
             // share one event_id (like D4SH's eat_start/eat_over), while
