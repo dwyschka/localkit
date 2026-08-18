@@ -96,6 +96,9 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
                 ]);
             },
             sprintf('/sys/%s/%s/thing/event/eat_over/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
+                $this->mergeHistory($message?->params?->event_id, $message?->params?->content);
+                EventPublisher::publish($device, 'eat_over');
+
                 $state = json_decode($message?->params?->state, false);
                 $device->update([
                     'working_state' => DeviceStates::IDLE->value,
@@ -104,6 +107,16 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
                 ]);
             },
             sprintf('/sys/%s/%s/thing/event/eat_start/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
+                if (isset($message->params->event_id)) {
+                    History::create([
+                        'messageId' => $message->params->event_id,
+                        'pet_id' => null,
+                        'type' => 'EAT',
+                        'parameters' => json_decode($message->params->content ?? '{}', true),
+                        'device_id' => $device->id,
+                    ]);
+                    EventPublisher::publish($device, 'eat_start');
+                }
 
                 $state = json_decode($message?->params?->state, false);
                 $device->update([
@@ -160,6 +173,34 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
                 ]);
             },
         ];
+    }
+
+    /**
+     * Merges a follow-up event's content into the History row created for
+     * the event it belongs to (found by messageId - the same event_id for
+     * start/over pairs like eat_start/eat_over). Silently does nothing if
+     * there's no matching row.
+     */
+    private function mergeHistory(?string $messageId, ?string $rawContent): void
+    {
+        if ($messageId === null) {
+            return;
+        }
+
+        $history = History::where('messageId', $messageId)->first();
+
+        if ($history === null) {
+            return;
+        }
+
+        $content = json_decode($rawContent ?? '{}', true) ?? [];
+
+        $history->update([
+            'parameters' => [
+                ...$history->parameters,
+                ...$content,
+            ],
+        ]);
     }
 
     private function reply(string $topic, ?stdClass $message)
