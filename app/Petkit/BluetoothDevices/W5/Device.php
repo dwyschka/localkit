@@ -161,7 +161,15 @@ class Device implements DeviceInterface, HasParserInterface
 
         $configuration->bleSequence = $seq;
         $this->model->configuration = $configuration->toArray();
-        $this->model->save();
+
+        // saveQuietly() - a plain save() here would refire the model's
+        // `updated` event (BluetoothDevice::booted()), which re-publishes
+        // to Home Assistant and calls propertyChange() again. Called from
+        // inside sendCommand(), which itself already runs from that same
+        // event (a form save changing power/mode) - each nested save was
+        // stacking another MQTT connect/publish/disconnect on top, which is
+        // what made saving feel like it hung.
+        $this->model->saveQuietly();
 
         return $seq;
     }
