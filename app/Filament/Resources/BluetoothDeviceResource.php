@@ -126,6 +126,12 @@ class BluetoothDeviceResource extends Resource
                             ->icon('heroicon-m-hashtag')
                             ->copyable(),
                     ]),
+
+                    TextColumn::make('configuration.states.lastUpdate')
+                        ->label('Last Update')
+                        ->since()
+                        ->color('gray')
+                        ->icon('heroicon-m-clock'),
                 ])->space(3),
             ])
             ->filters([

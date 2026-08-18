@@ -40,6 +40,10 @@ class UI
                     ->disabled()
                     ->dehydrated()
                     ->label('Do not Disturb (active now)'),
+                TextInput::make('configuration.states.lastUpdate')
+                    ->disabled()
+                    ->dehydrated()
+                    ->label('Last Update'),
                 Toggle::make('configuration.settings.doNotDisturbSwitch')
                     ->disabled()
                     ->dehydrated()

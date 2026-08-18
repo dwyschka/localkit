@@ -276,6 +276,16 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     )]
     public ?string $linkWith;
 
+    #[Sensor(
+        technicalName: 'last_update',
+        name: 'Last Update',
+        icon: 'mdi:clock-outline',
+        deviceClass: 'timestamp',
+        valueTemplate: '{{ value_json.states.lastUpdate }}',
+        entityCategory: 'diagnostic'
+    )]
+    public ?string $lastUpdate;
+
     // Internal only - not published to Home Assistant. BLE command frames
     // carry a sequence byte (0-255, wrapping) that the device uses to order
     // commands; persisted here so it survives across requests.
@@ -315,6 +325,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'purifiedWaterTodayLiters' => 0.0,
             'energyConsumedKwh' => '0.000000',
             'linkWith' => null,
+            'lastUpdate' => null,
             'bleSequence' => 0,
         ];
     }
@@ -371,6 +382,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'purifiedWaterTodayLiters' => ['numeric', 'min:0'],
             'energyConsumedKwh' => ['string'],
             'linkWith' => ['string', 'nullable'],
+            'lastUpdate' => ['string', 'nullable'],
             'bleSequence' => ['integer', 'min:0', 'max:255'],
 
         ];
@@ -409,6 +421,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'purifiedWaterLiters' => new FloatCast(),
             'purifiedWaterTodayLiters' => new FloatCast(),
             'energyConsumedKwh' => new StringCast(),
+            'lastUpdate' => new StringCast(),
             'bleSequence' => new IntegerCast(),
         ];
     }
@@ -463,6 +476,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         $data['energyConsumedKwh'] = $stats['energyConsumedKwh'] ?? null;
 
         $data['linkWith'] = $device->linkWith?->name ?? 'None';
+        $data['lastUpdate'] = $status['lastUpdate'] ?? null;
         $data['bleSequence'] = $settings['bleSequence'] ?? null;
 
         return new self(array_filter($data, fn($value) => $value !== null));
@@ -524,6 +538,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
                 'warningBreakdown' => $this->warningBreakdown,
                 'warningWaterMissing' => $this->warningWaterMissing,
                 'warningFilter' => $this->warningFilter,
+                'lastUpdate' => $this->lastUpdate,
             ],
             'settings' => [
                 'doNotDisturbSwitch' => $this->doNotDisturbSwitch,

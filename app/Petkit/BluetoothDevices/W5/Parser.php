@@ -149,6 +149,10 @@ class Parser
 
     protected function parseBattery(array $data): array
     {
+        if (count($data) < 3) {
+            throw new UnderflowException('Insufficient data for battery (need 3 bytes, got ' . count($data) . ')');
+        }
+
         $voltage = (($data[0] * 256) + ($data[1] & 0xFF)) / 1000.0;
 
         return [
@@ -159,11 +163,19 @@ class Parser
 
     protected function parseSynchronization(array $data): array
     {
+        if (count($data) < 1) {
+            throw new UnderflowException('Insufficient data for synchronization (need 1 byte, got 0)');
+        }
+
         return ['deviceInitialized' => $data[0]];
     }
 
     protected function parseFirmware(array $data): array
     {
+        if (count($data) < 2) {
+            throw new UnderflowException('Insufficient data for firmware (need 2 bytes, got ' . count($data) . ')');
+        }
+
         return ['firmware' => (float) "{$data[0]}.{$data[1]}"];
     }
 
@@ -171,6 +183,10 @@ class Parser
     {
         if ($this->alias === 'CTW3') {
             return $this->parseDeviceStateCTW3($data);
+        }
+
+        if (count($data) < 12) {
+            throw new UnderflowException('Insufficient data for device state (need 12 bytes, got ' . count($data) . ')');
         }
 
         return [
@@ -220,6 +236,10 @@ class Parser
             return $this->parseDeviceConfigurationCTW3($data);
         }
 
+        if (count($data) < 13) {
+            throw new UnderflowException('Insufficient data for device configuration (need 13 bytes, got ' . count($data) . ')');
+        }
+
         $ledOn  = self::bytesToShort(array_slice($data, 4, 2));
         $ledOff = self::bytesToShort(array_slice($data, 6, 2));
         $dndOn  = self::bytesToShort(array_slice($data, 9, 2));
@@ -245,6 +265,10 @@ class Parser
 
     protected function parseDeviceConfigurationCTW3(array $data): array
     {
+        if (count($data) < 9) {
+            throw new UnderflowException('Insufficient data for CTW3 device configuration (need 9 bytes, got ' . count($data) . ')');
+        }
+
         $batteryWorkingTime = self::bytesToShort(array_slice($data, 2, 2));
         $batterySleepTime   = self::bytesToShort(array_slice($data, 4, 2));
 
@@ -264,6 +288,10 @@ class Parser
 
     protected function parseDeviceStatus(array $data): array
     {
+        if (count($data) < 29) {
+            throw new UnderflowException('Insufficient data for device status (need 29 bytes, got ' . count($data) . ')');
+        }
+
         $mode            = $data[1];
         $filterPct       = ($data[10] & 0xFF);
         $smartTimeOn     = $data[16];

@@ -11,6 +11,7 @@ use App\Petkit\BluetoothDevices\DeviceInterface;
 use App\Petkit\BluetoothDevices\HasParserInterface;
 use App\Petkit\BluetoothDevices\W5\Parser;
 use Illuminate\Support\Facades\Log;
+use UnderflowException;
 
 class Device implements DeviceInterface, HasParserInterface
 {
@@ -50,7 +51,21 @@ class Device implements DeviceInterface, HasParserInterface
         }
         Log::info('W5', ['cmd' => $cmd, 'payload' => $payload]);
         $binary = bin2hex(base64_decode(urldecode($payload)));
-        $decode = $this->parser()->decode($binary, $cmd);
+
+        try {
+            $decode = $this->parser()->decode($binary, $cmd);
+        } catch (UnderflowException $e) {
+            // A short/partial frame (e.g. a mid-handshake ack) would
+            // otherwise silently parse into zeroed-out fields and
+            // overwrite the last known-good state - reject it instead.
+            Log::warning('W5 status frame too short to parse, ignoring', [
+                'bluetooth_device_id' => $this->model->id,
+                'binary' => $binary,
+                'error' => $e->getMessage(),
+            ]);
+            return false;
+        }
+
         Log::info('Decoded', ['decode' => $decode]);
 
         $configuration = Configuration::fromParser($decode['decoded']);
@@ -59,6 +74,7 @@ class Device implements DeviceInterface, HasParserInterface
         // carries none of our own bookkeeping - carry the BLE sequence
         // counter across so it doesn't reset to 0 on every status update.
         $configuration->bleSequence = $this->model->configuration()->bleSequence;
+        $configuration->lastUpdate = now()->toIso8601String();
 
         Log::info('From Parser', ['msg' => $configuration]);
 
