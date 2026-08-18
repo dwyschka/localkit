@@ -25,6 +25,10 @@ class UI
                     ->disabled()
                     ->dehydrated()
                     ->label('Power'),
+                TextInput::make('configuration.states.modeReadable')
+                    ->disabled()
+                    ->dehydrated()
+                    ->label('Mode'),
                 Toggle::make('configuration.states.runningStatus')
                     ->disabled()
                     ->dehydrated()

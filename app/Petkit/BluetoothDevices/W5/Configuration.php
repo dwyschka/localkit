@@ -29,6 +29,15 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     public bool $powerStatus;
     public int $mode;
 
+    #[Sensor(
+        technicalName: 'mode',
+        name: 'Mode',
+        icon: 'mdi:tune',
+        valueTemplate: '{{ value_json.states.modeReadable }}',
+        entityCategory: 'diagnostic'
+    )]
+    public string $modeReadable;
+
 
     #[BinarySensor(
         technicalName: 'running_status',
@@ -134,6 +143,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         return [
             'powerStatus' => false,
             'mode' => 1,
+            'modeReadable' => 'Normal',
             'runningStatus' => false,
             'dndState' => false,
             'doNotDisturbSwitch' => false,
@@ -172,11 +182,24 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         return $this;
     }
 
+    /**
+     * 1 = normal, 2 = smart (see W5\Commands::setMode()).
+     */
+    private static function modeLabel(?int $mode): string
+    {
+        return match ($mode) {
+            1 => 'Normal',
+            2 => 'Smart',
+            default => 'Unknown',
+        };
+    }
+
     protected function rules(): array
     {
         return [
             'powerStatus' => ['boolean'],
             'mode' => ['integer', 'min:0'],
+            'modeReadable' => ['string'],
             'runningStatus' => ['boolean'],
             'dndState' => ['boolean'],
             'doNotDisturbSwitch' => ['boolean'],
@@ -215,6 +238,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         return [
             'powerStatus' => new BooleanCast(),
             'mode' => new IntegerCast(),
+            'modeReadable' => new StringCast(),
             'runningStatus' => new BooleanCast(),
             'dndState' => new BooleanCast(),
             'doNotDisturbSwitch' => new BooleanCast(),
@@ -259,6 +283,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
 
         $data['powerStatus'] = $status['powerStatus'] ?? null;
         $data['mode'] = $status['mode'] ?? null;
+        $data['modeReadable'] = self::modeLabel($status['mode'] ?? null);
         $data['runningStatus'] = $status['runningStatus'] ?? null;
 
         $data['dndState'] = $status['dndState'] ?? null;
@@ -305,6 +330,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
 
         $data['powerStatus'] = (bool)$parser['powerStatus'] ?? null;
         $data['mode'] = $parser['mode'] ?? null;
+        $data['modeReadable'] = self::modeLabel($parser['mode'] ?? null);
         $data['runningStatus'] = $parser['runningStatus'] ?? null;
 
         $data['dndState'] = $parser['dndState'] ?? null;
@@ -349,6 +375,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'states' => [
                 'powerStatus' => $this->powerStatus,
                 'mode' => $this->mode,
+                'modeReadable' => $this->modeReadable,
                 'runningStatus' => $this->runningStatus,
                 'dndState' => $this->dndState,
                 'warningBreakdown' => $this->warningBreakdown,
