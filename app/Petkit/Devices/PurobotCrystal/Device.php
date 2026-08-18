@@ -10,6 +10,7 @@ use App\Helpers\Time;
 use App\Homeassistant\EventPublisher;
 use App\Homeassistant\HomeassistantTopic;
 use App\Homeassistant\Interfaces\Snapshot;
+use App\Jobs\ServiceBle;
 use App\Jobs\ServiceConnect;
 use App\Jobs\ServiceEnd;
 use App\Jobs\ServiceStart;
@@ -670,5 +671,12 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
             $this->getDevice(), $btDevice,
         );
 
+    }
+
+    public function btWrite(BluetoothDevice $btDevice, string $rawCommand, int $cmd): void
+    {
+        ServiceBle::dispatchSync(
+            $this->getDevice(), $btDevice, $rawCommand, $cmd,
+        );
     }
 }

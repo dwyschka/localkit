@@ -9,6 +9,7 @@ use App\Homeassistant\EventPublisher;
 use App\Homeassistant\HomeassistantTopic;
 use App\Homeassistant\Interfaces\Snapshot;
 use App\Jobs\AddWaterReset;
+use App\Jobs\ServiceBle;
 use App\Jobs\ServiceConnect;
 use App\Jobs\ServiceStart;
 use App\Jobs\SetProperty;
@@ -623,6 +624,13 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface, Has
     {
         ServiceConnect::dispatchSync(
             $this->getDevice(), $btDevice,
+        );
+    }
+
+    public function btWrite(BluetoothDevice $btDevice, string $rawCommand, int $cmd): void
+    {
+        ServiceBle::dispatchSync(
+            $this->getDevice(), $btDevice, $rawCommand, $cmd,
         );
     }
 }
