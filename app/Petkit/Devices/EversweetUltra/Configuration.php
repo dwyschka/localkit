@@ -108,15 +108,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     public bool $taryL;
     public bool $taryF;
 
-    #[BinarySensor(
-        technicalName: 'water_tank_empty',
-        name: 'Fresh Water Tank Empty',
-        valueTemplate: '{{ value_json.states.taryO }}',
-        entityCategory: 'diagnostic',
-        deviceClass: 'problem',
-        payloadOn: true,
-        payloadOff: false
-    )]
+    // water_tank_empty not published to Home Assistant.
     public bool $taryO;
 
     public bool $ptcL;
@@ -144,17 +136,9 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     )]
     public bool $cwtInstall;
 
-    #[BinarySensor(
-        technicalName: 'waste_tank_installed',
-        name: 'Waste Tank Installed',
-        valueTemplate: '{{ value_json.states.wtInstall }}',
-        entityCategory: 'diagnostic',
-        payloadOn: true,
-        payloadOff: false
-    )]
+    // waste_tank_installed, waste_tank_lock and heater_installed not
+    // published to Home Assistant.
     public bool $wtInstall;
-
-    // waste_tank_lock/heater_installed not published to Home Assistant.
     public bool $wtLock;
     public bool $heatInstall;
 
@@ -532,48 +516,39 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     )]
     public int $waterChangeTime;
 
-    #[HASwitch(
+    #[BinarySensor(
         technicalName: 'clean_water_lack_light',
         name: 'Clean Water Tank Low',
-        commandTopic: 'setting/set',
         icon: 'mdi:water-alert-outline',
+        deviceClass: 'problem',
         valueTemplate: '{{ value_json.settings.cleanWaterLackLight }}',
-        commandTemplate: '{"cleanWaterLackLight":{{ value }}}',
+        entityCategory: 'diagnostic',
         payloadOn: true,
-        payloadOff: false,
-        stateOn: true,
-        stateOff: false,
-        entityCategory: 'diagnostic'
+        payloadOff: false
     )]
     public bool $cleanWaterLackLight;
 
-    #[HASwitch(
+    #[BinarySensor(
         technicalName: 'clean_water_empty_light',
         name: 'Clean Water Tank Empty',
-        commandTopic: 'setting/set',
         icon: 'mdi:water-off-outline',
+        deviceClass: 'problem',
         valueTemplate: '{{ value_json.settings.cleanWaterEmptyLight }}',
-        commandTemplate: '{"cleanWaterEmptyLight":{{ value }}}',
+        entityCategory: 'diagnostic',
         payloadOn: true,
-        payloadOff: false,
-        stateOn: true,
-        stateOff: false,
-        entityCategory: 'diagnostic'
+        payloadOff: false
     )]
     public bool $cleanWaterEmptyLight;
 
-    #[HASwitch(
+    #[BinarySensor(
         technicalName: 'waste_water_full_light',
         name: 'Waste Water Tank Full',
-        commandTopic: 'setting/set',
         icon: 'mdi:water-alert',
+        deviceClass: 'problem',
         valueTemplate: '{{ value_json.settings.wasteWaterFullLight }}',
-        commandTemplate: '{"wasteWaterFullLight":{{ value }}}',
+        entityCategory: 'diagnostic',
         payloadOn: true,
-        payloadOff: false,
-        stateOn: true,
-        stateOff: false,
-        entityCategory: 'diagnostic'
+        payloadOff: false
     )]
     public bool $wasteWaterFullLight;
 
