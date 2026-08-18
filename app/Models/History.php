@@ -146,6 +146,15 @@ class History extends Model
 
     private function createDetectMessage()
     {
+        // pet_id is only filled in once the async pet_discern event resolves
+        // an identity, so a detection can start out anonymous and only later
+        // be attributable to a specific pet - prefer the name once we have one.
+        if ($this->pet) {
+            return __('petkit.history.detect_identified', [
+                'name' => $this->pet->name,
+            ]);
+        }
+
         $count = $this->parameters['count'] ?? 0;
 
         return $count > 0

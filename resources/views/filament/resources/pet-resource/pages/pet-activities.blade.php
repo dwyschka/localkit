@@ -50,6 +50,16 @@
             border-radius: 0.5rem;
             background: var(--gray-950);
         }
+        .petkit-timeline__day {
+            position: relative;
+            margin-left: 4.25rem;
+            padding-bottom: 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--gray-400);
+        }
     </style>
 
     @if ($histories->isEmpty())
@@ -61,7 +71,16 @@
     @else
         <x-filament::section>
             <div class="petkit-timeline">
+                @php($lastDate = null)
                 @foreach ($histories as $history)
+                    @php($eventDate = $history->created_at?->timezone('Europe/Berlin'))
+                    @php($dateKey = $eventDate?->toDateString())
+                    @if ($dateKey !== $lastDate)
+                        <div class="petkit-timeline__day">
+                            {{ $eventDate?->isToday() ? __('Today') : ($eventDate?->isYesterday() ? __('Yesterday') : $eventDate?->translatedFormat('l, F j, Y')) }}
+                        </div>
+                        @php($lastDate = $dateKey)
+                    @endif
                     @php($meta = \App\Filament\Resources\DeviceResource\Pages\PetkitActivities::typeMeta($history->type))
                     <div class="petkit-timeline__item">
                         <span class="petkit-timeline__node" style="{{ \Filament\Support\get_color_css_variables($meta['color'], shades: [500]) }}">

@@ -20,6 +20,7 @@ return [
         'detect_title' => 'Motion detected',
         'detect' => 'Pet detected near the camera',
         'detect_count' => ':count pet(s) detected near the camera',
+        'detect_identified' => ':name detected near the camera',
         'drink_title' => 'Drinking',
         'drink' => 'Drank for :duration seconds',
     ],
