@@ -4,6 +4,9 @@ namespace App\Petkit\BluetoothDevices\W5;
 
 use App\DTOs\DeviceConfigurationDTO;
 use App\Homeassistant\BinarySensor;
+use App\Homeassistant\Button;
+use App\Homeassistant\HASwitch;
+use App\Homeassistant\Select;
 use App\Homeassistant\Sensor;
 use App\Models\BluetoothDevice;
 use App\Models\Device;
@@ -16,25 +19,29 @@ use WendellAdriel\ValidatedDTO\Casting\StringCast;
 class Configuration extends DeviceConfigurationDTO implements ConfigurationInterface
 {
 
-    #[BinarySensor(
+    #[HASwitch(
         technicalName: 'power_status',
         name: 'Power',
+        commandTopic: 'setting/set',
         icon: 'mdi:power',
-        deviceClass: 'power',
         valueTemplate: '{{ value_json.states.powerStatus }}',
-        entityCategory: 'diagnostic',
-        payloadOn: 'on',
-        payloadOff: 'off'
+        commandTemplate: '{"powerStatus": {{ value }} }',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: 'on',
+        stateOff: 'off'
     )]
     public bool $powerStatus;
     public int $mode;
 
-    #[Sensor(
+    #[Select(
         technicalName: 'mode',
         name: 'Mode',
+        options: ['Normal', 'Smart'],
+        commandTopic: 'setting/set',
         icon: 'mdi:tune',
         valueTemplate: '{{ value_json.states.modeReadable }}',
-        entityCategory: 'diagnostic'
+        commandTemplate: '{% if value == "Normal" %}{"mode": 1}{% elif value == "Smart" %}{"mode": 2}{% endif %}'
     )]
     public string $modeReadable;
 
@@ -290,6 +297,16 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     // carry a sequence byte (0-255, wrapping) that the device uses to order
     // commands; persisted here so it survives across requests.
     public int $bleSequence;
+
+    #[Button(
+        technicalName: 'action_reset_filter',
+        name: 'Reset Filter',
+        commandTopic: 'action/start',
+        icon: 'mdi:filter-outline',
+        commandTemplate: '{"action": "reset_filter"}',
+        availabilityTemplate: 'online',
+    )]
+    private $actionResetFilter = 1;
 
     public function defaults(): array
     {

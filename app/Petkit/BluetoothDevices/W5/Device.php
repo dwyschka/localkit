@@ -10,6 +10,7 @@ use App\Petkit\BluetoothDevices\BluetoothProxyInterface;
 use App\Petkit\BluetoothDevices\DeviceInterface;
 use App\Petkit\BluetoothDevices\HasParserInterface;
 use App\Petkit\BluetoothDevices\W5\Parser;
+use App\Homeassistant\HomeassistantTopic;
 use Illuminate\Support\Facades\Log;
 use UnderflowException;
 
@@ -95,6 +96,37 @@ class Device implements DeviceInterface, HasParserInterface
     public function resetFilter(): void
     {
         $this->sendCommand(fn (int $seq) => Commands::resetFilter($seq), Commands::CMD_RESET_FILTER);
+    }
+
+    /**
+     * Home Assistant equivalent of editing Power/Mode on the record's
+     * detail page - the Power switch and Mode select both command here
+     * (see W5\Configuration's powerStatus/modeReadable attributes), each
+     * only ever setting its own key. Fall back to the currently known
+     * value for whichever key is absent, since the device only accepts
+     * state+mode together in one command.
+     */
+    #[HomeassistantTopic('setting/set')]
+    public function settings(stdClass $message): void
+    {
+        if (!isset($message->powerStatus) && !isset($message->mode)) {
+            return;
+        }
+
+        $configuration = $this->model->configuration();
+
+        $state = isset($message->powerStatus) ? (int) $message->powerStatus : (int) $configuration->powerStatus;
+        $mode = isset($message->mode) ? (int) $message->mode : ($configuration->mode ?: 1);
+
+        $this->setMode($state, $mode);
+    }
+
+    #[HomeassistantTopic('action/start')]
+    public function action(stdClass $message): void
+    {
+        if (($message->action ?? null) === 'reset_filter') {
+            $this->resetFilter();
+        }
     }
 
     /**

@@ -4,7 +4,8 @@ namespace App\Homeassistant;
 
 use App\Helpers\HomeassistantHelper;
 use Attribute;
-use \App\Models\Device as DeviceModel;
+use App\Models\BluetoothDevice;
+use App\Models\Device;
 #[Attribute(Attribute::TARGET_METHOD)]
 class HomeassistantTopic
 {
@@ -14,7 +15,7 @@ class HomeassistantTopic
     ) {
     }
 
-    public function getTopic(DeviceModel $device): string
+    public function getTopic(Device|BluetoothDevice $device): string
     {
         return sprintf('%s/%s', HomeassistantHelper::deviceTopic($device), $this->topic);
     }
