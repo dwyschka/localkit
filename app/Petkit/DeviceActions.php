@@ -45,8 +45,6 @@ class DeviceActions
     public const LINK_WITH_K3 = 'link_with_k3';
     public const UNLINK_WITH_K3 = 'unlink_with_k3';
 
-    public const REBOOT = 'reboot';
-
     public const RESET_WORKING_STATE = 'reset_working_state';
 
     public const RESET_ADD_WATER = 'reset_add_water';
@@ -251,19 +249,13 @@ class DeviceActions
                 ->action(function (Device $record) {
                     $record->definition()->deepClean($record);
                 }),
-            Action::make('Reboot')
-                ->visible(fn(Device $record) => self::visible($record, self::REBOOT))
-                ->requiresConfirmation()
-                ->action(function (Device $record) {
-                    $record->definition()->reboot($record);
-                }),
-            // NextGen devices don't have an MQTT reboot RPC implemented (or
-            // possibly at all - it's never been reverse-engineered), so this
-            // falls back to the device's own telnetd instead. Deliberately
-            // NOT gated on mqtt_connected like everything else here - it's a
-            // different transport, and this is exactly the recovery path
-            // you'd reach for when the device is stuck/unresponsive over
-            // MQTT but still reachable on the network.
+            // Reboot is only offered for NextGen devices, over telnet - older
+            // devices' MQTT reboot RPC was never reliably reverse-engineered
+            // and has been removed. Deliberately NOT gated on mqtt_connected
+            // like everything else here - it's a different transport, and
+            // this is exactly the recovery path you'd reach for when the
+            // device is stuck/unresponsive over MQTT but still reachable on
+            // the network.
             Action::make('Reboot (Telnet)')
                 ->label('Reboot')
                 ->visible(fn(Device $record) => (bool) ($record->isNextGen() ?? false))

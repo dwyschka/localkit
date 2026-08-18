@@ -8,7 +8,6 @@ use App\Helpers\JsonHelper;
 use App\Helpers\Time;
 use App\Homeassistant\HomeassistantTopic;
 use App\Jobs\FeedRealtime;
-use App\Jobs\Reboot;
 use App\Jobs\ServiceConnect;
 use App\Jobs\ServiceEnd;
 use App\Jobs\ServiceStart;
@@ -35,7 +34,6 @@ class Device implements DeviceDefinition, BluetoothProxyInterface
 {
     protected array $actions = [
         DeviceActions::START_FEEDING,
-        DeviceActions::REBOOT,
         DeviceActions::RESET_DESICCANT,
     ];
     public static $workingStates = [
@@ -131,8 +129,6 @@ class Device implements DeviceDefinition, BluetoothProxyInterface
         switch ($action) {
             case DeviceActions::START_FEEDING:
                 return $hasAction;
-            case DeviceActions::REBOOT:
-                return $hasAction && (bool)$this->device->mqtt_connected;
         }
 
         return $hasAction;
@@ -142,11 +138,6 @@ class Device implements DeviceDefinition, BluetoothProxyInterface
     {
         $generic = GenericReply::reply($topic, $message);
         MQTT::connection('publisher')->publish($generic->getTopic(), $generic->getMessage());
-    }
-
-    public function reboot(DeviceModel $record): void
-    {
-        Reboot::dispatchSync($record);
     }
 
     public function startFeeding(DeviceModel $record, ?int $amount = null): void

@@ -6,7 +6,6 @@ use App\DTOs\DeviceConfigurationDTO;
 use App\Homeassistant\BinarySensor;
 use App\Homeassistant\Button;
 use App\Homeassistant\HASwitch;
-use App\Homeassistant\Image;
 use App\Homeassistant\Interfaces\Snapshot;
 use App\Homeassistant\Interfaces\Video;
 use App\Homeassistant\Number;
@@ -100,10 +99,8 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     )]
     public bool $drinkDetected;
 
-    #[Image(
-        technicalName: 'last_snapshot',
-        name: 'Snapshot',
-    )]
+    // Not published to Home Assistant - the DTO still needs the property for
+    // TakeSnapshot's bookkeeping and the Filament admin preview (UI.php).
     public ?string $lastSnapshot;
 
     public ?string $stream;
@@ -474,48 +471,28 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     // Hall-effect position sensors - nested under the wire state's `sensor`
     // object. Naming (Cover/Door/Lift-Tray) is inherited from shared
     // litter-box firmware; relevance to this fountain is unconfirmed.
-    #[Sensor(technicalName: 'hall_ch', name: 'Hall Sensor CH', valueTemplate: '{{ value_json.states.hall_CH }}', entityCategory: 'diagnostic')]
+    // Not published to Home Assistant (kept in the DTO for parity with the
+    // on-device config only).
     public float $hall_CH;
-
-    #[Sensor(technicalName: 'hall_cl', name: 'Hall Sensor CL', valueTemplate: '{{ value_json.states.hall_CL }}', entityCategory: 'diagnostic')]
     public float $hall_CL;
-
-    #[Sensor(technicalName: 'hall_ckl', name: 'Hall Sensor CKL', valueTemplate: '{{ value_json.states.hall_CKL }}', entityCategory: 'diagnostic')]
     public float $hall_CKL;
-
-    #[Sensor(technicalName: 'hall_ckr', name: 'Hall Sensor CKR', valueTemplate: '{{ value_json.states.hall_CKR }}', entityCategory: 'diagnostic')]
     public float $hall_CKR;
-
-    #[Sensor(technicalName: 'hall_dh', name: 'Hall Sensor DH', valueTemplate: '{{ value_json.states.hall_DH }}', entityCategory: 'diagnostic')]
     public float $hall_DH;
-
-    #[Sensor(technicalName: 'hall_dkl', name: 'Hall Sensor DKL', valueTemplate: '{{ value_json.states.hall_DKL }}', entityCategory: 'diagnostic')]
     public float $hall_DKL;
-
-    #[Sensor(technicalName: 'hall_dkr', name: 'Hall Sensor DKR', valueTemplate: '{{ value_json.states.hall_DKR }}', entityCategory: 'diagnostic')]
     public float $hall_DKR;
-
-    #[Sensor(technicalName: 'hall_ltu', name: 'Hall Sensor LTU', valueTemplate: '{{ value_json.states.hall_LTU }}', entityCategory: 'diagnostic')]
     public float $hall_LTU;
-
-    #[Sensor(technicalName: 'hall_ltd', name: 'Hall Sensor LTD', valueTemplate: '{{ value_json.states.hall_LTD }}', entityCategory: 'diagnostic')]
     public float $hall_LTD;
-
-    #[Sensor(technicalName: 'hall_ty', name: 'Hall Sensor TY', valueTemplate: '{{ value_json.states.hall_TY }}', entityCategory: 'diagnostic')]
     public float $hall_TY;
 
     // Work-state codes - only present on some events (e.g. work_start),
-    // nested under the wire state's `workState` object.
-    #[Sensor(technicalName: 'work_mode', name: 'Work Mode', valueTemplate: '{{ value_json.states.workMode }}', entityCategory: 'diagnostic')]
+    // nested under the wire state's `workState` object. Mode/Reason/Process
+    // are kept in the DTO but not published to Home Assistant.
     public int $workMode;
-
-    #[Sensor(technicalName: 'work_reason', name: 'Work Reason', valueTemplate: '{{ value_json.states.workReason }}', entityCategory: 'diagnostic')]
     public int $workReason;
 
     #[Sensor(technicalName: 'safe_warn', name: 'Safety Warning Code', icon: 'mdi:alert', valueTemplate: '{{ value_json.states.safeWarn }}', entityCategory: 'diagnostic')]
     public int $safeWarn;
 
-    #[Sensor(technicalName: 'work_process', name: 'Work Process', valueTemplate: '{{ value_json.states.workProcess }}', entityCategory: 'diagnostic')]
     public int $workProcess;
 
     // Last error_start event content (IMPLEMENT/w7h_error_states.csv rows 57-59).
