@@ -100,35 +100,12 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     // state's `err` object. Most names are inherited from shared litter-box
     // firmware (tary = waste tray, ptc = heater, cyc = circulation pump);
     // rep* naming is explicitly uncertain per the CSV.
-    #[BinarySensor(
-        technicalName: 'tray_door',
-        name: 'Waste Tray Door',
-        valueTemplate: '{{ value_json.states.taryD }}',
-        entityCategory: 'diagnostic',
-        payloadOn: true,
-        payloadOff: false
-    )]
+    // tray_door/tray_lock/tray_full, heater_low_water/heater_malfunction,
+    // valve_lock/valve_error/valve_normal, pump_lock/pump_malfunction and
+    // rep_lock/rep_malfunction are not published to Home Assistant, but the
+    // properties stay for parity with the on-device config.
     public bool $taryD;
-
-    #[BinarySensor(
-        technicalName: 'tray_lock',
-        name: 'Waste Tray Lock',
-        valueTemplate: '{{ value_json.states.taryL }}',
-        entityCategory: 'diagnostic',
-        payloadOn: true,
-        payloadOff: false
-    )]
     public bool $taryL;
-
-    #[BinarySensor(
-        technicalName: 'tray_full',
-        name: 'Waste Tray Full',
-        valueTemplate: '{{ value_json.states.taryF }}',
-        entityCategory: 'diagnostic',
-        deviceClass: 'problem',
-        payloadOn: true,
-        payloadOff: false
-    )]
     public bool $taryF;
 
     #[BinarySensor(
@@ -142,122 +119,19 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     )]
     public bool $taryO;
 
-    #[BinarySensor(
-        technicalName: 'heater_low_water',
-        name: 'Heater Low Water Protect',
-        valueTemplate: '{{ value_json.states.ptcL }}',
-        entityCategory: 'diagnostic',
-        deviceClass: 'problem',
-        payloadOn: true,
-        payloadOff: false
-    )]
     public bool $ptcL;
-
-    #[BinarySensor(
-        technicalName: 'heater_malfunction',
-        name: 'Heater Malfunction',
-        valueTemplate: '{{ value_json.states.ptcM }}',
-        entityCategory: 'diagnostic',
-        deviceClass: 'problem',
-        payloadOn: true,
-        payloadOff: false
-    )]
     public bool $ptcM;
-
-    #[BinarySensor(
-        technicalName: 'valve_lock',
-        name: 'Lift Valve Lock',
-        valueTemplate: '{{ value_json.states.valveL }}',
-        entityCategory: 'diagnostic',
-        payloadOn: true,
-        payloadOff: false
-    )]
     public bool $valveL;
-
-    #[BinarySensor(
-        technicalName: 'valve_error',
-        name: 'Lift Valve Error',
-        valueTemplate: '{{ value_json.states.valveE }}',
-        entityCategory: 'diagnostic',
-        deviceClass: 'problem',
-        payloadOn: true,
-        payloadOff: false
-    )]
     public bool $valveE;
-
-    #[BinarySensor(
-        technicalName: 'valve_normal',
-        name: 'Lift Valve Normal',
-        valueTemplate: '{{ value_json.states.valveN }}',
-        entityCategory: 'diagnostic',
-        payloadOn: true,
-        payloadOff: false
-    )]
     public bool $valveN;
-
-    #[BinarySensor(
-        technicalName: 'pump_lock',
-        name: 'Circulation Pump Lock',
-        valueTemplate: '{{ value_json.states.cycL }}',
-        entityCategory: 'diagnostic',
-        payloadOn: true,
-        payloadOff: false
-    )]
     public bool $cycL;
-
-    #[BinarySensor(
-        technicalName: 'pump_malfunction',
-        name: 'Circulation Pump Malfunction',
-        valueTemplate: '{{ value_json.states.cycM }}',
-        entityCategory: 'diagnostic',
-        deviceClass: 'problem',
-        payloadOn: true,
-        payloadOff: false
-    )]
     public bool $cycM;
-
-    // Naming uncertain per IMPLEMENT/w7h_error_states.csv ("Replacement/relief pump(?)").
-    #[BinarySensor(
-        technicalName: 'rep_lock',
-        name: 'Rep Lock (uncertain)',
-        valueTemplate: '{{ value_json.states.repL }}',
-        entityCategory: 'diagnostic',
-        payloadOn: true,
-        payloadOff: false
-    )]
     public bool $repL;
-
-    #[BinarySensor(
-        technicalName: 'rep_malfunction',
-        name: 'Rep Malfunction (uncertain)',
-        valueTemplate: '{{ value_json.states.repM }}',
-        entityCategory: 'diagnostic',
-        deviceClass: 'problem',
-        payloadOn: true,
-        payloadOff: false
-    )]
     public bool $repM;
 
-    // Install/lock flags - top-level wire state fields.
-    #[BinarySensor(
-        technicalName: 'storage_installed',
-        name: 'Storage Tray Installed',
-        valueTemplate: '{{ value_json.states.stgInstall }}',
-        entityCategory: 'diagnostic',
-        payloadOn: true,
-        payloadOff: false
-    )]
+    // Install/lock flags - top-level wire state fields. storage_installed/
+    // storage_full are not published to Home Assistant (same as above).
     public bool $stgInstall;
-
-    #[BinarySensor(
-        technicalName: 'storage_full',
-        name: 'Storage Tray Full',
-        valueTemplate: '{{ value_json.states.stgFullState }}',
-        entityCategory: 'diagnostic',
-        deviceClass: 'problem',
-        payloadOn: true,
-        payloadOff: false
-    )]
     public bool $stgFullState;
 
     #[BinarySensor(
@@ -280,24 +154,8 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     )]
     public bool $wtInstall;
 
-    #[BinarySensor(
-        technicalName: 'waste_tank_lock',
-        name: 'Waste Tank Lock',
-        valueTemplate: '{{ value_json.states.wtLock }}',
-        entityCategory: 'diagnostic',
-        payloadOn: true,
-        payloadOff: false
-    )]
+    // waste_tank_lock/heater_installed not published to Home Assistant.
     public bool $wtLock;
-
-    #[BinarySensor(
-        technicalName: 'heater_installed',
-        name: 'Heater Installed',
-        valueTemplate: '{{ value_json.states.heatInstall }}',
-        entityCategory: 'diagnostic',
-        payloadOn: true,
-        payloadOff: false
-    )]
     public bool $heatInstall;
 
     // Run-state / status codes - top-level wire state fields, verbatim ints.
@@ -328,13 +186,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     )]
     public int $liftValveState;
 
-    #[Sensor(
-        technicalName: 'pump_state',
-        name: 'Pump Run State',
-        icon: 'mdi:pump',
-        valueTemplate: '{{ value_json.states.pumpState }}',
-        entityCategory: 'diagnostic'
-    )]
+    // pump_state not published to Home Assistant.
     public int $pumpState;
 
     #[Sensor(
@@ -391,13 +243,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     )]
     public int $liftResetState;
 
-    #[Sensor(
-        technicalName: 'lift_live_state',
-        name: 'Lift Valve Live State',
-        icon: 'mdi:valve',
-        valueTemplate: '{{ value_json.states.liftLiveState }}',
-        entityCategory: 'diagnostic'
-    )]
+    // lift_live_state not published to Home Assistant.
     public int $liftLiveState;
 
     #[Sensor(
@@ -481,37 +327,15 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     public int $workMode;
     public int $workReason;
 
-    #[Sensor(technicalName: 'safe_warn', name: 'Safety Warning Code', icon: 'mdi:alert', valueTemplate: '{{ value_json.states.safeWarn }}', entityCategory: 'diagnostic')]
+    // safe_warn not published to Home Assistant.
     public int $safeWarn;
 
     public int $workProcess;
 
-    // Last error_start event content (IMPLEMENT/w7h_error_states.csv rows 57-59).
-    #[Sensor(
-        technicalName: 'last_error_code',
-        name: 'Last Error Code',
-        icon: 'mdi:alert-circle-outline',
-        valueTemplate: '{{ value_json.states.lastErrorCode }}',
-        entityCategory: 'diagnostic'
-    )]
+    // Last error_start event content (IMPLEMENT/w7h_error_states.csv rows
+    // 57-59). Not published to Home Assistant.
     public ?string $lastErrorCode;
-
-    #[Sensor(
-        technicalName: 'last_error_message',
-        name: 'Last Error Message',
-        icon: 'mdi:message-alert-outline',
-        valueTemplate: '{{ value_json.states.lastErrorMessage }}',
-        entityCategory: 'diagnostic'
-    )]
     public ?string $lastErrorMessage;
-
-    #[Sensor(
-        technicalName: 'last_error_detail',
-        name: 'Last Error Detail',
-        icon: 'mdi:message-alert-outline',
-        valueTemplate: '{{ value_json.states.lastErrorDetail }}',
-        entityCategory: 'diagnostic'
-    )]
     public ?string $lastErrorDetail;
 
     // Camera settings
@@ -1031,19 +855,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     )]
     public bool $smartFrame;
 
-    #[HASwitch(
-        technicalName: 'upload',
-        name: 'Cloud Recording',
-        commandTopic: 'setting/set',
-        icon: 'mdi:cloud-upload-outline',
-        valueTemplate: '{{ value_json.settings.upload }}',
-        commandTemplate: '{"upload":{{ value }}}',
-        payloadOn: true,
-        payloadOff: false,
-        stateOn: true,
-        stateOff: false,
-        entityCategory: 'config'
-    )]
+    // upload (Cloud Recording) not published to Home Assistant.
     public bool $upload;
 
     public array $capacity;
@@ -1124,6 +936,16 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         availabilityTemplate: 'online',
     )]
     private $actionDeepClean = 1;
+
+    #[Button(
+        technicalName: 'action_reset_cube',
+        name: 'Reset Cube',
+        commandTopic: 'action/start',
+        icon: 'mdi:cube-outline',
+        commandTemplate: '{"action": "reset_cube"}',
+        availabilityTemplate: 'online',
+    )]
+    private $actionResetCube = 1;
 
     protected function rules(): array
     {

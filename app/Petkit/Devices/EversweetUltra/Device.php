@@ -505,6 +505,9 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface, Has
             case 'deep_clean':
                 $this->deepClean($this->getDevice());
                 break;
+            case 'reset_cube':
+                $this->resetCube($this->getDevice());
+                break;
         }
     }
 

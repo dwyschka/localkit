@@ -575,19 +575,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
 
     public bool $vomitDetection;
 
-    #[HASwitch(
-        technicalName: 'upload',
-        name: 'Cloud Recording',
-        commandTopic: 'setting/set',
-        icon: 'mdi:cloud-upload',
-        valueTemplate: '{{ value_json.settings.upload }}',
-        commandTemplate: '{"upload":{{ value }}}',
-        payloadOn: true,
-        payloadOff: false,
-        stateOn: true,
-        stateOff: false,
-        entityCategory: 'config'
-    )]
+    // upload (Cloud Recording) not published to Home Assistant.
     public bool $upload;
 
     #[Sensor(
