@@ -2,41 +2,49 @@
     @php($histories = $this->getHistories())
 
     <style>
-        .petkit-timeline { position: relative; padding-left: 2.75rem; }
+        .petkit-timeline { position: relative; }
         .petkit-timeline::before {
             content: '';
             position: absolute;
-            left: 1.25rem;
-            top: 0.25rem;
-            bottom: 0.25rem;
+            left: 1.5rem;
+            top: 0.5rem;
+            bottom: 0.5rem;
             width: 2px;
             background: var(--gray-200);
         }
         .dark .petkit-timeline::before { background: var(--gray-700); }
-        .petkit-timeline__item { position: relative; padding-bottom: 1.75rem; }
+        .petkit-timeline__item {
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+            gap: 1.25rem;
+            padding-bottom: 2.75rem;
+        }
         .petkit-timeline__item:last-child { padding-bottom: 0; }
         .petkit-timeline__node {
-            position: absolute;
-            left: -1.75rem;
-            top: 0;
+            position: relative;
+            z-index: 1;
+            flex: none;
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 2.25rem;
-            height: 2.25rem;
+            width: 3rem;
+            height: 3rem;
             border-radius: 9999px;
             background: color-mix(in oklch, var(--color-500) 15%, transparent);
             color: var(--color-500);
         }
-        .petkit-timeline__node svg { width: 1.25rem; height: 1.25rem; }
-        .petkit-timeline__title { font-weight: 600; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 0.375rem; }
-        .petkit-timeline__device { color: var(--gray-500); font-size: 0.8125rem; }
-        .petkit-timeline__desc { color: var(--gray-500); font-size: 0.875rem; margin-top: 0.125rem; }
-        .petkit-timeline__date { color: var(--gray-400); font-size: 0.75rem; margin-top: 0.25rem; }
-        .petkit-timeline__media { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.625rem; }
+        .petkit-timeline__node svg { width: 1.375rem; height: 1.375rem; }
+        .petkit-timeline__content { flex: 1 1 auto; min-width: 0; padding-top: 0.5rem; }
+        .petkit-timeline__title { font-weight: 600; font-size: 1rem; line-height: 1.4; }
+        .petkit-timeline__device { color: var(--gray-500); font-size: 0.875rem; line-height: 1.5; margin-top: 0.5rem; }
+        .petkit-timeline__desc { color: var(--gray-500); font-size: 0.9375rem; line-height: 1.6; margin-top: 0.625rem; }
+        .petkit-timeline__date { color: var(--gray-400); font-size: 0.8125rem; line-height: 1.5; margin-top: 0.75rem; }
+        .petkit-timeline__media { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.25rem; }
         .petkit-timeline__media img,
         .petkit-timeline__media video {
-            width: 10rem;
+            width: 12rem;
+            max-width: 100%;
             aspect-ratio: 16 / 9;
             object-fit: cover;
             border-radius: 0.5rem;
@@ -60,31 +68,33 @@
                             @svg($meta['icon'])
                         </span>
 
-                        <div class="petkit-timeline__title">
-                            {{ $history->title() }}
-                        </div>
-                        <div class="petkit-timeline__device">
-                            {{ $history->device?->name ?? $history->device?->serial_number ?? __('petkit.unknown') }}
-                            &middot; {{ $history->eventDuration() }}s
-                        </div>
-                        <div class="petkit-timeline__desc">{!! $history->message() !!}</div>
-                        <div class="petkit-timeline__date">
-                            {{ $history->created_at?->timezone('Europe/Berlin')?->format('F j, Y · H:i') }}
-                        </div>
-
-                        @php($listingMedia = \App\Filament\Resources\DeviceResource\Pages\PetkitActivities::mediaForListing($history->media))
-                        @if ($listingMedia['image'] || $listingMedia['video'])
-                            <div class="petkit-timeline__media">
-                                @if ($listingMedia['image'])
-                                    <a href="{{ route('media.file', ['fileId' => $listingMedia['image']->file_id]) }}" target="_blank">
-                                        <img src="{{ route('media.file', ['fileId' => $listingMedia['image']->file_id]) }}" alt="Capture" loading="lazy" />
-                                    </a>
-                                @endif
-                                @if ($listingMedia['video'])
-                                    <video src="{{ route('media.file', ['fileId' => $listingMedia['video']->file_id]) }}" controls preload="none"></video>
-                                @endif
+                        <div class="petkit-timeline__content">
+                            <div class="petkit-timeline__title">
+                                {{ $history->title() }}
                             </div>
-                        @endif
+                            <div class="petkit-timeline__device">
+                                {{ $history->device?->name ?? $history->device?->serial_number ?? __('petkit.unknown') }}
+                                &middot; {{ $history->eventDuration() }}s
+                            </div>
+                            <div class="petkit-timeline__desc">{!! $history->message() !!}</div>
+                            <div class="petkit-timeline__date">
+                                {{ $history->created_at?->timezone('Europe/Berlin')?->format('F j, Y · H:i') }}
+                            </div>
+
+                            @php($listingMedia = \App\Filament\Resources\DeviceResource\Pages\PetkitActivities::mediaForListing($history->media))
+                            @if ($listingMedia['image'] || $listingMedia['video'])
+                                <div class="petkit-timeline__media">
+                                    @if ($listingMedia['image'])
+                                        <a href="{{ route('media.file', ['fileId' => $listingMedia['image']->file_id]) }}" target="_blank">
+                                            <img src="{{ route('media.file', ['fileId' => $listingMedia['image']->file_id]) }}" alt="Capture" loading="lazy" />
+                                        </a>
+                                    @endif
+                                    @if ($listingMedia['video'])
+                                        <video src="{{ route('media.file', ['fileId' => $listingMedia['video']->file_id]) }}" controls preload="none"></video>
+                                    @endif
+                                </div>
+                            @endif
+                        </div>
                     </div>
                 @endforeach
             </div>
