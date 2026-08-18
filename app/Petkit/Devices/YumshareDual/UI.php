@@ -39,6 +39,10 @@ class UI
                     ->label('IP Address')
                     ->readOnly()
                     ->disabled(true),
+                TextInput::make('configuration.states.bowl')
+                    ->label('Bowl')
+                    ->readOnly()
+                    ->disabled(true),
             ]),
             Section::make('Consumables')->columns(2)->schema([
                 TextInput::make('configuration.consumables.desiccantDurability')->numeric(),
