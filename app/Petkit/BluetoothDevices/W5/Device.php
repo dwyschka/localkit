@@ -22,9 +22,6 @@ class Device implements DeviceInterface, HasParserInterface
 
     protected array $actions = [
         Actions::REFRESH,
-        Actions::MODE_NORMAL,
-        Actions::MODE_SMART,
-        Actions::POWER_OFF,
         Actions::RESET_FILTER,
     ];
 
@@ -98,6 +95,29 @@ class Device implements DeviceInterface, HasParserInterface
     public function resetFilter(): void
     {
         $this->sendCommand(fn (int $seq) => Commands::resetFilter($seq), Commands::CMD_RESET_FILTER);
+    }
+
+    /**
+     * Power/mode are edited directly on the record's detail page (rather
+     * than via separate "Turn On"/"Turn Off" buttons) - saving the form
+     * lands here, where a change to either gets turned into a single
+     * setMode() write (the device takes both together in one command).
+     */
+    public function propertyChange(BluetoothDevice $device): void
+    {
+        $old = $device->getOriginal('configuration')['states'] ?? [];
+        $new = $device->configuration['states'] ?? [];
+
+        $oldPower = (int) ($old['powerStatus'] ?? 0);
+        $newPower = (int) ($new['powerStatus'] ?? 0);
+        $oldMode  = (int) ($old['mode'] ?? 1);
+        $newMode  = (int) ($new['mode'] ?? 1);
+
+        if ($oldPower === $newPower && $oldMode === $newMode) {
+            return;
+        }
+
+        $this->setMode($newPower, $newMode ?: 1);
     }
 
     /**

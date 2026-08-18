@@ -3,6 +3,7 @@
 namespace App\Petkit\BluetoothDevices\W5;
 
 use Filament\Schemas\Components\Section;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms;
@@ -25,13 +26,16 @@ class UI
             ]),
             Section::make('States')->columns(2)->schema([
                 Toggle::make('configuration.states.powerStatus')
-                    ->disabled()
-                    ->dehydrated()
-                    ->label('Power'),
-                TextInput::make('configuration.states.modeReadable')
-                    ->disabled()
-                    ->dehydrated()
-                    ->label('Mode'),
+                    ->label('Power')
+                    ->helperText('Saving the form sends this to the fountain over BLE.'),
+                Select::make('configuration.states.mode')
+                    ->label('Mode')
+                    ->options([
+                        1 => 'Normal',
+                        2 => 'Smart',
+                    ])
+                    ->native(false)
+                    ->helperText('Saving the form sends this to the fountain over BLE.'),
                 Toggle::make('configuration.states.runningStatus')
                     ->disabled()
                     ->dehydrated()

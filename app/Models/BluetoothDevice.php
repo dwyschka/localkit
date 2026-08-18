@@ -44,6 +44,13 @@ class BluetoothDevice extends Model
         });
 
         self::updated(function (self $device) {
+            if (isset($device->getChanges()['configuration'])) {
+                try {
+                    $device->device()->propertyChange($device);
+                } catch (Exception $e) {
+                }
+            }
+
             $definition = $device->device();
 
             if(config('app.enable.homeassistant')) {
