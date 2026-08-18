@@ -308,6 +308,16 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     )]
     private $actionResetFilter = 1;
 
+    #[Button(
+        technicalName: 'action_refresh_data',
+        name: 'Refresh Device Data',
+        commandTopic: 'action/start',
+        icon: 'mdi:refresh',
+        commandTemplate: '{"action": "refresh_data"}',
+        availabilityTemplate: 'online',
+    )]
+    private $actionRefreshData = 1;
+
     public function defaults(): array
     {
         return [

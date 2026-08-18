@@ -99,6 +99,34 @@ class Device implements DeviceInterface, HasParserInterface
     }
 
     /**
+     * Reconnects the linked proxy device to this W5 over Bluetooth,
+     * prompting it to (re)send its current status - shared by the
+     * "Refresh Device Data" Filament action and the Home Assistant button.
+     */
+    public function refresh(): void
+    {
+        $proxyDevice = $this->model->linkWith;
+
+        if ($proxyDevice === null) {
+            Log::warning('W5 refresh has no linked proxy device to relay through', [
+                'bluetooth_device_id' => $this->model->id,
+            ]);
+            return;
+        }
+
+        $definition = $proxyDevice->definition();
+
+        if (!($definition instanceof BluetoothProxyInterface)) {
+            Log::warning('W5 refresh\'s linked proxy device cannot relay BLE connections', [
+                'bluetooth_device_id' => $this->model->id,
+            ]);
+            return;
+        }
+
+        $definition->btConnect($this->model);
+    }
+
+    /**
      * Home Assistant equivalent of editing Power/Mode on the record's
      * detail page - the Power switch and Mode select both command here
      * (see W5\Configuration's powerStatus/modeReadable attributes), each
@@ -124,9 +152,11 @@ class Device implements DeviceInterface, HasParserInterface
     #[HomeassistantTopic('action/start')]
     public function action(stdClass $message): void
     {
-        if (($message->action ?? null) === 'reset_filter') {
-            $this->resetFilter();
-        }
+        match ($message->action ?? null) {
+            'reset_filter' => $this->resetFilter(),
+            'refresh_data' => $this->refresh(),
+            default => null,
+        };
     }
 
     /**
