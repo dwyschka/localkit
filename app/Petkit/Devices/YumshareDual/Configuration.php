@@ -7,7 +7,6 @@ use App\DTOs\RangeDTO;
 use App\Homeassistant\BinarySensor;
 use App\Homeassistant\Button;
 use App\Homeassistant\HASwitch;
-use App\Homeassistant\Image;
 use App\Homeassistant\Interfaces\Snapshot;
 use App\Homeassistant\Interfaces\Video;
 use App\Homeassistant\Number;
@@ -126,10 +125,8 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     )]
     public int $bowl;
 
-    #[Image(
-        technicalName: 'last_snapshot',
-        name: 'Snapshot',
-    )]
+    // Not published to Home Assistant - the DTO still needs the property for
+    // TakeSnapshot's bookkeeping and the Filament admin preview (UI.php).
     public ?string $lastSnapshot;
 
     public ?string $stream;
@@ -184,19 +181,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
 
     public array $lightMultiRange;
 
-    #[HASwitch(
-        technicalName: 'multi_config',
-        name: 'Multi Config',
-        commandTopic: 'setting/set',
-        icon: 'mdi:toggle-switch',
-        valueTemplate: '{{ value_json.settings.multiConfig }}',
-        commandTemplate: '{"multiConfig":{{ value }}}',
-        payloadOn: true,
-        payloadOff: false,
-        stateOn: true,
-        stateOff: false,
-        entityCategory: 'config'
-    )]
+    // multi_config not published to Home Assistant.
     public bool $multiConfig;
 
     #[HASwitch(
@@ -303,15 +288,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     )]
     public bool $timeDisplay;
 
-    #[BinarySensor(
-        technicalName: 'eat_video',
-        name: 'YUMSHARE Video/Photo Upload',
-        icon: 'mdi:cloud-upload',
-        entityCategory: 'diagnostic',
-        valueTemplate: '{{ value_json.settings.eatVideo }}',
-        payloadOn: true,
-        payloadOff: false
-    )]
+    // eat_video (Video/Photo Upload) not published to Home Assistant.
     public bool $eatVideo;
 
     // Hopper calibration factors (bowl 1 / bowl 2)
@@ -525,13 +502,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     )]
     public int $volume;
 
-    #[Sensor(
-        technicalName: 'selected_sound',
-        name: 'Selected Sound',
-        icon: 'mdi:music-note',
-        entityCategory: 'diagnostic',
-        valueTemplate: '{{ value_json.settings.selectedSound }}'
-    )]
+    // selected_sound not published to Home Assistant.
     public int $selectedSound;
 
     // AI and other settings
@@ -578,13 +549,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     // upload (Cloud Recording) not published to Home Assistant.
     public bool $upload;
 
-    #[Sensor(
-        technicalName: 'service_status',
-        name: 'Service Status',
-        icon: 'mdi:information-outline',
-        entityCategory: 'diagnostic',
-        valueTemplate: '{{ value_json.settings.serviceStatus }}'
-    )]
+    // service_status not published to Home Assistant.
     public int $serviceStatus;
 
     #[HASwitch(
@@ -602,13 +567,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     )]
     public bool $feedPicture;
 
-    #[Sensor(
-        technicalName: 'attire_id',
-        name: 'Attire ID',
-        icon: 'mdi:identifier',
-        entityCategory: 'diagnostic',
-        valueTemplate: '{{ value_json.settings.attireId }}'
-    )]
+    // attire_id not published to Home Assistant.
     public int $attireId;
 
     #[Sensor(
@@ -620,26 +579,12 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     )]
     public int $logo_cn;
 
-    #[BinarySensor(
-        technicalName: 'auto_upgrade',
-        name: 'Auto Upgrade',
-        icon: 'mdi:cloud-download',
-        entityCategory: 'diagnostic',
-        valueTemplate: '{{ value_json.settings.autoUpgrade }}',
-        payloadOn: true,
-        payloadOff: false
-    )]
+    // auto_upgrade not published to Home Assistant.
     public bool $autoUpgrade;
 
     public array $capacity;
 
-    #[Sensor(
-        technicalName: 'type_code',
-        name: 'Type Code',
-        icon: 'mdi:identifier',
-        entityCategory: 'diagnostic',
-        valueTemplate: '{{ value_json.settings.typeCode }}'
-    )]
+    // type_code not published to Home Assistant.
     public int $typeCode;
 
     #[Sensor(
