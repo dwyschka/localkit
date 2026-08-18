@@ -66,12 +66,16 @@
 
     @if ($histories->isEmpty())
         <x-filament::section>
+            <x-slot name="heading">{{ $this->record->name ?? $this->record->serial_number }}</x-slot>
+
             <div style="text-align:center;padding:1.5rem 0;color:var(--gray-500);font-size:0.875rem;">
                 {{ __('No activities recorded yet.') }}
             </div>
         </x-filament::section>
     @else
         <x-filament::section>
+            <x-slot name="heading">{{ $this->record->name ?? $this->record->serial_number }}</x-slot>
+
             <div class="petkit-timeline">
                 @php($lastDate = null)
                 @foreach ($histories as $history)
