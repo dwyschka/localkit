@@ -200,8 +200,8 @@ class UI
                                 ->columns(4)
                                 ->required()
                                 ->stateCast(new IdentityStateCast())
-                                ->formatStateUsing(fn(string|array $state) => is_array($state) ? $state : explode(',', $state))
-                                ->dehydrateStateUsing(fn($state) => implode(',', Arr::sort(array_filter($state)))),
+                                ->formatStateUsing(fn(string|array|null $state) => is_array($state) ? $state : (($state === null || $state === '') ? [] : explode(',', $state)))
+                                ->dehydrateStateUsing(fn($state) => implode(',', Arr::sort(array_filter((array) $state)))),
 
                             Repeater::make('it')
                                 ->label('Schedule Items')
