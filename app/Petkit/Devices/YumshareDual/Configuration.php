@@ -4,7 +4,6 @@ namespace App\Petkit\Devices\YumshareDual;
 
 use App\DTOs\DeviceConfigurationDTO;
 use App\DTOs\RangeDTO;
-use App\Homeassistant\BinarySensor;
 use App\Homeassistant\Button;
 use App\Homeassistant\HASwitch;
 use App\Homeassistant\Interfaces\Snapshot;
@@ -105,15 +104,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     )]
     public ?string $error;
 
-    #[BinarySensor(
-        technicalName: 'door',
-        name: 'Door',
-        icon: 'mdi:door',
-        valueTemplate: '{{ value_json.states.door }}',
-        entityCategory: 'diagnostic',
-        payloadOn: true,
-        payloadOff: false
-    )]
     public bool $door;
 
     #[Sensor(

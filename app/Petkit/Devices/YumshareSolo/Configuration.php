@@ -93,15 +93,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     )]
     public ?string $error;
 
-    #[BinarySensor(
-        technicalName: 'door',
-        name: 'Door',
-        icon: 'mdi:door',
-        valueTemplate: '{{ value_json.states.door }}',
-        entityCategory: 'diagnostic',
-        payloadOn: true,
-        payloadOff: false
-    )]
     public bool $door;
 
     #[Sensor(
