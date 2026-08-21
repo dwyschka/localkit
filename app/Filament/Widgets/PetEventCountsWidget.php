@@ -19,7 +19,7 @@ class PetEventCountsWidget extends Widget
 
     protected static ?int $sort = 1;
 
-    private const DAYS = 14;
+    private const DAYS = 3;
 
     /**
      * @return Collection<string, Collection<int, array{pet: \App\Models\Pet, events: Collection<string, int>}>>
