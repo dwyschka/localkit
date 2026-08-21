@@ -231,8 +231,16 @@ class UI
                                         ->label('id')
                                         ->required(),
 
-                                    TextInput::make('a')
-                                        ->label('Amount')
+                                    TextInput::make('a1')
+                                        ->label('Amount Hopper 1')
+                                        ->numeric()
+                                        ->required()
+                                        ->integer()
+                                        ->dehydrateStateUsing(fn($state) => (int)$state)
+                                        ->suffix('amount'),
+
+                                    TextInput::make('a2')
+                                        ->label('Amount Hopper 2')
                                         ->numeric()
                                         ->required()
                                         ->integer()
@@ -243,7 +251,7 @@ class UI
                                         ->label('Time (seconds)')
                                         ->required(),
                                 ])
-                                ->columns(2)
+                                ->columns(3)
                                 ->addActionLabel('Add Schedule Item')
                                 ->minItems(1)
                                 ->collapsible()
@@ -264,7 +272,8 @@ class UI
                                     });
 
                                     $data = collect($state)->map(fn($s) => [
-                                        'a' => $s['a'],
+                                        'a1' => $s['a1'],
+                                        'a2' => $s['a2'],
                                         'id' => $s['id'],
                                         't' => $s['t'] + 1,
                                     ])->toArray();
@@ -279,8 +288,9 @@ class UI
                                         $minutes = floor(($seconds % 3600) / 60);
                                         $time = sprintf('%02d:%02d', $hours, $minutes);
                                     }
-                                    $amount = $state['a'] ?? '';
-                                    return $time ? "{$time} ({$amount}g)" : 'New Item';
+                                    $amount1 = $state['a1'] ?? '';
+                                    $amount2 = $state['a2'] ?? '';
+                                    return $time ? "{$time} ({$amount1}g / {$amount2}g)" : 'New Item';
                                 }),
                         ])
                         ->columns(1)

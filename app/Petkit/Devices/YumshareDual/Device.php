@@ -334,7 +334,7 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
     {
 
         $latest = Time::calculateLatest($device->configuration['schedule']);
-        $nextTick = last($latest) ?: ['a' => 0, 'id' => '', 't' => 0];
+        $nextTick = last($latest) ?: ['a1' => 0, 'a2' => 0, 'id' => '', 't' => 0];
 
         return json_encode([
             'schedule' => $device->configuration['schedule'],
@@ -511,7 +511,7 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
     {
         $unusedDays = [1,2,3,4,5,6,7];
         $latest = Time::calculateLatest($this->device->configuration['schedule']);
-        $nextTick = last($latest) ?: ['a' => 0, 'id' => '', 't' => 0];
+        $nextTick = last($latest) ?: ['a1' => 0, 'a2' => 0, 'id' => '', 't' => 0];
         $schedules = $this->device->configuration['schedule'];
 
         foreach($schedules as &$schedule) {

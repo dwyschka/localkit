@@ -3,6 +3,7 @@
 namespace App\Helpers;
 
 use Carbon\CarbonInterface;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use InvalidArgumentException;
 
@@ -75,8 +76,13 @@ class Time
 
                 $date = Carbon::createFromTimestamp($key);
 
+                // Single-hopper devices key the dispensed amount as 'a'; dual-hopper
+                // devices (e.g. D4SH) split it into 'a1'/'a2' - pass through whichever
+                // of these the schedule item actually carries.
+                $amounts = array_map(fn ($amount) => (int)$amount, Arr::only($item, ['a', 'a1', 'a2']));
+
                 return [
-                    'a' => (int)$item['a'],
+                    ...$amounts,
                     'id' => sprintf('s_%d_%d', $date->format('Ymd'), $item['t']),
                     't' => round($current->diffInSeconds($date, true) - 1)
                 ];
