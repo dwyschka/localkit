@@ -84,8 +84,7 @@ class Device implements DeviceDefinition, BluetoothProxyInterface
 
                 $content = json_decode($message?->params?->content, false);
 
-                History::create([
-                    'messageId' => $message->params->event_id,
+                History::updateOrCreate(['messageId' => $message->params->event_id], [
                     'pet_id' => null,
                     'type' => DeviceStates::WORKING->value,
                     'parameters' => $content,

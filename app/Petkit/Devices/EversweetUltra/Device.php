@@ -131,8 +131,7 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface, Has
             },
             sprintf('/sys/%s/%s/thing/event/pet_detect/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 if (isset($message->params->event_id)) {
-                    History::create([
-                        'messageId' => $message->params->event_id,
+                    History::updateOrCreate(['messageId' => $message->params->event_id], [
                         'pet_id' => null,
                         'type' => 'DETECT',
                         'parameters' => json_decode($message->params->content ?? '{}', true),
@@ -159,8 +158,7 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface, Has
             },
             sprintf('/sys/%s/%s/thing/event/drink_start/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 if (isset($message->params->event_id)) {
-                    History::create([
-                        'messageId' => $message->params->event_id,
+                    History::updateOrCreate(['messageId' => $message->params->event_id], [
                         'pet_id' => null,
                         'type' => 'DRINK',
                         'parameters' => json_decode($message->params->content ?? '{}', true),

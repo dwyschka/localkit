@@ -104,8 +104,7 @@ class Device implements DeviceDefinition, BluetoothProxyInterface
                 $deviceStatus = $this->deviceStatus($content?->action);
 
                 if ($deviceStatus !== DeviceStates::IDLE->value) {
-                    History::create([
-                        'messageId' => $message->params->event_id,
+                    History::updateOrCreate(['messageId' => $message->params->event_id], [
                         'pet_id' => null,
                         'type' => $deviceStatus,
                         'parameters' => $content,
@@ -164,8 +163,7 @@ class Device implements DeviceDefinition, BluetoothProxyInterface
                 // The device reports pet_weight in grams (e.g. 4209), while pets store their
                 // weight in kg — convert before matching, and store the pet's id (not the model).
                 $pet = Pet::nearestWeight($content['pet_weight'] / 1000);
-                History::create([
-                    'messageId' => $message->params->event_id,
+                History::updateOrCreate(['messageId' => $message->params->event_id], [
                     'pet_id' => $pet?->id,
                     'parameters' => $content,
                     'type' => 'IN_USE',

@@ -98,8 +98,7 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
             },
             sprintf('/sys/%s/%s/thing/event/pet_detect/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 if (isset($message->params->event_id)) {
-                    History::create([
-                        'messageId' => $message->params->event_id,
+                    History::updateOrCreate(['messageId' => $message->params->event_id], [
                         'pet_id' => null,
                         'type' => 'DETECT',
                         'parameters' => json_decode($message->params->content ?? '{}', true),
@@ -120,8 +119,7 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
             // PuraMax's pet_out this can't match a pet by weight.
             sprintf('/sys/%s/%s/thing/event/pet_in/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 if (isset($message->params->event_id)) {
-                    History::create([
-                        'messageId' => $message->params->event_id,
+                    History::updateOrCreate(['messageId' => $message->params->event_id], [
                         'pet_id' => null,
                         'type' => 'IN_USE',
                         'parameters' => json_decode($message->params->content ?? '{}', true),
@@ -142,8 +140,7 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
                 // codes (2 = deodorize, 4 = level, 7 = lightning) are already
                 // reported through their own dedicated *_over topics.
                 if (isset($message->params->event_id) && ($content['action'] ?? null) === 0) {
-                    History::create([
-                        'messageId' => $message->params->event_id,
+                    History::updateOrCreate(['messageId' => $message->params->event_id], [
                         'pet_id' => null,
                         'type' => 'CLEANING',
                         'parameters' => $content,
@@ -199,8 +196,7 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
                 $content = json_decode($message?->params?->content ?? '{}', true);
 
                 if (isset($message->params->event_id)) {
-                    History::create([
-                        'messageId' => $message->params->event_id,
+                    History::updateOrCreate(['messageId' => $message->params->event_id], [
                         'pet_id' => null,
                         'type' => 'ERROR',
                         'parameters' => $content,
