@@ -346,7 +346,12 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
     {
 
         $latest = Time::calculateLatest($device->configuration['schedule']);
-        $nextTick = last($latest) ?: ['a1' => 0, 'a2' => 0, 'id' => '', 't' => 0];
+        // calculateLatest() returns entries sorted ascending by proximity, so
+        // the nearest upcoming feed - what "nextTick" should mean - is the
+        // first element, not the last (last was the farthest of the up-to-3
+        // entries, e.g. an event 6 days out while the actual next feed was
+        // 5 minutes away).
+        $nextTick = head($latest) ?: ['a1' => 0, 'a2' => 0, 'id' => '', 't' => 0];
 
         return json_encode([
             'schedule' => array_map(
@@ -526,7 +531,12 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
     {
         $unusedDays = [1,2,3,4,5,6,7];
         $latest = Time::calculateLatest($this->device->configuration['schedule']);
-        $nextTick = last($latest) ?: ['a1' => 0, 'a2' => 0, 'id' => '', 't' => 0];
+        // calculateLatest() returns entries sorted ascending by proximity, so
+        // the nearest upcoming feed - what "nextTick" should mean - is the
+        // first element, not the last (last was the farthest of the up-to-3
+        // entries, e.g. an event 6 days out while the actual next feed was
+        // 5 minutes away).
+        $nextTick = head($latest) ?: ['a1' => 0, 'a2' => 0, 'id' => '', 't' => 0];
         $schedules = $this->device->configuration['schedule'];
 
         foreach($schedules as &$schedule) {
