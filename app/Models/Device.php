@@ -56,8 +56,18 @@ class Device extends Model
                     $device->definition()->propertyChange($device);
                 }
             } catch (Exception $e) {
-
-
+                // propertyChange() runs the whole config->wire pipeline
+                // (schedule normalization, MQTT publish via
+                // SetProperty::dispatchSync()) synchronously right here.
+                // This used to be a bare empty catch, so ANY exception in
+                // that pipeline - a malformed schedule shape, an MQTT
+                // connection failure, anything - silently dropped the
+                // device push with zero trace anywhere. Log it so failures
+                // are actually diagnosable instead of just "the device
+                // didn't update and nothing explains why".
+                Log::error('propertyChange failed for device ' . $device->id, [
+                    'exception' => $e,
+                ]);
             }
 
 //            if(config('petkit.homeassistant.enabled')) {
