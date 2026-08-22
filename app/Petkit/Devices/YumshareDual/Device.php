@@ -353,7 +353,7 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
                 fn(array $schedule) => Time::normalizeScheduleGroupForWire($schedule),
                 $device->configuration['schedule']
             ),
-            'nextTick' => $nextTick['t'],
+            'nextTick' => $nextTick['t'] + 1,
             'latest' => $latest
         ]);
 
@@ -553,7 +553,7 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
 
         return [
             'schedule' => $schedules,
-            'nextTick' => $nextTick['t'],
+            'nextTick' => $nextTick['t'] + 1,
             'latest' => $latest
         ];
     }
