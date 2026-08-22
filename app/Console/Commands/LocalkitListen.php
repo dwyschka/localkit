@@ -88,6 +88,16 @@ class LocalkitListen extends Command
                         ->each(function ($callback, $stateTopic) use ($topic, $message, $definition, $output) {
                             if ($stateTopic === $topic) {
                                 $output->writeln(sprintf('Found State Topic %s', $stateTopic));
+
+                                // $definitions was built once at process startup and this
+                                // listener runs forever, so the wrapped Device model is a
+                                // long-lived in-memory copy - without refreshing it here,
+                                // any change made elsewhere (e.g. a schedule/settings edit
+                                // in the Filament admin, a separate PHP-FPM request) is
+                                // invisible to it, and the next state message rebuilds
+                                // 'configuration' from the stale snapshot and silently
+                                // overwrites that change back out.
+                                $definition->getDevice()->refresh();
                                 $callback($definition->getDevice(), $topic, $message);
                             }
                         });
