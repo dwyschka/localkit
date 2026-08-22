@@ -275,7 +275,7 @@ class UI
                                         'a1' => $s['a1'],
                                         'a2' => $s['a2'],
                                         'id' => $s['id'],
-                                        't' => $s['t'] + 1,
+                                        't' => $s['t'],
                                     ])->toArray();
 
                                     return $data;
