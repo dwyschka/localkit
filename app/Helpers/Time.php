@@ -84,7 +84,11 @@ class Time
                 return [
                     ...$amounts,
                     'id' => sprintf('s_%d_%d', $date->format('Ymd'), $item['t']),
-                    't' => round($current->diffInSeconds($date, true) - 1)
+                    // cJSON's valueint is fine with a float-looking JSON number, but
+                    // schedule.md's own §3d warning (wrong JSON type is worse than a
+                    // missing field) is reason enough to not rely on that leniency -
+                    // round() returns a float, so cast explicitly to a genuine int.
+                    't' => (int) round($current->diffInSeconds($date, true) - 1)
                 ];
             })
             ->values()->toArray();
@@ -93,19 +97,49 @@ class Time
     }
 
     /**
-     * The device's on-device parser (pk_schmg_parse_schedule, per schedule.md)
-     * reads a schedule group's 're' one character at a time and sets a bit for
-     * each '1'-'7' digit - the first character outside that range (e.g. the
-     * comma our stored/editable representation uses) truncates parsing for
-     * the rest of the string instead of being skipped as a separator. Storage
-     * and the Filament form keep the comma-separated form for readability;
-     * this strips it down to the bare digit run the firmware actually expects
-     * right before a schedule is serialized onto the wire (MQTT 'feed' or the
-     * HTTP dev_feed_get response - both go through the same parser).
+     * The device's on-device parser (pk_schmg_parse_schedule, per schedule.md
+     * §3c) copies a schedule group's 're' verbatim into a 20-byte stack
+     * buffer via strcpy with no length check, then scans all 20 buffer
+     * positions independently, setting a bit for each '1'-'7' digit found -
+     * non-digit characters (e.g. the comma our stored/editable representation
+     * uses) are just skipped in place, not a parse-stopping delimiter. So
+     * "1,2,3" and "123" already produce the identical mask; stripping the
+     * comma here isn't required for correctness, only for staying well under
+     * the 20-char buffer - a 're' at or over ~20 chars overflows that stack
+     * buffer on-device (crash risk, not just a rejected write). Our source is
+     * always at most the 7 distinct weekday digits, but the length is capped
+     * defensively in case that ever changes upstream.
      */
     public static function toWireRepeatDays(string $re): string
     {
-        return preg_replace('/[^1-7]/', '', $re);
+        return substr(preg_replace('/[^1-7]/', '', $re), 0, 19);
+    }
+
+    /**
+     * schedule.md §3d: the device reads 'id'/'re' via cJSON's valuestring
+     * (no NULL check - a JSON number in that slot instead of a string is a
+     * NULL-pointer deref, i.e. a crash, not a graceful rejection) and
+     * 'a'/'a1'/'a2'/'t' via valueint (a JSON string there just silently
+     * reads as 0, no error). Storage already casts these correctly on save,
+     * but that's a UI-layer guarantee, not a wire-format one - this
+     * re-asserts the right native JSON type for every field right before a
+     * schedule group is serialized onto the wire, so a stray untyped value
+     * from any other write path can't reach the device as one of these.
+     */
+    public static function normalizeScheduleGroupForWire(array $schedule): array
+    {
+        return [
+            ...$schedule,
+            're' => self::toWireRepeatDays((string) $schedule['re']),
+            'it' => array_map(fn(array $item) => [
+                ...$item,
+                'id' => (string) $item['id'],
+                ...(array_key_exists('a', $item) ? ['a' => (int) $item['a']] : []),
+                ...(array_key_exists('a1', $item) ? ['a1' => (int) $item['a1']] : []),
+                ...(array_key_exists('a2', $item) ? ['a2' => (int) $item['a2']] : []),
+                't' => (int) $item['t'],
+            ], $schedule['it']),
+        ];
     }
 
     public static function toTimeFromSeconds(int $seconds)
