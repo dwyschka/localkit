@@ -157,39 +157,43 @@ class Device implements DeviceDefinition, BluetoothProxyInterface
         return $this->configurationDefinition()->toArray();
     }
 
+    /**
+     * Settings and schedule can both change in the same save (e.g. toggling
+     * sche_enable while also editing feed times) - the device takes those
+     * together in one property_set, so both diffs are merged into a single
+     * dispatch rather than the settings diff silently winning over a
+     * schedule change or vice versa.
+     */
     public function propertyChange(DeviceModel $device): void
     {
-        $scheduleChange = false;
         $difference = JsonHelper::difference($device->configuration['settings'], $device->getOriginal('configuration')['settings']);
-        if(empty($difference)) {
-            $difference = JsonHelper::difference($device->configuration['schedule'], $device->getOriginal('configuration')['schedule']);
-            $scheduleChange = !empty($difference);
-        }
+        $scheduleChanged = !empty(JsonHelper::difference($device->configuration['schedule'], $device->getOriginal('configuration')['schedule']));
 
         $dto = $this->configurationDefinition();
 
-        if(!$scheduleChange) {
-            foreach ($difference as $key => $val) {
+        foreach ($difference as $key => $val) {
 
-                $value = $dto->$key;
+            $value = $dto->$key;
 
 
-                if($value instanceof PetkitDTOInterface) {
-                    $difference[$key] = $value->toPetkitConfiguration();
-                } else if (is_numeric($value)) {
-                    $difference[$key] = (int)$value;
-                } else if (is_bool($value)) {
-                    $difference[$key] = (int)$value;
-                }
+            if($value instanceof PetkitDTOInterface) {
+                $difference[$key] = $value->toPetkitConfiguration();
+            } else if (is_numeric($value)) {
+                $difference[$key] = (int)$value;
+            } else if (is_bool($value)) {
+                $difference[$key] = (int)$value;
             }
-            SetProperty::dispatchSync($device, $difference);
-        } else {
-
-            SetProperty::dispatchSync($device, [
-                'feed' => $this->toFeed($device)
-            ]);
         }
 
+        if ($scheduleChanged) {
+            $difference['feed'] = $this->toFeed($device);
+        }
+
+        if (empty($difference)) {
+            return;
+        }
+
+        SetProperty::dispatchSync($device, $difference);
     }
 
     public function toHomeassistant()
