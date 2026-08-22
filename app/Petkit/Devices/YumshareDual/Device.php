@@ -76,18 +76,22 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
             },
             sprintf('/sys/%s/%s/thing/event/feed_stop/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $this->parseState($device, $message);
+                $this->reply($topic, $message);
             },
             sprintf('/sys/%s/%s/thing/event/property_post/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $this->parseState($device, $message);
+                $this->reply($topic, $message);
             },
             sprintf('/sys/%s/%s/thing/event/feed_over/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $this->parseState($device, $message);
+                $this->reply($topic, $message);
             },
             sprintf('/sys/%s/%s/thing/event/eat_over/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $this->mergeHistory($message?->params?->event_id, $message?->params?->content);
                 EventPublisher::publish($device, 'eat_over');
 
                 $this->parseState($device, $message);
+                $this->reply($topic, $message);
             },
             sprintf('/sys/%s/%s/thing/event/eat_start/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 if (isset($message->params->event_id)) {
@@ -101,9 +105,11 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
                 }
 
                 $this->parseState($device, $message);
+                $this->reply($topic, $message);
             },
             sprintf('/sys/%s/%s/thing/event/move_detect/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $this->parseState($device, $message);
+                $this->reply($topic, $message);
             },
             sprintf('/sys/%s/%s/thing/event/pet_detect/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 if (isset($message->params->event_id)) {
@@ -117,6 +123,7 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
                 }
 
                 $this->parseState($device, $message);
+                $this->reply($topic, $message);
             },
             sprintf('/sys/%s/%s/thing/event/pet_discern/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $content = json_decode($message?->params?->content ?? '{}', true);
@@ -124,6 +131,7 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
                 $this->mergeHistory($content['related_event'] ?? null, $message?->params?->content);
 
                 $this->parseState($device, $message);
+                $this->reply($topic, $message);
             },
             sprintf('/sys/%s/%s/thing/event/feed_start/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $content = json_decode($message?->params?->content, false);
@@ -136,6 +144,7 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
                 ]);
 
                 $this->parseState($device, $message, DeviceStates::WORKING->value);
+                $this->reply($topic, $message);
             },
         ];
     }
