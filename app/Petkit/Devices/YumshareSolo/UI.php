@@ -53,11 +53,16 @@ class UI
 
                 })->readOnly()->disabled(true),
             ]),
-            Section::make('Feeding')->schema([
+            Section::make('Feeding')->columns(2)->schema([
                 TextInput::make('configuration.settings.amount')
                     ->label('Feeding Amount')
                     ->helperText('Default amount for manual feeding')
                     ->numeric(),
+                TextInput::make('configuration.settings.factor')
+                    ->label('Factor')
+                    ->helperText('Device-side calibration factor amounts are divided by before dispensing')
+                    ->readOnly()
+                    ->disabled(true),
             ]),
             Section::make('Media')->schema([
                 View::make('camera_stream')->viewData(fn($record): array => [
