@@ -103,16 +103,17 @@ class Time
      * positions independently, setting a bit for each '1'-'7' digit found -
      * non-digit characters (e.g. the comma our stored/editable representation
      * uses) are just skipped in place, not a parse-stopping delimiter. So
-     * "1,2,3" and "123" already produce the identical mask; stripping the
-     * comma here isn't required for correctness, only for staying well under
-     * the 20-char buffer - a 're' at or over ~20 chars overflows that stack
-     * buffer on-device (crash risk, not just a rejected write). Our source is
-     * always at most the 7 distinct weekday digits, but the length is capped
-     * defensively in case that ever changes upstream.
+     * "1,2,3" and "123" produce the identical mask on-device either way -
+     * but the comma is kept here (only genuinely invalid characters are
+     * stripped) since it's the readable form the app itself sends and what
+     * shows up in captures/logs; a bare "1267" is correct but confusing to
+     * read back. The 20-char buffer is still the hard constraint - a 're' at
+     * or over ~20 chars overflows that stack buffer on-device (crash risk,
+     * not just a rejected write) - so length stays capped regardless.
      */
     public static function toWireRepeatDays(string $re): string
     {
-        return substr(preg_replace('/[^1-7]/', '', $re), 0, 19);
+        return substr(preg_replace('/[^1-7,]/', '', $re), 0, 19);
     }
 
     /**
