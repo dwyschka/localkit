@@ -357,6 +357,7 @@ class UI
                     ->helperText('Indicator light work within the following period')
                     ->label('Indicator Light'),
 
+                Hidden::make('configuration.settings.lightMultiRange.name')->default('lightMultiRange'),
                 Repeater::make('configuration.settings.lightMultiRange.ranges')
                     ->columns(2)
                     ->label('Screen Period')
