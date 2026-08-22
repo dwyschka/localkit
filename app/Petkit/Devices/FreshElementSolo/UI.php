@@ -213,7 +213,7 @@ class UI
                                     return collect($state)->map(fn($s) => [
                                         'a' => $s['a'],
                                         'id' => $s['id'],
-                                        't' => $s['t'] + 1,
+                                        't' => $s['t'],
                                     ])->toArray();
                                 })
                                 ->itemLabel(function (array $state): ?string {
