@@ -159,7 +159,7 @@ class Device implements DeviceDefinition, BluetoothProxyInterface
 
     /**
      * Settings and schedule can both change in the same save (e.g. toggling
-     * sche_enable while also editing feed times) - the device takes those
+     * camera while also editing feed times) - the device takes those
      * together in one property_set, so both diffs are merged into a single
      * dispatch rather than the settings diff silently winning over a
      * schedule change or vice versa.

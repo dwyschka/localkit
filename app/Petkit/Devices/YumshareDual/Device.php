@@ -298,7 +298,7 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
 
     /**
      * Settings and schedule can both change in the same save (e.g. toggling
-     * sche_enable while also editing feed times) - the device takes those
+     * camera while also editing feed times) - the device takes those
      * together in one property_set, same as W5's combined setMode() write,
      * so both diffs are merged into a single dispatch rather than the
      * settings diff silently winning over a schedule change or vice versa.
@@ -454,7 +454,6 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
                 'toneMode' => (int)$config['toneMode'],
                 'toneMultiRange' => $config['toneMultiRange'],
                 'manualLock' => (int)$config['manualLock'],
-                'sche_enable' => (int)$config['sche_enable'],
                 'CTime' => (int)$config['CTime'],
                 'camera' => (int)$config['camera'],
                 'cameraMultiRange' => $config['cameraMultiRange'],

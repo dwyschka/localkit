@@ -27,7 +27,7 @@ use WendellAdriel\ValidatedDTO\Casting\StringCast;
  * NOTE: the property names must match the device's setting keys exactly, since
  * {@see \App\Petkit\Devices\YumshareDual\Device::propertyChange()} diffs the
  * stored `settings` array and forwards the changed keys straight to the device.
- * The real device uses a mix of snake_case (e.g. sche_enable) and
+ * The real device uses a mix of snake_case (e.g. logo_cn) and
  * camelCase (e.g. moveDetection) setting keys - both are kept verbatim below.
  */
 class Configuration extends DeviceConfigurationDTO implements ConfigurationInterface, Video, Snapshot, HasCamera
@@ -188,22 +188,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         entityCategory: 'config'
     )]
     public bool $shareOpen;
-
-    // Schedule
-    #[HASwitch(
-        technicalName: 'sche_enable',
-        name: 'Feeding Schedule',
-        commandTopic: 'setting/set',
-        icon: 'mdi:calendar-clock',
-        valueTemplate: '{{ value_json.settings.sche_enable }}',
-        commandTemplate: '{"sche_enable":{{ value }}}',
-        payloadOn: true,
-        payloadOff: false,
-        stateOn: true,
-        stateOff: false,
-        entityCategory: 'config'
-    )]
-    public bool $sche_enable;
 
     #[Sensor(
         technicalName: 'c_time',
@@ -655,7 +639,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'shareOpen' => ['bool'],
 
             // Schedule
-            'sche_enable' => ['bool'],
             'CTime' => ['integer'],
 
             // Camera
@@ -738,7 +721,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'shareOpen' => false,
 
             // Schedule
-            'sche_enable' => false,
             'CTime' => 0,
 
             // Camera
@@ -823,7 +805,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'shareOpen' => new BooleanCast(),
 
             // Schedule
-            'sche_enable' => new BooleanCast(),
             'CTime' => new IntegerCast(),
 
             // Camera
@@ -916,7 +897,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             $data['hertz'] = $settings['hertz'] ?? null;
 
             // Schedule
-            $data['sche_enable'] = $settings['sche_enable'] ?? null;
             $data['CTime'] = $settings['CTime'] ?? null;
 
             // Camera settings
@@ -1004,7 +984,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
                 'hertz' => $this->hertz,
 
                 // Schedule
-                'sche_enable' => $this->sche_enable,
                 'CTime' => $this->CTime,
 
                 // Camera settings
