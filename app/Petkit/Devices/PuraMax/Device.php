@@ -434,6 +434,11 @@ class Device implements DeviceDefinition, BluetoothProxyInterface
         return Configuration::fromDevice($this->getDevice());
     }
 
+    public function resetConfiguration(): array
+    {
+        return (new Configuration([]))->toArray();
+    }
+
     #[HomeassistantTopic(topic: 'setting/set')]
     public function settings(stdClass $message) {
         $configuration = $this->configurationDefinition();

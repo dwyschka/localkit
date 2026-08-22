@@ -205,6 +205,11 @@ class Device implements DeviceDefinition, BluetoothProxyInterface
         return Configuration::fromDevice($this->getDevice());
     }
 
+    public function resetConfiguration(): array
+    {
+        return (new Configuration([]))->toArray();
+    }
+
     public function resetDesiccant(DeviceModel $record): void
     {
         $configuration = $this->configurationDefinition();

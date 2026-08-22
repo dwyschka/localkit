@@ -285,6 +285,11 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
         return Configuration::fromDevice($this->getDevice());
     }
 
+    public function resetConfiguration(): array
+    {
+        return (new Configuration([]))->toArray();
+    }
+
     public function configuration()
     {
         return $this->configurationDefinition()->toArray();
