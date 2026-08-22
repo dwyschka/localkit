@@ -180,10 +180,6 @@ class UI
 
             Section::make('Feeding Plan')
                 ->schema([
-                    Toggle::make('configuration.settings.sche_enable')
-                        ->helperText('Enable the feeding schedule below')
-                        ->label('Feeding Schedule Enabled'),
-
                     Repeater::make('configuration.schedule')
                         ->schema([
                             CheckboxList::make('re')
