@@ -3,6 +3,7 @@
 namespace App\Petkit\Devices\FreshElementSolo;
 
 use Filament\Schemas\Components\Section;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Components\Utilities\Get;
@@ -97,6 +98,7 @@ class UI
                     ->helperText('Indicator light work within the following period')
                     ->label('Indicator Light'),
 
+                Hidden::make('configuration.settings.lightMultiRange.name')->default('lightMultiRange'),
                 Repeater::make('configuration.settings.lightMultiRange.ranges')
                     ->columns(2)
                     ->label('Screen Period')
