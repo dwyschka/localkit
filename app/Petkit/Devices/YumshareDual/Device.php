@@ -342,10 +342,42 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
         SetProperty::dispatchSync($device, $difference);
     }
 
+    /**
+     * The device divides a1/a2 by its own persisted factor1/factor2 before
+     * dispensing (schedule.md §2c/§3e - confirmed on a live device log: a
+     * raw a1=1/a2=1 with factor1/factor2 already >1 on-device came back as
+     * amount_l=0, amount_r=0 after that division). Storage/UI keeps amounts
+     * as plain human units (grams); this scales them up to whatever the
+     * on-device division will bring back down to the intended amount, right
+     * before the schedule is put on the wire - not persisted, so a later
+     * factor1/factor2 change doesn't require touching every stored item.
+     */
+    private function scaleAmountsForWire(array $schedule, array $settings): array
+    {
+        $factor1 = max(1, (int)($settings['factor1'] ?? 1));
+        $factor2 = max(1, (int)($settings['factor2'] ?? 1));
+
+        foreach ($schedule as &$group) {
+            foreach ($group['it'] as &$item) {
+                if (array_key_exists('a1', $item)) {
+                    $item['a1'] = (int)$item['a1'] * $factor1;
+                }
+                if (array_key_exists('a2', $item)) {
+                    $item['a2'] = (int)$item['a2'] * $factor2;
+                }
+            }
+            unset($item);
+        }
+        unset($group);
+
+        return $schedule;
+    }
+
     public function toFeed(DeviceModel $device): string
     {
+        $schedule = $this->scaleAmountsForWire($device->configuration['schedule'], $device->configuration['settings']);
 
-        $latest = Time::calculateLatest($device->configuration['schedule']);
+        $latest = Time::calculateLatest($schedule);
         // calculateLatest() returns entries sorted ascending by proximity, so
         // the nearest upcoming feed - what "nextTick" should mean - is the
         // first element, not the last (last was the farthest of the up-to-3
@@ -355,8 +387,8 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
 
         return json_encode([
             'schedule' => array_map(
-                fn(array $schedule) => Time::normalizeScheduleGroupForWire($schedule),
-                $device->configuration['schedule']
+                fn(array $s) => Time::normalizeScheduleGroupForWire($s),
+                $schedule
             ),
             'nextTick' => $nextTick['t'] + 1,
             'latest' => $latest
@@ -529,14 +561,14 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
     public function toFeedGet(): array
     {
         $unusedDays = [1,2,3,4,5,6,7];
-        $latest = Time::calculateLatest($this->device->configuration['schedule']);
+        $schedules = $this->scaleAmountsForWire($this->device->configuration['schedule'], $this->device->configuration['settings']);
+        $latest = Time::calculateLatest($schedules);
         // calculateLatest() returns entries sorted ascending by proximity, so
         // the nearest upcoming feed - what "nextTick" should mean - is the
         // first element, not the last (last was the farthest of the up-to-3
         // entries, e.g. an event 6 days out while the actual next feed was
         // 5 minutes away).
         $nextTick = head($latest) ?: ['a1' => 0, 'a2' => 0, 'id' => '', 't' => 0];
-        $schedules = $this->device->configuration['schedule'];
 
         foreach($schedules as &$schedule) {
             $schedule['itemJsonString'] = json_encode($schedule['it']);
