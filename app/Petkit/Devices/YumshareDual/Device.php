@@ -463,6 +463,7 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
                 'toneMode' => (int)$config['toneMode'],
                 'toneMultiRange' => $config['toneMultiRange'],
                 'manualLock' => (int)$config['manualLock'],
+                'sche_enable' => (int)$config['sche_enable'],
                 'CTime' => (int)$config['CTime'],
                 'camera' => (int)$config['camera'],
                 'cameraMultiRange' => $config['cameraMultiRange'],
