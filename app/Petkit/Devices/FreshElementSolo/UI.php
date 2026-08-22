@@ -178,9 +178,7 @@ class UI
                                                 $set('time_display', $time);
                                             }
                                         }),
-                                    TextInput::make('id')
-                                        ->hidden(true)
-                                        ->dehydratedWhenHidden(true)
+                                    Hidden::make('id')
                                         ->label('id')
                                         ->required(),
                                     TextInput::make('a')
@@ -190,11 +188,8 @@ class UI
                                         ->integer()
                                         ->dehydrateStateUsing(fn($state) => (int)$state)
                                         ->suffix('amount'),
-                                    TextInput::make('t')
-                                        ->hidden(true)
+                                    Hidden::make('t')
                                         ->label('Time (seconds)')
-                                        ->numeric()
-                                        ->dehydratedWhenHidden(true)
                                         ->required(),
                                 ])
                                 ->columns(2)
