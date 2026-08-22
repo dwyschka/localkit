@@ -230,10 +230,6 @@ class UI
                 TextInput::make('configuration.settings.petInTipLimit')
                     ->helperText('The meaning is currently unknown'),
 
-                Toggle::make('configuration.settings.shareOpen')
-                    ->helperText('The meaning is currently unknown')
-                    ->label('Share Open'),
-
                 Toggle::make('configuration.settings.removeSand')
                     ->helperText('The meaning is currently unknown')
                     ->label('Remove Sand'),

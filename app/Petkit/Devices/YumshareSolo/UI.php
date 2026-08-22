@@ -400,8 +400,6 @@ class UI
                     ->columnSpanFull()
                     ->view('filament.forms.warning')
                     ->viewData(['message' => 'Its Unknown, because the changes are not verified']),
-                Toggle::make('configuration.settings.shareOpen')->label('Share Open'),
-                Toggle::make('configuration.settings.multiConfig')->label('Multi Config'),
             ]),
 
 
