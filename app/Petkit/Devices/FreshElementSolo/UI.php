@@ -135,7 +135,6 @@ class UI
             Section::make('Feeding Plan')
                 ->schema([
                     Repeater::make('configuration.schedule')
-
                         ->schema([
                             CheckboxList::make('re')
                                 ->label('Days of Week')
@@ -151,8 +150,8 @@ class UI
                                 ->columns(4)
                                 ->required()
                                 ->stateCast(new IdentityStateCast())
-                                ->formatStateUsing(fn(string|array $state) => is_array($state) ? $state : explode(',', $state))
-                                ->dehydrateStateUsing(fn($state) => implode(',', Arr::sort(array_filter($state)))),
+                                ->formatStateUsing(fn(string|array|null $state) => is_array($state) ? $state : (($state === null || $state === '') ? [] : explode(',', $state)))
+                                ->dehydrateStateUsing(fn($state) => implode(',', Arr::sort(array_filter((array) $state)))),
 
                             Repeater::make('it')
                                 ->label('Schedule Items')
@@ -181,6 +180,7 @@ class UI
                                     Hidden::make('id')
                                         ->label('id')
                                         ->required(),
+
                                     TextInput::make('a')
                                         ->label('Amount')
                                         ->numeric()
@@ -188,13 +188,14 @@ class UI
                                         ->integer()
                                         ->dehydrateStateUsing(fn($state) => (int)$state)
                                         ->suffix('amount'),
+
                                     Hidden::make('t')
                                         ->label('Time (seconds)')
                                         ->required(),
                                 ])
                                 ->columns(2)
                                 ->addActionLabel('Add Schedule Item')
-                                ->minItems(0)
+                                ->minItems(1)
                                 ->collapsible()
                                 ->live(true)
                                 ->dehydrateStateUsing(function (array $state) {
@@ -212,11 +213,13 @@ class UI
                                         return $intA <=> $intB;
                                     });
 
-                                    return collect($state)->map(fn($s) => [
+                                    $data = collect($state)->map(fn($s) => [
                                         'a' => $s['a'],
                                         'id' => $s['id'],
                                         't' => $s['t'],
                                     ])->toArray();
+
+                                    return $data;
                                 })
                                 ->itemLabel(function (array $state): ?string {
                                     $time = '';
@@ -250,7 +253,7 @@ class UI
                             }
                             return !empty($days) ? implode(', ', $days) : 'New Schedule';
                         }),
-                ]),
+                ])->collapsible(),
             Section::make('Unknown')->columns(2)->schema([
 
                 ViewField::make('UnknownWarning')
