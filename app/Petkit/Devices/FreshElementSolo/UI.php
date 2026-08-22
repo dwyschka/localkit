@@ -254,15 +254,6 @@ class UI
                             return !empty($days) ? implode(', ', $days) : 'New Schedule';
                         }),
                 ])->collapsible(),
-            Section::make('Unknown')->columns(2)->schema([
-
-                ViewField::make('UnknownWarning')
-                    ->columnSpanFull()
-                    ->view('filament.forms.warning')
-                    ->viewData(['message' => 'Its Unknown, because the changes are not verified']),
-
-            ]),
-
 
         ];
     }
