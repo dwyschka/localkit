@@ -26,14 +26,20 @@ class SetProperty implements ShouldQueue
      */
     public function handle(): void
     {
-        foreach($this->changes as $key => $change) {
-            $message = PropertySetMessage::send($this->device, [$key => $change]);
-
-            $connection = MQTT::connection('publisher');
-            $connection->publish($message->getTopic(), $message->getMessage());
-            $connection->disconnect();
-
+        if (empty($this->changes)) {
+            return;
         }
 
+        // PropertySetMessage::send() already accepts a multi-key array and
+        // builds one message from it - splitting into one publish per key
+        // just meant the device saw N separate property_set messages for a
+        // save that changed N properties at once, instead of the one
+        // combined message the real app/device firmware expects (and that
+        // BLE devices already send via a single setMode() write).
+        $message = PropertySetMessage::send($this->device, $this->changes);
+
+        $connection = MQTT::connection('publisher');
+        $connection->publish($message->getTopic(), $message->getMessage());
+        $connection->disconnect();
     }
 }

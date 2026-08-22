@@ -92,6 +92,22 @@ class Time
         return $nextSchedule;
     }
 
+    /**
+     * The device's on-device parser (pk_schmg_parse_schedule, per schedule.md)
+     * reads a schedule group's 're' one character at a time and sets a bit for
+     * each '1'-'7' digit - the first character outside that range (e.g. the
+     * comma our stored/editable representation uses) truncates parsing for
+     * the rest of the string instead of being skipped as a separator. Storage
+     * and the Filament form keep the comma-separated form for readability;
+     * this strips it down to the bare digit run the firmware actually expects
+     * right before a schedule is serialized onto the wire (MQTT 'feed' or the
+     * HTTP dev_feed_get response - both go through the same parser).
+     */
+    public static function toWireRepeatDays(string $re): string
+    {
+        return preg_replace('/[^1-7]/', '', $re);
+    }
+
     public static function toTimeFromSeconds(int $seconds)
     {
         $hours = floor($seconds / 3600);

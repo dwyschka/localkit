@@ -313,7 +313,10 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
         $nextTick = last($latest) ?: ['a' => 0, 'id' => '', 't' => 0];
 
         return json_encode([
-            'schedule' => $device->configuration['schedule'],
+            'schedule' => array_map(fn(array $schedule) => [
+                ...$schedule,
+                're' => Time::toWireRepeatDays($schedule['re']),
+            ], $device->configuration['schedule']),
             'nextTick' => $nextTick['t'],
             'latest' => $latest
         ]);
@@ -495,6 +498,10 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
             ];
         }
 
+        $schedules = array_map(fn(array $schedule) => [
+            ...$schedule,
+            're' => Time::toWireRepeatDays($schedule['re']),
+        ], $schedules);
 
         return [
             'schedule' => $schedules,
