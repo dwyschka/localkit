@@ -189,26 +189,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     )]
     public bool $shareOpen;
 
-    // Not in any decoded property_set sub-parser (schedule.md/d4sh.md don't
-    // cover it), but confirmed via live device capture as a real, processed
-    // key - re-added after removing it made scheduled feeds stop firing
-    // entirely, consistent with it being an undocumented schedule-execution
-    // master switch.
-    #[HASwitch(
-        technicalName: 'sche_enable',
-        name: 'Feeding Schedule',
-        commandTopic: 'setting/set',
-        icon: 'mdi:calendar-clock',
-        valueTemplate: '{{ value_json.settings.sche_enable }}',
-        commandTemplate: '{"sche_enable":{{ value }}}',
-        payloadOn: true,
-        payloadOff: false,
-        stateOn: true,
-        stateOff: false,
-        entityCategory: 'config'
-    )]
-    public bool $sche_enable;
-
     #[Sensor(
         technicalName: 'c_time',
         name: 'Schedule Change Time',
@@ -659,7 +639,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'shareOpen' => ['bool'],
 
             // Schedule
-            'sche_enable' => ['bool'],
             'CTime' => ['integer'],
 
             // Camera
@@ -742,7 +721,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'shareOpen' => false,
 
             // Schedule
-            'sche_enable' => true,
             'CTime' => 0,
 
             // Camera
@@ -827,7 +805,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'shareOpen' => new BooleanCast(),
 
             // Schedule
-            'sche_enable' => new BooleanCast(),
             'CTime' => new IntegerCast(),
 
             // Camera
@@ -920,7 +897,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             $data['hertz'] = $settings['hertz'] ?? null;
 
             // Schedule
-            $data['sche_enable'] = $settings['sche_enable'] ?? null;
             $data['CTime'] = $settings['CTime'] ?? null;
 
             // Camera settings
@@ -1008,7 +984,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
                 'hertz' => $this->hertz,
 
                 // Schedule
-                'sche_enable' => $this->sche_enable,
                 'CTime' => $this->CTime,
 
                 // Camera settings
