@@ -46,52 +46,63 @@ class Time
         return ($time->hour * 60) + $time->minute;
     }
 
+    /**
+     * One 'latest[]' entry per schedule item - each item's own next future
+     * occurrence, not a globally-sorted "soonest N across everything" list.
+     * Corrected 2026-08-23 against a real capture from the actual Petkit
+     * app/cloud (real product key in the topic, not localkit's own): a
+     * 4-times-a-day schedule (00:00/06:00/12:00/18:00) produced exactly 4
+     * 'latest[]' entries, one per item, each 't' matching that specific
+     * item's own next occurrence to the second. This ruled out every earlier
+     * take(N) guess (3, then 2) - there's no fixed cap at all, it's simply
+     * "however many items the schedule has, over all its groups".
+     */
     public static function calculateLatest(array $schedules)
     {
-        $nextSchedule = [];
+        $current = Carbon::now();
+        $latest = [];
+
         foreach ($schedules as $schedule) {
             $days = explode(',', $schedule['re']);
 
-            foreach ($schedule['it'] as $interval) {
+            foreach ($schedule['it'] as $item) {
+                [$hour, $minute] = explode(':', self::toTimeFromSeconds($item['t']));
 
+                // This item's own soonest future occurrence across all the
+                // weekdays its 're' mask matches - not the soonest across
+                // the whole schedule.
+                $next = null;
                 foreach ($days as $day) {
-                    [$hour, $minute] = explode(':', self::toTimeFromSeconds($interval['t']));
-
                     $date = Carbon::now()->next(self::$days[$day]);
                     if (self::$days[$day] == Carbon::now()->dayOfWeek) {
                         $date = Carbon::now();
                     }
-                    $nextSchedule[$date->setTime($hour, $minute)->timestamp] = $interval;
+                    $date->setTime((int) $hour, (int) $minute);
+
+                    // Today's occurrence of this weekday already passed -
+                    // roll to next week's, rather than dropping this weekday
+                    // as a candidate entirely (another weekday in the same
+                    // 're' mask might still be closer than that, so both
+                    // stay in the running below).
+                    if ($date->lessThanOrEqualTo($current)) {
+                        $date->addWeek();
+                    }
+
+                    if ($next === null || $date->lessThan($next)) {
+                        $next = $date;
+                    }
                 }
-            }
-        }
 
-        ksort($nextSchedule);
-        $current = Carbon::now();
-
-        return collect($nextSchedule)
-            ->filter(fn($item, $key) => $key > $current->timestamp)
-            // Capped at 2, not 3: every real app capture in schedule.md ever
-            // showed at most 2 'latest[]' entries (§4h is the only multi-entry
-            // capture found, and it had exactly 2) - 3 was never confirmed
-            // against a real device. schedule.md §4g separately found that
-            // this device's on-device parser doesn't reject oversized input
-            // it doesn't expect, it silently corrupts adjacent memory (the
-            // unterminated 'id' buffer overflow) - the same "parses clean,
-            // never fires" symptom this whole investigation started from. A
-            // fixed-size on-device 'latest' buffer sized for 2 entries is an
-            // unconfirmed but plausible mechanism fitting that same pattern.
-            ->take(2)
-            ->map(function (array $item, int $key) use ($current){
-
-                $date = Carbon::createFromTimestamp($key);
+                if ($next === null) {
+                    continue;
+                }
 
                 // Single-hopper devices key the dispensed amount as 'a'; dual-hopper
                 // devices (e.g. D4SH) split it into 'a1'/'a2' - pass through whichever
                 // of these the schedule item actually carries.
                 $amounts = array_map(fn ($amount) => (int)$amount, Arr::only($item, ['a', 'a1', 'a2']));
 
-                return [
+                $latest[] = [
                     ...$amounts,
                     // schedule.md's on-device struct for a `latest` item is
                     // `id[16]` (16 bytes, no separate null-terminator byte).
@@ -105,17 +116,24 @@ class Time
                     // unterminated fixed-size buffer. Dropping the leading
                     // underscore keeps every id at 15 bytes, one byte under
                     // the field size.
-                    'id' => sprintf('s%d_%d', $date->format('Ymd'), $item['t']),
+                    'id' => sprintf('s%d_%d', $next->format('Ymd'), $item['t']),
                     // cJSON's valueint is fine with a float-looking JSON number, but
                     // schedule.md's own §3d warning (wrong JSON type is worse than a
                     // missing field) is reason enough to not rely on that leniency -
                     // round() returns a float, so cast explicitly to a genuine int.
-                    't' => (int) round($current->diffInSeconds($date, true) - 1)
+                    't' => (int) round($current->diffInSeconds($next, true) - 1)
                 ];
-            })
-            ->values()->toArray();
+            }
+        }
 
-        return $nextSchedule;
+        // HandlesFeederSchedule::toFeed()/toFeedGet() take nextTick as the
+        // *last* entry here (the farthest-out occurrence, per schedule.md
+        // §4h's live-capture evidence) - sort ascending by 't' so that holds
+        // regardless of the order items happen to be stored in, the same
+        // guarantee the old ksort()-before-take(N) version gave for free.
+        usort($latest, fn(array $a, array $b) => $a['t'] <=> $b['t']);
+
+        return $latest;
     }
 
     /**

@@ -19,20 +19,27 @@ use Illuminate\Support\Facades\Log;
  * commit-by-commit from D4SH (see git log: "Port D4SH schedule fixes to
  * ...").
  *
- * nextTick is the *last* entry of Time::calculateLatest()'s up-to-3
- * results, not the first/nearest - confirmed 2026-08-23 against a real app
- * capture with 2 latest entries (today + tomorrow, for an every-day
- * schedule): the app's own nextTick equalled the *later* one (tomorrow's
- * occurrence), not the sooner one. This reverses an earlier "fix" (commit
- * f0d2b9a, "reflect the nearest upcoming feed, not the farthest") made
- * without a multi-entry capture to check it against - which had also
- * overwritten FreshElement3 (D3)'s original last($latest), on the
- * assumption that it was a bug rather than what the real app does. A +1
- * bump on this value was tried twice (commit 6c18e0e removed the first
- * attempt; a second attempt on 2026-08-23, stacked with a +1 also tried in
- * Time::calculateLatest()'s 't' offset, was removed again the same day in
- * favor of testing SetProperty's late-recompute fix instead - see its
- * docblock) - nextTick is sent as the raw value from Time::calculateLatest().
+ * nextTick is the *last* entry of Time::calculateLatest()'s results, not the
+ * first/nearest - confirmed 2026-08-23 against a real app capture with 2
+ * latest entries (today + tomorrow, for an every-day schedule): the app's
+ * own nextTick equalled the *later* one (tomorrow's occurrence), not the
+ * sooner one. This reverses an earlier "fix" (commit f0d2b9a, "reflect the
+ * nearest upcoming feed, not the farthest") made without a multi-entry
+ * capture to check it against - which had also overwritten FreshElement3
+ * (D3)'s original last($latest), on the assumption that it was a bug rather
+ * than what the real app does. A +1 bump on this value was tried twice
+ * (commit 6c18e0e removed the first attempt; a second attempt on
+ * 2026-08-23, stacked with a +1 also tried in Time::calculateLatest()'s 't'
+ * offset, was removed again the same day in favor of testing SetProperty's
+ * late-recompute fix instead - see its docblock) - nextTick is sent as the
+ * raw value from Time::calculateLatest().
+ *
+ * calculateLatest() itself does *not* cap how many entries it returns (two
+ * earlier attempts to cap it, at 3 then 2, were both guesses never checked
+ * against a real multi-item schedule) - it returns exactly one entry per
+ * schedule item, confirmed 2026-08-23 against a real capture of a 4-times-
+ * daily schedule that produced 4 latest[] entries, each matching that one
+ * item's own next occurrence to the second.
  *
  * Amounts are sent as-is, with no client-side factor multiplication -
  * an earlier scaleAmountsForWire() step (multiplying by settings.factor/
@@ -62,9 +69,9 @@ trait HandlesFeederSchedule
         $schedule = $device->configuration['schedule'];
 
         $latest = Time::calculateLatest($schedule);
-        // calculateLatest() returns entries sorted ascending by proximity;
-        // nextTick is the *last* (farthest) of the up-to-3 entries - see the
-        // trait-level docblock for the live-capture evidence.
+        // calculateLatest() returns one entry per schedule item, sorted
+        // ascending by proximity; nextTick is the *last* (farthest) of them
+        // - see the trait-level docblock for the live-capture evidence.
         $nextTickDefault = [...array_fill_keys(static::amountKeys(), 0), 'id' => '', 't' => 0];
         $nextTick = last($latest) ?: $nextTickDefault;
 
@@ -105,9 +112,9 @@ trait HandlesFeederSchedule
         $unusedDays = [1, 2, 3, 4, 5, 6, 7];
         $schedules = $this->device->configuration['schedule'];
         $latest = Time::calculateLatest($schedules);
-        // calculateLatest() returns entries sorted ascending by proximity;
-        // nextTick is the *last* (farthest) of the up-to-3 entries - see the
-        // trait-level docblock for the live-capture evidence.
+        // calculateLatest() returns one entry per schedule item, sorted
+        // ascending by proximity; nextTick is the *last* (farthest) of them
+        // - see the trait-level docblock for the live-capture evidence.
         $nextTickDefault = [...array_fill_keys(static::amountKeys(), 0), 'id' => '', 't' => 0];
         $nextTick = last($latest) ?: $nextTickDefault;
 
