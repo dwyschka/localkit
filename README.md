@@ -17,10 +17,17 @@ The configuration is handled via your `.env` file. You can use the following var
 
 | Variable | Description | Default |
 |---|---|---|
-| `PETKIT_LOCAL_IP` | The local IP address of your Petkit device. | `127.0.0.1` |
+| `PETKIT_LOCAL_IP` | LAN IP address of your LocalKit server (must be reachable by devices). | `127.0.0.1` |
+| `DEVICE_TELNET_USERNAME` | Telnet username for NextGen PetKit devices. | `root` |
+| `DEVICE_TELNET_PASSWORD` | Telnet password for NextGen PetKit devices. | (empty) |
 | `HOMEASSISTANT_DISCOVERY_PREFIX` | The Home Assistant MQTT discovery prefix. | `homeassistant` |
 | `BYPASS_AUTH` | Bypass authentication for development or testing. | `true` |
 | `BYPASS_AUTH_ID` | The user ID to use when authentication is bypassed. | `1` |
+
+## Guides & Documentation
+
+- [Device Installer (Telnet) & Fake Device Simulation](docs/installer.md) - Web-based firmware patch installer and mock Telnet daemon for development.
+- [S3 / Object Storage Emulation](docs/s3.md) - Camera snapshot and media upload storage backed by Garage S3.
 
 
 ## Supported Devices

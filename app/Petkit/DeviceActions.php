@@ -19,6 +19,8 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Support\Exceptions\Halt;
+use App\Petkit\TelnetService;
+use App\Petkit\Exceptions\TelnetCredentialsNotConfiguredException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -64,6 +66,30 @@ class DeviceActions
     private static function visible(Device $record, string $action): bool
     {
         return (bool) $record->mqtt_connected && $record->definition()->hasAction($action);
+    }
+
+    private static function supportsTelnet(Device $record): bool
+    {
+        return (bool) ($record->isNextGen() ?? false);
+    }
+
+    private static function notifyTelnetError(Throwable $e, string $operation): void
+    {
+        if ($e instanceof TelnetCredentialsNotConfiguredException) {
+            Notification::make()
+                ->danger()
+                ->title($e->getPublicTitle())
+                ->body($e->getPublicBody())
+                ->send();
+
+            return;
+        }
+
+        Notification::make()
+            ->danger()
+            ->title("Telnet {$operation} failed")
+            ->body($e->getMessage())
+            ->send();
     }
 
     public static function actions()
@@ -258,39 +284,12 @@ class DeviceActions
             // the network.
             Action::make('Reboot (Telnet)')
                 ->label('Reboot')
-                ->visible(fn(Device $record) => (bool) ($record->isNextGen() ?? false))
+                ->visible(fn(Device $record) => self::supportsTelnet($record))
                 ->requiresConfirmation()
                 ->modalDescription('Reboots the device over telnet using its built-in root credentials.')
                 ->action(function (Device $record) {
-                    $ipAddress = $record->configuration()->ipAddress ?? null;
-
-                    if (empty($ipAddress)) {
-                        Notification::make()
-                            ->danger()
-                            ->title('No IP address known for this device')
-                            ->send();
-
-                        return;
-                    }
-
-                    $username = config('petkit.telnet_username');
-                    $password = config('petkit.telnet_password');
-
-                    if (empty($username) || empty($password)) {
-                        Notification::make()
-                            ->danger()
-                            ->title('Telnet credentials not configured')
-                            ->body('Set DEVICE_TELNET_USERNAME / DEVICE_TELNET_PASSWORD in .env')
-                            ->send();
-
-                        return;
-                    }
-
                     try {
-                        $telnet = new TelnetClient($ipAddress);
-                        $telnet->login($username, $password);
-                        $telnet->exec('reboot');
-                        $telnet->close();
+                        app(TelnetService::class)->execDevice($record, 'reboot');
 
                         Notification::make()
                             ->success()
@@ -299,17 +298,22 @@ class DeviceActions
                     } catch (Throwable $e) {
                         Log::warning('Telnet reboot failed', [
                             'device_id' => $record->id,
-                            'ip' => $ipAddress,
                             'error' => $e->getMessage(),
                         ]);
 
-                        Notification::make()
-                            ->danger()
-                            ->title('Telnet reboot failed')
-                            ->body($e->getMessage())
-                            ->send();
+                        self::notifyTelnetError($e, 'reboot');
                     }
                 }),
+            Action::make('Reinstall (Telnet)')
+                ->label('Reinstall')
+                ->visible(fn(Device $record) => self::supportsTelnet($record))
+                ->modalWidth('5xl')
+                ->modalContent(fn(Device $record) => view('filament.actions.install-modal', [
+                    'defaultIp' => $record->configuration()->ipAddress ?? null,
+                ]))
+                ->modalDescription('Installs LocalKit on the device over telnet using its built-in root credentials.')
+                ->modalSubmitAction(false)
+                ->modalCancelActionLabel('Close'),
             Action::make('Reset State')
                 ->visible(fn(Device $record) => self::visible($record, self::RESET_WORKING_STATE))
                 ->requiresConfirmation()

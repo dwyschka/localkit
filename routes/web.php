@@ -37,6 +37,11 @@ Route::get('media/file/{fileId}', MediaFileController::class)
 Route::get('camera/{device}/thumbnail/{stream?}', CameraThumbnailController::class)
     ->name('camera.thumbnail');
 
+// Installer streaming endpoint - protected, CSRF applies on POST
+Route::post('installer', [\App\Http\Controllers\InstallerController::class, 'install'])
+    ->middleware('auth')
+    ->name('installer.run');
+
 // Pet discern reference photo, fetched directly by the device (see
 // DevDiscernPicResource) - no auth, extensionless on purpose.
 Route::get('pet/media/{id}', PetMediaController::class)
