@@ -100,7 +100,7 @@ class Time
                     // schedule.md's own §3d warning (wrong JSON type is worse than a
                     // missing field) is reason enough to not rely on that leniency -
                     // round() returns a float, so cast explicitly to a genuine int.
-                    't' => (int) round($current->diffInSeconds($date, true) - 1)
+                    't' => (int) round($current->diffInSeconds($date, true) + 1)
                 ];
             })
             ->values()->toArray();
