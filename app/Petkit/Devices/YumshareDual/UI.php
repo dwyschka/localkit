@@ -72,12 +72,12 @@ class UI
                     ->label('Hopper 1 Calibration Factor')
                     ->helperText('Calibration factor for the first hopper')
                     ->numeric()
-                    ->minValue(1),
+                    ->minValue(0),
                 TextInput::make('configuration.settings.factor2')
                     ->label('Hopper 2 Calibration Factor')
                     ->helperText('Calibration factor for the second hopper')
                     ->numeric()
-                    ->minValue(1),
+                    ->minValue(0),
             ]),
             Section::make('Media')->schema([
                 View::make('camera_stream')->viewData(fn($record): array => [

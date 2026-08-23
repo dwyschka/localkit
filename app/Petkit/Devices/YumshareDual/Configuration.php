@@ -651,8 +651,8 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'eatVideo' => ['bool'],
 
             // Hopper factors
-            'factor1' => ['integer', 'min:1', 'max:100'],
-            'factor2' => ['integer', 'min:1', 'max:100'],
+            'factor1' => ['integer', 'min:0', 'max:100'],
+            'factor2' => ['integer', 'min:0', 'max:100'],
 
             // Detection
             'moveDetection' => ['bool'],
