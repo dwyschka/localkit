@@ -26,11 +26,12 @@ use App\Models\Device as DeviceModel;
  * f0d2b9a, "reflect the nearest upcoming feed, not the farthest") made
  * without a multi-entry capture to check it against - which had also
  * overwritten FreshElement3 (D3)'s original last($latest), on the
- * assumption that it was a bug rather than what the real app does. An
- * earlier +1 bump on this value was tried, removed (commit 6c18e0e), and
- * reinstated again 2026-08-23 per direct instruction after schedules were
- * still not firing without it - now stacked on top of Time::calculateLatest()'s
- * own +1 second offset on 't'.
+ * assumption that it was a bug rather than what the real app does. A +1
+ * bump on this value was tried twice (commit 6c18e0e removed the first
+ * attempt; a second attempt on 2026-08-23, stacked with a +1 also tried in
+ * Time::calculateLatest()'s 't' offset, was removed again the same day in
+ * favor of testing SetProperty's late-recompute fix instead - see its
+ * docblock) - nextTick is sent as the raw value from Time::calculateLatest().
  *
  * Amounts are sent as-is, with no client-side factor multiplication -
  * an earlier scaleAmountsForWire() step (multiplying by settings.factor/
@@ -71,7 +72,7 @@ trait HandlesFeederSchedule
                 fn(array $s) => Time::normalizeScheduleGroupForWire($s),
                 $schedule
             ),
-            'nextTick' => $nextTick['t'] + 1,
+            'nextTick' => $nextTick['t'],
             'latest' => $latest,
         ]);
     }
@@ -120,7 +121,7 @@ trait HandlesFeederSchedule
 
         return [
             'schedule' => $schedules,
-            'nextTick' => $nextTick['t'] + 1,
+            'nextTick' => $nextTick['t'],
             'latest' => $latest,
         ];
     }
