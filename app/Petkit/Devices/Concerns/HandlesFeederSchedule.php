@@ -6,6 +6,7 @@ use App\Helpers\Time;
 use App\Jobs\FeedRealtime;
 use App\Jobs\ServiceStart;
 use App\Models\Device as DeviceModel;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Single source of truth for "how many hopper amounts does this feeder's
@@ -66,6 +67,19 @@ trait HandlesFeederSchedule
         // trait-level docblock for the live-capture evidence.
         $nextTickDefault = [...array_fill_keys(static::amountKeys(), 0), 'id' => '', 't' => 0];
         $nextTick = last($latest) ?: $nextTickDefault;
+
+        // Temporary timing instrumentation: microsecond-precision pair with
+        // the '[TIMING] publishing' line in SetProperty::handle(), to
+        // measure how much (if any) of a gap survives between 't'/nextTick
+        // being computed here (off Carbon::now()) and the moment the
+        // payload actually goes out over publish(). Remove once the
+        // staleness hypothesis is confirmed or ruled out.
+        Log::debug(sprintf(
+            '[TIMING] toFeed computed for device %s at %s (nextTick t=%d)',
+            $device->serial_number,
+            now()->format('H:i:s.u'),
+            $nextTick['t']
+        ));
 
         return json_encode([
             'schedule' => array_map(

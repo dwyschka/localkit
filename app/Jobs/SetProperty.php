@@ -6,6 +6,7 @@ use App\Models\Device;
 use App\MQTT\PropertySetMessage;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use PhpMqtt\Client\Facades\MQTT;
 
@@ -55,6 +56,18 @@ class SetProperty implements ShouldQueue
         // combined message the real app/device firmware expects (and that
         // BLE devices already send via a single setMode() write).
         $message = PropertySetMessage::send($this->device, $this->changes);
+
+        // Temporary timing instrumentation: microsecond-precision pair with
+        // the '[TIMING] toFeed computed' line above (HandlesFeederSchedule::
+        // toFeed()) - diff the two to see how much gap actually survives
+        // between 't'/nextTick being computed and the payload going out on
+        // the wire. Remove once the staleness hypothesis is confirmed or
+        // ruled out.
+        Log::debug(sprintf(
+            '[TIMING] publishing feed for device %s at %s',
+            $this->device->serial_number,
+            now()->format('H:i:s.u')
+        ));
 
         $connection->publish($message->getTopic(), $message->getMessage());
         $connection->disconnect();
