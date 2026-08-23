@@ -71,9 +71,9 @@ Configure the following variables in your `.env` file:
 
 ---
 
-## 4. Fake PetKit Telnet Server (Development & Testing)
+## 4. Mock PetKit Telnet Server (Development & Testing)
 
-For local development and automated testing without physical PetKit hardware, LocalKit includes a high-fidelity Python-based Telnet daemon simulator located in `scripts/fake_petkit_telnet.py`.
+For local development and automated testing without physical PetKit hardware, LocalKit includes a high-fidelity Python-based Telnet daemon simulator located in `scripts/mock_petkit_telnet.py`.
 
 ### Features of the Simulator:
 - Emulates authentic BusyBox Telnet login prompts (`petkit login: `, `Password: `, `[petkit:~]# `).
@@ -89,26 +89,26 @@ For local development and automated testing without physical PetKit hardware, Lo
 #### Using PowerShell:
 ```powershell
 # Run D4SH (Feeder) simulation (default):
-.\scripts\start_fake_telnet.ps1 d
+.\scripts\start_mock_telnet.ps1 d
 
 # Run W7H (Fountain / Toilet) simulation:
-.\scripts\start_fake_telnet.ps1 w
+.\scripts\start_mock_telnet.ps1 w
 
 # Custom port or failure simulation:
-.\scripts\start_fake_telnet.ps1 -Model W7H -Port 2323
-.\scripts\start_fake_telnet.ps1 -Model D4SH -Fail
+.\scripts\start_mock_telnet.ps1 -Model W7H -Port 2323
+.\scripts\start_mock_telnet.ps1 -Model D4SH -Fail
 ```
 
 #### Direct Python Invocation:
 ```bash
 # Run D4SH simulation (default port 23):
-python3 scripts/fake_petkit_telnet.py --model D4SH --port 23
+python3 scripts/mock_petkit_telnet.py --model D4SH --port 23
 
 # Run W7H simulation:
-python3 scripts/fake_petkit_telnet.py --model W7H --port 23
+python3 scripts/mock_petkit_telnet.py --model W7H --port 23
 
 # Simulate an install failure:
-python3 scripts/fake_petkit_telnet.py --fail
+python3 scripts/mock_petkit_telnet.py --fail
 ```
 
 ---

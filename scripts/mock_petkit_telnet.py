@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Fake PetKit Telnet Listener
+Mock PetKit Telnet Listener
 Simulates a PetKit BusyBox/Linux device over Telnet (default port 23)
 to test LocalKit's web installer and device management actions without physical hardware.
 """
@@ -49,7 +49,7 @@ def load_env(env_path: str = None) -> dict[str, str]:
 
 
 def sigint_handler(sig, frame):
-    print("\n[*] Stopping Fake Telnet Server...")
+    print("\n[*] Stopping Mock Telnet Server...")
     sys.exit(0)
 
 
@@ -826,7 +826,7 @@ def handle_client(conn: socket.socket, addr, model: str = "D4SH", should_fail: b
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Fake PetKit Telnet Server for LocalKit testing")
+        description="Mock PetKit Telnet Server for LocalKit testing")
     parser.add_argument("--host", default="0.0.0.0",
                         help="Host IP to bind (default: 0.0.0.0)")
     parser.add_argument("--port", "-p", type=int, default=23,
@@ -863,7 +863,7 @@ def main():
     server.listen(10)
     server.settimeout(0.5)
     print("=" * 65)
-    print(f" Fake PetKit Telnet Server running on {args.host}:{args.port}")
+    print(f" Mock PetKit Telnet Server running on {args.host}:{args.port}")
     print(f" Simulating Model: {model} | Mode: {'Simulate Failure' if args.fail else 'Normal / Success'}")
     if expected_user and expected_pass:
         print(f" Auth: Enforcing credentials from .env (user: '{expected_user}')")
@@ -886,7 +886,7 @@ def main():
             )
             client_thread.start()
     except (KeyboardInterrupt, SystemExit):
-        print("\n[*] Stopping Fake Telnet Server...")
+        print("\n[*] Stopping Mock Telnet Server...")
     finally:
         try:
             server.close()

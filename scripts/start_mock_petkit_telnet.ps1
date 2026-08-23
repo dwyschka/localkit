@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Starts the LocalKit Fake PetKit Telnet Server.
+    Starts the LocalKit Mock PetKit Telnet Server.
 
 .DESCRIPTION
     Runs a mock PetKit Telnet daemon supporting D4SH (Feeder) and W7H (Fountain/Toilet) models
@@ -22,16 +22,16 @@
     Optional path to a custom .env file.
 
 .EXAMPLE
-    .\start_fake_telnet.ps1 -Model D4SH
-    .\start_fake_telnet.ps1 -m w -Port 2323
-    .\start_fake_telnet.ps1 d
-    .\start_fake_telnet.ps1 w -Fail
+    .\start_mock_petkit_telnet.ps1 -Model D4SH
+    .\start_mock_petkit_telnet.ps1 -m w -Port 2323
+    .\start_mock_petkit_telnet.ps1 d
+    .\start_mock_petkit_telnet.ps1 w -Fail
 #>
 [CmdletBinding()]
 param (
     [Parameter(Position = 0)]
     [Alias('m')]
-    [ValidateSet('D4SH', 'W7H', 'd', 'w' IgnoreCase = $true)]
+    [ValidateSet('D4SH', 'W7H', 'd', 'w', 'd4sh', 'w7h', IgnoreCase = $true)]
     [string]$Model = 'D4SH',
 
     [Parameter()]
@@ -74,7 +74,7 @@ $NormalizedModel = switch ($Model.ToLower()) {
 }
 
 $PyArgs = @(
-    "$ScriptDir\fake_petkit_telnet.py",
+    "$ScriptDir\mock_petkit_telnet.py",
     "--model", $NormalizedModel,
     "--host", $HostAddress,
     "--port", $Port

@@ -29,13 +29,13 @@ class DatabaseSeeder extends Seeder
             \App\Models\Device::updateOrCreate(
                 ['serial_number' => 'PK-D4SH-0010001'],
                 [
-                    'name' => 'Fake PetKit YumShare Dual',
+                    'name' => 'Mock PetKit YumShare Dual',
                     'device_type' => 'd4sh',
                     'firmware' => '895',
                     'mac' => 'AA:BB:CC:DD:EE:01',
                     'bt_mac' => 'AA:BB:CC:DD:EE:02',
                     'ap_mac' => 'AA:BB:CC:DD:EE:03',
-                    'chip_id' => 'fake-chip-10001',
+                    'chip_id' => 'mock-chip-10001',
                     'petkit_id' => 10000001,
                     'timezone' => 'America/New_York',
                     'locale' => 'en_US',
