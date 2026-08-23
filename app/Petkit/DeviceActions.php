@@ -11,7 +11,6 @@ use App\Jobs\ServiceStart;
 use App\Localkit\OTA;
 use App\Models\BluetoothDevice;
 use App\Models\Device;
-use App\Petkit\Devices\YumshareDual\Device as PetkitYumshareDual;
 use Filament\Actions\ActionGroup;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;
@@ -175,8 +174,9 @@ class DeviceActions
                 ->visible(fn(Device $record) => self::visible($record, self::START_FEEDING))
                 ->schema(function (Device $record) {
                     $settings = $record->configuration['settings'] ?? [];
+                    $definition = $record->definition();
 
-                    if ($record->definition() instanceof PetkitYumshareDual) {
+                    if ($definition::FEEDER_COUNT > 1) {
                         return [
                             TextInput::make('amount1')
                                 ->label('Hopper 1 Amount')
@@ -207,7 +207,7 @@ class DeviceActions
                 ->action(function (Device $record, array $data) {
                     $definition = $record->definition();
 
-                    if ($definition instanceof PetkitYumshareDual) {
+                    if ($definition::FEEDER_COUNT > 1) {
                         $definition->startFeeding($record, (int) $data['amount1'], (int) $data['amount2']);
                     } else {
                         $definition->startFeeding($record, (int) $data['amount']);

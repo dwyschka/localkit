@@ -5,13 +5,10 @@ namespace App\Petkit\Devices\FreshElementSolo;
 use stdClass;
 use App\DTOs\PetkitDTOInterface;
 use App\Helpers\JsonHelper;
-use App\Helpers\Time;
 use App\Homeassistant\HomeassistantTopic;
-use App\Jobs\FeedRealtime;
 use App\Jobs\ServiceBle;
 use App\Jobs\ServiceConnect;
 use App\Jobs\ServiceEnd;
-use App\Jobs\ServiceStart;
 use App\Jobs\SetProperty;
 use App\Models\BluetoothDevice;
 use App\Models\Device as DeviceModel;
@@ -24,6 +21,7 @@ use App\Petkit\BluetoothDevices\BluetoothProxyInterface;
 use App\Petkit\BluetoothDevices\Message;
 use App\Petkit\DeviceActions;
 use App\Petkit\DeviceDefinition;
+use App\Petkit\Devices\Concerns\HandlesFeederSchedule;
 use App\Petkit\Devices\Configuration\ConfigurationInterface;
 use App\Petkit\DeviceStates;
 use Carbon\Carbon;
@@ -33,6 +31,11 @@ use PhpMqtt\Client\Facades\MQTT;
 
 class Device implements DeviceDefinition, BluetoothProxyInterface
 {
+    use HandlesFeederSchedule;
+
+    /** schedule.md §4e: confirmed single-hopper (only 'a', never 'a1'/'a2') at the wire-protocol level. */
+    public const FEEDER_COUNT = 1;
+
     protected array $actions = [
         DeviceActions::START_FEEDING,
         DeviceActions::RESET_DESICCANT,
@@ -139,13 +142,6 @@ class Device implements DeviceDefinition, BluetoothProxyInterface
         MQTT::connection('publisher')->publish($generic->getTopic(), $generic->getMessage());
     }
 
-    public function startFeeding(DeviceModel $record, ?int $amount = null): void
-    {
-        $amount ??= $this->device->configuration['settings']['amount'] ?? 10;
-
-        FeedRealtime::dispatchSync($record, $amount);
-        ServiceStart::dispatchSync($record, $amount);
-    }
     public static function deviceName()
     {
         return 'Petkit FreshElement Solo';
@@ -310,53 +306,6 @@ class Device implements DeviceDefinition, BluetoothProxyInterface
             'error' => $err,
         ]);
 
-    }
-
-    /**
-     * The device divides 'a' by its own persisted factor before dispensing
-     * (schedule.md §2c/§3e, confirmed live on D4SH - same mechanism here,
-     * single-hopper so only one factor/amount pair instead of a1/a2).
-     * Storage/UI keeps amounts as plain human units; this scales up to
-     * whatever the on-device division will bring back down to the intended
-     * amount, right before the schedule is put on the wire - not persisted,
-     * so a later factor change doesn't require touching every stored item.
-     */
-    private function scaleAmountsForWire(array $schedule, array $settings): array
-    {
-        $factor = max(1, (int)($settings['factor'] ?? 1));
-
-        foreach ($schedule as &$group) {
-            foreach ($group['it'] as &$item) {
-                if (array_key_exists('a', $item)) {
-                    $item['a'] = (int)$item['a'] * $factor;
-                }
-            }
-            unset($item);
-        }
-        unset($group);
-
-        return $schedule;
-    }
-
-    public function toFeed(DeviceModel $device): string
-    {
-        $schedule = $this->scaleAmountsForWire($device->configuration['schedule'], $device->configuration['settings']);
-
-        $latest = Time::calculateLatest($schedule);
-        // calculateLatest() returns entries sorted ascending by proximity, so
-        // the nearest upcoming feed - what "nextTick" should mean - is the
-        // first element, not the last (last was the farthest of the up-to-3
-        // entries).
-        $nextTick = head($latest) ?: ['a' => 0, 'id' => '', 't' => 0];
-
-        return json_encode([
-            'schedule' => array_map(
-                fn(array $s) => Time::normalizeScheduleGroupForWire($s),
-                $schedule
-            ),
-            'nextTick' => $nextTick['t'] + 1,
-            'latest' => $latest
-        ]);
     }
 
     public function btConnect(BluetoothDevice $btDevice): void

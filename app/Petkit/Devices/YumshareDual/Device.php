@@ -9,10 +9,8 @@ use App\Helpers\Time;
 use App\Homeassistant\EventPublisher;
 use App\Homeassistant\HomeassistantTopic;
 use App\Homeassistant\Interfaces\Snapshot;
-use App\Jobs\FeedRealtime;
 use App\Jobs\ServiceBle;
 use App\Jobs\ServiceConnect;
-use App\Jobs\ServiceStart;
 use App\Jobs\SetProperty;
 use App\Jobs\TakeSnapshot;
 use App\Models\BluetoothDevice;
@@ -24,6 +22,7 @@ use App\Petkit\BluetoothDevices\BluetoothProxyInterface;
 use App\Petkit\BluetoothDevices\Message;
 use App\Petkit\DeviceActions;
 use App\Petkit\DeviceDefinition;
+use App\Petkit\Devices\Concerns\HandlesFeederSchedule;
 use App\Petkit\Devices\Configuration\ConfigurationInterface;
 use App\Petkit\DeviceStates;
 use Carbon\Carbon;
@@ -32,6 +31,11 @@ use PhpMqtt\Client\Facades\MQTT;
 
 class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
 {
+    use HandlesFeederSchedule;
+
+    /** schedule.md §4e/§4f: this is D4SH, the one confirmed dual-hopper feeder (a1/a2). */
+    public const FEEDER_COUNT = 2;
+
     public static $workingStates = [
         DeviceStates::WORKING, DeviceStates::IDLE,
     ];
@@ -347,61 +351,6 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
         SetProperty::dispatchSync($device, $difference);
     }
 
-    /**
-     * The device divides a1/a2 by its own persisted factor1/factor2 before
-     * dispensing (schedule.md §2c/§3e - confirmed on a live device log: a
-     * raw a1=1/a2=1 with factor1/factor2 already >1 on-device came back as
-     * amount_l=0, amount_r=0 after that division). Storage/UI keeps amounts
-     * as plain human units (grams); this scales them up to whatever the
-     * on-device division will bring back down to the intended amount, right
-     * before the schedule is put on the wire - not persisted, so a later
-     * factor1/factor2 change doesn't require touching every stored item.
-     */
-    private function scaleAmountsForWire(array $schedule, array $settings): array
-    {
-        $factor1 = max(1, (int)($settings['factor1'] ?? 1));
-        $factor2 = max(1, (int)($settings['factor2'] ?? 1));
-
-        foreach ($schedule as &$group) {
-            foreach ($group['it'] as &$item) {
-                if (array_key_exists('a1', $item)) {
-                    $item['a1'] = (int)$item['a1'] * $factor1;
-                }
-                if (array_key_exists('a2', $item)) {
-                    $item['a2'] = (int)$item['a2'] * $factor2;
-                }
-            }
-            unset($item);
-        }
-        unset($group);
-
-        return $schedule;
-    }
-
-    public function toFeed(DeviceModel $device): string
-    {
-        $schedule = $this->scaleAmountsForWire($device->configuration['schedule'], $device->configuration['settings']);
-
-        $latest = Time::calculateLatest($schedule);
-        // calculateLatest() returns entries sorted ascending by proximity, so
-        // the nearest upcoming feed - what "nextTick" should mean - is the
-        // first element, not the last (last was the farthest of the up-to-3
-        // entries, e.g. an event 6 days out while the actual next feed was
-        // 5 minutes away).
-        $nextTick = head($latest) ?: ['a1' => 0, 'a2' => 0, 'id' => '', 't' => 0];
-
-        return json_encode([
-            'schedule' => array_map(
-                fn(array $s) => Time::normalizeScheduleGroupForWire($s),
-                $schedule
-            ),
-            'nextTick' => $nextTick['t'] + 1,
-            'latest' => $latest
-        ]);
-
-
-    }
-
     public function toHomeassistant()
     {
         return json_encode($this->configurationDefinition()->toArray());
@@ -436,17 +385,6 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
                 $this->takeSnapshot($this->getDevice());
                 break;
         }
-    }
-
-    public function startFeeding(DeviceModel $record, ?int $amount = null, ?int $amount2 = null): void
-    {
-        $settings = $this->device->configuration['settings'];
-        $amount ??= $settings['amount1'] ?? 1;
-        $amount2 ??= $settings['amount2'] ?? 1;
-
-        // Dual is a two-hopper feeder, so feed_realtime carries amount1/amount2.
-        FeedRealtime::dispatchSync($record, $amount, $amount2);
-        ServiceStart::dispatchSync($record, $amount + $amount2);
     }
 
     public function toOTA(): array
@@ -560,47 +498,6 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
             "lightMultiRange" => json_encode([
                 "lightMultiRange" => [[0, 1440]]
             ])
-        ];
-    }
-
-    public function toFeedGet(): array
-    {
-        $unusedDays = [1,2,3,4,5,6,7];
-        $schedules = $this->scaleAmountsForWire($this->device->configuration['schedule'], $this->device->configuration['settings']);
-        $latest = Time::calculateLatest($schedules);
-        // calculateLatest() returns entries sorted ascending by proximity, so
-        // the nearest upcoming feed - what "nextTick" should mean - is the
-        // first element, not the last (last was the farthest of the up-to-3
-        // entries, e.g. an event 6 days out while the actual next feed was
-        // 5 minutes away).
-        $nextTick = head($latest) ?: ['a1' => 0, 'a2' => 0, 'id' => '', 't' => 0];
-
-        foreach($schedules as &$schedule) {
-            $schedule['itemJsonString'] = json_encode($schedule['it']);
-
-            foreach(explode(',', $schedule['re']) as $re) {
-                unset($unusedDays[intval($re) - 1]);
-            }
-
-        }
-
-        if(!empty($unusedDays)) {
-            $schedules[] = [
-                're' => implode(',', $unusedDays),
-                'it' => [],
-                'itemJsonString' => '[]',
-            ];
-        }
-
-        $schedules = array_map(
-            fn(array $schedule) => Time::normalizeScheduleGroupForWire($schedule),
-            $schedules
-        );
-
-        return [
-            'schedule' => $schedules,
-            'nextTick' => $nextTick['t'] + 1,
-            'latest' => $latest
         ];
     }
 

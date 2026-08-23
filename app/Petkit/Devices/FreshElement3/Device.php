@@ -5,13 +5,10 @@ namespace App\Petkit\Devices\FreshElement3;
 use stdClass;
 use App\DTOs\PetkitDTOInterface;
 use App\Helpers\JsonHelper;
-use App\Helpers\Time;
 use App\Homeassistant\HomeassistantTopic;
-use App\Jobs\FeedRealtime;
 use App\Jobs\ServiceBle;
 use App\Jobs\ServiceConnect;
 use App\Jobs\ServiceEnd;
-use App\Jobs\ServiceStart;
 use App\Jobs\SetProperty;
 use App\Models\BluetoothDevice;
 use App\Models\Device as DeviceModel;
@@ -24,6 +21,7 @@ use App\Petkit\BluetoothDevices\BluetoothProxyInterface;
 use App\Petkit\BluetoothDevices\Message;
 use App\Petkit\DeviceActions;
 use App\Petkit\DeviceDefinition;
+use App\Petkit\Devices\Concerns\HandlesFeederSchedule;
 use App\Petkit\Devices\Configuration\ConfigurationInterface;
 use App\Petkit\DeviceStates;
 use Carbon\Carbon;
@@ -33,6 +31,11 @@ use PhpMqtt\Client\Facades\MQTT;
 
 class Device implements DeviceDefinition, BluetoothProxyInterface
 {
+    use HandlesFeederSchedule;
+
+    /** schedule.md §4e: confirmed single-hopper (only 'a', never 'a1'/'a2') at the wire-protocol level. */
+    public const FEEDER_COUNT = 1;
+
     protected array $actions = [
         DeviceActions::START_FEEDING,
         DeviceActions::RESET_DESICCANT,
@@ -140,13 +143,6 @@ class Device implements DeviceDefinition, BluetoothProxyInterface
         MQTT::connection('publisher')->publish($generic->getTopic(), $generic->getMessage());
     }
 
-    public function startFeeding(DeviceModel $record, ?int $amount = null): void
-    {
-        $amount ??= $this->device->configuration['settings']['amount'] ?? 10;
-
-        FeedRealtime::dispatchSync($record, $amount);
-        ServiceStart::dispatchSync($record, $amount);
-    }
     public static function deviceName()
     {
         return 'Petkit Fresh Element 3';
@@ -316,21 +312,6 @@ class Device implements DeviceDefinition, BluetoothProxyInterface
             'error' => $err,
         ]);
 
-    }
-
-    public function toFeed(DeviceModel $device): string
-    {
-        $latest = Time::calculateLatest($device->configuration['schedule']);
-        $nextTick = last($latest) ?: ['a' => 0, 'id' => '', 't' => 0];
-
-        return json_encode([
-            'schedule' => array_map(
-                fn(array $schedule) => Time::normalizeScheduleGroupForWire($schedule),
-                $device->configuration['schedule']
-            ),
-            'nextTick' => $nextTick['t'],
-            'latest' => $latest
-        ]);
     }
 
     public function btConnect(BluetoothDevice $btDevice): void
