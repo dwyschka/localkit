@@ -26,7 +26,7 @@ The configuration is handled via your `.env` file. You can use the following var
 
 ## Guides & Documentation
 
-- [Device Installer (Telnet) & Fake Device Simulation](docs/installer.md) - Web-based firmware patch installer and mock Telnet daemon for development.
+- [Device Installer (Telnet) & Device Simulation](docs/installer.md) - Web-based firmware patch installer and mock Telnet daemon for development.
 - [S3 / Object Storage Emulation](docs/s3.md) - Camera snapshot and media upload storage backed by Garage S3.
 
 
