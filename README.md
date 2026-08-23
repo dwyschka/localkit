@@ -18,7 +18,7 @@ The configuration is handled via your `.env` file. You can use the following var
 | Variable | Description | Default |
 |---|---|---|
 | `PETKIT_LOCAL_IP` | LAN IP address of your LocalKit server (must be reachable by devices). | `127.0.0.1` |
-| `DEVICE_TELNET_USERNAME` | Telnet username for NextGen PetKit devices. | `root` |
+| `DEVICE_TELNET_USERNAME` | Telnet username for NextGen PetKit devices (likely `root`). | (empty) |
 | `DEVICE_TELNET_PASSWORD` | Telnet password for NextGen PetKit devices. | (empty) |
 | `HOMEASSISTANT_DISCOVERY_PREFIX` | The Home Assistant MQTT discovery prefix. | `homeassistant` |
 | `BYPASS_AUTH` | Bypass authentication for development or testing. | `true` |
