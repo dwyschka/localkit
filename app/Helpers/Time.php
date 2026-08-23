@@ -71,7 +71,17 @@ class Time
 
         return collect($nextSchedule)
             ->filter(fn($item, $key) => $key > $current->timestamp)
-            ->take(3)
+            // Capped at 2, not 3: every real app capture in schedule.md ever
+            // showed at most 2 'latest[]' entries (§4h is the only multi-entry
+            // capture found, and it had exactly 2) - 3 was never confirmed
+            // against a real device. schedule.md §4g separately found that
+            // this device's on-device parser doesn't reject oversized input
+            // it doesn't expect, it silently corrupts adjacent memory (the
+            // unterminated 'id' buffer overflow) - the same "parses clean,
+            // never fires" symptom this whole investigation started from. A
+            // fixed-size on-device 'latest' buffer sized for 2 entries is an
+            // unconfirmed but plausible mechanism fitting that same pattern.
+            ->take(2)
             ->map(function (array $item, int $key) use ($current){
 
                 $date = Carbon::createFromTimestamp($key);
