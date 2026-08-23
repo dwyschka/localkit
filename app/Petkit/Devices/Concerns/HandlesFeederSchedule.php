@@ -27,7 +27,10 @@ use App\Models\Device as DeviceModel;
  * without a multi-entry capture to check it against - which had also
  * overwritten FreshElement3 (D3)'s original last($latest), on the
  * assumption that it was a bug rather than what the real app does. An
- * earlier +1 bump on this value was also tried and has been removed again.
+ * earlier +1 bump on this value was tried, removed (commit 6c18e0e), and
+ * reinstated again 2026-08-23 per direct instruction after schedules were
+ * still not firing without it - now stacked on top of Time::calculateLatest()'s
+ * own +1 second offset on 't'.
  *
  * Amounts are sent as-is, with no client-side factor multiplication -
  * an earlier scaleAmountsForWire() step (multiplying by settings.factor/
@@ -68,7 +71,7 @@ trait HandlesFeederSchedule
                 fn(array $s) => Time::normalizeScheduleGroupForWire($s),
                 $schedule
             ),
-            'nextTick' => $nextTick['t'],
+            'nextTick' => $nextTick['t'] + 1,
             'latest' => $latest,
         ]);
     }
@@ -117,7 +120,7 @@ trait HandlesFeederSchedule
 
         return [
             'schedule' => $schedules,
-            'nextTick' => $nextTick['t'],
+            'nextTick' => $nextTick['t'] + 1,
             'latest' => $latest,
         ];
     }
