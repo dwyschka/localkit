@@ -43,33 +43,40 @@ class SetProperty implements ShouldQueue
         // time landed entirely *after* 't' was already frozen. Recomputing
         // here, after connect(), shrinks the calculation-to-wire gap down to
         // just the publish() call itself.
+        // Connecting first means a message-building failure below (e.g. a
+        // malformed schedule) now happens after connect() - wrapped in
+        // try/finally so that still can't leak the socket the way a bare
+        // connect()...disconnect() pair would.
         $connection = MQTT::connection('publisher');
 
-        if (array_key_exists('feed', $this->changes) && method_exists($this->device->definition(), 'toFeed')) {
-            $this->changes['feed'] = $this->device->definition()->toFeed($this->device);
+        try {
+            if (array_key_exists('feed', $this->changes) && method_exists($this->device->definition(), 'toFeed')) {
+                $this->changes['feed'] = $this->device->definition()->toFeed($this->device);
+            }
+
+            // PropertySetMessage::send() already accepts a multi-key array and
+            // builds one message from it - splitting into one publish per key
+            // just meant the device saw N separate property_set messages for a
+            // save that changed N properties at once, instead of the one
+            // combined message the real app/device firmware expects (and that
+            // BLE devices already send via a single setMode() write).
+            $message = PropertySetMessage::send($this->device, $this->changes);
+
+            // Temporary timing instrumentation: microsecond-precision pair with
+            // the '[TIMING] toFeed computed' line above (HandlesFeederSchedule::
+            // toFeed()) - diff the two to see how much gap actually survives
+            // between 't'/nextTick being computed and the payload going out on
+            // the wire. Remove once the staleness hypothesis is confirmed or
+            // ruled out.
+            Log::debug(sprintf(
+                '[TIMING] publishing feed for device %s at %s',
+                $this->device->serial_number,
+                now()->format('H:i:s.u')
+            ));
+
+            $connection->publish($message->getTopic(), $message->getMessage());
+        } finally {
+            $connection->disconnect();
         }
-
-        // PropertySetMessage::send() already accepts a multi-key array and
-        // builds one message from it - splitting into one publish per key
-        // just meant the device saw N separate property_set messages for a
-        // save that changed N properties at once, instead of the one
-        // combined message the real app/device firmware expects (and that
-        // BLE devices already send via a single setMode() write).
-        $message = PropertySetMessage::send($this->device, $this->changes);
-
-        // Temporary timing instrumentation: microsecond-precision pair with
-        // the '[TIMING] toFeed computed' line above (HandlesFeederSchedule::
-        // toFeed()) - diff the two to see how much gap actually survives
-        // between 't'/nextTick being computed and the payload going out on
-        // the wire. Remove once the staleness hypothesis is confirmed or
-        // ruled out.
-        Log::debug(sprintf(
-            '[TIMING] publishing feed for device %s at %s',
-            $this->device->serial_number,
-            now()->format('H:i:s.u')
-        ));
-
-        $connection->publish($message->getTopic(), $message->getMessage());
-        $connection->disconnect();
     }
 }

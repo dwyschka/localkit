@@ -64,6 +64,12 @@ trait HandlesFeederSchedule
         return static::FEEDER_COUNT > 1 ? ['a1', 'a2'] : ['a'];
     }
 
+    /** @return array the shape of a 'latest[]' item, used when a schedule has no future occurrences at all. */
+    private static function nextTickDefault(): array
+    {
+        return [...array_fill_keys(static::amountKeys(), 0), 'id' => '', 't' => 0];
+    }
+
     public function toFeed(DeviceModel $device): string
     {
         $schedule = $device->configuration['schedule'];
@@ -72,8 +78,7 @@ trait HandlesFeederSchedule
         // calculateLatest() returns one entry per schedule item, sorted
         // ascending by proximity; nextTick is the *last* (farthest) of them
         // - see the trait-level docblock for the live-capture evidence.
-        $nextTickDefault = [...array_fill_keys(static::amountKeys(), 0), 'id' => '', 't' => 0];
-        $nextTick = last($latest) ?: $nextTickDefault;
+        $nextTick = last($latest) ?: static::nextTickDefault();
 
         // Temporary timing instrumentation: microsecond-precision pair with
         // the '[TIMING] publishing' line in SetProperty::handle(), to
@@ -115,8 +120,7 @@ trait HandlesFeederSchedule
         // calculateLatest() returns one entry per schedule item, sorted
         // ascending by proximity; nextTick is the *last* (farthest) of them
         // - see the trait-level docblock for the live-capture evidence.
-        $nextTickDefault = [...array_fill_keys(static::amountKeys(), 0), 'id' => '', 't' => 0];
-        $nextTick = last($latest) ?: $nextTickDefault;
+        $nextTick = last($latest) ?: static::nextTickDefault();
 
         foreach ($schedules as &$schedule) {
             $schedule['itemJsonString'] = json_encode($schedule['it']);

@@ -73,9 +73,9 @@ class Time
                 // the whole schedule.
                 $next = null;
                 foreach ($days as $day) {
-                    $date = Carbon::now()->next(self::$days[$day]);
-                    if (self::$days[$day] == Carbon::now()->dayOfWeek) {
-                        $date = Carbon::now();
+                    $date = $current->copy()->next(self::$days[$day]);
+                    if (self::$days[$day] == $current->dayOfWeek) {
+                        $date = $current->copy();
                     }
                     $date->setTime((int) $hour, (int) $minute);
 
@@ -121,7 +121,12 @@ class Time
                     // schedule.md's own §3d warning (wrong JSON type is worse than a
                     // missing field) is reason enough to not rely on that leniency -
                     // round() returns a float, so cast explicitly to a genuine int.
-                    't' => (int) round($current->diffInSeconds($next, true) - 1)
+                    // max(0, ...) guards the edge where $next lands under 1s away -
+                    // diffInSeconds() truncates that to 0 and the -1 would otherwise
+                    // send a negative t, which schedule.md §3b documents as hitting a
+                    // different (verbatim-store) on-device code path than a
+                    // non-negative one for 'latest' items - not what's intended here.
+                    't' => max(0, (int) round($current->diffInSeconds($next, true) - 1))
                 ];
             }
         }
