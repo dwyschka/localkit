@@ -190,7 +190,16 @@ class UI
                                                 // Convert time to seconds from midnight;
                                                 $seconds = Time::toSeconds($state);
                                                 $set('t', $seconds);
-                                                $set('id', sprintf('n_%d', $seconds));
+                                                // schedule.md's on-device struct for a schedule
+                                                // item is `id[7]` (7 bytes, no null-terminator
+                                                // byte). The old 'n_%d' format hits exactly 7
+                                                // bytes whenever seconds >= 10000 (most of the
+                                                // day) - a live D4SH capture (2026-08-23) showed
+                                                // the device's own debug print of exactly such an
+                                                // id with garbage bytes appended right after the
+                                                // 7th character. Dropping the underscore keeps
+                                                // every id at 6 bytes, one under the field size.
+                                                $set('id', sprintf('n%d', $seconds));
                                             }
                                         })
                                         ->afterStateHydrated(function (Set $set, Get $get) {

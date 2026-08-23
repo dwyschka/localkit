@@ -83,7 +83,19 @@ class Time
 
                 return [
                     ...$amounts,
-                    'id' => sprintf('s_%d_%d', $date->format('Ymd'), $item['t']),
+                    // schedule.md's on-device struct for a `latest` item is
+                    // `id[16]` (16 bytes, no separate null-terminator byte).
+                    // The old 's_%d_%d' format (2-char prefix + 8-digit Ymd +
+                    // '_' + up to 5-digit seconds-of-day) hits exactly 16
+                    // bytes whenever the time is >= 10000s (most of the
+                    // day) - a live D4SH capture (2026-08-23) showed the
+                    // device's own debug print of a same-length schedule
+                    // item id with garbage bytes appended right after the
+                    // 7th character, consistent with it reading past an
+                    // unterminated fixed-size buffer. Dropping the leading
+                    // underscore keeps every id at 15 bytes, one byte under
+                    // the field size.
+                    'id' => sprintf('s%d_%d', $date->format('Ymd'), $item['t']),
                     // cJSON's valueint is fine with a float-looking JSON number, but
                     // schedule.md's own §3d warning (wrong JSON type is worse than a
                     // missing field) is reason enough to not rely on that leniency -
