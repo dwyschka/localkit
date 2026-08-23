@@ -59,17 +59,7 @@ class Time
      */
     public static function calculateLatest(array $schedules)
     {
-        // Using UTC as the reference clock here, per direct instruction
-        // 2026-08-23 - despite the cross-check earlier that day (comparing
-        // our own log timestamps against Petkit's own HTTP 'Date' response
-        // header) confirming the app server runs in local time (Europe/
-        // Berlin, UTC+2 CEST) and that the device's own heartbeat reports
-        // locale "Europe/Berlin". That check only established what
-        // timezone *our* calculation and the device's *reported* locale
-        // use - not what clock the on-device schedule *engine* actually
-        // evaluates 't' against internally, which remains unconfirmed and
-        // is what this change tests directly.
-        $current = Carbon::now('UTC');
+        $current = Carbon::now();
         $latest = [];
 
         foreach ($schedules as $schedule) {
