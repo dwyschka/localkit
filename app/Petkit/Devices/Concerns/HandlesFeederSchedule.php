@@ -18,9 +18,11 @@ use App\Models\Device as DeviceModel;
  * scaleAmountsForWire(), ported commit-by-commit from D4SH (see git log:
  * "Port D4SH schedule fixes to ..."). FreshElement3 (D3) never got that
  * port and had drifted from the other three - it used last($latest)
- * instead of head() (farthest upcoming feed instead of nearest) and was
- * missing the nextTick +1 - both fixed here as a side effect of there now
- * being one implementation instead of four, not as a separate change.
+ * instead of head() (farthest upcoming feed instead of nearest) - fixed
+ * here as a side effect of there now being one implementation instead of
+ * four, not as a separate change. nextTick is sent as the raw seconds
+ * from Time::calculateLatest() - an earlier +1 bump on this value was
+ * tried and has been removed again.
  *
  * A class using this trait need only declare `public const FEEDER_COUNT`
  * (1 for single-hopper, 2 for dual - schedule.md §4e independently
@@ -90,7 +92,7 @@ trait HandlesFeederSchedule
                 fn(array $s) => Time::normalizeScheduleGroupForWire($s),
                 $schedule
             ),
-            'nextTick' => $nextTick['t'] + 1,
+            'nextTick' => $nextTick['t'],
             'latest' => $latest,
         ]);
     }
@@ -140,7 +142,7 @@ trait HandlesFeederSchedule
 
         return [
             'schedule' => $schedules,
-            'nextTick' => $nextTick['t'] + 1,
+            'nextTick' => $nextTick['t'],
             'latest' => $latest,
         ];
     }
