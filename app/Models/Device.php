@@ -121,6 +121,18 @@ class Device extends Model
         return $this->hasMany(History::class, 'device_id', 'id')->orderBy('created_at', 'desc');
     }
 
+    /**
+     * Normalized schedule storage (device_schedules/device_schedule_items) -
+     * not yet the source of truth for feeding schedules, that's still
+     * configuration['schedule'] (JSON), read/written by Time.php and each
+     * device's Filament UI. This relation exists for the table itself; nothing
+     * writes to it yet.
+     */
+    public function schedules(): HasMany
+    {
+        return $this->hasMany(DeviceSchedule::class);
+    }
+
     public function deviceName()
     {
         return sprintf('d_%s_%s', $this->device_type, $this->serial_number);
