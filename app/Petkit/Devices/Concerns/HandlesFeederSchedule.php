@@ -72,7 +72,11 @@ trait HandlesFeederSchedule
 
     public function toFeed(DeviceModel $device): string
     {
-        $schedule = $device->configuration['schedule'];
+        // configuration['schedule'] is now just a pointer (['key'=>..,
+        // 'checksum'=>..]) - the actual day-groups live in
+        // device_schedules/device_schedule_items, see Device::scheduleGroups().
+        $key = $device->configuration['schedule']['key'] ?? 'default';
+        $schedule = $device->scheduleGroups($key);
 
         $latest = Time::calculateLatest($schedule);
         // calculateLatest() returns one entry per schedule item, sorted
@@ -115,7 +119,8 @@ trait HandlesFeederSchedule
     public function toFeedGet(): array
     {
         $unusedDays = [1, 2, 3, 4, 5, 6, 7];
-        $schedules = $this->device->configuration['schedule'];
+        $key = $this->device->configuration['schedule']['key'] ?? 'default';
+        $schedules = $this->device->scheduleGroups($key);
         $latest = Time::calculateLatest($schedules);
         // calculateLatest() returns one entry per schedule item, sorted
         // ascending by proximity; nextTick is the *last* (farthest) of them
