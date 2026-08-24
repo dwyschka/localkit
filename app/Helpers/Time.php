@@ -119,12 +119,17 @@ class Time
                     // schedule.md's own §3d warning (wrong JSON type is worse than a
                     // missing field) is reason enough to not rely on that leniency -
                     // round() returns a float, so cast explicitly to a genuine int.
-                    // max(0, ...) guards the edge where $next lands under 1s away -
-                    // diffInSeconds() truncates that to 0 and the -1 would otherwise
-                    // send a negative t, which schedule.md §3b documents as hitting a
-                    // different (verbatim-store) on-device code path than a
-                    // non-negative one for 'latest' items - not what's intended here.
-                    't' => max(0, (int) round($current->diffInSeconds($next, true) - 1))
+                    // Floored at 1, not 0 (changed 2026-08-24, on request): a t of 0
+                    // means "fire immediately", which - given the countdown only
+                    // starts once the device has actually received and parsed the
+                    // message - risks landing before the schedule is even armed if
+                    // $next is under 1s away by the time this runs. 1 guarantees the
+                    // device always has at least one real tick to count down before
+                    // firing, rather than racing the message's own delivery. A
+                    // negative t would hit a different (verbatim-store) on-device code
+                    // path for 'latest' items per schedule.md §3b - not what's
+                    // intended here either.
+                    't' => max(1, (int) round($current->diffInSeconds($next, true) - 1))
                 ];
             }
         }
