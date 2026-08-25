@@ -50,7 +50,7 @@ return new class extends Migration
                     $scheduleId = DB::table('device_schedules')->insertGetId([
                         'device_id' => $device->id,
                         'key' => $key,
-                        're' => json_encode(array_values(array_filter(explode(',', (string) $group['re']), fn($day) => $day !== ''))),
+                        're' => (string) $group['re'],
                         'created_at' => $now,
                         'updated_at' => $now,
                     ]);

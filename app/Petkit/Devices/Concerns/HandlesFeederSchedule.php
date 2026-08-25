@@ -130,7 +130,7 @@ trait HandlesFeederSchedule
         foreach ($schedules as &$schedule) {
             $schedule['itemJsonString'] = json_encode($schedule['it']);
 
-            foreach ($schedule['re'] as $re) {
+            foreach (explode(',', $schedule['re']) as $re) {
                 unset($unusedDays[intval($re) - 1]);
             }
         }
@@ -138,7 +138,7 @@ trait HandlesFeederSchedule
 
         if (!empty($unusedDays)) {
             $schedules[] = [
-                're' => array_values($unusedDays),
+                're' => implode(',', $unusedDays),
                 'it' => [],
                 'itemJsonString' => '[]',
             ];

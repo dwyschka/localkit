@@ -23,6 +23,7 @@ use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use PhpMqtt\Client\Facades\MQTT;
@@ -157,7 +158,7 @@ class UI
                                 ->required()
                                 ->stateCast(new IdentityStateCast())
                                 ->formatStateUsing(fn(string|array $state) => is_array($state) ? $state : explode(',', $state))
-                                ->dehydrateStateUsing(fn($state) => Time::normalizeRepeatDays($state)),
+                                ->dehydrateStateUsing(fn($state) => implode(',', Arr::sort(array_filter($state)))),
 
                             Repeater::make('it')
                                 ->label('Schedule Items')
@@ -258,7 +259,7 @@ class UI
                         ->itemLabel(function (array $state): ?string {
                             $days = [];
                             if (!empty($state['re'])) {
-                                $dayNumbers = $state['re'];
+                                $dayNumbers = is_string($state['re']) ? explode(',', $state['re']) : $state['re'];
                                 $dayNames = [
                                     '1' => 'Sun', '2' => 'Mon', '3' => 'Tue', '4' => 'Wed',
                                     '5' => 'Thu', '6' => 'Fri', '7' => 'Sat'
