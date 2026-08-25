@@ -211,7 +211,7 @@ class UI
                                 ->dehydrateStateUsing(function (array $state) {
                                     if (!is_array($state)) return $state;
 
-                                    // Sort by time_display treating it as time
+                                    // Sort by time_display treating it as time, descending - the device requires it.
                                     uasort($state, function ($a, $b) {
                                         $timeA = $a['time_display'] ?? '00:00';
                                         $timeB = $b['time_display'] ?? '00:00';
@@ -220,7 +220,7 @@ class UI
                                         $intA = (int)str_replace(':', '', $timeA);
                                         $intB = (int)str_replace(':', '', $timeB);
 
-                                        return $intA <=> $intB;
+                                        return $intB <=> $intA;
                                     });
 
                                     $data = collect($state)->map(fn($s) => [
