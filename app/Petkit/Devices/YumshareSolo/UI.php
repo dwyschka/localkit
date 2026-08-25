@@ -175,7 +175,13 @@ class UI
                                 ->required()
                                 ->stateCast(new IdentityStateCast())
                                 ->formatStateUsing(fn(string|array|null $state) => is_array($state) ? $state : (($state === null || $state === '') ? [] : explode(',', $state)))
-                                ->dehydrateStateUsing(fn($state) => implode(',', Arr::sort(array_filter((array) $state)))),
+                                // Kept as an array here, not joined into a comma string - Filament
+                                // validates the *dehydrated* value against the options list, and a
+                                // joined string ("1,2,3,4,5,6,7") never matches a single option key,
+                                // so any 2+ day selection failed "is invalid". The comma string this
+                                // needs for storage is built afterwards, in
+                                // EditDevice::mutateFormDataBeforeSave(), after validation has passed.
+                                ->dehydrateStateUsing(fn($state) => array_values(Arr::sort(array_filter((array) $state)))),
 
                             Repeater::make('it')
                                 ->label('Schedule Items')

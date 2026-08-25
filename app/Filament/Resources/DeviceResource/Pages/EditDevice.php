@@ -58,7 +58,15 @@ class EditDevice extends EditRecord
         $record = $this->getRecord();
 
         if ($this->hasSchedule($record) && isset($data['configuration']['schedule']) && is_array($data['configuration']['schedule'])) {
-            $groups = $data['configuration']['schedule'];
+            // The CheckboxList('re') field dehydrates 're' as an array, not a
+            // comma string - joining it here, after validation, instead of in
+            // the field's own dehydrateStateUsing() is what lets Filament's
+            // built-in "is one of the options" check validate a multi-day
+            // selection correctly (see the UI.php comment next to that field).
+            $groups = array_map(fn(array $group) => [
+                ...$group,
+                're' => implode(',', (array) ($group['re'] ?? [])),
+            ], $data['configuration']['schedule']);
             $key = $record->configuration['schedule']['key'] ?? 'default';
 
             $record->syncSchedule($groups, $key);
