@@ -63,7 +63,7 @@ class Time
         $latest = [];
 
         foreach ($schedules as $schedule) {
-            $days = explode(',', $schedule['re']);
+            $days = $schedule['re'];
 
             foreach ($schedule['it'] as $item) {
                 [$hour, $minute] = explode(':', self::toTimeFromSeconds($item['t']));
@@ -149,19 +149,43 @@ class Time
      * §3c) copies a schedule group's 're' verbatim into a 20-byte stack
      * buffer via strcpy with no length check, then scans all 20 buffer
      * positions independently, setting a bit for each '1'-'7' digit found -
-     * non-digit characters (e.g. the comma our stored/editable representation
-     * uses) are just skipped in place, not a parse-stopping delimiter. So
-     * "1,2,3" and "123" produce the identical mask on-device either way -
-     * but the comma is kept here (only genuinely invalid characters are
-     * stripped) since it's the readable form the app itself sends and what
-     * shows up in captures/logs; a bare "1267" is correct but confusing to
-     * read back. The 20-char buffer is still the hard constraint - a 're' at
-     * or over ~20 chars overflows that stack buffer on-device (crash risk,
-     * not just a rejected write) - so length stays capped regardless.
+     * non-digit characters (e.g. the comma this joins the array with below)
+     * are just skipped in place, not a parse-stopping delimiter. So "1,2,3"
+     * and "123" produce the identical mask on-device either way - but the
+     * comma is kept here since it's the readable form the app itself sends
+     * and what shows up in captures/logs; a bare "1267" is correct but
+     * confusing to read back. The 20-char buffer is still the hard
+     * constraint - a 're' at or over ~20 chars overflows that stack buffer
+     * on-device (crash risk, not just a rejected write) - so length stays
+     * capped regardless.
      */
-    public static function toWireRepeatDays(string $re): string
+    public static function toWireRepeatDays(array $re): string
     {
-        return substr(preg_replace('/[^1-7,]/', '', $re), 0, 19);
+        $days = array_unique(array_filter(
+            array_map('strval', $re),
+            fn(string $day) => preg_match('/^[1-7]$/', $day) === 1
+        ));
+
+        return substr(implode(',', $days), 0, 19);
+    }
+
+    /**
+     * Canonical array form of a schedule group's weekday selection
+     * (CheckboxList option keys '1'-'7') - sorted and de-duplicated so a
+     * save with no real change produces the same array every time, which
+     * keeps EditDevice's md5(json_encode($groups)) checksum stable. Also
+     * accepts a legacy comma-joined string (pre-array device_schedules rows,
+     * imports) for the same tolerance toWireRepeatDays() has at the wire
+     * boundary.
+     */
+    public static function normalizeRepeatDays(array|string $re): array
+    {
+        $days = is_array($re) ? $re : explode(',', $re);
+
+        return array_values(Arr::sort(array_unique(array_filter(
+            $days,
+            fn($day) => $day !== null && $day !== ''
+        ))));
     }
 
     /**
@@ -179,7 +203,7 @@ class Time
     {
         return [
             ...$schedule,
-            're' => self::toWireRepeatDays((string) $schedule['re']),
+            're' => self::toWireRepeatDays((array) $schedule['re']),
             'it' => array_map(fn(array $item) => [
                 ...$item,
                 'id' => (string) $item['id'],

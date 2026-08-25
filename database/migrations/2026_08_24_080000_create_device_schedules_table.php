@@ -27,7 +27,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('device_id')->constrained()->cascadeOnDelete();
             $table->string('key')->default('default');
-            $table->string('re');
+            $table->json('re');
             $table->timestamps();
 
             $table->index(['device_id', 'key']);

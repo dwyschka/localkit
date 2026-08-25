@@ -10,6 +10,8 @@ class DeviceSchedule extends Model
 {
     protected $fillable = ['device_id', 'key', 're'];
 
+    protected $casts = ['re' => 'array'];
+
     public function device(): BelongsTo
     {
         return $this->belongsTo(Device::class);

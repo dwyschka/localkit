@@ -26,6 +26,7 @@ use App\Petkit\Devices\EversweetUltra\UI as EversweetUltraUI;
 use App\Petkit\Devices\EversweetUltra\Configuration as EversweetUltraConfiguration;
 use App\Helpers\HomeassistantHelper;
 use App\Helpers\JsonHelper;
+use App\Helpers\Time;
 use App\Homeassistant\Interfaces\Snapshot;
 use App\Jobs\SetProperty;
 use App\Petkit\DeviceDefinition;
@@ -179,7 +180,7 @@ class Device extends Model
             foreach (array_values($groups) as $group) {
                 $schedule = $this->schedules()->create([
                     'key' => $key,
-                    're' => (string) ($group['re'] ?? ''),
+                    're' => Time::normalizeRepeatDays($group['re'] ?? []),
                 ]);
 
                 foreach (array_values($group['it'] ?? []) as $item) {

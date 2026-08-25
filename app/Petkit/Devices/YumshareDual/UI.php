@@ -19,7 +19,6 @@ use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -197,7 +196,7 @@ class UI
                                 ->required()
                                 ->stateCast(new IdentityStateCast())
                                 ->formatStateUsing(fn(string|array|null $state) => is_array($state) ? $state : (($state === null || $state === '') ? [] : explode(',', $state)))
-                                ->dehydrateStateUsing(fn($state) => implode(',', Arr::sort(array_filter((array) $state)))),
+                                ->dehydrateStateUsing(fn($state) => Time::normalizeRepeatDays((array) $state)),
 
                             Repeater::make('it')
                                 ->label('Schedule Items')
@@ -307,7 +306,7 @@ class UI
                         ->itemLabel(function (array $state): ?string {
                             $days = [];
                             if (!empty($state['re'])) {
-                                $dayNumbers = is_string($state['re']) ? explode(',', $state['re']) : $state['re'];
+                                $dayNumbers = $state['re'];
                                 $dayNames = [
                                     '1' => 'Sun', '2' => 'Mon', '3' => 'Tue', '4' => 'Wed',
                                     '5' => 'Thu', '6' => 'Fri', '7' => 'Sat'

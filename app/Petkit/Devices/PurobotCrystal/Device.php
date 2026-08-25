@@ -614,7 +614,7 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
         foreach($schedules as &$schedule) {
             $schedule['itemJsonString'] = json_encode($schedule['it']);
 
-            foreach(explode(',', $schedule['re']) as $re) {
+            foreach($schedule['re'] as $re) {
                 unset($unusedDays[intval($re) - 1]);
             }
 
@@ -622,7 +622,7 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
 
         if(!empty($unusedDays)) {
             $schedules[] = [
-                're' => implode(',', $unusedDays),
+                're' => array_values($unusedDays),
                 'it' => [],
                 'itemJsonString' => '[]',
             ];
