@@ -17,6 +17,6 @@ class DeviceSchedule extends Model
 
     public function items(): HasMany
     {
-        return $this->hasMany(DeviceScheduleItem::class);
+        return $this->hasMany(DeviceScheduleItem::class)->orderBy('t');
     }
 }
