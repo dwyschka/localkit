@@ -82,6 +82,8 @@ class LocalkitListen extends Command
                 return Localkit::route($topic, $message);
             }
 
+            $this->updateLastTimestamp($topic, $message, $definitions);
+
             try {
                 $definitions->each(function ($definition) use ($topic, $message, $output) {
                     collect($definition->stateTopics())
@@ -140,6 +142,30 @@ class LocalkitListen extends Command
             'topic' => $topic,
             'message' => $message,
         ]);
+    }
+
+    /**
+     * Every MQTT event message carries its own top-level params.timestamp
+     * (confirmed via live captures, e.g. mqtt_discern.txt) - update it
+     * regardless of whether the topic is one we otherwise handle. Uses a
+     * direct query builder update rather than $device->update() so this
+     * doesn't fire Device::booted()'s 'updated' hook (Home Assistant
+     * republish) on every single message a device sends.
+     */
+    private function updateLastTimestamp(string $topic, $message, $definitions): void
+    {
+        $timestamp = $message?->params?->timestamp ?? null;
+
+        if ($timestamp === null) {
+            return;
+        }
+
+        $definitions->each(function ($definition) use ($topic, $timestamp) {
+            $device = $definition->getDevice();
+            if (str_contains($topic, $device->deviceName())) {
+                Device::whereKey($device->id)->update(['last_timestamp' => $timestamp]);
+            }
+        });
     }
 
     private function logDeviceMqttMessage(Device $device, string $topic, string $message): void

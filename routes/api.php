@@ -33,7 +33,7 @@ use \App\Http\Controllers\Petkit\DevUploadLogTokenController;
 
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('{deviceType}')->group(function () {
+Route::prefix('{deviceType}')->middleware(\App\Http\Middleware\UpdateDeviceLastTimestamp::class)->group(function () {
     Route::post('dev_signup', DevSignupController::class);
     Route::get('dev_signup', DevSignupController::class);
 
@@ -81,7 +81,7 @@ Route::prefix('{deviceType}')->group(function () {
 
 
     Route::match(['get', 'post'], 'poll/{slug}/heartbeat', HeartbeatController::class)
-        ->middleware(\App\Http\Middleware\LogDeviceHttpRequests::class);
+        ->middleware([\App\Http\Middleware\LogDeviceHttpRequests::class, \App\Http\Middleware\UpdateDeviceLastTimestamp::class]);
 
 
     Route::prefix('api')->middleware(['api'])->group(function () {
