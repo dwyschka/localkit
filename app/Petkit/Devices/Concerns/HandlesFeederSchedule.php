@@ -7,6 +7,7 @@ use App\Jobs\FeedRealtime;
 use App\Jobs\ServiceStart;
 use App\Models\Device as DeviceModel;
 use App\Models\History;
+use App\Petkit\DeviceStates;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -169,22 +170,39 @@ trait HandlesFeederSchedule
      * feed_over's result/err_code/real_amount(1/2)/completed_at - and
      * error_over's resolution - into the row the paired *_start event
      * already created, instead of that data being silently dropped.
-     * Silently does nothing if there's no matching row (same pattern as
-     * PurobotCrystal's identical helper).
+     *
+     * A scheduled (device-triggered) feed never sends feed_start at all -
+     * only feed_over fires (confirmed via live D4 and D4SH captures, both
+     * carrying content.manual=0 with no preceding feed_start event_id ever
+     * seen) - so with no $type given, this used to silently drop the whole
+     * feed. Passing $type lets a caller opt into creating the row itself
+     * from feed_over's own content when no feed_start row exists yet;
+     * callers that don't pass it keep the old silently-do-nothing behavior.
      */
-    protected function mergeHistory(?string $messageId, ?string $rawContent): void
+    protected function mergeHistory(?string $messageId, ?string $rawContent, ?string $type = null): void
     {
         if ($messageId === null) {
             return;
         }
 
+        $content = json_decode($rawContent ?? '{}', true) ?? [];
         $history = History::where('messageId', $messageId)->first();
 
         if ($history === null) {
+            if ($type === null) {
+                return;
+            }
+
+            History::create([
+                'messageId' => $messageId,
+                'pet_id' => null,
+                'type' => $type,
+                'parameters' => $content,
+                'device_id' => $this->device->id,
+            ]);
+
             return;
         }
-
-        $content = json_decode($rawContent ?? '{}', true) ?? [];
 
         $history->update([
             'parameters' => [

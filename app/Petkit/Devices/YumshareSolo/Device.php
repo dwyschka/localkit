@@ -92,7 +92,7 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
                 ]);
             },
             sprintf('/sys/%s/%s/thing/event/feed_over/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
-                $this->mergeHistory($message?->params?->event_id ?? null, $message?->params?->content ?? null);
+                $this->mergeHistory($message?->params?->event_id ?? null, $message?->params?->content ?? null, DeviceStates::WORKING->value);
 
                 $state = json_decode($message?->params?->state, false);
                 $device->update([
@@ -219,22 +219,40 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
     /**
      * Merges a follow-up event's content into the History row created for
      * the event it belongs to (found by messageId - the same event_id for
-     * start/over pairs like eat_start/eat_over). Silently does nothing if
-     * there's no matching row.
+     * start/over pairs like eat_start/eat_over).
+     *
+     * A scheduled (device-triggered) feed never sends feed_start at all -
+     * only feed_over fires (confirmed via a live D4H-family capture,
+     * content.manual=0 with no preceding feed_start event_id) - so with no
+     * $type given, this used to silently drop the whole feed. Passing
+     * $type lets a caller opt into creating the row itself from *_over's
+     * own content when no *_start row exists yet; callers that don't pass
+     * it keep the old silently-do-nothing behavior.
      */
-    private function mergeHistory(?string $messageId, ?string $rawContent): void
+    private function mergeHistory(?string $messageId, ?string $rawContent, ?string $type = null): void
     {
         if ($messageId === null) {
             return;
         }
 
+        $content = json_decode($rawContent ?? '{}', true) ?? [];
         $history = History::where('messageId', $messageId)->first();
 
         if ($history === null) {
+            if ($type === null) {
+                return;
+            }
+
+            History::create([
+                'messageId' => $messageId,
+                'pet_id' => null,
+                'type' => $type,
+                'parameters' => $content,
+                'device_id' => $this->device->id,
+            ]);
+
             return;
         }
-
-        $content = json_decode($rawContent ?? '{}', true) ?? [];
 
         $history->update([
             'parameters' => [
