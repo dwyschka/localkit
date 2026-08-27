@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources;
 
-use Carbon\Carbon;
 use Filament\Schemas\Schema;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
@@ -133,12 +132,6 @@ class DeviceResource extends Resource
                                     'w7h' => PetkitEversweetUltra::deviceName(),
                                 };
                             }),
-                        TextColumn::make('last_timestamp')
-                            ->label('Last Timestamp')
-                            ->color('gray')
-                            ->grow(false)
-                            ->formatStateUsing(fn ($state) => Carbon::createFromTimestamp($state)->format('Y-m-d'))
-                            ->visible(fn ($state) => filled($state)),
                         TextColumn::make('working_state')
                             ->badge()
                             ->grow(false),

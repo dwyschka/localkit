@@ -20,12 +20,6 @@ class PetkitHeader
         return Str::lower($parameters['type']);
     }
 
-    public static function timestamp($header): ?int
-    {
-        $parameters = self::parse($header);
-        return isset($parameters['timestamp']) ? (int) $parameters['timestamp'] : null;
-    }
-
     protected static function parse(string $header): array
     {
 
