@@ -152,11 +152,16 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
                 $this->parseState($device, $message, DeviceStates::WORKING->value);
                 $this->reply($topic, $message);
             },
-            // error_start/error_over share one event_id (schedule.md/d4sh.md:
-            // ctrl's content shape is {"start_time":<int>,"err":"<string>"} on
-            // error_start; error_over's own content, whatever it carries, is
-            // merged into the same History row rather than assumed). Distinct
-            // from parseState()'s state-embedded error flag - this logs an
+            // error_start/error_over do NOT share one event_id the way
+            // feed_start/feed_over does - each derives its own event_id
+            // from its own timestamp (confirmed via a live D4SH capture:
+            // error_start's event_id was ..._1787833502, error_over's own
+            // was ..._1787833503, one second later). error_over's content
+            // instead carries error_start's timestamp as start_time
+            // ({"start_time":<int>,"err":"<string>"}) - reconstruct
+            // error_start's messageId from it by swapping this event's own
+            // timestamp suffix for that start_time. Distinct from
+            // parseState()'s state-embedded error flag - this logs an
             // actual ERROR-type activity entry with a start/end.
             sprintf('/sys/%s/%s/thing/event/error_start/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $content = json_decode($message?->params?->content ?? '{}', true) ?? [];
@@ -171,11 +176,19 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
                 }
 
                 $device->update(['error' => $content['err'] ?? null]);
+                $this->reply($topic, $message);
             },
             sprintf('/sys/%s/%s/thing/event/error_over/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
-                $this->mergeHistory($message?->params?->event_id ?? null, $message?->params?->content ?? null);
+                $content = json_decode($message?->params?->content ?? '{}', true) ?? [];
+                $eventId = $message?->params?->event_id ?? null;
+                $startTime = $content['start_time'] ?? null;
+
+                if ($eventId !== null && $startTime !== null && ($pos = strrpos($eventId, '_')) !== false) {
+                    $this->mergeHistory(substr($eventId, 0, $pos) . '_' . $startTime, $message?->params?->content ?? null);
+                }
 
                 $device->update(['error' => null]);
+                $this->reply($topic, $message);
             },
         ];
     }
