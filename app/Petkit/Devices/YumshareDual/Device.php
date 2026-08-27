@@ -169,9 +169,13 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
                         'device_id' => $device->id,
                     ]);
                 }
+
+                $device->update(['error' => $content['err'] ?? null]);
             },
             sprintf('/sys/%s/%s/thing/event/error_over/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $this->mergeHistory($message?->params?->event_id ?? null, $message?->params?->content ?? null);
+
+                $device->update(['error' => null]);
             },
         ];
     }

@@ -35,5 +35,19 @@ return [
         'heater_low_water' => 'The heater is protecting against low water',
         'ota_failed' => 'The firmware update failed',
         'ota_task_failed' => 'The firmware update could not be started (device out of resources)',
+
+        // Feeder (D4/D4S/D4SH/D3) error_start `err` codes - these match the
+        // field names of the device's own state.err struct 1:1 ("blk_d"
+        // confirmed via a live D4SH error_start capture on 2026-08-27; the
+        // rest are inferred from that same struct's naming, not
+        // independently confirmed against firmware disassembly).
+        'DC' => 'A power supply fault was detected',
+        'sys' => 'A system fault was detected',
+        'rtc_c' => 'The clock calibration failed',
+        'moto' => 'The feeding motor has a fault',
+        'blk_f' => 'The hopper is blocked',
+        'blk_d' => 'The dispenser is blocked',
+        'camera' => 'The camera has a fault',
+        'serial' => 'A serial communication fault was detected',
     ]
 ];
