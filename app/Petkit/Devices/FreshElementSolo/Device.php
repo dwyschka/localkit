@@ -77,6 +77,8 @@ class Device implements DeviceDefinition, BluetoothProxyInterface
 
             },
             sprintf('/sys/%s/%s/thing/event/feed_over/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
+                $this->mergeHistory($message?->params?->event_id ?? null, $message?->params?->content ?? null);
+
                 $device->update([
                     'working_state' => DeviceStates::IDLE->value
                 ]);
@@ -100,6 +102,31 @@ class Device implements DeviceDefinition, BluetoothProxyInterface
 
                 $this->reply($topic, $message);
 
+            },
+            // error_start/error_over share one event_id (schedule.md/d4sh.md:
+            // ctrl's content shape is {"start_time":<int>,"err":"<string>"} on
+            // error_start; error_over's own content, whatever it carries, is
+            // merged into the same History row rather than assumed).
+            sprintf('/sys/%s/%s/thing/event/error_start/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
+                $content = json_decode($message?->params?->content ?? '{}', true) ?? [];
+
+                if (isset($message->params->event_id)) {
+                    History::updateOrCreate(['messageId' => $message->params->event_id], [
+                        'pet_id' => null,
+                        'type' => 'ERROR',
+                        'parameters' => ['error' => $content['err'] ?? null],
+                        'device_id' => $device->id,
+                    ]);
+                }
+
+                $device->update(['error' => $content['err'] ?? null]);
+                $this->reply($topic, $message);
+            },
+            sprintf('/sys/%s/%s/thing/event/error_over/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
+                $this->mergeHistory($message?->params?->event_id ?? null, $message?->params?->content ?? null);
+
+                $device->update(['error' => null]);
+                $this->reply($topic, $message);
             },
             sprintf('/ota/device/inform/%s/%s', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $message = OtaMessage::send($device);

@@ -6,6 +6,7 @@ use App\Helpers\Time;
 use App\Jobs\FeedRealtime;
 use App\Jobs\ServiceStart;
 use App\Models\Device as DeviceModel;
+use App\Models\History;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -159,6 +160,38 @@ trait HandlesFeederSchedule
             'nextTick' => $nextTick['t'],
             'latest' => $latest,
         ];
+    }
+
+    /**
+     * Merges a follow-up event's content into the History row created for
+     * the event it belongs to (found by messageId - the same event_id
+     * feed_start/feed_over and error_start/error_over share). Used to fold
+     * feed_over's result/err_code/real_amount(1/2)/completed_at - and
+     * error_over's resolution - into the row the paired *_start event
+     * already created, instead of that data being silently dropped.
+     * Silently does nothing if there's no matching row (same pattern as
+     * PurobotCrystal's identical helper).
+     */
+    protected function mergeHistory(?string $messageId, ?string $rawContent): void
+    {
+        if ($messageId === null) {
+            return;
+        }
+
+        $history = History::where('messageId', $messageId)->first();
+
+        if ($history === null) {
+            return;
+        }
+
+        $content = json_decode($rawContent ?? '{}', true) ?? [];
+
+        $history->update([
+            'parameters' => [
+                ...$history->parameters,
+                ...$content,
+            ],
+        ]);
     }
 
     public function startFeeding(DeviceModel $record, ?int $amount = null, ?int $amount2 = null): void

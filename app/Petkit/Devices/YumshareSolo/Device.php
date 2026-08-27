@@ -92,6 +92,7 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
                 ]);
             },
             sprintf('/sys/%s/%s/thing/event/feed_over/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
+                $this->mergeHistory($message?->params?->event_id ?? null, $message?->params?->content ?? null);
 
                 $state = json_decode($message?->params?->state, false);
                 $device->update([
@@ -173,6 +174,27 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
                     'error' => $this->prepareErrorReporting($state),
                     'configuration' => $this->updateConfiguration($state)
                 ]);
+            },
+            // error_start/error_over share one event_id (schedule.md/d4sh.md:
+            // ctrl's content shape is {"start_time":<int>,"err":"<string>"} on
+            // error_start; error_over's own content, whatever it carries, is
+            // merged into the same History row rather than assumed). Distinct
+            // from prepareErrorReporting()'s state-embedded flag above - this
+            // logs an actual ERROR-type activity entry with a start/end.
+            sprintf('/sys/%s/%s/thing/event/error_start/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
+                $content = json_decode($message?->params?->content ?? '{}', true) ?? [];
+
+                if (isset($message->params->event_id)) {
+                    History::updateOrCreate(['messageId' => $message->params->event_id], [
+                        'pet_id' => null,
+                        'type' => 'ERROR',
+                        'parameters' => ['error' => $content['err'] ?? null],
+                        'device_id' => $device->id,
+                    ]);
+                }
+            },
+            sprintf('/sys/%s/%s/thing/event/error_over/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
+                $this->mergeHistory($message?->params?->event_id ?? null, $message?->params?->content ?? null);
             },
         ];
     }
