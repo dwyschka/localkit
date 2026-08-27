@@ -129,7 +129,13 @@ class Time
                     // negative t would hit a different (verbatim-store) on-device code
                     // path for 'latest' items per schedule.md §3b - not what's
                     // intended here either.
-                    't' => max(1, (int) round($current->diffInSeconds($next, true) - 1))
+                    //
+                    // No longer subtracting an extra 1s here (removed 2026-08-27):
+                    // that subtraction made every 'latest'/'nextTick' countdown land
+                    // one second short of the real target (12:00:00 -> 43199 ->
+                    // resolves to 11:59:59). diffInSeconds() already returns the
+                    // true remaining seconds to $next.
+                    't' => max(1, (int) round($current->diffInSeconds($next, true)))
                 ];
             }
         }
