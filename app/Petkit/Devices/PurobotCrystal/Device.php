@@ -334,20 +334,23 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
 
     public function toFeed(DeviceModel $device): string
     {
+        // configuration['schedule'] is now just a pointer (['key'=>..,
+        // 'checksum'=>..]) - the actual day-groups live in
+        // device_schedules/device_schedule_items, see Device::scheduleGroups().
+        $key = $device->configuration['schedule']['key'] ?? 'default';
+        $schedule = $device->scheduleGroups($key);
 
-        $latest = Time::calculateLatest($device->configuration['schedule']);
+        $latest = Time::calculateLatest($schedule);
         $nextTick = last($latest) ?: ['a' => 0, 'id' => '', 't' => 0];
 
         return json_encode([
             'schedule' => array_map(
-                fn(array $schedule) => Time::normalizeScheduleGroupForWire($schedule),
-                $device->configuration['schedule']
+                fn(array $s) => Time::normalizeScheduleGroupForWire($s),
+                $schedule
             ),
             'nextTick' => $nextTick['t'],
             'latest' => $latest
         ]);
-
-
     }
 
     public function toHomeassistant()
@@ -603,9 +606,10 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
     public function toFeedGet(): array
     {
         $unusedDays = [1,2,3,4,5,6,7];
-        $latest = Time::calculateLatest($this->device->configuration['schedule']);
+        $key = $this->device->configuration['schedule']['key'] ?? 'default';
+        $schedules = $this->device->scheduleGroups($key);
+        $latest = Time::calculateLatest($schedules);
         $nextTick = last($latest) ?: ['a' => 0, 'id' => '', 't' => 0];
-        $schedules = $this->device->configuration['schedule'];
 
         foreach($schedules as &$schedule) {
             $schedule['itemJsonString'] = json_encode($schedule['it']);

@@ -175,7 +175,13 @@ class UI
                                 ->required()
                                 ->stateCast(new IdentityStateCast())
                                 ->formatStateUsing(fn(string|array|null $state) => is_array($state) ? $state : (($state === null || $state === '') ? [] : explode(',', $state)))
-                                ->dehydrateStateUsing(fn($state) => implode(',', Arr::sort(array_filter((array) $state)))),
+                                // Kept as an array here, not joined into a comma string - Filament
+                                // validates the *dehydrated* value against the options list, and a
+                                // joined string ("1,2,3,4,5,6,7") never matches a single option key,
+                                // so any 2+ day selection failed "is invalid". The comma string this
+                                // needs for storage is built afterwards, in
+                                // EditDevice::mutateFormDataBeforeSave(), after validation has passed.
+                                ->dehydrateStateUsing(fn($state) => array_values(Arr::sort(array_filter((array) $state)))),
 
                             Repeater::make('it')
                                 ->label('Schedule Items')
@@ -190,6 +196,17 @@ class UI
                                                 // Convert time to seconds from midnight;
                                                 $seconds = Time::toSeconds($state);
                                                 $set('t', $seconds);
+                                                // Reverted 2026-08-24: the 'n%d' (no underscore)
+                                                // shortening below was meant to leave a
+                                                // null-terminator byte after a 2026-08-23 capture
+                                                // showed the device's own debug log printing
+                                                // garbage past an unterminated 7-byte id. A live
+                                                // side-by-side test against the real app confirmed
+                                                // that hypothesis wrong: the real app sends the
+                                                // full 7-byte unterminated 'n_%d' form and the
+                                                // device fires fine on it, while localkit's
+                                                // shortened 'n%d' form silently failed to fire at
+                                                // the scheduled time. Back to 'n_%d'.
                                                 $set('id', sprintf('n_%d', $seconds));
                                             }
                                         })
@@ -225,7 +242,7 @@ class UI
                                 ->dehydrateStateUsing(function (array $state) {
                                     if (!is_array($state)) return $state;
 
-                                    // Sort by time_display treating it as time
+                                    // Sort by time_display treating it as time, descending - the device requires it.
                                     uasort($state, function ($a, $b) {
                                         $timeA = $a['time_display'] ?? '00:00';
                                         $timeB = $b['time_display'] ?? '00:00';
@@ -234,7 +251,7 @@ class UI
                                         $intA = (int)str_replace(':', '', $timeA);
                                         $intB = (int)str_replace(':', '', $timeB);
 
-                                        return $intA <=> $intB;
+                                        return $intB <=> $intA;
                                     });
 
                                     $data = collect($state)->map(fn($s) => [
