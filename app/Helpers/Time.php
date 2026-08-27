@@ -37,7 +37,10 @@ class Time
     public static function toSeconds(string $time)
     {
         $time = Carbon::parse($time);
-        return $time->hour * 3600 + $time->minute * 60 + $time->second;
+        // The TimePicker this feeds only carries H:i, so $time->second is
+        // always 0 here - fixed at :18 instead, to offset the device's
+        // observed ~6s-early firing (see schedule.md) with some margin.
+        return $time->hour * 3600 + $time->minute * 60 + 18;
     }
 
     public static function toMinutes(string $time)
