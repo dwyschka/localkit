@@ -112,9 +112,14 @@ trait HandlesFeederSchedule
      * re-pull path) - built the same way as toFeed()'s push payload, plus a
      * synthetic all-remaining-days-off group so the app can render every day
      * of the week, and a raw 'itemJsonString' per group for whatever consumes
-     * this response pre-decoded. Only YumshareSolo/YumshareDual expose this;
-     * folded into the trait rather than copied because it shared the exact
-     * same amountKeys()-shaped nextTick default as toFeed() did.
+     * this response pre-decoded. Available to every class using this trait,
+     * not just YumshareSolo/YumshareDual as an earlier version of this
+     * comment claimed - corrected 2026-08-27 after finding the literal
+     * string `d4/dev_feed_get` in the plain D4's own ESP32 firmware
+     * (userbin.bin), confirming the D4 (FreshElementSolo) firmware calls
+     * this endpoint too, not only D4SH. Folded into the trait rather than
+     * copied because it shared the exact same amountKeys()-shaped nextTick
+     * default as toFeed() did.
      */
     public function toFeedGet(): array
     {
