@@ -86,7 +86,7 @@
             <x-slot name="heading">{{ $this->record->name }}</x-slot>
             <x-slot name="afterHeader">
                 <div class="petkit-refreshed">
-                    <span class="petkit-refreshed__text" wire:key="refreshed-at-empty-{{ now()->format('His') }}" title="{{ now()->timezone(config('app.timezone'))->format('l, F j, Y · H:i:s (T)') }}">Last refreshed {{ now()->timezone(config('app.timezone'))->format('H:i:s') }}</span>
+                    <span class="petkit-refreshed__text" wire:key="refreshed-at-empty-{{ now()->format('His') }}" title="{{ now()->timezone(config('app.timezone'))->isoFormat('LLLL (z)') }}">Last refreshed {{ now()->timezone(config('app.timezone'))->isoFormat('LTS') }}</span>
                     <x-filament::icon-button
                         icon="heroicon-m-arrow-path"
                         color="gray"
@@ -109,7 +109,7 @@
             <x-slot name="heading">{{ $this->record->name }}</x-slot>
             <x-slot name="afterHeader">
                 <div class="petkit-refreshed">
-                    <span class="petkit-refreshed__text" wire:key="refreshed-at-{{ now()->format('His') }}" title="{{ now()->timezone(config('app.timezone'))->format('l, F j, Y · H:i:s (T)') }}">Last refreshed {{ now()->timezone(config('app.timezone'))->format('H:i:s') }}</span>
+                    <span class="petkit-refreshed__text" wire:key="refreshed-at-{{ now()->format('His') }}" title="{{ now()->timezone(config('app.timezone'))->isoFormat('LLLL (z)') }}">Last refreshed {{ now()->timezone(config('app.timezone'))->isoFormat('LTS') }}</span>
                     <x-filament::icon-button
                         icon="heroicon-m-arrow-path"
                         color="gray"
@@ -150,7 +150,7 @@
                             </div>
                             <div class="petkit-timeline__desc">{!! $history->message() !!}</div>
                             <div class="petkit-timeline__date">
-                                {{ $history->created_at?->timezone(config('app.timezone'))?->format('F j, Y · H:i') }}
+                                {{ $history->created_at?->timezone(config('app.timezone'))?->isoFormat('LLL') }}
                             </div>
 
                             @php($listingMedia = \App\Filament\Resources\DeviceResource\Pages\PetkitActivities::mediaForListing($history->media))
