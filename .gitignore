@@ -26,3 +26,6 @@ storage/localkit.sqlite
 /IMPLEMENT
 .DS_Store
 /s3
+__pycache__/
+*.py[cod]
+*$py.class
