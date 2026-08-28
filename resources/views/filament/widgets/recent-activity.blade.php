@@ -63,7 +63,7 @@
                                 <div class="petkit-recent__meta">
                                     {{ $history->pet?->name ?? $history->device?->name ?? $history->device?->serial_number ?? __('petkit.unknown') }}
                                     &middot;
-                                    {{ $history->created_at?->timezone('Europe/Berlin')?->diffForHumans() }}
+                                    {{ $history->created_at?->timezone(config('app.timezone'))?->diffForHumans() }}
                                 </div>
                                 <div class="petkit-recent__desc">{!! $history->message() !!}</div>
                             </div>

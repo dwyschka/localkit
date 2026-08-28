@@ -88,11 +88,11 @@
         </div>
         <div class="petkit-detail__row">
             <div class="petkit-detail__label">Started</div>
-            <div class="petkit-detail__value">{{ $history->created_at?->timezone('Europe/Berlin')?->format('F j, Y · H:i:s') }}</div>
+            <div class="petkit-detail__value">{{ $history->created_at?->timezone(config('app.timezone'))?->format('F j, Y · H:i:s') }}</div>
         </div>
         <div class="petkit-detail__row">
             <div class="petkit-detail__label">Last updated</div>
-            <div class="petkit-detail__value">{{ $history->updated_at?->timezone('Europe/Berlin')?->format('F j, Y · H:i:s') }}</div>
+            <div class="petkit-detail__value">{{ $history->updated_at?->timezone(config('app.timezone'))?->format('F j, Y · H:i:s') }}</div>
         </div>
         <div class="petkit-detail__row">
             <div class="petkit-detail__label">Duration</div>
@@ -174,8 +174,8 @@
                                                     @foreach ($clip->segments as $segment)
                                                         <tr>
                                                             <td><code>{{ $segment['fileId'] ?? '—' }}</code></td>
-                                                            <td>{{ isset($segment['startTime']) ? \Illuminate\Support\Carbon::createFromTimestamp($segment['startTime'])->timezone('Europe/Berlin')->format('H:i:s') : '—' }}</td>
-                                                            <td>{{ isset($segment['endTime']) ? \Illuminate\Support\Carbon::createFromTimestamp($segment['endTime'])->timezone('Europe/Berlin')->format('H:i:s') : '—' }}</td>
+                                                            <td>{{ isset($segment['startTime']) ? \Illuminate\Support\Carbon::createFromTimestamp($segment['startTime'])->timezone(config('app.timezone'))->format('H:i:s') : '—' }}</td>
+                                                            <td>{{ isset($segment['endTime']) ? \Illuminate\Support\Carbon::createFromTimestamp($segment['endTime'])->timezone(config('app.timezone'))->format('H:i:s') : '—' }}</td>
                                                             <td>{{ isset($segment['duration']) ? number_format($segment['duration'] / 1000, 1) . 's' : '—' }}</td>
                                                             <td>{{ $this->formatBytes($segment['size'] ?? null) }}</td>
                                                         </tr>

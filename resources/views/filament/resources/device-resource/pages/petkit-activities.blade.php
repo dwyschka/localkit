@@ -79,7 +79,7 @@
             <div class="petkit-timeline">
                 @php($lastDate = null)
                 @foreach ($histories as $history)
-                    @php($eventDate = $history->created_at?->timezone('Europe/Berlin'))
+                    @php($eventDate = $history->created_at?->timezone(config('app.timezone')))
                     @php($dateKey = $eventDate?->toDateString())
                     @if ($dateKey !== $lastDate)
                         <div class="petkit-timeline__day">
@@ -108,7 +108,7 @@
                             </div>
                             <div class="petkit-timeline__desc">{!! $history->message() !!}</div>
                             <div class="petkit-timeline__date">
-                                {{ $history->created_at?->timezone('Europe/Berlin')?->format('F j, Y · H:i') }}
+                                {{ $history->created_at?->timezone(config('app.timezone'))?->format('F j, Y · H:i') }}
                             </div>
 
                             @php($listingMedia = \App\Filament\Resources\DeviceResource\Pages\PetkitActivities::mediaForListing($history->media))
