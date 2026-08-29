@@ -88,11 +88,11 @@
         </div>
         <div class="petkit-detail__row">
             <div class="petkit-detail__label">Started</div>
-            <div class="petkit-detail__value">{{ $history->created_at?->timezone(config('app.timezone'))?->isoFormat('LLL') }}</div>
+            <div class="petkit-detail__value">{{ $history->created_at?->timezone(config('app.timezone'))?->isoFormat('LL · LTS') }}</div>
         </div>
         <div class="petkit-detail__row">
             <div class="petkit-detail__label">Last updated</div>
-            <div class="petkit-detail__value">{{ $history->updated_at?->timezone(config('app.timezone'))?->isoFormat('LLL') }}</div>
+            <div class="petkit-detail__value">{{ $history->updated_at?->timezone(config('app.timezone'))?->isoFormat('LL · LTS') }}</div>
         </div>
         <div class="petkit-detail__row">
             <div class="petkit-detail__label">Duration</div>
