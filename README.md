@@ -11,67 +11,29 @@ This project aims to provide local control of Petkit devices. It communicates di
 
 As an internal MQTT broker, [localkit-broker](https://github.com/dwyschka/localkit-broker) is required for the system to function correctly.
 
-## Configuration
-
-The configuration is handled via your `.env` file. You can use the following variables:
-
-| Variable | Description | Default |
-|---|---|---|
-| `PETKIT_LOCAL_IP` | The local IP address of your Petkit device. | `127.0.0.1` |
-| `HOMEASSISTANT_DISCOVERY_PREFIX` | The Home Assistant MQTT discovery prefix. | `homeassistant` |
-| `BYPASS_AUTH` | Bypass authentication for development or testing. | `true` |
-| `BYPASS_AUTH_ID` | The user ID to use when authentication is bypassed. | `1` |
-
-
 ## Supported Devices
 
-### Petkit Pura Max
+**Litter boxes**
+- **Petkit Pura Max** (`t4`)
+- **Petkit Purobot Crystal** (`t7`)
 
-**Sensors:**
-- Error status
-- Device Status
-- Litter Weight & Percentage
-- Used Times
-- N50 deodorant durability (in days)
-- K3 Battery & Liquid percentage
+**Feeders**
+- **Petkit Fresh Element 3** (`d3`)
+- **Petkit Fresh Element Solo** (`d4`)
+- **Petkit Yumshare Solo** (`d4h`)
+- **Petkit Yumshare Dual** (`d4sh`)
 
-**Switches:**
-- Child lock
-- Display on/off
-- Auto clean
-- Continuous Rotation
-- Avoid repeat cleaning
-- Underweight pet detection
-- Kitten mode
-- Do not disturb mode
-- Deep Cleaning
+**Water fountains**
+- **Petkit Eversweet Ultra** (`w7h`)
 
-**Controls:**
-- **Buttons:** Start/Stop Maintenance, Start/Stop Lightning, Start Odour Removal, Start Cleaning, Dump Litter, Reset N50
-- **Selects:** Litter Type, Unit (kg/lb), Language
-- **Number:** Set N50 Durability (in days)
+**Bluetooth accessories**
+- **K3 Spray** (`k3`)
+- **Eversweet Fountain** (`w5`)
 
-### Petkit Element Fresh Solo
+## Home Assistant
 
-**Sensors:**
-- Error status
-- Device Status
+Localkit integrates with Home Assistant over MQTT, automatically exposing your Petkit devices as entities via MQTT discovery. See the [Home Assistant integration guide](https://localkit.io/overview/homeassistant.html) for setup details.
 
-**Switches:**
-- Refill alarm
-- Feeding chime
-- Child lock
+## Documentation
 
-**Controls:**
-- **Button:** Manual Feed
-- **Select:** Feed Amount (in grams)
-
-
-# Screenshots
-## Panel
-![Schedule](screenshots/feeder-schedule.png)
-![Devices](screenshots/devices.png)
-
-## Homeassistant
-![Pura Max Homeassistant](screenshots/homeassistant-pura-max.png)
-![Pura Max Homeassistant](screenshots/homeassistant-fresh-element-solo.png)
+For full setup instructions, the complete list of exposed entities, and detailed documentation, visit [localkit.io](https://localkit.io).
