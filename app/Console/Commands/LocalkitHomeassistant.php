@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use Exception;
 use App\Helpers\HomeassistantHelper;
 use App\Homeassistant\AutoDiscoveryService;
 use App\Homeassistant\HomeassistantTopicService;
@@ -38,10 +39,11 @@ class LocalkitHomeassistant extends Command
         }
         $mqtt = MQTT::connection('homeassistant');
 
-        $devices = Device::whereProxyMode(0)->get();
+        $devices = Device::all();
         $bluetoothDevices = BluetoothDevice::all();
 
         $devices = collect($devices)->merge($bluetoothDevices);
+
 
         $devices->each(function (Device|BluetoothDevice $device) use ($mqtt) {
 
@@ -61,7 +63,7 @@ class LocalkitHomeassistant extends Command
                     if (!is_null($snapshotMessage)) {
                         $mqtt->publish(HomeassistantHelper::snapshotTopic($device), $snapshotMessage, 0, true);
                     }
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     Log::error($e->getMessage());
                 }
             }

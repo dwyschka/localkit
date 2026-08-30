@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Petkit;
 
+use Exception;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\DevSignupResource;
 use App\Models\Device;
@@ -47,15 +48,11 @@ class DevSignupController extends Controller
             ]);
         }
 
-//        if(is_null($device) || ($device?->proxy_mode ?? 1)) {
-//            return $this->proxy($request);
-//        }
-
         try {
             $device->update([
                 'configuration' => $device->configuration()->toArray(),
             ]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return new JsonResponse(['result' => 'error', 'message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
         }
 

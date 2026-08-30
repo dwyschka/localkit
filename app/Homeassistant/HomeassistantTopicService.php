@@ -2,6 +2,9 @@
 
 namespace App\Homeassistant;
 
+use stdClass;
+use App\Models\BluetoothDevice;
+use App\Models\Device;
 use App\Helpers\HomeassistantHelper;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
@@ -15,11 +18,13 @@ class HomeassistantTopicService
 
     }
 
-    public function resolve(string $topic, \stdClass $message)
+    public function resolve(string $topic, stdClass $message)
     {
-        /** @var \App\Models\Device $device */
+        /** @var Device|BluetoothDevice $device */
         foreach($this->devices as $device) {
-            $reflection = new ReflectionClass($device->definition());
+            $definition = $device instanceof BluetoothDevice ? $device->device() : $device->definition();
+
+            $reflection = new ReflectionClass($definition);
             $methods = $reflection->getMethods();
 
             foreach ($methods as $method) {
@@ -34,7 +39,7 @@ class HomeassistantTopicService
                     $instance = $attribute->newInstance();
                     if ($instance->getTopic($device) == $topic) {
 
-                        $device->definition()->{$method->getName()}($message);
+                        $definition->{$method->getName()}($message);
 
                     }
 

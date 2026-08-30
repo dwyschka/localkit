@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Petkit\Devices\YumshareSolo\Configuration as PetkitYumshareSolo;
 use App\Management\Go2RTC;
 use App\Models\Device;
 use App\MQTT\FeedRealtimeMessage;
@@ -45,14 +46,28 @@ class TakeSnapshot implements ShouldQueue
             return;
         }
 
+        $go2rtc = app(Go2RTC::class);
+
+        // The configured default (go2rtc.stream) is a guess - only trust it if
+        // the device's go2rtc actually registered a stream under that name,
+        // otherwise fall back to whatever it does have. Avoids "stream not
+        // found" when a device names its stream differently.
+        $streams = $go2rtc->streams($this->device);
+
+        if (empty($streams)) {
+            Log::error('No go2rtc streams available', ['device' => $this->device->getKey()]);
+            return;
+        }
+
+        $stream = in_array(config('go2rtc.stream'), $streams, true) ? config('go2rtc.stream') : $streams[0];
 
         Storage::disk('snapshots')->writeStream(
-            $jpegFileName, Http::get(app(Go2RTC::class)->frameUrl($this->device))->resource()
+            $jpegFileName, Http::get($go2rtc->frameUrl($this->device, $stream))->resource()
         );
 
 
 
-        /** @var \App\Petkit\Devices\Configuration\PetkitYumshareSolo $configuration */
+        /** @var PetkitYumshareSolo $configuration */
         $configuration = $this->device->configuration();
 
         $lastSnapshot = $configuration->lastSnapshot;

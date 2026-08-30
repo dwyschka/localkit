@@ -35,7 +35,7 @@ class DevScheduleGet extends JsonResource
                 ],
                 "dataType" => "dev_schedule_get"
             ],
-            "type" => "t4_data_get",
+            "type" => sprintf('%s_data_get', $this->resource->device_type),
             'timestamp' => time()
         ];
     }

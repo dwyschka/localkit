@@ -1,0 +1,5 @@
+GET http://10.10.46.105/6/w7h/dev_discern_pic
+User-Agent: PETKIT DEV
+Host: api.eu-pet.com
+Content-Type: application/x-www-form-urlencoded
+X-Device: id=30000653&nonce=L3HLAFPHCLe9&timestamp=1786735100&type=W7H&sign=6d5900ef4538b011537f7761be0f40bd

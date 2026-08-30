@@ -16,10 +16,6 @@ class DevMultiConfigController extends Controller
         $deviceId = PetkitHeader::petkitId($request->header('X-Device'));
         $device = Device::wherePetkitId($deviceId)->firstOrFail();
 
-        if(is_null($device) || ($device?->proxy_mode ?? 1)) {
-            $this->proxy($request);
-        }
-
         return new DevMultiConfigResource($device);
     }
 }

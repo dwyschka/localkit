@@ -1,6 +1,9 @@
 <?php
 namespace App\Petkit\BluetoothDevices\W5;
 
+use InvalidArgumentException;
+use UnderflowException;
+
 /**
  * Petkit BLE Message Parser
  *
@@ -75,7 +78,7 @@ class Parser
             $cmd  = $forceCmd;
             $data = $bytes;
         } else {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'No FAFCFD header found. Provide $forceCmd to decode a raw payload.'
             );
         }
@@ -146,6 +149,10 @@ class Parser
 
     protected function parseBattery(array $data): array
     {
+        if (count($data) < 3) {
+            throw new UnderflowException('Insufficient data for battery (need 3 bytes, got ' . count($data) . ')');
+        }
+
         $voltage = (($data[0] * 256) + ($data[1] & 0xFF)) / 1000.0;
 
         return [
@@ -156,11 +163,19 @@ class Parser
 
     protected function parseSynchronization(array $data): array
     {
+        if (count($data) < 1) {
+            throw new UnderflowException('Insufficient data for synchronization (need 1 byte, got 0)');
+        }
+
         return ['deviceInitialized' => $data[0]];
     }
 
     protected function parseFirmware(array $data): array
     {
+        if (count($data) < 2) {
+            throw new UnderflowException('Insufficient data for firmware (need 2 bytes, got ' . count($data) . ')');
+        }
+
         return ['firmware' => (float) "{$data[0]}.{$data[1]}"];
     }
 
@@ -168,6 +183,10 @@ class Parser
     {
         if ($this->alias === 'CTW3') {
             return $this->parseDeviceStateCTW3($data);
+        }
+
+        if (count($data) < 12) {
+            throw new UnderflowException('Insufficient data for device state (need 12 bytes, got ' . count($data) . ')');
         }
 
         return [
@@ -186,7 +205,7 @@ class Parser
     protected function parseDeviceStateCTW3(array $data): array
     {
         if (count($data) < 26) {
-            throw new \UnderflowException('Insufficient data for CTW3 device state (need 26 bytes, got ' . count($data) . ')');
+            throw new UnderflowException('Insufficient data for CTW3 device state (need 26 bytes, got ' . count($data) . ')');
         }
 
         return [
@@ -217,6 +236,10 @@ class Parser
             return $this->parseDeviceConfigurationCTW3($data);
         }
 
+        if (count($data) < 13) {
+            throw new UnderflowException('Insufficient data for device configuration (need 13 bytes, got ' . count($data) . ')');
+        }
+
         $ledOn  = self::bytesToShort(array_slice($data, 4, 2));
         $ledOff = self::bytesToShort(array_slice($data, 6, 2));
         $dndOn  = self::bytesToShort(array_slice($data, 9, 2));
@@ -242,6 +265,10 @@ class Parser
 
     protected function parseDeviceConfigurationCTW3(array $data): array
     {
+        if (count($data) < 9) {
+            throw new UnderflowException('Insufficient data for CTW3 device configuration (need 9 bytes, got ' . count($data) . ')');
+        }
+
         $batteryWorkingTime = self::bytesToShort(array_slice($data, 2, 2));
         $batterySleepTime   = self::bytesToShort(array_slice($data, 4, 2));
 
@@ -261,6 +288,10 @@ class Parser
 
     protected function parseDeviceStatus(array $data): array
     {
+        if (count($data) < 29) {
+            throw new UnderflowException('Insufficient data for device status (need 29 bytes, got ' . count($data) . ')');
+        }
+
         $mode            = $data[1];
         $filterPct       = ($data[10] & 0xFF);
         $smartTimeOn     = $data[16];
@@ -275,7 +306,12 @@ class Parser
         $tOn  = ($mode === 1) ? 1 : $smartTimeOn;
         $tOff = ($mode === 1) ? 0 : $smartTimeOff;
 
-        $filterTimeLeft     = $this->calculateRemainingFilterDays($filterPct, $tOn, $tOff);
+        // calculateRemainingFilterDays() expects a 0-1 fraction (matches
+        // slespersen/PetkitW5BLEMQTT's parsers.py, which always divides the
+        // raw percentage byte by 100 before this calculation) - filterPct
+        // itself stays the raw 0-100 value since that's what's published as
+        // the "Filter %" sensor.
+        $filterTimeLeft     = $this->calculateRemainingFilterDays($filterPct / 100, $tOn, $tOff);
         $purifiedWater      = $this->calculateWaterPurified($pumpRuntime);
         $purifiedWaterToday = $this->calculateWaterPurified($pumpRuntimeToday);
         $energyConsumed     = $this->calculateEnergyUsage($pumpRuntime);
@@ -358,7 +394,7 @@ class Parser
         $hex = strtolower(preg_replace('/\s+/', '', $hex));
 
         if (!ctype_xdigit($hex) || strlen($hex) % 2 !== 0) {
-            throw new \InvalidArgumentException('Invalid hex string');
+            throw new InvalidArgumentException('Invalid hex string');
         }
 
         return array_values(array_map('hexdec', str_split($hex, 2)));

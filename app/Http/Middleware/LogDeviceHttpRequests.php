@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use Throwable;
 use App\Helpers\PetkitHeader;
 use App\Models\Device;
 use Closure;
@@ -34,7 +35,7 @@ class LogDeviceHttpRequests
             try {
                 $petkitId = PetkitHeader::petkitId($xDevice);
                 return Device::where('petkit_id', $petkitId)->first();
-            } catch (\Throwable) {
+            } catch (Throwable) {
             }
         }
 
@@ -55,6 +56,7 @@ class LogDeviceHttpRequests
             'headers' => $request->headers->all(),
             'body' => $request->all(),
             'response_status' => $response->getStatusCode(),
+            'response_headers' => $response->headers->all(),
             'response_body' => $response->getContent(),
         ];
 

@@ -17,7 +17,7 @@ class StateReport extends JsonResource
                 "interval" => 3600,
                 "time" => Carbon::now()->format('Y-m-d\TH:i:s.vO')
             ],
-            "type" => "t4_state_report",
+            "type" => sprintf('%s_state_report', $this->resource->device_type),
             'timestamp' => time()
         ];
     }

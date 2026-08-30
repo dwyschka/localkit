@@ -25,10 +25,6 @@ class DevIotDeviceInfoController extends Controller
                 'device_type' => $type,
             ]);
         }
-
-        if(is_null($device) || ($device?->proxy_mode ?? 1)) {
-            $this->proxy($request);
-        }
         return new DevIotDeviceInfoResource($device);
     }
 }

@@ -1,0 +1,701 @@
+<?php
+
+namespace App\Petkit\Devices\PuraMax;
+
+use stdClass;
+use Exception;
+use App\DTOs\MultiRangeDTO;
+use App\DTOs\PetkitDTOInterface;
+use App\Helpers\JsonHelper;
+use App\Homeassistant\HomeassistantTopic;
+use App\Jobs\ServiceBle;
+use App\Jobs\ServiceConnect;
+use App\Jobs\ServiceEnd;
+use App\Jobs\ServiceStart;
+use App\Jobs\SetProperty;
+use App\Models\BluetoothDevice;
+use App\Models\Device as DeviceModel;
+use App\Models\History;
+use App\Models\Pet;
+use App\MQTT\GenericReply;
+use App\MQTT\OtaMessage;
+use App\MQTT\UserGet;
+use App\Petkit\BluetoothDevices\BluetoothProxyInterface;
+use App\Petkit\BluetoothDevices\K3\Configuration as K3Configuration;
+use App\Petkit\BluetoothDevices\Message;
+use App\Petkit\DeviceActions;
+use App\Petkit\DeviceDefinition;
+use App\Petkit\Devices\Configuration\ConfigurationInterface;
+use App\Petkit\DeviceStates;
+use Carbon\Carbon;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Log;
+use PhpMqtt\Client\Facades\MQTT;
+use WendellAdriel\ValidatedDTO\SimpleDTO;
+
+class Device implements DeviceDefinition, BluetoothProxyInterface
+{
+    protected array $actions = [
+        DeviceActions::START_CLEAN,
+        DeviceActions::START_MAINTENANCE,
+        DeviceActions::STOP_MAINTENANCE,
+        DeviceActions::CLEAN_LITTER,
+        DeviceActions::START_ODOUR,
+        DeviceActions::START_LIGHTNING,
+        DeviceActions::STOP_LIGHTNING,
+        DeviceActions::RESET_N50,
+        DeviceActions::LINK_WITH_K3,
+        DeviceActions::UNLINK_WITH_K3,
+    ];
+    public static $workingStates = [
+        DeviceStates::WORKING, DeviceStates::IDLE, DeviceStates::PET_IN, DeviceStates::CLEANING, DeviceStates::MAINTENANCE,
+    ];
+
+    public function __construct(protected DeviceModel $device)
+    {
+
+
+    }
+
+    public function subscribedTopics(): array
+    {
+        return [
+            sprintf('/ota/device/upgrade/%s/%s', $this->device->productKey(), $this->device->deviceName()),
+            sprintf('/sys/%s/%s/thing/service/end', $this->device->productKey(), $this->device->deviceName()),
+            sprintf('/sys/%s/%s/thing/service/property/set', $this->device->productKey(), $this->device->deviceName()),
+            sprintf('/sys/%s/%s/thing/service/start', $this->device->productKey(), $this->device->deviceName()),
+            sprintf('/sys/%s/%s/thing/service/connect', $this->device->productKey(), $this->device->deviceName()),
+            sprintf('/sys/%s/%s/thing/service/ble', $this->device->productKey(), $this->device->deviceName()),
+        ];
+    }
+
+    public function stateTopics(): array
+    {
+        return [
+            sprintf('/sys/%s/%s/thing/event/ble_response/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
+                $content = json_decode($message?->params?->content, false);
+                Message::handleProxyMessage($content);
+
+                $this->reply($topic, $message);
+            },
+            sprintf('/sys/%s/%s/thing/event/work_continue/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
+                $device->refresh();
+                $content = json_decode($message?->params?->content, false);
+                $deviceStatus = $this->deviceStatus($content?->action);
+
+                $device->update([
+                    'working_state' => $deviceStatus
+                ]);
+
+                $this->reply($topic, $message);
+            },
+            sprintf('/sys/%s/%s/thing/event/work_suspend/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
+                $device->refresh();
+                $device->update([
+                    'working_state' => DeviceStates::IDLE->value
+                ]);
+                $this->reply($topic, $message);
+
+            },
+            sprintf('/sys/%s/%s/thing/event/work_start/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
+                $device->refresh();
+
+                $content = json_decode($message?->params?->content, false);
+                $deviceStatus = $this->deviceStatus($content?->action);
+
+                if ($deviceStatus !== DeviceStates::IDLE->value) {
+                    History::updateOrCreate(['messageId' => $message->params->event_id], [
+                        'pet_id' => null,
+                        'type' => $deviceStatus,
+                        'parameters' => $content,
+                        'device_id' => $device->id
+                    ]);
+                }
+
+                $device->update([
+                    'working_state' => $deviceStatus
+                ]);
+
+                $this->reply($topic, $message);
+
+            },
+            sprintf('/sys/%s/%s/thing/event/clean_over/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
+                $device->refresh();
+                $device->update([
+                    'working_state' => DeviceStates::IDLE->value
+                ]);
+                $this->reply($topic, $message);
+
+            },
+            sprintf('/sys/%s/%s/thing/event/dump_over/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
+                $device->refresh();
+                $device->update([
+                    'working_state' => DeviceStates::IDLE->value
+                ]);
+                $this->reply($topic, $message);
+
+            },
+            sprintf('/sys/%s/%s/thing/event/reset_over/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
+                $device->refresh();
+                $device->update([
+                    'working_state' => DeviceStates::IDLE->value
+                ]);
+                $this->updateLitter($device, $message);
+                $this->updateHistory($message);
+                $this->reply($topic, $message);
+
+            },
+            sprintf('/sys/%s/%s/thing/event/pet_in/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
+                $device->refresh();
+                $device->update([
+                    'working_state' => DeviceStates::PET_IN->value
+                ]);
+                $this->reply($topic, $message);
+            },
+            sprintf('/sys/%s/%s/thing/event/pet_out/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
+                $device->refresh();
+                $device->update([
+                    'working_state' => DeviceStates::IDLE->value
+                ]);
+                $this->reply($topic, $message);
+
+                $content = json_decode($message->params->content, true);
+                // The device reports pet_weight in grams (e.g. 4209), while pets store their
+                // weight in kg — convert before matching, and store the pet's id (not the model).
+                $pet = Pet::nearestWeight($content['pet_weight'] / 1000);
+                History::updateOrCreate(['messageId' => $message->params->event_id], [
+                    'pet_id' => $pet?->id,
+                    'parameters' => $content,
+                    'type' => 'IN_USE',
+                    'device_id' => $device->id
+                ]);
+
+                if ($pet !== null) {
+                    $this->setLastUsedBy($device, $pet);
+                }
+            },
+            sprintf('/sys/%s/%s/thing/event/error_start/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
+                $device->refresh();
+                $msg = $message->params->content;
+                $msg = json_decode($msg, false);
+
+                $device->update([
+                    'error' => $msg->err
+                ]);
+
+                History::create([
+                    'messageId' => 'custom-err-' . now()->timestamp,
+                    'pet_id' => null,
+                    'type' => 'ERROR',
+                    'parameters' => [
+                        'error' => $msg->err,
+                    ],
+                    'device_id' => $device->id,
+                ]);
+                $this->reply($topic, $message);
+            },
+            sprintf('/sys/%s/%s/thing/event/error_over/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
+                $device->refresh();
+                $device->update([
+                    'working_state' => DeviceStates::IDLE->value,
+                    'error' => null
+                ]);
+                $this->reply($topic, $message);
+            },
+            sprintf('/ota/device/inform/%s/%s', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
+                $message = OtaMessage::send($device);
+                MQTT::connection('publisher')->publish($message->getTopic(), $message->getMessage());
+            },
+            sprintf('/sys/%s/%s/thing/event/data_get/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
+                $this->reply($topic, $message);
+                try {
+                    $msg = UserGet::reply($device->productKey(), $device->deviceName(), $message);
+                } catch (Exception $e) {
+                    Log::error('UserGet', [
+                        'e' => $e->getMessage()
+                    ]);
+                }
+                MQTT::connection('publisher')->publish($msg->getTopic(), $msg->getMessage());
+            },
+            sprintf('/sys/%s/%s/thing/event/property/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
+                $device->refresh();
+
+                $this->reply($topic, $message);
+
+                /** @var Configuration $configuration */
+                $configuration = $device->configuration();
+                $workingState = $device->working_state;
+
+                if (!empty($message?->params?->litter)) {
+                    $configuration->litterPercent = (int)$message->params->litter?->percent;
+                    $configuration->litterWeight = (int)$message->params->litter?->weight;
+                }
+
+                $this->updateK3($message);
+
+                if (isset($message?->params?->work_state)) {
+                    $workingState = $this->deviceStatus($message->params->work_state->work_mode);
+                }
+
+                $device->update([
+                    'configuration' => $configuration->toArray(),
+                    'working_state' => $workingState
+                ]);
+
+                $msg = UserGet::replyToState($device->productKey(), $device->deviceName(), $message);
+                MQTT::connection('publisher')->publish($msg->getTopic(), $msg->getMessage());
+            }
+        ];
+    }
+
+    public function getDevice(): DeviceModel
+    {
+        return $this->device;
+    }
+
+    public function getK3(): ?BluetoothDevice {
+
+        $k3 = $this->getDevice()->bleLinked->firstWhere('type', 'k3');
+
+        if(is_null($k3)) {
+            return null;
+        }
+        return $k3;
+    }
+    public function hasAction(string $action): bool
+    {
+        $hasAction = in_array($action, $this->actions);
+        $hasK3 = !empty($this->getK3());
+
+        switch ($action) {
+            case DeviceActions::RESET_N50:
+                return $hasAction;
+
+            case DeviceActions::CLEAN_LITTER:
+            case DeviceActions::START_MAINTENANCE:
+            case DeviceActions::START_CLEAN:
+                return $hasAction && $this->device->working_state === DeviceStates::IDLE->value;
+
+            case DeviceActions::START_ODOUR:
+            case DeviceActions::START_LIGHTNING:
+            case DeviceActions::STOP_LIGHTNING:
+                return $hasAction && $hasK3;
+
+            case DeviceActions::STOP_MAINTENANCE:
+                return $hasAction && $this?->device?->working_state == DeviceStates::MAINTENANCE->value;
+        }
+
+        return $hasAction;
+    }
+
+    private function reply(string $topic, ?stdClass $message)
+    {
+        $generic = GenericReply::reply($topic, $message);
+        MQTT::connection('publisher')->publish($generic->getTopic(), $generic->getMessage());
+    }
+
+    public function startCleaning(DeviceModel $record)
+    {
+        ServiceStart::dispatchSync($record, 0);
+    }
+
+    public function startMaintenance(DeviceModel $record)
+    {
+        ServiceStart::dispatchSync($record, 9);
+    }
+
+    public function stopMaintenance(DeviceModel $record)
+    {
+        ServiceEnd::dispatchSync($record, 9);
+    }
+
+    public function cleanLitter(DeviceModel $record)
+    {
+        ServiceStart::dispatchSync($record, 1);
+    }
+
+    public function startOdour(DeviceModel $record)
+    {
+        ServiceStart::dispatchSync($record, 2);
+    }
+
+    public function startLightning(DeviceModel $record)
+    {
+        ServiceStart::dispatchSync($record, 7);
+    }
+
+    public function stopLightning(DeviceModel $record)
+    {
+        ServiceStart::dispatchSync($record, 7);
+    }
+
+    public function resetN50(DeviceModel $record) {
+        $configuration = $this->configurationDefinition();
+        $durability = $configuration->n50Durability;
+        $nextChange = Carbon::now()->addDays((int)$durability);
+
+        $configuration->n50NextChange = $nextChange->timestamp;
+
+        $record->update([
+            'configuration' => $configuration->toArray()
+        ]);
+    }
+
+
+    public static function deviceName()
+    {
+        return 'Petkit Pura Max';
+    }
+
+    public function configuration()
+    {
+        return $this->configurationDefinition()->toArray();
+    }
+
+    public function propertyChange(DeviceModel $device): void
+    {
+        $difference = JsonHelper::difference($device->configuration['settings'], $device->getOriginal('configuration')['settings']);
+
+        $dto = $this->configurationDefinition();
+
+        foreach ($difference as $key => $val) {
+
+            $value = $dto->$key;
+
+
+            if($value instanceof PetkitDTOInterface) {
+                $difference[$key] = $value->toPetkitConfiguration();
+            } else if (is_numeric($value)) {
+                $difference[$key] = (int)$value;
+            } else if (is_bool($value)) {
+                $difference[$key] = (int)$value;
+            }
+        }
+
+
+        SetProperty::dispatchSync($device, $difference);
+    }
+
+
+    private function deviceStatus($parameter): string
+    {
+        $deviceStatus = DeviceStates::IDLE->value;
+        switch ($parameter) {
+
+            case 0:
+                $deviceStatus = DeviceStates::CLEANING->value;
+                break;
+            case 9:
+                $deviceStatus = DeviceStates::MAINTENANCE->value;
+                break;
+        }
+        return $deviceStatus;
+    }
+
+    private function updateHistory(stdClass|null $message)
+    {
+        if (is_null($message)) {
+            return;
+        }
+        $content = json_decode($message->params->content, true);
+        $history = History::where('messageId', $message->params->event_id)->first();
+        if (!is_null($history)) {
+            $history->update([
+                'parameters' => [
+                    ...$history->parameters,
+                    ...$content
+                ]
+            ]);
+        }
+    }
+
+
+    /**
+     * "Last used by" is device state, not history - it reflects whichever
+     * pet was most recently matched by weight on pet_out.
+     */
+    private function setLastUsedBy(DeviceModel $device, Pet $pet): void
+    {
+        $configuration = $this->configurationDefinition();
+        $configuration->lastUsedByPetId = $pet->id;
+        $configuration->lastUsedByName = $pet->name;
+
+        $device->update([
+            'configuration' => $configuration->toArray(),
+        ]);
+    }
+
+    public function toHomeassistant()
+    {
+        return json_encode($this->configurationDefinition()->toArray());
+    }
+
+    public function configurationDefinition(): ConfigurationInterface {
+        return Configuration::fromDevice($this->getDevice());
+    }
+
+    public function resetConfiguration(): array
+    {
+        return (new Configuration([]))->toArray();
+    }
+
+    #[HomeassistantTopic(topic: 'setting/set')]
+    public function settings(stdClass $message) {
+        $configuration = $this->configurationDefinition();
+        $keys = get_object_vars($message);
+
+        foreach($keys as $attributeName => $value) {
+            $configuration->$attributeName = $value;
+        }
+        $this->getDevice()->update(['configuration' => $configuration]);
+    }
+
+    #[HomeassistantTopic('action/start')]
+    public function action(stdClass $message): void {
+        $action = $message->action;
+        switch ($action) {
+            case 'start_maintenance':
+                $this->startMaintenance($this->getDevice());
+                break;
+            case 'start_cleaning':
+                $this->startCleaning($this->getDevice());
+                break;
+            case 'start_lightning':
+                $this->startLightning($this->getDevice());
+                break;
+            case 'start_odour':
+                $this->startOdour($this->getDevice());
+                break;
+            case 'stop_maintenance':
+                $this->stopMaintenance($this->getDevice());
+                break;
+            case 'stop_lightning':
+                $this->stopLightning($this->getDevice());
+                break;
+            case 'dump_litter':
+                $this->cleanLitter($this->getDevice());
+                break;
+            case 'reset_n50':
+                $this->resetN50($this->getDevice());
+                break;
+            default:
+                Log::error('Unknown action: ' . $action);
+        }
+    }
+
+    private function updateLitter(DeviceModel $device, ?stdClass $message)
+    {
+        if (is_null($message)) {
+            return;
+        }
+        $state = json_decode($message->params->state, false);
+        $configuration = $device->configuration;
+        $configuration['litter'] = (array)$state->litter;
+        $device->update(['configuration' => $configuration]);
+    }
+
+
+    public function toOTA(): array
+    {
+        return [
+            'firmwareId' => 33,
+            'version' => '1.625',
+            'details' => [
+                [
+                    'id' => 50,
+                    'module' => 'userbin',
+                    'version' => 2447004,
+                    'file' => [
+                        'url' => 'http://api.eu-pet.com/firmware/T4/1.625/63ab5fc6-38c0-4333-ad5b-24e202f52951.bin',
+                        'size' => 1494992,
+                        'digest' => 'f0eae5ff3654419a264e4d40072eac84'
+                    ]
+                ],
+                [
+                    'id' => 49,
+                    'module' => 'pics',
+                    'version' => 2442001,
+                    'file' => [
+                        'url' => 'http://api.eu-pet.com/firmware/T4/1.625/3b01a7e7-54b4-4fb1-981c-1d8a0d6af060.bin',
+                        'size' => 131072,
+                        'digest' => '238b72bd540037f4ee33bf5307684713'
+                    ]
+                ],
+                [
+                    'id' => 48,
+                    'module' => 'lans',
+                    'version' => 2444003,
+                    'file' => [
+                        'url' => 'http://api.eu-pet.com/firmware/T4/1.625/e19cef1a-f5a5-4ed2-8d44-4c2c78d11571.bin',
+                        'size' => 712704,
+                        'digest' => '36fb8f4ea82f5252d52ec73c9a10b319'
+                    ]
+                ]
+            ]
+        ];
+    }
+
+    public function toDevSignup(): array {
+
+        return [
+            'id' => $this->device->petkit_id,
+            'mac' =>  $this->device->mac,
+            'sn' =>  $this->device->serial_number,
+            'secret' => $this->device->secret ?? '',
+            'timezone' =>  $this->device->timezone,
+            'locale' =>  $this->device->locale,
+            'shareOpen' =>  $this->device->configuration['settings']['shareOpen'],
+            'petInTipLimit' =>  $this->device->configuration['settings']['petInTipLimit']
+        ];
+    }
+    public function toDeviceInfo(): array {
+        $config = $this->getDevice()->configuration();
+        $k3 = $this->getK3();
+        $hasK3 = !is_null($k3);
+        $result = [
+            'id' => $this->device->petkit_id,
+            'mac' => $this->device->mac,
+            'sn' => $this->device->serial_number,
+            'secret' => $this->device->secret,
+            'timezone' => (float)$this->device->timezone,
+            'locale' => $this->device->locale,
+            'shareOpen' => (int)$config->shareOpen,
+            'typeCode' => (int)$config->typeCode,
+            'withK3' => (int)$hasK3,
+            'k3Id' => (int)($k3?->petkit_id ?? 0),
+            'btMac' => $this->device->bt_mac,
+            'settings' => [
+                //test
+                'disturbRage' => [40,520],
+                'lightRange' => [0,1440],
+                'sandSaving' => 0,
+                'fixedTimeRefresh' => '1',
+                'sandType' => (int)$config->sandType,
+                'manualLock' => (int)$config->manualLock,
+                'lightMode' => (int)$config->lightMode,
+                'clickOkEnable' => (int)$config->clickOkEnable,
+                'autoWork' => (int)$config->autoWork,
+                'fixedTimeClear' =>$config->fixedTimeClear,
+                'downpos' => (int)$config->downpos,
+                'deepRefresh' => (int)$config->deepRefresh,
+                'autoIntervalMin' =>$config->autoIntervalMin,
+                'stillTime' =>$config->stillTime,
+                'unit' => (int)$config->unit,
+                'language' =>$config->language,
+                'avoidRepeat' => (int)$config->avoidRepeat,
+                'underweight' => (int)$config->underweight,
+                'kitten' => (int)$config->kitten,
+                'stopTime' =>$config->stopTime,
+                'sandFullWeight' => $config->sandFullWeight->toPetkitConfiguration(),
+                'disturbMode' => (int)$config->disturbMode,
+                'sandSetUseConfig' =>$config->sandSetUseConfig,
+                'k3Config' => [
+                    'config' => $k3?->configuration()?->toArray()['settings'] ?? [],
+                ],
+                'relateK3Switch' => (int)!$hasK3,
+                'lightest' =>$config->lightest,
+                'deepClean' => (int)$config->deepClean,
+                'removeSand' => (int)$config->removeSand,
+                'bury' => (int)$config->bury,
+            ],
+            'k3Device' => [
+                'id' => (int)($k3?->petkit_id ?? 0),
+                'mac' => $k3?->mac ?? '',
+                'sn' => $k3?->serial_number ?? '',
+                'secret' => $k3?->secret ?? '',
+            ],
+            'multiConfig' => true,
+            'petInTipLimit' => (int)$config->petInTipLimit,
+        ];
+
+        if(!$hasK3) {
+            unset($result['k3Id']);
+            unset($result['k3Device']);
+        }
+        return $result;
+    }
+
+    public function toDeviceMultiConfig(): array {
+        $setting = $this->getDevice()->configuration();
+
+        return [
+            'lightMultiRange' =>$setting->lightMultiRange ?? [],
+            'distrubMultiRange' => $setting->disturbMultiRange ?? [],
+        ];
+    }
+
+    public function toK3DeviceInfo(): array
+    {
+        $k3 = $this->getK3();
+        $config = $k3?->configuration() ?? new K3Configuration([]);
+
+        return [
+            'k3Config' => [
+                'config' => [
+                    'standard' => $config->standard,
+                    'lightness' => $config->lightness,
+                    'lowVoltage' => $config->lowVoltage,
+                    'refreshTotalTime' => $config->refreshTotalTime,
+                    'singleRefreshTime' => $config->singleRefreshTime,
+                    'singleLightTime' => $config->singleLightTime,
+                ],
+            ],
+        ];
+    }
+
+    public function link(BluetoothDevice $bluetoothDevice) {
+        SetProperty::dispatchSync($this->getDevice(), [
+            'k3Id' => $bluetoothDevice->petkit_id,
+            'autoRefresh' => 1
+        ]);
+
+    }
+
+    public function unlink() {
+        SetProperty::dispatchSync($this->getDevice(), [
+            'k3Id' => 0
+        ]);
+    }
+
+    private function updateK3(?stdClass $message)
+    {
+        $k3 = $this->getK3();
+        if (is_null($k3)) {
+            return;
+        }
+
+        $configuration = $k3->configuration();
+
+        $update = false;
+        if (!empty($message?->params?->battery)) {
+            $configuration->battery = (int)$message->params->battery;
+            $update = true;
+        }
+
+        if (!empty($message?->params?->liquid)) {
+            $configuration->liquid = (int)$message->params->liquid;
+            $update = true;
+        }
+
+        if(!$update) {
+            return;
+        }
+
+        $k3->update(['configuration' => $configuration->toArray()]);
+    }
+
+    public function btConnect(BluetoothDevice $btDevice): void
+    {
+        ServiceConnect::dispatchSync(
+            $this->getDevice(), $btDevice,
+        );
+
+    }
+
+    public function btWrite(BluetoothDevice $btDevice, string $commandBase64, int $cmd): void
+    {
+        ServiceBle::dispatchSync(
+            $this->getDevice(), $btDevice, $commandBase64, $cmd,
+        );
+    }
+}

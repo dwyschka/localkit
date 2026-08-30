@@ -2,6 +2,10 @@
 
 namespace App\Petkit\BluetoothDevices\W5;
 
+use Filament\Schemas\Components\Section;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms;
 
 class UI
@@ -10,45 +14,117 @@ class UI
     public function formFields(): array
     {
         return [
-            Forms\Components\Section::make('Consumables')->columns(2)->schema([
-                Forms\Components\TextInput::make('configuration.consumables.filterPercentage')
+            Section::make('Consumables')->columns(2)->schema([
+                TextInput::make('configuration.consumables.filterPercentage')
                     ->label('Filter %')
                     ->dehydrated()
-                    ->disabled()
-                    ->columnSpan('full'),
-            ]),
-            Forms\Components\Section::make('States')->columns(2)->schema([
-                Forms\Components\Toggle::make('configuration.states.powerStatus')
-                    ->disabled()
+                    ->disabled(),
+                TextInput::make('configuration.consumables.filterTimeLeftDays')
+                    ->label('Filter Time Left (days)')
                     ->dehydrated()
-                    ->label('Power'),
-                Forms\Components\Toggle::make('configuration.states.runningStatus')
+                    ->disabled(),
+            ]),
+            Section::make('States')->columns(2)->schema([
+                Toggle::make('configuration.states.powerStatus')
+                    ->label('Power')
+                    ->helperText('Saving the form sends this to the fountain over BLE.'),
+                Select::make('configuration.states.mode')
+                    ->label('Mode')
+                    ->options([
+                        1 => 'Normal',
+                        2 => 'Smart',
+                    ])
+                    ->native(false)
+                    ->helperText('Saving the form sends this to the fountain over BLE.'),
+                Toggle::make('configuration.states.runningStatus')
                     ->disabled()
                     ->dehydrated()
                     ->label('Running'),
-                Forms\Components\Toggle::make('configuration.states.dndState')
+                Toggle::make('configuration.states.dndState')
                     ->disabled()
                     ->dehydrated()
-                    ->label('Do not Disturb'),
+                    ->label('Do not Disturb (active now)'),
+                TextInput::make('configuration.states.lastUpdate')
+                    ->disabled()
+                    ->dehydrated()
+                    ->label('Last Update'),
+                Toggle::make('configuration.settings.doNotDisturbSwitch')
+                    ->disabled()
+                    ->dehydrated()
+                    ->label('Do not Disturb (enabled)'),
+                TextInput::make('configuration.settings.doNotDisturbTimeOnReadable')
+                    ->disabled()
+                    ->dehydrated()
+                    ->label('Do not Disturb Start'),
+                TextInput::make('configuration.settings.doNotDisturbTimeOffReadable')
+                    ->disabled()
+                    ->dehydrated()
+                    ->label('Do not Disturb End'),
 
             ]),
-            Forms\Components\Section::make('Errors')->columns(2)->schema([
+            Section::make('Errors')->columns(2)->schema([
 
-                Forms\Components\Toggle::make('configuration.states.warningBreakdown')
+                Toggle::make('configuration.states.warningBreakdown')
                     ->disabled()
                     ->dehydrated()
                     ->label('Breakdown Error'),
-                Forms\Components\Toggle::make('configuration.states.warningWaterMissing')
+                Toggle::make('configuration.states.warningWaterMissing')
                     ->disabled()
                     ->dehydrated()
                     ->label('Water Missing Error'),
-                Forms\Components\Toggle::make('configuration.states.warningFilter')
+                Toggle::make('configuration.states.warningFilter')
                     ->disabled()
                     ->dehydrated()
                     ->label('Filter error'),
-            ])
-
-
+            ]),
+            Section::make('LED & Smart Mode')->columns(2)->schema([
+                Toggle::make('configuration.settings.ledSwitch')
+                    ->disabled()
+                    ->dehydrated()
+                    ->label('LED'),
+                TextInput::make('configuration.settings.ledBrightness')
+                    ->disabled()
+                    ->dehydrated()
+                    ->label('LED Brightness'),
+                TextInput::make('configuration.settings.ledLightTimeOnReadable')
+                    ->disabled()
+                    ->dehydrated()
+                    ->label('LED On At'),
+                TextInput::make('configuration.settings.ledLightTimeOffReadable')
+                    ->disabled()
+                    ->dehydrated()
+                    ->label('LED Off At'),
+                TextInput::make('configuration.settings.smartTimeOn')
+                    ->disabled()
+                    ->dehydrated()
+                    ->label('Smart Mode Time On (min)'),
+                TextInput::make('configuration.settings.smartTimeOff')
+                    ->disabled()
+                    ->dehydrated()
+                    ->label('Smart Mode Time Off (min)'),
+            ]),
+            Section::make('Statistics')->columns(2)->schema([
+                TextInput::make('configuration.stats.pumpRuntimeReadable')
+                    ->disabled()
+                    ->dehydrated()
+                    ->label('Pump Runtime'),
+                TextInput::make('configuration.stats.pumpRuntimeTodayReadable')
+                    ->disabled()
+                    ->dehydrated()
+                    ->label('Pump Runtime Today'),
+                TextInput::make('configuration.stats.purifiedWaterLiters')
+                    ->disabled()
+                    ->dehydrated()
+                    ->label('Purified Water (L)'),
+                TextInput::make('configuration.stats.purifiedWaterTodayLiters')
+                    ->disabled()
+                    ->dehydrated()
+                    ->label('Purified Water Today (L)'),
+                TextInput::make('configuration.stats.energyConsumedKwh')
+                    ->disabled()
+                    ->dehydrated()
+                    ->label('Energy Consumed (kWh)'),
+            ]),
         ];
     }
 }

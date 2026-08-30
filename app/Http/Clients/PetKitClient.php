@@ -2,6 +2,7 @@
 
 namespace App\Http\Clients;
 
+use Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\Client\Response;
@@ -88,14 +89,14 @@ class PetKitClient
         $response = Http::get($url);
 
         if (!$response->successful()) {
-            throw new \Exception('Failed to fetch region servers');
+            throw new Exception('Failed to fetch region servers');
         }
 
         $collection = collect($response->json('result.list'));
         $base = $collection->filter(fn($item) => $item['id'] === Str::upper($region));
 
         if (empty($base)) {
-            throw new \Exception('Failed to fetch region servers');
+            throw new Exception('Failed to fetch region servers');
         }
 
         return $base->first()['gateway'];
@@ -108,7 +109,7 @@ class PetKitClient
     public function getDevicesData(): array
     {
         if (!$this->ensureAuthenticated()) {
-            throw new \Exception('Authentication failed');
+            throw new Exception('Authentication failed');
         }
 
         try {
@@ -142,8 +143,8 @@ class PetKitClient
                 return $this->petkitEntities;
             }
 
-            throw new \Exception('Failed to fetch devices data');
-        } catch (\Exception $e) {
+            throw new Exception('Failed to fetch devices data');
+        } catch (Exception $e) {
             logger()->error('Failed to get devices data: ' . $e->getMessage());
             throw $e;
         }
@@ -211,7 +212,7 @@ class PetKitClient
             }
 
             return false;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             logger()->error('PetKit login failed: ' . $e->getMessage());
             return false;
         }
@@ -313,7 +314,7 @@ class PetKitClient
             }
 
             return null;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             logger()->error('Failed to get device detail: ' . $e->getMessage());
             return null;
         }
@@ -338,7 +339,7 @@ class PetKitClient
                 ->post($this->baseUrl . $command, $requestData);
 
             return $response->successful();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             logger()->error('Failed to send API request: ' . $e->getMessage());
             return false;
         }

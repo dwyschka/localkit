@@ -18,6 +18,11 @@ class Device implements DeviceInterface
         return false;
     }
 
+    public function propertyChange(BluetoothDevice $device): void
+    {
+        // K3 has no writable BLE settings.
+    }
+
     public function deviceName(): string {
         return 'K3 Spray';
     }
