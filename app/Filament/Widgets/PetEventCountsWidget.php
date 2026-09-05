@@ -33,7 +33,7 @@ class PetEventCountsWidget extends Widget
             ->where('created_at', '>=', $since)
             ->with('pet:id,name')
             ->get()
-            ->groupBy(fn (History $history) => $history->created_at->timezone('Europe/Berlin')->toDateString())
+            ->groupBy(fn (History $history) => $history->created_at->timezone(config('app.timezone'))->toDateString())
             ->sortKeysDesc()
             ->map(fn (Collection $dayHistories) => $dayHistories
                 ->groupBy('pet_id')
