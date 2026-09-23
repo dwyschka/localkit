@@ -93,6 +93,7 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
             },
             sprintf('/sys/%s/%s/thing/event/feed_over/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $this->mergeHistory($message?->params?->event_id ?? null, $message?->params?->content ?? null, DeviceStates::WORKING->value);
+                $this->publishDispenseEvent($device, $message?->params?->content ?? null);
 
                 $state = json_decode($message?->params?->state, false);
                 $device->update([
@@ -198,6 +199,7 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
                     ]);
                 }
 
+                EventPublisher::publish($device, 'error_start', ['error' => $content['err'] ?? null]);
                 $device->update(['error' => $content['err'] ?? null]);
                 $this->reply($topic, $message);
             },
@@ -209,6 +211,8 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
                 if ($eventId !== null && $startTime !== null && ($pos = strrpos($eventId, '_')) !== false) {
                     $this->mergeHistory(substr($eventId, 0, $pos) . '_' . $startTime, $message?->params?->content ?? null);
                 }
+
+                EventPublisher::publish($device, 'error_over', ['error' => $content['err'] ?? null]);
 
                 $device->update(['error' => null]);
                 $this->reply($topic, $message);

@@ -7,6 +7,7 @@ use Exception;
 use App\DTOs\MultiRangeDTO;
 use App\DTOs\PetkitDTOInterface;
 use App\Helpers\JsonHelper;
+use App\Homeassistant\EventPublisher;
 use App\Homeassistant\HomeassistantTopic;
 use App\Jobs\ServiceBle;
 use App\Jobs\ServiceConnect;
@@ -192,6 +193,7 @@ class Device implements DeviceDefinition, BluetoothProxyInterface
                     ],
                     'device_id' => $device->id,
                 ]);
+                EventPublisher::publish($device, 'error_start', ['error' => $msg->err ?? null]);
                 $this->reply($topic, $message);
             },
             sprintf('/sys/%s/%s/thing/event/error_over/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
@@ -200,6 +202,7 @@ class Device implements DeviceDefinition, BluetoothProxyInterface
                     'working_state' => DeviceStates::IDLE->value,
                     'error' => null
                 ]);
+                EventPublisher::publish($device, 'error_over');
                 $this->reply($topic, $message);
             },
             sprintf('/ota/device/inform/%s/%s', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
