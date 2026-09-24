@@ -217,8 +217,10 @@ trait HandlesFeederSchedule
     /**
      * Published from feed_over, not feed_start - a scheduled feed only ever
      * sends feed_over (see mergeHistory() above), so it's the one event
-     * every dispense produces. Source comes from the feed's own id prefix
-     * ('s_' = schedule item) or content.manual (the device's own button).
+     * every dispense produces. content.manual marks the device's own button;
+     * 'r_' ids are the ones Localkit generates for feed_realtime; a scheduled
+     * feed comes back as either a 'latest' id (s_<date>_<t>) or the schedule
+     * item's own id (n_<t>), depending on which the device fired from.
      */
     protected function publishDispenseEvent(DeviceModel $device, ?string $rawContent): void
     {
@@ -227,8 +229,8 @@ trait HandlesFeederSchedule
         EventPublisher::publish($device, 'dispense', [
             'source' => match (true) {
                 (int) ($content['manual'] ?? 0) === 1 => 'manual',
-                str_starts_with((string) ($content['id'] ?? ''), 's_') => 'schedule',
-                default => 'remote',
+                str_starts_with((string) ($content['id'] ?? ''), 'r_') => 'remote',
+                default => 'schedule',
             },
             'success' => (int) ($content['result'] ?? 0) === 0,
             ...Arr::only($content, ['real_amount', 'real_amount1', 'real_amount2', 'result', 'err_code']),
