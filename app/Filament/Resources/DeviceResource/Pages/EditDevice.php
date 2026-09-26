@@ -57,6 +57,17 @@ class EditDevice extends EditRecord
     {
         $record = $this->getRecord();
 
+        // Disabled fields aren't dehydrated, and some configuration (e.g.
+        // 'states', or a consumable reset from the device list while this
+        // form was open) has no form field at all - without this, every save
+        // silently replaced those keys with their defaults.
+        if (isset($data['configuration']) && is_array($data['configuration'])) {
+            $data['configuration'] = $this->fillUnsubmitted(
+                $data['configuration'],
+                $record->fresh()?->configuration ?? $record->configuration ?? [],
+            );
+        }
+
         if ($this->hasSchedule($record) && isset($data['configuration']['schedule']) && is_array($data['configuration']['schedule'])) {
             // The CheckboxList('re') field dehydrates 're' as an array, not a
             // comma string - joining it here, after validation, instead of in
@@ -78,6 +89,24 @@ class EditDevice extends EditRecord
         }
 
         return $data;
+    }
+
+    /**
+     * Keys missing from the submitted form are taken from what's stored.
+     * Lists (schedule groups, multi-ranges) are treated as a whole - merging
+     * them by index would resurrect items the user just removed.
+     */
+    private function fillUnsubmitted(array $submitted, array $stored): array
+    {
+        foreach ($stored as $key => $value) {
+            if (! array_key_exists($key, $submitted)) {
+                $submitted[$key] = $value;
+            } elseif (is_array($value) && is_array($submitted[$key]) && ! array_is_list($value) && ! array_is_list($submitted[$key])) {
+                $submitted[$key] = $this->fillUnsubmitted($submitted[$key], $value);
+            }
+        }
+
+        return $submitted;
     }
 
     protected function getHeaderActions(): array

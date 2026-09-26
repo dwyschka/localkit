@@ -29,6 +29,7 @@ use Illuminate\Support\Facades\Log;
 use PhpMqtt\Client\Facades\MQTT;
 use Filament\Forms;
 use Filament\Forms\Form;
+use App\Filament\Forms\Components\MinutesTimePicker;
 
 class UI
 {
@@ -66,23 +67,9 @@ class UI
                     ->label('Indicator Light'),
 
                 Section::make('Light Period')->schema([
-                    TimePicker::make('configuration.settings.lightRange.from')
-                        ->formatStateUsing(function ($state) {
-                            return Time::toTimeFromMinutes((int)$state);
-                        })
-                        ->dehydrateStateUsing(function ($state) {
-                            return Time::toMinutes($state);
-                        })
-                        ->seconds(false),
+                    MinutesTimePicker::make('configuration.settings.lightRange.from'),
 
-                    TimePicker::make('configuration.settings.lightRange.till')
-                        ->formatStateUsing(function ($state) {
-                            return Time::toTimeFromMinutes((int)$state);
-                        })
-                        ->dehydrateStateUsing(function ($state) {
-                            return Time::toMinutes($state);
-                        })
-                        ->seconds(false)
+                    MinutesTimePicker::make('configuration.settings.lightRange.till')
                 ])
                     ->columns(2)
                     ->columnSpanFull(),
@@ -106,23 +93,9 @@ class UI
                     ->label('Do Not Disturb'),
 
                 Section::make('Do Not Disturb Period')->schema([
-                    TimePicker::make('configuration.settings.disturbRange.from')
-                        ->formatStateUsing(function ($state) {
-                            return Time::toTimeFromMinutes((int)$state);
-                        })
-                        ->dehydrateStateUsing(function ($state) {
-                            return Time::toMinutes($state);
-                        })
-                        ->seconds(false),
+                    MinutesTimePicker::make('configuration.settings.disturbRange.from'),
 
-                    TimePicker::make('configuration.settings.disturbRange.till')
-                        ->formatStateUsing(function ($state) {
-                            return Time::toTimeFromMinutes((int)$state);
-                        })
-                        ->dehydrateStateUsing(function ($state) {
-                            return Time::toMinutes($state);
-                        })
-                        ->seconds(false)
+                    MinutesTimePicker::make('configuration.settings.disturbRange.till')
                 ])
                     ->columns(2)
                     ->columnSpanFull(),

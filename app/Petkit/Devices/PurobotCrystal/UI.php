@@ -11,11 +11,11 @@ use Filament\Forms\Components\Select;
 use App\Helpers\Time;
 use App\Management\Go2RTC;
 use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\TimePicker;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\HtmlString;
 use Filament\Forms;
+use App\Filament\Forms\Components\MinutesTimePicker;
 
 class UI
 {
@@ -252,19 +252,13 @@ class UI
             ->columns(2)
             ->label($label)
             ->schema([
-                TimePicker::make('from')
+                MinutesTimePicker::make('from')
                     ->label('From')
-                    ->seconds(false)
-                    ->required()
-                    ->formatStateUsing(fn(?string $state) => Time::toTimeFromMinutes((int)$state))
-                    ->dehydrateStateUsing(fn($state) => Time::toMinutes($state)),
+                    ->required(),
 
-                TimePicker::make('till')
+                MinutesTimePicker::make('till')
                     ->label('Till')
-                    ->seconds(false)
-                    ->required()
-                    ->formatStateUsing(fn(?string $state) => Time::toTimeFromMinutes((int)$state))
-                    ->dehydrateStateUsing(fn($state) => Time::toMinutes($state)),
+                    ->required(),
             ]);
     }
 }
