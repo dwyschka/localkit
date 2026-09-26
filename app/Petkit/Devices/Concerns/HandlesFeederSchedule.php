@@ -3,11 +3,13 @@
 namespace App\Petkit\Devices\Concerns;
 
 use App\Helpers\Time;
+use App\Homeassistant\EventPublisher;
 use App\Jobs\FeedRealtime;
 use App\Jobs\ServiceStart;
 use App\Models\Device as DeviceModel;
 use App\Models\History;
 use App\Petkit\DeviceStates;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -209,6 +211,29 @@ trait HandlesFeederSchedule
                 ...$history->parameters,
                 ...$content,
             ],
+        ]);
+    }
+
+    /**
+     * Published from feed_over, not feed_start - a scheduled feed only ever
+     * sends feed_over (see mergeHistory() above), so it's the one event
+     * every dispense produces. content.manual marks the device's own button;
+     * 'r_' ids are the ones Localkit generates for feed_realtime; a scheduled
+     * feed comes back as either a 'latest' id (s_<date>_<t>) or the schedule
+     * item's own id (n_<t>), depending on which the device fired from.
+     */
+    protected function publishDispenseEvent(DeviceModel $device, ?string $rawContent): void
+    {
+        $content = json_decode($rawContent ?? '{}', true) ?? [];
+
+        EventPublisher::publish($device, 'dispense', [
+            'source' => match (true) {
+                (int) ($content['manual'] ?? 0) === 1 => 'manual',
+                str_starts_with((string) ($content['id'] ?? ''), 'r_') => 'remote',
+                default => 'schedule',
+            },
+            'success' => (int) ($content['result'] ?? 0) === 0,
+            ...Arr::only($content, ['real_amount', 'real_amount1', 'real_amount2', 'result', 'err_code']),
         ]);
     }
 

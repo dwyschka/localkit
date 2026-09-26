@@ -5,6 +5,7 @@ namespace App\Petkit\Devices\FreshElement3;
 use stdClass;
 use App\DTOs\PetkitDTOInterface;
 use App\Helpers\JsonHelper;
+use App\Homeassistant\EventPublisher;
 use App\Homeassistant\HomeassistantTopic;
 use App\Jobs\ServiceBle;
 use App\Jobs\ServiceConnect;
@@ -78,6 +79,7 @@ class Device implements DeviceDefinition, BluetoothProxyInterface
             },
             sprintf('/sys/%s/%s/thing/event/feed_over/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $this->mergeHistory($message?->params?->event_id ?? null, $message?->params?->content ?? null, DeviceStates::WORKING->value);
+                $this->publishDispenseEvent($device, $message?->params?->content ?? null);
 
                 $device->update([
                     'working_state' => DeviceStates::IDLE->value
@@ -124,6 +126,7 @@ class Device implements DeviceDefinition, BluetoothProxyInterface
                     ]);
                 }
 
+                EventPublisher::publish($device, 'error_start', ['error' => $content['err'] ?? null]);
                 $device->update(['error' => $content['err'] ?? null]);
                 $this->reply($topic, $message);
             },
@@ -135,6 +138,8 @@ class Device implements DeviceDefinition, BluetoothProxyInterface
                 if ($eventId !== null && $startTime !== null && ($pos = strrpos($eventId, '_')) !== false) {
                     $this->mergeHistory(substr($eventId, 0, $pos) . '_' . $startTime, $message?->params?->content ?? null);
                 }
+
+                EventPublisher::publish($device, 'error_over', ['error' => $content['err'] ?? null]);
 
                 $device->update(['error' => null]);
                 $this->reply($topic, $message);
