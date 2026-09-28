@@ -288,6 +288,10 @@ class Parser
 
     protected function parseDeviceStatus(array $data): array
     {
+        if ($this->alias === 'CTW3') {
+            return $this->parseDeviceStatusCTW3($data);
+        }
+
         if (count($data) < 29) {
             throw new UnderflowException('Insufficient data for device status (need 29 bytes, got ' . count($data) . ')');
         }
@@ -347,6 +351,59 @@ class Parser
             'purifiedWaterTodayLiters'       => round($purifiedWaterToday, 2),
             'energyConsumedKwh'              => number_format($energyConsumed, 6),
         ];
+    }
+
+    /**
+     * CTW3 (Eversweet Max / Max Cordless) full status (CMD 230): the 26-byte
+     * CTW3 state section (same layout as CMD 210, see parseDeviceStateCTW3)
+     * followed by the CTW3 configuration section (same layout as CMD 211).
+     *
+     * slespersen/PetkitW5BLEMQTT reads the configuration at offset 26; the
+     * 42-byte frames from an Eversweet Max Cordless carry 4 extra bytes there
+     * (varying, meaning unknown) and the configuration starts at offset 30.
+     */
+    protected function parseDeviceStatusCTW3(array $data): array
+    {
+        $state = $this->parseDeviceStateCTW3($data);
+
+        $configOffset = count($data) >= 40 ? 30 : 26;
+        $config = count($data) >= $configOffset + 9
+            ? $this->parseDeviceConfigurationCTW3(array_slice($data, $configOffset))
+            : [];
+
+        $mode         = $state['mode'];
+        $filterPct    = $state['filterPercentage'];
+        $smartTimeOn  = $config['smartTimeOn'] ?? 0;
+        $smartTimeOff = $config['smartTimeOff'] ?? 0;
+        $pumpRuntime      = $state['pumpRuntime'];
+        $pumpRuntimeToday = $state['pumpRuntimeToday'];
+
+        $tOn  = ($mode === 1) ? 1 : $smartTimeOn;
+        $tOff = ($mode === 1) ? 0 : $smartTimeOff;
+
+        return $state + $config + [
+            'pumpRuntimeReadable'      => self::secondsToDaysHours($pumpRuntime),
+            'pumpRuntimeTodayReadable' => self::secondsToHoursMinutes($pumpRuntimeToday),
+            'filterTimeLeftDays'       => $this->calculateRemainingFilterDays($filterPct / 100, $tOn, $tOff),
+            'purifiedWaterLiters'      => round($this->calculateWaterPurified($pumpRuntime), 2),
+            'purifiedWaterTodayLiters' => round($this->calculateWaterPurified($pumpRuntimeToday), 2),
+            'energyConsumedKwh'        => number_format($this->calculateEnergyUsage($pumpRuntime), 6),
+        ];
+    }
+
+    /**
+     * Picks the parser alias from a CMD 230 payload's data length (excluding
+     * any FAFCFD frame wrapper): W5-family status data is 29+ bytes (last
+     * field at offset 28), CTW3 carries a 26-byte state section plus a
+     * 10-byte configuration section (36+).
+     */
+    public static function aliasForStatusPayload(string $hex): string
+    {
+        $bytes = self::hexToBytes($hex);
+        $framed = count($bytes) >= 9 && array_slice($bytes, 0, 3) === self::FRAME_HEADER;
+        $length = $framed ? count($bytes) - 9 : count($bytes);
+
+        return $length >= 36 ? 'CTW3' : 'W5';
     }
 
     protected function parseUnknown(int $cmd, array $data): array
