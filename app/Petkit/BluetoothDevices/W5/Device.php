@@ -51,7 +51,8 @@ class Device implements DeviceInterface, HasParserInterface
         $binary = bin2hex(base64_decode(urldecode($payload)));
 
         try {
-            $decode = $this->parser()->decode($binary, $cmd);
+            $parser = $this->parser()->setAlias(Parser::aliasForStatusPayload($binary));
+            $decode = $parser->decode($binary, $cmd);
         } catch (UnderflowException $e) {
             // A short/partial frame (e.g. a mid-handshake ack) would
             // otherwise silently parse into zeroed-out fields and
