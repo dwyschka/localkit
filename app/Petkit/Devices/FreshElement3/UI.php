@@ -157,7 +157,7 @@ class UI
                                 ->columns(4)
                                 ->required()
                                 ->stateCast(new IdentityStateCast())
-                                ->formatStateUsing(fn(string|array $state) => is_array($state) ? $state : explode(',', $state))
+                                ->formatStateUsing(fn(string|array|null $state) => is_array($state) ? $state : ($state === null || $state === '' ? [] : explode(',', $state)))
                                 // Kept as an array here, not joined into a comma string - Filament
                                 // validates the *dehydrated* value against the options list, and a
                                 // joined string ("1,2,3,4,5,6,7") never matches a single option key,
