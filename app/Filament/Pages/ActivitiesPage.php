@@ -71,7 +71,9 @@ class ActivitiesPage extends Page
             : max(1, (int) $this->perPage);
 
         if ($this->maxResults > 0) {
-            $items = $query->forPage($this->getPage(), $pageSize)->get();
+            $offset = ($this->getPage() - 1) * $pageSize;
+            $remaining = max(0, $totalCount - $offset);
+            $items = $query->offset($offset)->limit(min($pageSize, $remaining))->get();
 
             return new \Illuminate\Pagination\LengthAwarePaginator(
                 $items,
