@@ -1,7 +1,7 @@
 <x-filament-panels::page>
     @php($histories = $this->getHistories())
 
-    {!! loadInlineStylesheet('css/petkit-pet-activities.css') !!}
+    <link rel="stylesheet" href="{{ \Filament\Support\Facades\FilamentAsset::getStyleHref('petkit-pet-activities') }}">
 
     @if ($histories->isEmpty())
         <x-filament::section>

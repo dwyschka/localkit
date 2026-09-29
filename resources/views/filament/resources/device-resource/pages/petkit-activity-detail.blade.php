@@ -1,7 +1,7 @@
 <x-filament-panels::page>
     @php($meta = \App\Filament\Resources\DeviceResource\Pages\PetkitActivities::typeMeta($history->type))
 
-    {!! loadInlineStylesheet('css/petkit-activity-detail.css') !!}
+    <link rel="stylesheet" href="{{ \Filament\Support\Facades\FilamentAsset::getStyleHref('petkit-activity-detail') }}">
 
     <div style="margin-bottom:1rem;">
         <x-filament::button

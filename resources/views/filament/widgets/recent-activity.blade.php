@@ -1,5 +1,5 @@
 <x-filament-widgets::widget>
-    {!! loadInlineStylesheet('css/petkit-recent-activity.css') !!}
+    <link rel="stylesheet" href="{{ \Filament\Support\Facades\FilamentAsset::getStyleHref('petkit-recent-activity') }}">
 
     <x-filament::section heading="Last Activity">
         @if ($histories->isEmpty())

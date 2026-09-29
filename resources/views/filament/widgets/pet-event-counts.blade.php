@@ -1,5 +1,5 @@
 <x-filament-widgets::widget>
-    {!! loadInlineStylesheet('css/petkit-event-counts.css') !!}
+    <link rel="stylesheet" href="{{ \Filament\Support\Facades\FilamentAsset::getStyleHref('petkit-event-counts') }}">
 
     <x-filament::section heading="Pet Activity by Day">
         @forelse ($dailyCounts as $date => $pets)
