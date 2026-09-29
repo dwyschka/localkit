@@ -3,13 +3,17 @@
 namespace App\Filament\Widgets;
 
 use App\Models\History;
+use App\Petkit\DeviceStates;
 use Filament\Widgets\Widget;
 use Illuminate\Support\Collection;
 
 /**
- * Dashboard tile showing, per pet and per day, how many times each event
- * type (EAT, DRINK, IN_USE, ...) was logged - a quick day-by-day activity
- * count rather than a single all-time total.
+ * Dashboard tile showing, per pet and per day, how many times each pet activity
+ * type was logged - a quick day-by-day activity count rather than a single
+ * all-time total.
+ *
+ * Events without an associated pet are grouped together as "Unknown".
+ * Device-level states are excluded using the existing DeviceStates enum.
  */
 class PetEventCountsWidget extends Widget
 {
@@ -22,28 +26,71 @@ class PetEventCountsWidget extends Widget
     private const DAYS = 3;
 
     /**
-     * @return Collection<string, Collection<int, array{pet: \App\Models\Pet, events: Collection<string, int>}>>
+     * @return Collection<string, Collection<int, array{
+     *     pet: \App\Models\Pet|null,
+     *     events: Collection<string, array{
+     *         count: int,
+     *         total_duration: int,
+     *         human_duration: string|null
+     *     }>
+     * }>>
      */
     protected function getDailyCounts(): Collection
     {
-        $since = now()->subDays(self::DAYS - 1)->startOfDay();
+        $timezone = (string) config('app.timezone');
+
+        $since = now($timezone)
+            ->subDays(self::DAYS - 1)
+            ->startOfDay()
+            ->setTimezone('UTC');
 
         return History::query()
-            ->whereNotNull('pet_id')
+            // This widget is for pet activity, so exclude device-level states.
+            ->whereNotIn('type', DeviceStates::values())
             ->where('created_at', '>=', $since)
             ->with('pet:id,name')
             ->get()
-            ->groupBy(fn (History $history) => $history->created_at->timezone(config('app.timezone'))->toDateString())
+            ->groupBy(
+                fn (History $history) =>
+                    $history->created_at
+                        ->timezone($timezone)
+                        ->toDateString()
+            )
             ->sortKeysDesc()
-            ->map(fn (Collection $dayHistories) => $dayHistories
-                ->groupBy('pet_id')
-                ->filter(fn (Collection $petHistories) => $petHistories->first()->pet !== null)
-                ->map(fn (Collection $petHistories) => [
-                    'pet' => $petHistories->first()->pet,
-                    'events' => $petHistories->groupBy('type')->map->count(),
-                ])
-                ->sortBy(fn (array $entry) => $entry['pet']->name)
-                ->values());
+            ->map(
+                fn (Collection $dayHistories) =>
+                    $dayHistories
+                        ->groupBy('pet_id')
+                        ->map(fn (Collection $petHistories) => [
+                            'pet' => $petHistories->first()->pet,
+
+                            // Keep event types in a deterministic alphabetical order.
+                            'events' => $petHistories
+                                ->groupBy('type')
+                                ->map(function (Collection $typeHistories): array {
+                                    $totalDuration = (int) $typeHistories->sum(fn (History $h): int => $h->eventDuration());
+
+                                    return [
+                                        'count' => $typeHistories->count(),
+                                        'total_duration' => $totalDuration,
+                                        'human_duration' => $totalDuration > 0 ? History::formatHumanDuration($totalDuration) : null,
+                                    ];
+                                })
+                                ->sortBy(
+                                    fn (array $eventData, string $type) =>
+                                        strtolower(History::typeTitle($type))
+                                ),
+                        ])
+                        // Sort pets in an alphabetical order, with "Unknown" pets (null) at the end of the list.
+                        ->sortBy(
+                            fn (array $entry) => sprintf(
+                                '%d:%s',
+                                $entry['pet'] === null ? 1 : 0,
+                                strtolower($entry['pet']?->name ?? '')
+                            )
+                        )
+                        ->values()
+            );
     }
 
     protected function getViewData(): array
@@ -55,6 +102,6 @@ class PetEventCountsWidget extends Widget
 
     public static function typeLabel(string $type): string
     {
-        return (new History(['type' => $type]))->title();
+        return History::typeTitle($type);
     }
 }

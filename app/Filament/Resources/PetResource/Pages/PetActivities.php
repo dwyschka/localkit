@@ -2,10 +2,12 @@
 
 namespace App\Filament\Resources\PetResource\Pages;
 
+use App\Filament\Pages\ActivitiesPage;
 use App\Filament\Resources\PetResource;
 use Filament\Resources\Pages\Concerns\InteractsWithRecord;
 use Filament\Resources\Pages\Page;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Livewire\Attributes\Url;
 use Livewire\WithPagination;
 
 /**
@@ -25,9 +27,9 @@ class PetActivities extends Page
 
     protected string $view = 'filament.resources.pet-resource.pages.pet-activities';
 
-    public function mount(int|string $record): void
+    public function mount(int|string $record): mixed
     {
-        $this->record = $this->resolveRecord($record);
+        return redirect()->to(ActivitiesPage::getUrl(['petId' => $record]));
     }
 
     public function getTitle(): string
@@ -40,6 +42,6 @@ class PetActivities extends Page
      */
     public function getHistories(): LengthAwarePaginator
     {
-        return $this->record->histories()->with(['media', 'device'])->latest()->paginate(10);
+        return $this->record->histories()->with(['media', 'device'])->latest()->paginate($this->perPage);
     }
 }

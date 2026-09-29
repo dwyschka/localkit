@@ -1,14 +1,17 @@
 <x-filament-panels::page>
     @php($meta = \App\Filament\Resources\DeviceResource\Pages\PetkitActivities::typeMeta($history->type))
 
+@once
     {!! loadInlineStylesheet('css/petkit-activity-detail.css') !!}
+@endonce
+
 
     <div style="margin-bottom:1rem;">
         <x-filament::button
             color="gray"
             icon="heroicon-m-arrow-left"
             tag="a"
-            href="{{ \App\Filament\Resources\DeviceResource::getUrl('activities', ['record' => $this->record]) }}"
+            href="{{ \App\Filament\Pages\ActivitiesPage::getUrl(['devices' => [$this->record->id]]) }}"
             size="sm"
         >
             Back to Activities
@@ -43,11 +46,11 @@
         </div>
         <div class="petkit-detail__row">
             <div class="petkit-detail__label">Started</div>
-            <div class="petkit-detail__value">{{ $history->created_at?->timezone(config('app.timezone'))?->isoFormat('LL · LTS') }}</div>
+            <div class="petkit-detail__value">{{ $history->created_at?->timezone(config('app.timezone'))?->isoFormat(\App\Models\History::DATETIME_WITH_SECONDS_FORMAT) }}</div>
         </div>
         <div class="petkit-detail__row">
             <div class="petkit-detail__label">Last updated</div>
-            <div class="petkit-detail__value">{{ $history->updated_at?->timezone(config('app.timezone'))?->isoFormat('LL · LTS') }}</div>
+            <div class="petkit-detail__value">{{ $history->updated_at?->timezone(config('app.timezone'))?->isoFormat(\App\Models\History::DATETIME_WITH_SECONDS_FORMAT) }}</div>
         </div>
         <div class="petkit-detail__row">
             <div class="petkit-detail__label">Duration</div>

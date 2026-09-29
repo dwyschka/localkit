@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\DeviceResource\Pages;
 
+use App\Filament\Pages\ActivitiesPage;
 use App\Filament\Resources\DeviceResource;
 use App\Models\History;
 use App\Models\MediaFile;
@@ -20,9 +21,9 @@ class PetkitActivities extends Page
 
     protected string $view = 'filament.resources.device-resource.pages.petkit-activities';
 
-    public function mount(int|string $record): void
+    public function mount(int|string $record): mixed
     {
-        $this->record = $this->resolveRecord($record);
+        return redirect()->to(ActivitiesPage::getUrl(['deviceId' => $record]));
     }
 
     public function getTitle(): string
@@ -35,7 +36,7 @@ class PetkitActivities extends Page
      */
     public function getHistories(): LengthAwarePaginator
     {
-        return $this->record->histories()->with('media')->latest()->paginate(10);
+        return $this->record->histories()->with('media')->latest()->paginate($this->perPage);
     }
 
     /**

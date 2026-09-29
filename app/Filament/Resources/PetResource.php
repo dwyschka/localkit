@@ -15,6 +15,7 @@ use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
+use App\Filament\Pages\ActivitiesPage;
 use App\Filament\Resources\PetResource\Pages\ListPets;
 use App\Filament\Resources\PetResource\Pages\CreatePet;
 use App\Filament\Resources\PetResource\Pages\EditPet;
@@ -149,7 +150,7 @@ class PetResource extends Resource
                     ->color('purple')
                     ->button()
                     ->size('sm')
-                    ->url(fn (Pet $record) => PetResource::getUrl('activities', ['record' => $record])),
+                    ->url(fn (Pet $record) => ActivitiesPage::getUrl(['pets' => [$record->id]])),
             ])
             ->recordActionsAlignment('start')
             ->toolbarActions([
@@ -172,7 +173,6 @@ class PetResource extends Resource
             'index' => ListPets::route('/'),
             'create' => CreatePet::route('/create'),
             'edit' => EditPet::route('/{record}/edit'),
-            'activities' => Pages\PetActivities::route('/{record}/activities'),
         ];
     }
 }

@@ -1,9 +1,38 @@
-.petkit-detail__row { display: flex; gap: 0.5rem; padding: 0.375rem 0; font-size: 0.875rem; }
-.petkit-detail__row + .petkit-detail__row { border-top: 1px solid var(--gray-200); }
-.dark .petkit-detail__row + .petkit-detail__row { border-top-color: var(--gray-700); }
-.petkit-detail__label { width: 9rem; flex-shrink: 0; color: var(--gray-500); }
-.petkit-detail__value { flex: 1; word-break: break-word; }
-.petkit-detail__icon svg { width: 1.25rem; height: 1.25rem; }
+/* ==========================================================================
+   Petkit Activity Detail Stylesheet
+   ========================================================================== */
+
+.petkit-detail__row {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.375rem 0;
+    font-size: 0.875rem;
+}
+
+.petkit-detail__row + .petkit-detail__row {
+    border-top: 1px solid var(--gray-200);
+}
+
+.dark .petkit-detail__row + .petkit-detail__row {
+    border-top-color: var(--gray-700);
+}
+
+.petkit-detail__label {
+    width: 9rem;
+    flex-shrink: 0;
+    color: var(--gray-500);
+}
+
+.petkit-detail__value {
+    flex: 1;
+    word-break: break-word;
+}
+
+.petkit-detail__icon svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
 .petkit-detail__params {
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     font-size: 0.8rem;
@@ -17,28 +46,102 @@
     max-height: 24rem;
     overflow: auto;
 }
-.petkit-media-table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
-.petkit-media-table th, .petkit-media-table td {
+
+.petkit-media-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8125rem;
+}
+
+.petkit-media-table th,
+.petkit-media-table td {
     text-align: left;
     padding: 0.5rem 0.75rem;
     border-bottom: 1px solid var(--gray-200);
     vertical-align: top;
 }
-.dark .petkit-media-table th, .dark .petkit-media-table td { border-bottom-color: var(--gray-700); }
-.petkit-media-table th { color: var(--gray-500); font-weight: 500; }
-.petkit-media-table code { font-size: 0.75rem; }
-.petkit-media-preview img,
-.petkit-media-preview video {
-    width: 8rem;
+
+.dark .petkit-media-table th,
+.dark .petkit-media-table td {
+    border-bottom-color: var(--gray-700);
+}
+
+.petkit-media-table th {
+    color: var(--gray-500);
+    font-weight: 500;
+}
+
+.petkit-media-table code {
+    font-size: 0.75rem;
+}
+
+.petkit-media-preview {
+    width: var(--petkit-video-controls-min-size, 13rem);
+    min-width: var(--petkit-video-controls-min-size, 13rem);
+}
+
+.petkit-media-preview img {
+    width: var(--petkit-video-controls-min-size, 13rem);
     aspect-ratio: 16 / 9;
     object-fit: cover;
-    border-radius: 0.375rem;
+    border-radius: 0.5rem;
     background: var(--gray-950);
 }
-.petkit-segments-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
-.petkit-segments-table th, .petkit-segments-table td {
+
+.petkit-media-preview video {
+    width: var(--petkit-video-controls-min-size, 13rem);
+    aspect-ratio: 16 / 9;
+    object-fit: contain;
+    border-radius: 0.5rem;
+    background: var(--gray-950);
+}
+
+.petkit-media-preview video:fullscreen {
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: 100vw !important;
+    max-height: 100vh !important;
+    aspect-ratio: auto !important;
+    object-fit: contain !important;
+    border-radius: 0 !important;
+    background: #000000 !important;
+}
+
+.petkit-media-preview video:-webkit-full-screen {
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: 100vw !important;
+    max-height: 100vh !important;
+    aspect-ratio: auto !important;
+    object-fit: contain !important;
+    border-radius: 0 !important;
+    background: #000000 !important;
+}
+
+.petkit-media-preview video:-moz-full-screen {
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: 100vw !important;
+    max-height: 100vh !important;
+    aspect-ratio: auto !important;
+    object-fit: contain !important;
+    border-radius: 0 !important;
+    background: #000000 !important;
+}
+
+.petkit-segments-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.75rem;
+}
+
+.petkit-segments-table th,
+.petkit-segments-table td {
     text-align: left;
     padding: 0.25rem 0.5rem;
     color: var(--gray-500);
 }
-.petkit-segments-table th { font-weight: 500; }
+
+.petkit-segments-table th {
+    font-weight: 500;
+}

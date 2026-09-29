@@ -20,6 +20,16 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class PetkitPanelProvider extends PanelProvider
 {
+    private const ACTIVITIES_STYLESHEETS = [
+        'css/petkit-activities.css',
+        'css/petkit-timeline.css',
+        'css/petkit-activity-detail.css',
+        'css/petkit-event-counts.css',
+    ];
+    private const ACTIVITIES_SCRIPTS = [
+        'js/petkit-activities.js',
+    ];
+
     public function panel(Panel $panel): Panel
     {
         return $panel
@@ -29,6 +39,10 @@ class PetkitPanelProvider extends PanelProvider
             ->login()
             ->topNavigation()
             ->breadcrumbs(false)
+            ->navigationGroups([
+                'Activities',
+                'System',
+            ])
             ->colors([
                 'primary' => Color::Amber,
                 'purple' => Color::Purple,
@@ -53,8 +67,11 @@ class PetkitPanelProvider extends PanelProvider
             ])
             ->renderHook(
                 \Filament\View\PanelsRenderHook::HEAD_END,
-                fn (): string => loadInlineStylesheet('css/petkit-activities.css')
-                    . loadInlineScript('js/petkit-activities.js'),
+                fn (): string => loadInlineStylesheet(...self::ACTIVITIES_STYLESHEETS),
+            )
+            ->renderHook(
+                \Filament\View\PanelsRenderHook::BODY_END,
+                fn (): string => loadInlineScript(...self::ACTIVITIES_SCRIPTS),
             )
             ->authMiddleware([
                 Authenticate::class,
