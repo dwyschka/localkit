@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Petkit\DeviceStates;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,6 +12,9 @@ use Illuminate\Support\Str;
 
 class History extends Model
 {
+    public const DATETIME_FORMAT = 'LL · LT';
+    public const DATETIME_WITH_SECONDS_FORMAT = 'LL · LTS';
+
     protected $table = 'history';
     protected $fillable = ['messageId', 'message', 'pet_id', 'device_id', 'parameters', 'type'];
 
@@ -24,6 +28,14 @@ class History extends Model
 
     public function device(): BelongsTo {
         return $this->belongsTo(Device::class);
+    }
+
+    /**
+     * Determines whether this history entry represents a pet-attributable activity.
+     */
+    public function isPetActivity(): bool
+    {
+        return $this->pet !== null || ! DeviceStates::isDeviceState($this->type);
     }
 
     /**
@@ -48,17 +60,84 @@ class History extends Model
      * over duration()'s created_at/updated_at, which has processing/network
      * latency baked in on both ends.
      */
-    public function eventDuration(): int {
+    public function eventDuration(): int
+    {
         if (isset($this->parameters['event_start'], $this->parameters['event_end'])) {
-            return $this->parameters['event_end'] - $this->parameters['event_start'];
+            return max(0, (int) ($this->parameters['event_end'] - $this->parameters['event_start']));
         }
 
-        return (int) $this->duration();
+        if (isset($this->parameters['time_in'], $this->parameters['time_out'])) {
+            return max(0, (int) ($this->parameters['time_out'] - $this->parameters['time_in']));
+        }
+
+        if (isset($this->parameters['start_time'], $this->parameters['over_time'])) {
+            return max(0, (int) ($this->parameters['over_time'] - $this->parameters['start_time']));
+        }
+
+        return max(0, (int) $this->duration());
     }
 
-    public function message(): string {
+    /**
+     * Formats seconds into a compact human-readable duration string.
+     *
+     * Supports fractional seconds for sub-minute benchmark timings (e.g., 23.3s),
+     * as well as multi-unit breakdowns for longer durations (e.g., 1d 2h 15m 4s).
+     *
+     * Examples:
+     * 23.3   => 23.3s
+     * 30     => 30s
+     * 60     => 1m
+     * 75     => 1m 15s
+     * 300    => 5m
+     * 3665   => 1h 1m 5s
+     * 86400  => 1d
+     * 90061  => 1d 1h 1m 1s
+     */
+    public static function formatHumanDuration(float|int $seconds): string
+    {
+        if ($seconds < 60) {
+            return is_float($seconds) && fmod($seconds, 1.0) !== 0.0
+                ? sprintf('%.1fs', $seconds)
+                : sprintf('%ds', (int) round($seconds));
+        }
 
-        $message = match ($this->type) {
+        $totalSeconds = (int) round($seconds);
+        $days = intdiv($totalSeconds, 86400);
+        $hours = intdiv($totalSeconds % 86400, 3600);
+        $minutes = intdiv($totalSeconds % 3600, 60);
+        $remainingSeconds = $totalSeconds % 60;
+
+        $parts = [];
+
+        if ($days > 0) {
+            $parts[] = "{$days}d";
+        }
+
+        if ($hours > 0) {
+            $parts[] = "{$hours}h";
+        }
+
+        if ($minutes > 0) {
+            $parts[] = "{$minutes}m";
+        }
+
+        if ($remainingSeconds > 0) {
+            $parts[] = "{$remainingSeconds}s";
+        }
+
+        return implode(' ', $parts) ?: '0s';
+    }
+
+    /**
+     * Returns the event duration in a compact human-readable format.
+     */
+    public function eventHumanDuration(): string
+    {
+        return self::formatHumanDuration($this->eventDuration());
+    }
+    public function message(): string
+    {
+        return match ($this->type) {
             'IN_USE' => $this->createInUseMessage(),
             'CLEANING' => $this->createCleaningMessage(),
             'MAINTENANCE' => $this->createMaintenanceMessage(),
@@ -68,20 +147,21 @@ class History extends Model
             'DETECT' => $this->createDetectMessage(),
             default => '',
         };
-
-        // pet_id can resolve after the fact (async pet_discern) and applies
-        // regardless of event type - surface the name whenever we have one,
-        // rather than only for the handful of message strings that embed it.
-        // Device faults (ERROR) aren't attributable to a specific pet.
-        if ($message !== '' && $this->type !== 'ERROR' && $this->pet) {
-            $message .= ' · ' . $this->pet->name;
-        }
-
-        return $message;
     }
 
     public function title(): string {
-        return __(sprintf('petkit.history.%s_title', Str::lower($this->type)));
+        return self::typeTitle($this->type);
+    }
+
+    public static function typeTitle(?string $type): string {
+        if ($type === null || $type === '') {
+            return __('Unknown');
+        }
+
+        $key = sprintf('petkit.history.%s_title', Str::lower($type));
+        $translation = __($key);
+
+        return ($translation === $key) ? Str::headline($type) : $translation;
     }
 
     private function createInUseMessage()
@@ -153,4 +233,3 @@ class History extends Model
             : __('petkit.history.detect');
     }
 }
-

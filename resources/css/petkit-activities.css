@@ -1,0 +1,115 @@
+/* ==========================================================================
+   Petkit Activities & Panel Layout Stylesheet
+   ========================================================================== */
+
+:root {
+    --petkit-video-controls-min-size: 13rem;
+}
+
+/* --------------------------------------------------------------------------
+   1. Filament Admin Panel Layout Overrides
+   -------------------------------------------------------------------------- */
+
+/* Lay the per-card control buttons out as a tidy 2-per-row grid. */
+.fi-ta-content-ctn .fi-ta-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.fi-ta-content-ctn .fi-ta-actions > * {
+    width: 100%;
+}
+
+.fi-ta-content-ctn .fi-ta-actions .fi-btn {
+    width: 100%;
+    justify-content: center;
+}
+
+/* Center the top navigation between the logo and the user menu. */
+.fi-topbar-nav-groups {
+    flex: 1;
+    justify-content: center;
+}
+
+/* Redundant with the top navigation right above it - keep the header's
+   action buttons (Create/Save/...), drop the heading. */
+.fi-header-heading {
+    display: none;
+}
+
+/* The image editor modal sizes itself to the source image - a tall portrait
+   photo can push the Save/Cancel toolbar off screen on a phone. Cap the
+   window height and let it scroll instead of overflowing past the viewport. */
+.fi-fo-file-upload-editor-window {
+    max-height: 90dvh;
+    overflow-y: auto;
+}
+
+/* --------------------------------------------------------------------------
+   2. Badges & Button Elements
+   -------------------------------------------------------------------------- */
+.petkit-filter-btn-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 0.375rem;
+    padding: 0.125rem 0.375rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1;
+    border-radius: 9999px;
+    background: color-mix(in oklch, var(--primary-500) 20%, transparent);
+    color: var(--primary-500);
+}
+
+.petkit-player-btn-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 0.375rem;
+    padding: 0.125rem 0.375rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.25);
+    color: white;
+}
+
+/* --------------------------------------------------------------------------
+   3. Global Native Video Fullscreen Containment
+   -------------------------------------------------------------------------- */
+video:fullscreen {
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: 100vw !important;
+    max-height: 100vh !important;
+    aspect-ratio: auto !important;
+    object-fit: contain !important;
+    border-radius: 0 !important;
+    background: #000000 !important;
+}
+
+video:-webkit-full-screen {
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: 100vw !important;
+    max-height: 100vh !important;
+    aspect-ratio: auto !important;
+    object-fit: contain !important;
+    border-radius: 0 !important;
+    background: #000000 !important;
+}
+
+video:-moz-full-screen {
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: 100vw !important;
+    max-height: 100vh !important;
+    aspect-ratio: auto !important;
+    object-fit: contain !important;
+    border-radius: 0 !important;
+    background: #000000 !important;
+}

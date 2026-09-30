@@ -1,59 +1,17 @@
 <x-filament-panels::page>
     @php($meta = \App\Filament\Resources\DeviceResource\Pages\PetkitActivities::typeMeta($history->type))
 
-    <style>
-        .petkit-detail__row { display: flex; gap: 0.5rem; padding: 0.375rem 0; font-size: 0.875rem; }
-        .petkit-detail__row + .petkit-detail__row { border-top: 1px solid var(--gray-200); }
-        .dark .petkit-detail__row + .petkit-detail__row { border-top-color: var(--gray-700); }
-        .petkit-detail__label { width: 9rem; flex-shrink: 0; color: var(--gray-500); }
-        .petkit-detail__value { flex: 1; word-break: break-word; }
-        .petkit-detail__icon svg { width: 1.25rem; height: 1.25rem; }
-        .petkit-detail__params {
-            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-            font-size: 0.8rem;
-            line-height: 1.55;
-            white-space: pre-wrap;
-            word-break: break-word;
-            color: var(--gray-300);
-            background: var(--gray-950);
-            padding: 1rem;
-            border-radius: 0.5rem;
-            max-height: 24rem;
-            overflow: auto;
-        }
-        .petkit-media-table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
-        .petkit-media-table th, .petkit-media-table td {
-            text-align: left;
-            padding: 0.5rem 0.75rem;
-            border-bottom: 1px solid var(--gray-200);
-            vertical-align: top;
-        }
-        .dark .petkit-media-table th, .dark .petkit-media-table td { border-bottom-color: var(--gray-700); }
-        .petkit-media-table th { color: var(--gray-500); font-weight: 500; }
-        .petkit-media-table code { font-size: 0.75rem; }
-        .petkit-media-preview img,
-        .petkit-media-preview video {
-            width: 8rem;
-            aspect-ratio: 16 / 9;
-            object-fit: cover;
-            border-radius: 0.375rem;
-            background: var(--gray-950);
-        }
-        .petkit-segments-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
-        .petkit-segments-table th, .petkit-segments-table td {
-            text-align: left;
-            padding: 0.25rem 0.5rem;
-            color: var(--gray-500);
-        }
-        .petkit-segments-table th { font-weight: 500; }
-    </style>
+@once
+    <link rel="stylesheet" href="{{ \Filament\Support\Facades\FilamentAsset::getStyleHref('petkit-activity-detail') }}">
+@endonce
+
 
     <div style="margin-bottom:1rem;">
         <x-filament::button
             color="gray"
             icon="heroicon-m-arrow-left"
             tag="a"
-            href="{{ \App\Filament\Resources\DeviceResource::getUrl('activities', ['record' => $this->record]) }}"
+            href="{{ \App\Filament\Pages\ActivitiesPage::getUrl(['devices' => [$this->record->id]]) }}"
             size="sm"
         >
             Back to Activities
@@ -88,11 +46,11 @@
         </div>
         <div class="petkit-detail__row">
             <div class="petkit-detail__label">Started</div>
-            <div class="petkit-detail__value">{{ $history->created_at?->timezone(config('app.timezone'))?->isoFormat('LL · LTS') }}</div>
+            <div class="petkit-detail__value">{{ $history->created_at?->timezone(config('app.timezone'))?->isoFormat(\App\Models\History::DATETIME_WITH_SECONDS_FORMAT) }}</div>
         </div>
         <div class="petkit-detail__row">
             <div class="petkit-detail__label">Last updated</div>
-            <div class="petkit-detail__value">{{ $history->updated_at?->timezone(config('app.timezone'))?->isoFormat('LL · LTS') }}</div>
+            <div class="petkit-detail__value">{{ $history->updated_at?->timezone(config('app.timezone'))?->isoFormat(\App\Models\History::DATETIME_WITH_SECONDS_FORMAT) }}</div>
         </div>
         <div class="petkit-detail__row">
             <div class="petkit-detail__label">Duration</div>

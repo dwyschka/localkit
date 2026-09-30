@@ -42,6 +42,13 @@ Route::get('camera/{device}/thumbnail/{stream?}', CameraThumbnailController::cla
 Route::get('pet/media/{id}', PetMediaController::class)
     ->name('pet.media');
 
+// Redirect /pets/{pet}/activities and /devices/{device}/activities to unified activities page
+Route::get('pets/{pet}/activities', fn ($pet) => redirect(\App\Filament\Pages\ActivitiesPage::getUrl(['pets' => [$pet]])))
+    ->middleware('auth');
+
+Route::get('devices/{device}/activities', fn ($device) => redirect(\App\Filament\Pages\ActivitiesPage::getUrl(['devices' => [$device]])))
+    ->middleware('auth');
+
 /*
  * OCI-compatible object storage emulation used by PetKit cameras.
  * Upload URL (pre-authenticated) is prefixed with `/p/{token}`; the read/domain

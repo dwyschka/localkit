@@ -14,6 +14,7 @@ use Filament\Tables\Columns\IconColumn;
 use App\Management\Go2RTC;
 use Filament\Actions\EditAction;
 use Filament\Actions\Action;
+use App\Filament\Pages\ActivitiesPage;
 use App\Filament\Resources\DeviceResource\Pages\ListDevices;
 use App\Filament\Resources\DeviceResource\Pages\EditDevice;
 use App\Filament\Resources\DeviceResource\Pages;
@@ -196,7 +197,7 @@ class DeviceResource extends Resource
                     ->color('purple')
                     ->button()
                     ->size('sm')
-                    ->url(fn($record) => DeviceResource::getUrl('activities', ['record' => $record])),
+                    ->url(fn($record) => ActivitiesPage::getUrl(['devices' => [$record->id]])),
 
                 ...array_map(
                     function (Action $action) {
@@ -251,7 +252,6 @@ class DeviceResource extends Resource
         return [
             'index' => ListDevices::route('/'),
             'edit' => EditDevice::route('/{record}/edit'),
-            'activities' => Pages\PetkitActivities::route('/{record}/activities'),
             'activity' => Pages\PetkitActivityDetail::route('/{record}/activities/{historyId}'),
         ];
     }

@@ -1,0 +1,79 @@
+/* ==========================================================================
+   Petkit Pet Event Counts Widget Stylesheet
+   ========================================================================== */
+
+.petkit-counts__day {
+    padding: 1rem 0;
+}
+
+.petkit-counts__day:first-child {
+    padding-top: 0;
+}
+
+.petkit-counts__day + .petkit-counts__day {
+    border-top: 1px solid var(--gray-200);
+}
+
+.dark .petkit-counts__day + .petkit-counts__day {
+    border-top-color: var(--gray-700);
+}
+
+.petkit-counts__day-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.petkit-counts__date {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--gray-400);
+}
+
+/* One row per pet: fixed pet-name column + remaining space for badges */
+.petkit-counts__pet {
+    display: grid;
+    grid-template-columns: 6.25rem minmax(0, 1fr);
+    align-items: center;
+    column-gap: 0.5rem;
+}
+
+.petkit-counts__pet + .petkit-counts__pet {
+    margin-top: 0.625rem;
+}
+
+.petkit-counts__pet-name {
+    font-weight: 600;
+    font-size: 0.875rem;
+    min-width: 0;
+}
+
+/* Keep badges on one line when possible, wrap only when needed */
+.petkit-counts__badges {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.375rem;
+    min-width: 0;
+}
+
+.petkit-counts__count {
+    display: inline-block;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    margin-left: 0.25rem;
+    font-weight: 600;
+}
+
+.petkit-counts__duration {
+    display: inline-block;
+    font-size: 0.6875rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    opacity: 0.85;
+    margin-left: 0.25rem;
+}
