@@ -46,7 +46,6 @@ class PetkitPanelProvider extends PanelProvider
             ->topNavigation()
             ->breadcrumbs(false)
             ->navigationGroups([
-                'Activities',
                 'System',
             ])
             ->colors([

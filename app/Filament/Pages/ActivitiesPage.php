@@ -27,7 +27,6 @@ class ActivitiesPage extends Page
     protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-bolt';
     protected string $view = 'filament.pages.activities-page';
     protected static ?string $slug = 'activities';
-    protected static string | \UnitEnum | null $navigationGroup = 'Activities';
     protected static ?int $navigationSort = 1;
     protected static ?string $navigationLabel = 'Activities';
     protected static ?string $title = 'Activities';
