@@ -6,6 +6,63 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | BLE Provisioning
+    |--------------------------------------------------------------------------
+    |
+    | A device set up over Bluetooth from the panel carries the `provisioning`
+    | flag. While it is set, every heartbeat hands the device this shell command
+    | (over its `user_cmd.run_cmd` path, run as root) so its built-in telnetd is
+    | brought up and stays reachable across reboots.
+    |
+    | It is intentionally idempotent - it only starts telnetd if none is already
+    | running, so re-sending it each heartbeat never stacks processes. Plain
+    | `telnetd` (no `-l`) keeps the device's own login prompt, so the
+    | DEVICE_TELNET_USERNAME / DEVICE_TELNET_PASSWORD credentials apply. Override
+    | it if a device needs a different command to expose telnet.
+    |
+    */
+    'provisioning' => [
+        'telnet_command' => env(
+            'LOCALKIT_PROVISIONING_TELNET_COMMAND',
+            'telnetd &'
+        ),
+
+        // Where Localkit starts numbering devices that sign up without an id
+        // of their own, which is every device provisioned over BLE. See
+        // Device::allocatePetkitId().
+        'device_id_base' => (int) env('LOCALKIT_DEVICE_ID_BASE', 10000000),
+
+        /*
+         ^* Shell steps the wizard offers to run on the device once telnet is up
+         * - the Localkit install scripts. Each is one command handed to the
+         * device's shell over telnet, in order, with its output printed to the
+         * wizard's console.
+         *
+         * Nothing is run without being asked for, and an empty list simply
+         * means the wizard makes no offer. Each entry takes:
+         *
+         *   name        what the step is called in the console
+         *   description one line on what it does, shown before it is run
+         *   command     the shell command itself
+         *
+         * What a device needs differs per model - the scripts for each one are
+         * listed at https://localkit.io/supported-devices.html.
+         *
+         * Credentials come from DEVICE_TELNET_USERNAME / DEVICE_TELNET_PASSWORD.
+         */
+        'install_steps' => [
+        ],
+
+        // The network the provisioning form opens with, for setups where every
+        // device joins the same one. Both are only ever prefilled into the
+        // form in the browser - the password is handed to the device over
+        // Bluetooth and never posted back here. Leave unset to start empty.
+        'default_ssid' => env('LOCALKIT_PROVISIONING_WIFI_SSID', ''),
+        'default_password' => env('LOCALKIT_PROVISIONING_WIFI_PASSWORD', ''),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Cleanup Retention (see app:cleanup-activity-log)
     |--------------------------------------------------------------------------
     |

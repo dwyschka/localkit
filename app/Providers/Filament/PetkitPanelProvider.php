@@ -51,6 +51,29 @@ class PetkitPanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])
+            /*
+             * BLE provisioning runs in the browser, and is reachable from two
+             * places - its own page and the "Provision Device" action on the
+             * device list. The action's modal is injected by Livewire, and a
+             * <script> tag that arrives through a DOM morph never executes, so
+             * the module is loaded panel-wide here instead of from either view.
+             * `defer` keeps it off the parsing path while still running before
+             * Alpine boots.
+             *
+             * The URL carries the file's mtime, because the wizard's markup and
+             * this module are changed together and a browser holding on to an
+             * older copy of one of them fails in ways that look like a broken
+             * device rather than a stale cache.
+             */
+            ->renderHook(
+                \Filament\View\PanelsRenderHook::HEAD_END,
+                function (): string {
+                    $path = 'js/localkit/provisioning.js';
+                    $version = @filemtime(public_path($path)) ?: 0;
+
+                    return '<script defer src="' . e(asset($path) . '?v=' . $version) . '"></script>';
+                },
+            )
             ->renderHook(
                 \Filament\View\PanelsRenderHook::HEAD_END,
                 fn (): string => <<<'HTML'

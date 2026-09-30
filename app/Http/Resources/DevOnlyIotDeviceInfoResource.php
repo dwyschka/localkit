@@ -20,8 +20,9 @@ class DevOnlyIotDeviceInfoResource extends PetkitHttpResource
         $region = 'eu-central-1';
 
         $mqtt =  sprintf('%s.iot-as-mqtt.%s.aliyuncs.com', $productKey, $region);
-        if($this->ota_state) {
-            $mqtt = 'noresolv.localkit.io';
+        if ($this->mqttShouldFail()) {
+            $mqtt = self::MQTT_NO_RESOLV;
+            $productKey = self::MQTT_NO_RESOLV;
         }
 
         return [
