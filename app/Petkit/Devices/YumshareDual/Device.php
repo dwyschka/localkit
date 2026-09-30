@@ -9,10 +9,8 @@ use App\Helpers\Time;
 use App\Homeassistant\EventPublisher;
 use App\Homeassistant\HomeassistantTopic;
 use App\Homeassistant\Interfaces\Snapshot;
-use App\Jobs\FeedRealtime;
 use App\Jobs\ServiceBle;
 use App\Jobs\ServiceConnect;
-use App\Jobs\ServiceStart;
 use App\Jobs\SetProperty;
 use App\Jobs\TakeSnapshot;
 use App\Models\BluetoothDevice;
@@ -24,6 +22,7 @@ use App\Petkit\BluetoothDevices\BluetoothProxyInterface;
 use App\Petkit\BluetoothDevices\Message;
 use App\Petkit\DeviceActions;
 use App\Petkit\DeviceDefinition;
+use App\Petkit\Devices\Concerns\HandlesFeederSchedule;
 use App\Petkit\Devices\Configuration\ConfigurationInterface;
 use App\Petkit\DeviceStates;
 use Carbon\Carbon;
@@ -32,6 +31,11 @@ use PhpMqtt\Client\Facades\MQTT;
 
 class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
 {
+    use HandlesFeederSchedule;
+
+    /** schedule.md §4e/§4f: this is D4SH, the one confirmed dual-hopper feeder (a1/a2). */
+    public const FEEDER_COUNT = 2;
+
     public static $workingStates = [
         DeviceStates::WORKING, DeviceStates::IDLE,
     ];
@@ -83,6 +87,9 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
                 $this->reply($topic, $message);
             },
             sprintf('/sys/%s/%s/thing/event/feed_over/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
+                $this->mergeHistory($message?->params?->event_id ?? null, $message?->params?->content ?? null, DeviceStates::WORKING->value);
+                $this->publishDispenseEvent($device, $message?->params?->content ?? null);
+
                 $this->parseState($device, $message);
                 $this->reply($topic, $message);
             },
@@ -146,6 +153,47 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
                 $this->parseState($device, $message, DeviceStates::WORKING->value);
                 $this->reply($topic, $message);
             },
+            // error_start/error_over do NOT share one event_id the way
+            // feed_start/feed_over does - each derives its own event_id
+            // from its own timestamp (confirmed via a live D4SH capture:
+            // error_start's event_id was ..._1787833502, error_over's own
+            // was ..._1787833503, one second later). error_over's content
+            // instead carries error_start's timestamp as start_time
+            // ({"start_time":<int>,"err":"<string>"}) - reconstruct
+            // error_start's messageId from it by swapping this event's own
+            // timestamp suffix for that start_time. Distinct from
+            // parseState()'s state-embedded error flag - this logs an
+            // actual ERROR-type activity entry with a start/end.
+            sprintf('/sys/%s/%s/thing/event/error_start/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
+                $content = json_decode($message?->params?->content ?? '{}', true) ?? [];
+
+                if (isset($message->params->event_id)) {
+                    History::updateOrCreate(['messageId' => $message->params->event_id], [
+                        'pet_id' => null,
+                        'type' => 'ERROR',
+                        'parameters' => ['error' => $content['err'] ?? null],
+                        'device_id' => $device->id,
+                    ]);
+                }
+
+                EventPublisher::publish($device, 'error_start', ['error' => $content['err'] ?? null]);
+                $device->update(['error' => $content['err'] ?? null]);
+                $this->reply($topic, $message);
+            },
+            sprintf('/sys/%s/%s/thing/event/error_over/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
+                $content = json_decode($message?->params?->content ?? '{}', true) ?? [];
+                $eventId = $message?->params?->event_id ?? null;
+                $startTime = $content['start_time'] ?? null;
+
+                if ($eventId !== null && $startTime !== null && ($pos = strrpos($eventId, '_')) !== false) {
+                    $this->mergeHistory(substr($eventId, 0, $pos) . '_' . $startTime, $message?->params?->content ?? null);
+                }
+
+                EventPublisher::publish($device, 'error_over', ['error' => $content['err'] ?? null]);
+
+                $device->update(['error' => null]);
+                $this->reply($topic, $message);
+            },
         ];
     }
 
@@ -162,20 +210,39 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
      * confirmed live capture) - that needs to land on the row's own pet_id
      * column, not just get folded into parameters, or $history->pet stays
      * null forever even once the device has resolved who it saw.
+     *
+     * A scheduled (device-triggered) feed never sends feed_start at all -
+     * only feed_over fires (confirmed via a live D4SH capture,
+     * content.manual=0 with no preceding feed_start event_id) - so with no
+     * $type given, this used to silently drop the whole feed. Passing
+     * $type lets a caller opt into creating the row itself from *_over's
+     * own content when no *_start row exists yet; callers that don't pass
+     * it keep the old silently-do-nothing behavior.
      */
-    private function mergeHistory(?string $messageId, ?string $rawContent): void
+    private function mergeHistory(?string $messageId, ?string $rawContent, ?string $type = null): void
     {
         if ($messageId === null) {
             return;
         }
 
+        $content = json_decode($rawContent ?? '{}', true) ?? [];
         $history = History::where('messageId', $messageId)->first();
 
         if ($history === null) {
+            if ($type === null) {
+                return;
+            }
+
+            History::create([
+                'messageId' => $messageId,
+                'pet_id' => !empty($content['pet_id']) ? $content['pet_id'] : null,
+                'type' => $type,
+                'parameters' => $content,
+                'device_id' => $this->device->id,
+            ]);
+
             return;
         }
-
-        $content = json_decode($rawContent ?? '{}', true) ?? [];
 
         $history->update([
             'parameters' => [
@@ -287,6 +354,11 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
         return Configuration::fromDevice($this->getDevice());
     }
 
+    public function resetConfiguration(): array
+    {
+        return (new Configuration([]))->toArray();
+    }
+
     public function resetDesiccant(DeviceModel $record): void
     {
         $configuration = $this->configurationDefinition();
@@ -342,24 +414,6 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
         SetProperty::dispatchSync($device, $difference);
     }
 
-    public function toFeed(DeviceModel $device): string
-    {
-
-        $latest = Time::calculateLatest($device->configuration['schedule']);
-        $nextTick = last($latest) ?: ['a1' => 0, 'a2' => 0, 'id' => '', 't' => 0];
-
-        return json_encode([
-            'schedule' => array_map(
-                fn(array $schedule) => Time::normalizeScheduleGroupForWire($schedule),
-                $device->configuration['schedule']
-            ),
-            'nextTick' => $nextTick['t'] + 1,
-            'latest' => $latest
-        ]);
-
-
-    }
-
     public function toHomeassistant()
     {
         return json_encode($this->configurationDefinition()->toArray());
@@ -394,17 +448,6 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
                 $this->takeSnapshot($this->getDevice());
                 break;
         }
-    }
-
-    public function startFeeding(DeviceModel $record, ?int $amount = null, ?int $amount2 = null): void
-    {
-        $settings = $this->device->configuration['settings'];
-        $amount ??= $settings['amount1'] ?? 1;
-        $amount2 ??= $settings['amount2'] ?? 1;
-
-        // Dual is a two-hopper feeder, so feed_realtime carries amount1/amount2.
-        FeedRealtime::dispatchSync($record, $amount, $amount2);
-        ServiceStart::dispatchSync($record, $amount + $amount2);
     }
 
     public function toOTA(): array
@@ -463,7 +506,6 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
                 'toneMode' => (int)$config['toneMode'],
                 'toneMultiRange' => $config['toneMultiRange'],
                 'manualLock' => (int)$config['manualLock'],
-                'sche_enable' => (int)$config['sche_enable'],
                 'CTime' => (int)$config['CTime'],
                 'camera' => (int)$config['camera'],
                 'cameraMultiRange' => $config['cameraMultiRange'],
@@ -519,42 +561,6 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
             "lightMultiRange" => json_encode([
                 "lightMultiRange" => [[0, 1440]]
             ])
-        ];
-    }
-
-    public function toFeedGet(): array
-    {
-        $unusedDays = [1,2,3,4,5,6,7];
-        $latest = Time::calculateLatest($this->device->configuration['schedule']);
-        $nextTick = last($latest) ?: ['a1' => 0, 'a2' => 0, 'id' => '', 't' => 0];
-        $schedules = $this->device->configuration['schedule'];
-
-        foreach($schedules as &$schedule) {
-            $schedule['itemJsonString'] = json_encode($schedule['it']);
-
-            foreach(explode(',', $schedule['re']) as $re) {
-                unset($unusedDays[intval($re) - 1]);
-            }
-
-        }
-
-        if(!empty($unusedDays)) {
-            $schedules[] = [
-                're' => implode(',', $unusedDays),
-                'it' => [],
-                'itemJsonString' => '[]',
-            ];
-        }
-
-        $schedules = array_map(
-            fn(array $schedule) => Time::normalizeScheduleGroupForWire($schedule),
-            $schedules
-        );
-
-        return [
-            'schedule' => $schedules,
-            'nextTick' => $nextTick['t'] + 1,
-            'latest' => $latest
         ];
     }
 

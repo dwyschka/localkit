@@ -20,7 +20,7 @@
 
     <x-filament::section heading="Pet Activity by Day">
         @forelse ($dailyCounts as $date => $pets)
-            @php($day = \Illuminate\Support\Carbon::parse($date, 'Europe/Berlin'))
+            @php($day = \Illuminate\Support\Carbon::parse($date, config('app.timezone')))
             <div class="petkit-counts__day">
                 <div class="petkit-counts__date">
                     {{ $day->isToday() ? __('Today') : ($day->isYesterday() ? __('Yesterday') : $day->translatedFormat('l, F j, Y')) }}

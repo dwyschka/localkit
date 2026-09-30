@@ -11,9 +11,9 @@ use Filament\Forms\Components\ViewField;
 use Filament\Forms\Components\KeyValue;
 use App\Helpers\Time;
 use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\TimePicker;
 use Illuminate\Support\Carbon;
 use Filament\Forms;
+use App\Filament\Forms\Components\MinutesTimePicker;
 
 class UI
 {
@@ -65,27 +65,13 @@ class UI
                     ->label('Screen Period')
                     ->schema(
                         [
-                            TimePicker::make('from')
+                            MinutesTimePicker::make('from')
                                 ->label('From')
-                                ->seconds(false)
-                                ->required()
-                                ->formatStateUsing(
-                                    fn (?string $state) => Time::toTimeFromMinutes((int) $state)
-                                )
-                                ->dehydrateStateUsing(
-                                    fn ($state) => Time::toMinutes($state)
-                                ),
+                                ->required(),
 
-                            TimePicker::make('till')
+                            MinutesTimePicker::make('till')
                                 ->label('Till')
-                                ->seconds(false)
-                                ->required()
-                                ->formatStateUsing(
-                                    fn (?string $state) => Time::toTimeFromMinutes((int) $state)
-                                )
-                                ->dehydrateStateUsing(
-                                    fn ($state) => Time::toMinutes($state)
-                                ),
+                                ->required(),
                         ]
                     ),
 
@@ -185,23 +171,9 @@ class UI
                         ->label('Do not Disturb Period')
                         ->reorderableWithButtons()
                         ->schema([
-                            TimePicker::make('from')
-                                ->formatStateUsing(function ($state) {
-                                    return Time::toTimeFromMinutes((int)$state);
-                                })
-                                ->dehydrateStateUsing(function ($state) {
-                                    return Time::toMinutes($state);
-                                })
-                                ->seconds(false),
+                            MinutesTimePicker::make('from'),
 
-                            TimePicker::make('till')
-                                ->formatStateUsing(function ($state) {
-                                    return Time::toTimeFromMinutes((int)$state);
-                                })
-                                ->dehydrateStateUsing(function ($state) {
-                                    return Time::toMinutes($state);
-                                })
-                                ->seconds(false)
+                            MinutesTimePicker::make('till')
                         ])
                         ->dehydrateStateUsing(function ($state) {
                             return $state;
@@ -229,10 +201,6 @@ class UI
 
                 TextInput::make('configuration.settings.petInTipLimit')
                     ->helperText('The meaning is currently unknown'),
-
-                Toggle::make('configuration.settings.shareOpen')
-                    ->helperText('The meaning is currently unknown')
-                    ->label('Share Open'),
 
                 Toggle::make('configuration.settings.removeSand')
                     ->helperText('The meaning is currently unknown')

@@ -35,6 +35,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use PhpMqtt\Client\Facades\MQTT;
 
@@ -119,6 +120,79 @@ class Device extends Model
     public function histories(): HasMany
     {
         return $this->hasMany(History::class, 'device_id', 'id')->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Normalized schedule storage (device_schedules/device_schedule_items) -
+     * the source of truth for feeding schedules as of 2026-08-24.
+     * configuration['schedule'] now only holds a pointer,
+     * ['key' => ..., 'checksum' => ...] (see scheduleGroups()/syncSchedule()
+     * below) - the checksum exists purely so Device::updating()'s existing
+     * JsonHelper::difference()-based change detection (in each device type's
+     * propertyChange()) still notices a schedule edit despite the pointer's
+     * 'key' usually staying the same across saves.
+     */
+    public function schedules(): HasMany
+    {
+        return $this->hasMany(DeviceSchedule::class);
+    }
+
+    /**
+     * Reconstructs the ['re' => ..., 'it' => [...]] day-group array
+     * Time::calculateLatest()/normalizeScheduleGroupForWire() expect, from
+     * the normalized tables. 'key' lets a device eventually carry more than
+     * one named schedule (only 'default' is used anywhere today).
+     */
+    public function scheduleGroups(string $key = 'default'): array
+    {
+        return $this->schedules()
+            ->with('items')
+            ->where('key', $key)
+            ->orderBy('id')
+            ->get()
+            ->map(fn (DeviceSchedule $schedule) => [
+                're' => $schedule->re,
+                'it' => $schedule->items->map(fn (DeviceScheduleItem $item) => array_filter([
+                    'id' => $item->item_id,
+                    'a' => $item->a,
+                    'a1' => $item->a1,
+                    'a2' => $item->a2,
+                    't' => $item->t,
+                ], fn ($value) => $value !== null))->all(),
+            ])
+            ->all();
+    }
+
+    /**
+     * Replaces every device_schedules row (and, via cascadeOnDelete, their
+     * device_schedule_items) under $key with $groups - the same
+     * ['re' => ..., 'it' => [['id'=>,'t'=>,'a'|'a1'/'a2'=>], ...]] shape the
+     * Filament schedule Repeater dehydrates to. Delete+recreate rather than
+     * diffing row-by-row since a schedule save is always "the whole thing",
+     * never a single-item patch.
+     */
+    public function syncSchedule(array $groups, string $key = 'default'): void
+    {
+        DB::transaction(function () use ($groups, $key) {
+            $this->schedules()->where('key', $key)->delete();
+
+            foreach (array_values($groups) as $group) {
+                $schedule = $this->schedules()->create([
+                    'key' => $key,
+                    're' => (string) ($group['re'] ?? ''),
+                ]);
+
+                foreach (array_values($group['it'] ?? []) as $item) {
+                    $schedule->items()->create([
+                        'item_id' => (string) ($item['id'] ?? ''),
+                        't' => (int) ($item['t'] ?? 0),
+                        'a' => array_key_exists('a', $item) ? (int) $item['a'] : null,
+                        'a1' => array_key_exists('a1', $item) ? (int) $item['a1'] : null,
+                        'a2' => array_key_exists('a2', $item) ? (int) $item['a2'] : null,
+                    ]);
+                }
+            }
+        });
     }
 
     public function deviceName()

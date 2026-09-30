@@ -22,7 +22,7 @@ class DevServerInfo extends JsonResource
                 'nextTick' => 3600,
                 'linked' => 1
             ],
-            "type" => "t4_data_get",
+            "type" => sprintf('%s_data_get', $this->resource->device_type),
             'timestamp' => time()
         ];
     }

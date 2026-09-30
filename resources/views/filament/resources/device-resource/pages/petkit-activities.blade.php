@@ -62,11 +62,45 @@
             text-transform: uppercase;
             color: var(--gray-400);
         }
+        @keyframes petkit-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .petkit-refreshed {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            color: var(--gray-400);
+        }
+        .petkit-refreshed__text {
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+        .petkit-spinning svg {
+            transform-origin: center;
+            animation: petkit-spin 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
     </style>
 
     @if ($histories->isEmpty())
         <x-filament::section>
             <x-slot name="heading">{{ $this->record->name ?? $this->record->serial_number }}</x-slot>
+            <x-slot name="afterHeader">
+                <div class="petkit-refreshed">
+                    <span class="petkit-refreshed__text" wire:key="refreshed-at-empty-{{ now()->format('His') }}" title="{{ now()->timezone(config('app.timezone'))->isoFormat('dddd, LL · LTS (z)') }}">Last refreshed {{ now()->timezone(config('app.timezone'))->isoFormat('LTS') }}</span>
+                    <x-filament::icon-button
+                        icon="heroicon-m-arrow-path"
+                        color="gray"
+                        size="sm"
+                        label="Refresh"
+                        wire:click="$refresh"
+                        x-data="{ spinning: false }"
+                        x-on:click="spinning = true; setTimeout(() => spinning = false, 600)"
+                        x-bind:class="{ 'petkit-spinning': spinning }"
+                    />
+                </div>
+            </x-slot>
 
             <div style="text-align:center;padding:1.5rem 0;color:var(--gray-500);font-size:0.875rem;">
                 {{ __('No activities recorded yet.') }}
@@ -75,11 +109,26 @@
     @else
         <x-filament::section>
             <x-slot name="heading">{{ $this->record->name ?? $this->record->serial_number }}</x-slot>
+            <x-slot name="afterHeader">
+                <div class="petkit-refreshed">
+                    <span class="petkit-refreshed__text" wire:key="refreshed-at-{{ now()->format('His') }}" title="{{ now()->timezone(config('app.timezone'))->isoFormat('dddd, LL · LTS (z)') }}">Last refreshed {{ now()->timezone(config('app.timezone'))->isoFormat('LTS') }}</span>
+                    <x-filament::icon-button
+                        icon="heroicon-m-arrow-path"
+                        color="gray"
+                        size="sm"
+                        label="Refresh"
+                        wire:click="$refresh"
+                        x-data="{ spinning: false }"
+                        x-on:click="spinning = true; setTimeout(() => spinning = false, 600)"
+                        x-bind:class="{ 'petkit-spinning': spinning }"
+                    />
+                </div>
+            </x-slot>
 
             <div class="petkit-timeline">
                 @php($lastDate = null)
                 @foreach ($histories as $history)
-                    @php($eventDate = $history->created_at?->timezone('Europe/Berlin'))
+                    @php($eventDate = $history->created_at?->timezone(config('app.timezone')))
                     @php($dateKey = $eventDate?->toDateString())
                     @if ($dateKey !== $lastDate)
                         <div class="petkit-timeline__day">
@@ -108,7 +157,7 @@
                             </div>
                             <div class="petkit-timeline__desc">{!! $history->message() !!}</div>
                             <div class="petkit-timeline__date">
-                                {{ $history->created_at?->timezone('Europe/Berlin')?->format('F j, Y · H:i') }}
+                                {{ $history->created_at?->timezone(config('app.timezone'))?->isoFormat('LL · LT') }}
                             </div>
 
                             @php($listingMedia = \App\Filament\Resources\DeviceResource\Pages\PetkitActivities::mediaForListing($history->media))

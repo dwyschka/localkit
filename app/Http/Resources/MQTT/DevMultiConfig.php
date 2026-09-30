@@ -21,7 +21,7 @@ class DevMultiConfig extends JsonResource
                     [40,520]
                 ]
             ],
-            "type" => "t4_data_get",
+            "type" => sprintf('%s_data_get', $this->resource->device_type),
             'timestamp' => time()
         ];
     }

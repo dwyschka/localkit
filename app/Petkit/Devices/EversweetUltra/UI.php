@@ -14,10 +14,11 @@ use App\Management\Go2RTC;
 use Illuminate\Support\Carbon;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\TimePicker;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\HtmlString;
 use Filament\Forms;
+use App\Filament\Forms\Components\MinutesTimePicker;
+use App\Filament\Forms\Components\SecondsTimePicker;
 
 class UI
 {
@@ -132,11 +133,8 @@ class UI
                     ->minValue(1)
                     ->suffix('days'),
 
-                TimePicker::make('configuration.settings.waterChangeTime')
-                    ->label('Drain & Refill Time')
-                    ->seconds(false)
-                    ->formatStateUsing(fn($state) => Time::toTimeFromSeconds((int) ($state ?? 0)))
-                    ->dehydrateStateUsing(fn($state) => Time::toSeconds($state)),
+                SecondsTimePicker::make('configuration.settings.waterChangeTime')
+                    ->label('Drain & Refill Time'),
 
                 Toggle::make('configuration.settings.cleanWaterLackLight')
                     ->label('Clean Water Tank Low Light'),
@@ -166,11 +164,8 @@ class UI
                 Toggle::make('configuration.settings.autoFlush')
                     ->label('Auto Drain & Flush'),
 
-                TimePicker::make('configuration.settings.flushTime')
-                    ->label('Drain & Flush Time')
-                    ->seconds(false)
-                    ->formatStateUsing(fn($state) => Time::toTimeFromSeconds((int) ($state ?? 0)))
-                    ->dehydrateStateUsing(fn($state) => Time::toSeconds($state)),
+                SecondsTimePicker::make('configuration.settings.flushTime')
+                    ->label('Drain & Flush Time'),
 
                 TextInput::make('configuration.settings.flushCycle')
                     ->label('Drain & Flush Cycle')
@@ -206,12 +201,8 @@ class UI
                     ->columnSpanFull()
                     ->label('Active Period')
                     ->schema([
-                        TimePicker::make('0')->label('From')->seconds(false)->required()
-                            ->formatStateUsing(fn(?string $state) => Time::toTimeFromMinutes((int)$state))
-                            ->dehydrateStateUsing(fn($state) => Time::toMinutes($state)),
-                        TimePicker::make('1')->label('Till')->seconds(false)->required()
-                            ->formatStateUsing(fn(?string $state) => Time::toTimeFromMinutes((int)$state))
-                            ->dehydrateStateUsing(fn($state) => Time::toMinutes($state)),
+                        MinutesTimePicker::make('0')->label('From')->required(),
+                        MinutesTimePicker::make('1')->label('Till')->required(),
                     ]),
             ]),
 
@@ -231,12 +222,8 @@ class UI
                         ->columns(2)
                         ->label('Undisturbed Period')
                         ->schema([
-                            TimePicker::make('0')->label('From')->seconds(false)
-                                ->formatStateUsing(fn($state) => Time::toTimeFromMinutes((int)$state))
-                                ->dehydrateStateUsing(fn($state) => Time::toMinutes($state)),
-                            TimePicker::make('1')->label('Till')->seconds(false)
-                                ->formatStateUsing(fn($state) => Time::toTimeFromMinutes((int)$state))
-                                ->dehydrateStateUsing(fn($state) => Time::toMinutes($state)),
+                            MinutesTimePicker::make('0')->label('From'),
+                            MinutesTimePicker::make('1')->label('Till'),
                         ]),
 
                     Toggle::make('configuration.settings.toneMode')->label('Prompt Tone Do not disturb'),
@@ -244,12 +231,8 @@ class UI
                         ->columns(2)
                         ->label('Undisturbed Period')
                         ->schema([
-                            TimePicker::make('0')->label('From')->seconds(false)
-                                ->formatStateUsing(fn($state) => Time::toTimeFromMinutes((int)$state))
-                                ->dehydrateStateUsing(fn($state) => Time::toMinutes($state)),
-                            TimePicker::make('1')->label('Till')->seconds(false)
-                                ->formatStateUsing(fn($state) => Time::toTimeFromMinutes((int)$state))
-                                ->dehydrateStateUsing(fn($state) => Time::toMinutes($state)),
+                            MinutesTimePicker::make('0')->label('From'),
+                            MinutesTimePicker::make('1')->label('Till'),
                         ]),
 
                     Toggle::make('configuration.settings.wlDisturbMode')
@@ -259,12 +242,8 @@ class UI
                         ->columns(2)
                         ->label('Undisturbed Period')
                         ->schema([
-                            TimePicker::make('0')->label('From')->seconds(false)
-                                ->formatStateUsing(fn($state) => Time::toTimeFromMinutes((int)$state))
-                                ->dehydrateStateUsing(fn($state) => Time::toMinutes($state)),
-                            TimePicker::make('1')->label('Till')->seconds(false)
-                                ->formatStateUsing(fn($state) => Time::toTimeFromMinutes((int)$state))
-                                ->dehydrateStateUsing(fn($state) => Time::toMinutes($state)),
+                            MinutesTimePicker::make('0')->label('From'),
+                            MinutesTimePicker::make('1')->label('Till'),
                         ]),
 
                     Toggle::make('configuration.settings.awDisturbMode')
@@ -274,12 +253,8 @@ class UI
                         ->columns(2)
                         ->label('Undisturbed Period')
                         ->schema([
-                            TimePicker::make('0')->label('From')->seconds(false)
-                                ->formatStateUsing(fn($state) => Time::toTimeFromMinutes((int)$state))
-                                ->dehydrateStateUsing(fn($state) => Time::toMinutes($state)),
-                            TimePicker::make('1')->label('Till')->seconds(false)
-                                ->formatStateUsing(fn($state) => Time::toTimeFromMinutes((int)$state))
-                                ->dehydrateStateUsing(fn($state) => Time::toMinutes($state)),
+                            MinutesTimePicker::make('0')->label('From'),
+                            MinutesTimePicker::make('1')->label('Till'),
                         ]),
                 ])->columnSpanFull(),
             ]),

@@ -118,6 +118,7 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface, Has
             sprintf('/sys/%s/%s/thing/event/error_start/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $this->parseState($device, $message);
                 $this->recordErrorEvent($device, json_decode($message?->params?->content ?? 'null', false));
+                EventPublisher::publish($device, 'error_start', ['error' => json_decode($message?->params?->content ?? '{}', true)['err'] ?? null]);
             },
             sprintf('/sys/%s/%s/thing/event/error_over/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 // parseState() re-syncs `error` from the state's `err` flags via
@@ -125,6 +126,7 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface, Has
                 // manual override needed here anymore.
                 $this->parseState($device, $message);
                 $this->recordErrorEvent($device, json_decode($message?->params?->content ?? 'null', false));
+                EventPublisher::publish($device, 'error_over', ['error' => json_decode($message?->params?->content ?? '{}', true)['err'] ?? null]);
             },
             sprintf('/sys/%s/%s/thing/event/work_start/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $this->parseState($device, $message);
@@ -431,6 +433,11 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface, Has
     public function configurationDefinition(): ConfigurationInterface
     {
         return Configuration::fromDevice($this->getDevice());
+    }
+
+    public function resetConfiguration(): array
+    {
+        return (new Configuration([]))->toArray();
     }
 
     public function configuration()
