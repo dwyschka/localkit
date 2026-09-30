@@ -1,0 +1,38 @@
+#!/bin/sh
+set -eu
+
+BASE="http://tool.localkit.io/scripts"
+TMP="/tmp/localkit-device-$$"
+
+cleanup() {
+    rm -f "$TMP"
+}
+trap cleanup EXIT INT TERM
+
+if ! pktool cfg dump /opt/dev.conf "$TMP" >/dev/null 2>&1; then
+    echo "ERROR: Unable to read /opt/dev.conf"
+    exit 1
+fi
+
+MODEL="$(
+    grep -m1 '"name"' "$TMP" |
+    sed 's/.*"name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/'
+)"
+
+case "$MODEL" in
+    D4SH)
+        echo "Detected D4SH"
+        INSTALLER="$BASE/d4sh/1.0.0/install"
+        ;;
+    W7H)
+        echo "Detected W7H"
+        INSTALLER="$BASE/w7h/1.0.0/install"
+        ;;
+    *)
+        echo "ERROR: Unsupported PETKIT model: ${MODEL:-UNKNOWN}"
+        exit 1
+        ;;
+esac
+
+wget -qO- "$INSTALLER" | sh
+

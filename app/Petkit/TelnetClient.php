@@ -3,6 +3,7 @@
 namespace App\Petkit;
 
 use RuntimeException;
+use App\Petkit\OutputSanitizer;
 
 /**
  * Minimal telnet client for the NextGen devices' busybox-style telnetd
@@ -22,8 +23,7 @@ class TelnetClient
         private readonly string $host,
         private readonly int $port = 23,
         private readonly float $timeout = 5.0,
-    ) {
-    }
+    ) {}
 
     public function login(string $username, string $password): void
     {
@@ -47,7 +47,67 @@ class TelnetClient
     {
         $this->write($command);
 
-        return $this->readUntil(['#', '$']);
+        $isReboot = str_starts_with(trim($command), 'reboot');
+        return $this->readUntil(['#', '$'], allowDisconnectOnReboot: $isReboot);
+    }
+
+    /**
+     * Stream the command output as it arrives. Yields cleaned chunks of text.
+     *
+     * @param string $command
+     * @param float $maxDuration seconds to keep streaming (default 300)
+     * @return \Generator yields string chunks
+     */
+    public function streamExec(string $command, float $maxDuration = 300): \Generator
+    {
+        $this->write($command);
+
+        $deadline = microtime(true) + $maxDuration;
+
+        while (is_resource($this->socket) && microtime(true) < $deadline) {
+            $read = [$this->socket];
+            $write = null;
+            $except = null;
+
+            // Wait up to 0.5s for data to become available
+            $tv = 500000;
+            $selected = @stream_select($read, $write, $except, 0, $tv);
+
+            if ($selected === false) {
+                throw new RuntimeException('stream_select failed');
+            }
+
+            if ($selected > 0) {
+                $chunk = fread($this->socket, 4096);
+
+                if ($chunk === false) {
+                    throw new RuntimeException('Telnet read failed');
+                }
+
+                if ($chunk === '') {
+                    if (feof($this->socket)) {
+                        break;
+                    }
+                    usleep(50_000);
+                    continue;
+                }
+
+                $clean = $this->stripTelnetControl($chunk);
+                $clean = OutputSanitizer::sanitize($clean);
+
+                if ($clean !== '') {
+                    yield $clean;
+                }
+            } else {
+                // No data available, small sleep to avoid busy loop
+                usleep(50_000);
+            }
+
+            // If socket EOF, break
+            if (feof($this->socket)) {
+                break;
+            }
+        }
     }
 
     public function close(): void
@@ -64,7 +124,7 @@ class TelnetClient
         fwrite($this->socket, $line . "\r\n");
     }
 
-    private function readUntil(array $markers): string
+    private function readUntil(array $markers, bool $allowDisconnectOnReboot = false): string
     {
         $buffer = '';
         $deadline = microtime(true) + $this->timeout;
@@ -73,6 +133,21 @@ class TelnetClient
             $chunk = fread($this->socket, 2048);
 
             if ($chunk === false || $chunk === '') {
+                if (feof($this->socket)) {
+                    $safe = OutputSanitizer::sanitize($buffer);
+                    if ($allowDisconnectOnReboot || str_contains(strtolower($safe), 'reboot') || str_contains($safe, 'SIGTERM') || str_contains($safe, 'SIGKILL')) {
+                        return $buffer;
+                    }
+
+                    foreach ($markers as $marker) {
+                        if (str_contains($buffer, $marker)) {
+                            return $buffer;
+                        }
+                    }
+
+                    throw new RuntimeException("Telnet connection closed by remote host (got: {$safe})");
+                }
+
                 usleep(50_000);
                 continue;
             }
@@ -86,7 +161,12 @@ class TelnetClient
             }
         }
 
-        throw new RuntimeException(sprintf('Telnet read timed out waiting for one of: %s (got: %s)', implode('/', $markers), $buffer));
+        $safe = OutputSanitizer::sanitize($buffer);
+        if ($allowDisconnectOnReboot && (str_contains(strtolower($safe), 'reboot') || str_contains($safe, 'SIGTERM') || str_contains($safe, 'SIGKILL'))) {
+            return $buffer;
+        }
+
+        throw new RuntimeException(sprintf('Telnet read timed out waiting for one of: %s (got: %s)', implode('/', $markers), $safe));
     }
 
     /**
