@@ -7,7 +7,7 @@
 ])
 
 @once
-    {!! loadInlineStylesheet('css/petkit-timeline.css') !!}
+    <link rel="stylesheet" href="{{ \Filament\Support\Facades\FilamentAsset::getStyleHref('petkit-timeline') }}">
 @endonce
 
 @if ($histories->isEmpty())

@@ -11,6 +11,9 @@ use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Support\Assets\Css;
+use Filament\Support\Assets\Js;
+use Filament\Support\Facades\FilamentAsset;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -20,18 +23,21 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class PetkitPanelProvider extends PanelProvider
 {
-    private const ACTIVITIES_STYLESHEETS = [
-        'css/petkit-activities.css',
-        'css/petkit-timeline.css',
-        'css/petkit-activity-detail.css',
-        'css/petkit-event-counts.css',
-    ];
-    private const ACTIVITIES_SCRIPTS = [
-        'js/petkit-activities.js',
-    ];
-
     public function panel(Panel $panel): Panel
     {
+        // Filament otherwise versions app assets with its own package version.
+        $assetFiles = [
+            'css/petkit-activities.css',
+            'css/petkit-timeline.css',
+            'css/petkit-activity-detail.css',
+            'css/petkit-event-counts.css',
+            'js/petkit-activities.js',
+        ];
+        FilamentAsset::appVersion(hash('sha256', implode('', array_map(
+            fn (string $file): string => hash_file('sha256', resource_path($file)),
+            $assetFiles,
+        ))));
+
         return $panel
             ->default()
             ->id('petkit')
@@ -65,14 +71,13 @@ class PetkitPanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])
-            ->renderHook(
-                \Filament\View\PanelsRenderHook::HEAD_END,
-                fn (): string => loadInlineStylesheet(...self::ACTIVITIES_STYLESHEETS),
-            )
-            ->renderHook(
-                \Filament\View\PanelsRenderHook::BODY_END,
-                fn (): string => loadInlineScript(...self::ACTIVITIES_SCRIPTS),
-            )
+            ->assets([
+                Css::make('petkit-activities', resource_path('css/petkit-activities.css')),
+                Css::make('petkit-timeline', resource_path('css/petkit-timeline.css'))->loadedOnRequest(),
+                Css::make('petkit-activity-detail', resource_path('css/petkit-activity-detail.css'))->loadedOnRequest(),
+                Css::make('petkit-event-counts', resource_path('css/petkit-event-counts.css'))->loadedOnRequest(),
+                Js::make('petkit-activities', resource_path('js/petkit-activities.js')),
+            ])
             ->authMiddleware([
                 Authenticate::class,
             ]);

@@ -2,7 +2,7 @@
     @php($meta = \App\Filament\Resources\DeviceResource\Pages\PetkitActivities::typeMeta($history->type))
 
 @once
-    {!! loadInlineStylesheet('css/petkit-activity-detail.css') !!}
+    <link rel="stylesheet" href="{{ \Filament\Support\Facades\FilamentAsset::getStyleHref('petkit-activity-detail') }}">
 @endonce
 
 

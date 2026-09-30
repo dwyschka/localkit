@@ -1,6 +1,6 @@
 <x-filament-widgets::widget>
     @once
-        {!! loadInlineStylesheet('css/petkit-event-counts.css') !!}
+        <link rel="stylesheet" href="{{ \Filament\Support\Facades\FilamentAsset::getStyleHref('petkit-event-counts') }}">
     @endonce
 
     <x-filament::section heading="Pet Activity by Day">
