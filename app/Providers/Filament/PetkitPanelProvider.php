@@ -11,6 +11,9 @@ use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Support\Assets\Css;
+use Filament\Support\Assets\Js;
+use Filament\Support\Facades\FilamentAsset;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -22,6 +25,21 @@ class PetkitPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
+        // Filament otherwise versions app assets with its own package version.
+        $assetFiles = [
+            'css/petkit-activities.css',
+            'css/petkit-timeline.css',
+            'css/petkit-pet-activities.css',
+            'css/petkit-activity-detail.css',
+            'css/petkit-event-counts.css',
+            'css/petkit-recent-activity.css',
+            'js/petkit-activities.js',
+        ];
+        FilamentAsset::appVersion(hash('sha256', implode('', array_map(
+            fn (string $file): string => hash_file('sha256', resource_path($file)),
+            $assetFiles,
+        ))));
+
         return $panel
             ->default()
             ->id('petkit')
@@ -51,43 +69,15 @@ class PetkitPanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])
-            ->renderHook(
-                \Filament\View\PanelsRenderHook::HEAD_END,
-                fn (): string => <<<'HTML'
-                <style>
-                    /* Lay the per-card control buttons out as a tidy 2-per-row grid. */
-                    .fi-ta-content-ctn .fi-ta-actions {
-                        display: grid;
-                        grid-template-columns: repeat(2, minmax(0, 1fr));
-                        gap: 0.5rem;
-                        width: 100%;
-                    }
-                    .fi-ta-content-ctn .fi-ta-actions > * { width: 100%; }
-                    .fi-ta-content-ctn .fi-ta-actions .fi-btn { width: 100%; justify-content: center; }
-
-                    /* Center the top navigation between the logo and the user menu. */
-                    .fi-topbar-nav-groups {
-                        flex: 1;
-                        justify-content: center;
-                    }
-
-                    /* Redundant with the top navigation right above it - keep the
-                       header's action buttons (Create/Save/...), drop the heading. */
-                    .fi-header-heading {
-                        display: none;
-                    }
-
-                    /* The image editor modal sizes itself to the source image - a
-                       tall portrait photo can push the Save/Cancel toolbar off
-                       screen on a phone. Cap the window height and let it scroll
-                       instead of overflowing past the viewport. */
-                    .fi-fo-file-upload-editor-window {
-                        max-height: 90dvh;
-                        overflow-y: auto;
-                    }
-                </style>
-                HTML,
-            )
+            ->assets([
+                Css::make('petkit-activities', resource_path('css/petkit-activities.css')),
+                Css::make('petkit-timeline', resource_path('css/petkit-timeline.css'))->loadedOnRequest(),
+                Css::make('petkit-pet-activities', resource_path('css/petkit-pet-activities.css'))->loadedOnRequest(),
+                Css::make('petkit-activity-detail', resource_path('css/petkit-activity-detail.css'))->loadedOnRequest(),
+                Css::make('petkit-event-counts', resource_path('css/petkit-event-counts.css'))->loadedOnRequest(),
+                Css::make('petkit-recent-activity', resource_path('css/petkit-recent-activity.css'))->loadedOnRequest(),
+                Js::make('petkit-activities', resource_path('js/petkit-activities.js')),
+            ])
             ->authMiddleware([
                 Authenticate::class,
             ]);
