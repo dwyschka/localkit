@@ -81,6 +81,10 @@ class DeviceResource extends Resource
                         Toggle::make('debug_mode')
                             ->columnSpan('half')
                             ->helperText('Logs all incoming HTTP requests from this device to storage/logs/device_{serial}.log'),
+                        Toggle::make('provisioning')
+                            ->label('Telnet (provisioning)')
+                            ->columnSpan('half')
+                            ->helperText('While on, every heartbeat tells the device to start its telnetd, so it stays reachable over telnet. Set automatically for devices provisioned over BLE; turn it off once telnet is no longer needed.'),
                     ]),
 
                 Fieldset::make('OTA')
@@ -134,7 +138,19 @@ class DeviceResource extends Resource
                             }),
                         TextColumn::make('working_state')
                             ->badge()
-                            ->grow(false),
+                            ->grow(false)
+                            /*
+                             * A device still being set up over BLE has no state
+                             * worth reporting - it has not done anything yet, and
+                             * "IDLE" next to a device that is mid-provisioning
+                             * reads as "nothing is happening" when something is.
+                             */
+                            ->formatStateUsing(fn (?string $state, Device $record): ?string => $record->provisioning
+                                ? 'PROVISIONING'
+                                : $state)
+                            ->color(fn (?string $state, Device $record): ?string => $record->provisioning
+                                ? 'warning'
+                                : null),
                         IconColumn::make('ota_available')
                             ->label('OTA')
                             ->icon(fn(bool $state): ?string => $state ? 'heroicon-m-arrow-down-tray' : null)

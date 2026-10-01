@@ -48,6 +48,14 @@ class Device extends Model
             if (empty($device->name)) {
                 $device->name = $device->serial_number;
             }
+
+            // A device provisioned over BLE has never met PetKit's cloud, so it
+            // signs up without an id and expects to be handed one here. That id
+            // is its identity from then on: it comes back in every X-Device
+            // header, so it has to exist before the row does.
+            if (empty($device->petkit_id)) {
+                $device->petkit_id = self::allocatePetkitId();
+            }
         });
 
         self::updated(function ($device) {
@@ -108,13 +116,29 @@ class Device extends Model
         });
     }
 
+    /**
+     * Hand out a device id for a device that arrived without one.
+     *
+     * One past the highest id in use, floored at a configurable base
+     * (LOCALKIT_DEVICE_ID_BASE) so the first assigned id has the same shape as
+     * the ids PetKit hands out rather than being a bare 1. Nothing reads meaning
+     * into the number - it only has to be an integer no other device holds.
+     */
+    public static function allocatePetkitId(): int
+    {
+        $base = (int) config('localkit.provisioning.device_id_base', 10000000);
+
+        return max($base, (int) self::max('petkit_id') + 1);
+    }
+
     protected $casts = [
         'configuration' => 'array',
         'debug_mode' => 'boolean',
+        'provisioning' => 'boolean',
     ];
 
     protected $fillable = [
-        'ota_state', 'ota_available', 'available_version', 'name', 'debug_mode', 'device_type', 'firmware', 'mac', 'timezone', 'locale', 'petkit_id', 'serial_number', 'bt_mac', 'ap_mac', 'chip_id', 'mqtt_subdomain', 'last_heartbeat', 'working_state', 'error', 'mqtt_connected', 'configuration', 'secret', 'link_with'
+        'ota_state', 'ota_available', 'available_version', 'name', 'debug_mode', 'provisioning', 'device_type', 'firmware', 'mac', 'timezone', 'locale', 'petkit_id', 'serial_number', 'bt_mac', 'ap_mac', 'chip_id', 'mqtt_subdomain', 'last_heartbeat', 'working_state', 'error', 'mqtt_connected', 'configuration', 'secret', 'link_with'
     ];
 
     public function histories(): HasMany
