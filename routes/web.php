@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CameraLiveController;
 use App\Http\Controllers\CameraThumbnailController;
 use App\Http\Controllers\LogDownloadController;
 use App\Http\Controllers\MediaDownloadController;
@@ -34,8 +35,15 @@ Route::get('media/file/{fileId}', MediaFileController::class)
     ->name('media.file');
 
 // Cached still-frame thumbnail (ffmpeg) for a device's camera stream.
-Route::get('camera/{device}/thumbnail/{stream?}', CameraThumbnailController::class)
+Route::get('camera/{device}/thumbnail', CameraThumbnailController::class)
+    ->middleware('auth')
     ->name('camera.thumbnail');
+
+// Live view: the device's RTSP stream remuxed to MPEG-TS for mpegts.js. Not a
+// Livewire route, so the bytes stream out instead of being buffered.
+Route::get('camera/{device}/live.ts', CameraLiveController::class)
+    ->middleware('auth')
+    ->name('camera.live');
 
 // Pet discern reference photo, fetched directly by the device (see
 // DevDiscernPicResource) - no auth, extensionless on purpose.

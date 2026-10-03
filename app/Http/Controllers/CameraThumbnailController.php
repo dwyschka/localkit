@@ -2,47 +2,40 @@
 
 namespace App\Http\Controllers;
 
-use App\Management\Go2RTC;
+use App\Management\Rtsp;
 use App\Models\Device;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\Process\Process;
 use Throwable;
 
 /**
- * Serves a still-frame JPEG thumbnail for a device's video stream.
+ * Serves a still-frame JPEG thumbnail for a device's camera.
  *
- * We fetch go2rtc's `/api/frame.mp4` endpoint ourselves (Laravel's HTTP
- * client, not ffmpeg's own network I/O) and pipe the bytes into ffmpeg via
- * stdin to convert to JPEG. frame.mp4 is used as the source (rather than
- * feeding ffmpeg the raw device stream, or using go2rtc's own
- * `/api/frame.jpeg`) because it reliably repackages whatever codec the
- * stream has (H264/H265) into a minimal fMP4 fragment with no transcoding
- * on go2rtc's side - see AlexxIT/go2rtc internal/mp4/mp4.go. The result is
- * cached (default 10s) so repeated views and the device list table don't
- * re-fetch/re-run ffmpeg per request.
+ * ffmpeg connects to the device's RTSP stream itself and writes a single
+ * frame as JPEG to stdout. The result is cached (default 10s) so repeated
+ * views and the device list table do not open a new RTSP session per request -
+ * the devices only tolerate a handful of concurrent ones.
  */
 class CameraThumbnailController extends Controller
 {
-    public function __construct(private readonly Go2RTC $go2rtc)
+    public function __construct(private readonly Rtsp $rtsp)
     {
     }
 
-    public function __invoke(Device $device, ?string $stream = null): Response
+    public function __invoke(Device $device): Response
     {
-        $stream ??= (string) config('go2rtc.stream');
-        $ttl = (int) config('go2rtc.thumbnail.ttl', 10);
+        $ttl = (int) config('camera.thumbnail.ttl', 10);
 
         // Cache base64 so the payload is safe across cache drivers (the JPEG is
         // binary). Failures return null, which Cache::remember does not store,
         // so an unreachable camera is retried on the next request.
         $encoded = Cache::remember(
-            sprintf('camera-thumbnail:%s:%s', $device->getKey(), $stream),
+            sprintf('camera-thumbnail:%s', $device->getKey()),
             $ttl,
-            function () use ($device, $stream): ?string {
-                $jpeg = $this->capture($device, $stream);
+            function () use ($device): ?string {
+                $jpeg = $this->capture($device);
 
                 return $jpeg !== null ? base64_encode($jpeg) : null;
             },
@@ -59,52 +52,38 @@ class CameraThumbnailController extends Controller
     }
 
     /**
-     * Fetch go2rtc's frame.mp4 ourselves, then convert it to JPEG with
-     * ffmpeg reading from stdin. Returns the raw JPEG bytes or null when
-     * the stream is unavailable.
+     * Grab one frame from the device's RTSP stream. Returns the raw JPEG bytes
+     * or null when the camera is unavailable.
      */
-    private function capture(Device $device, string $stream): ?string
+    private function capture(Device $device): ?string
     {
-        $timeout = (float) config('go2rtc.thumbnail.timeout', 10);
-        $url = $this->go2rtc->frameMp4Url($device, $stream);
+        $input = $this->rtsp->ffmpegInput($device);
 
-        try {
-            $response = Http::timeout($timeout)->get($url);
-        } catch (Throwable $e) {
-            Log::warning('Camera thumbnail frame.mp4 request failed', [
-                'device' => $device->getKey(),
-                'error' => $e->getMessage(),
-            ]);
-
+        if ($input === null) {
             return null;
         }
 
-        if (! $response->successful() || $response->body() === '') {
-            Log::warning('Camera thumbnail frame.mp4 request unsuccessful', [
-                'device' => $device->getKey(),
-                'status' => $response->status(),
-            ]);
-
-            return null;
-        }
+        $timeout = (float) config('camera.thumbnail.timeout', 10);
 
         $process = new Process([
-            (string) config('go2rtc.thumbnail.ffmpeg', 'ffmpeg'),
+            (string) config('camera.ffmpeg', 'ffmpeg'),
             '-hide_banner', '-loglevel', 'error',
             '-y',
-            '-i', 'pipe:0',
+            ...$input,
+            '-an',
             '-frames:v', '1',
             '-q:v', '3',
             '-f', 'image2pipe',
             '-vcodec', 'mjpeg',
             'pipe:1',
         ]);
-        $process->setInput($response->body());
         $process->setTimeout($timeout);
 
         try {
             $process->run();
         } catch (Throwable $e) {
+            // Includes the timeout: a camera that is powered down accepts the
+            // TCP connection but never sends a keyframe.
             Log::warning('Camera thumbnail ffmpeg error', [
                 'device' => $device->getKey(),
                 'error' => $e->getMessage(),

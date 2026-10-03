@@ -11,7 +11,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ViewColumn;
 use Filament\Support\Enums\TextSize;
 use Filament\Tables\Columns\IconColumn;
-use App\Management\Go2RTC;
+use App\Management\Rtsp;
 use Filament\Actions\EditAction;
 use Filament\Actions\Action;
 use App\Filament\Resources\DeviceResource\Pages\ListDevices;
@@ -192,9 +192,9 @@ class DeviceResource extends Resource
                     ViewColumn::make('camera_stream_tile')
                         ->view('tables.columns.camera-stream-tile')
                         ->viewData(fn (Device $record) => [
-                            'streams' => ($record->isNextGen() ?? false)
-                                ? app(Go2RTC::class)->thumbnailUrls($record)
-                                : [],
+                            'thumbnail' => ($record->isNextGen() ?? false) && app(Rtsp::class)->available($record)
+                                ? app(Rtsp::class)->thumbnailUrl($record)
+                                : null,
                         ]),
                 ])->space(3),
             ])

@@ -2,72 +2,58 @@
 
 namespace App\Jobs;
 
-use App\Petkit\Devices\YumshareSolo\Configuration as PetkitYumshareSolo;
-use App\Management\Go2RTC;
+use App\Management\Rtsp;
 use App\Models\Device;
-use App\MQTT\FeedRealtimeMessage;
-use App\MQTT\PropertySetMessage;
-use App\MQTT\ServiceStartMessage;
+use App\Petkit\Devices\Configuration\ConfigurationInterface;
+use App\Petkit\Interfaces\HasCamera;
 use Carbon\Carbon;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
-use PhpMqtt\Client\Facades\MQTT;
+use Symfony\Component\Process\Process;
+use Throwable;
 
+/**
+ * Grabs a still frame from the device's camera and stores it on the snapshots
+ * disk, so it can be published to Home Assistant as the device's Snapshot
+ * image entity (see the #[Image] attribute on each camera device's
+ * Configuration) and shown in the panel's Media section.
+ *
+ * The frame comes straight off the device's RTSP stream via ffmpeg - the
+ * cameras expose nothing else.
+ */
 class TakeSnapshot implements ShouldQueue
 {
     use Queueable;
 
-    /**
-     * Create a new job instance.
-     */
     public function __construct(protected Device $device)
     {
         //
     }
 
-    //{"method":"thing.service.feed_realtime","id":"18432013529","params":{"amount":10,"id":"r_20250629_81113389_81099-1"},"version":"1.0.0"}
-    /**
-     * Execute the job.
-     */
     public function handle(): void
     {
+        $rtsp = app(Rtsp::class);
+        $input = $rtsp->ffmpegInput($this->device);
 
-        $jpegFileName = sprintf('snapshot_%s_%s.jpeg', $this->device->name, Carbon::now()->format('YmdHis'));
-        $settings = $this->device->configuration;
-        $ip = $settings['states']['ipAddress'];
+        if ($input === null) {
+            Log::error('Cannot take snapshot, no IP set', ['device' => $this->device->getKey()]);
 
-
-        if(is_null($ip)) {
-            Log::error('No IP set');
             return;
         }
 
-        $go2rtc = app(Go2RTC::class);
+        $jpeg = $this->capture($input);
 
-        // The configured default (go2rtc.stream) is a guess - only trust it if
-        // the device's go2rtc actually registered a stream under that name,
-        // otherwise fall back to whatever it does have. Avoids "stream not
-        // found" when a device names its stream differently.
-        $streams = $go2rtc->streams($this->device);
-
-        if (empty($streams)) {
-            Log::error('No go2rtc streams available', ['device' => $this->device->getKey()]);
+        if ($jpeg === null) {
             return;
         }
 
-        $stream = in_array(config('go2rtc.stream'), $streams, true) ? config('go2rtc.stream') : $streams[0];
+        $fileName = sprintf('snapshot_%s_%s.jpeg', $this->device->name, Carbon::now()->format('YmdHis'));
 
-        Storage::disk('snapshots')->writeStream(
-            $jpegFileName, Http::get($go2rtc->frameUrl($this->device, $stream))->resource()
-        );
+        Storage::disk('snapshots')->put($fileName, $jpeg);
 
-
-
-        /** @var PetkitYumshareSolo $configuration */
+        /** @var HasCamera&ConfigurationInterface $configuration */
         $configuration = $this->device->configuration();
 
         $lastSnapshot = $configuration->lastSnapshot;
@@ -77,11 +63,62 @@ class TakeSnapshot implements ShouldQueue
             );
         }
 
-        $configuration->lastSnapshot = $jpegFileName;
+        $configuration->lastSnapshot = $fileName;
 
         $this->device->update([
             'configuration' => $configuration->toArray()
         ]);
+    }
 
+    /**
+     * @param  array<int, string>  $input
+     */
+    private function capture(array $input): ?string
+    {
+        $timeout = (float) config('camera.thumbnail.timeout', 10);
+
+        $process = new Process([
+            (string) config('camera.ffmpeg', 'ffmpeg'),
+            '-hide_banner', '-loglevel', 'error',
+            '-y',
+            ...$input,
+            '-an',
+            '-frames:v', '1',
+            '-q:v', '3',
+            '-f', 'image2pipe',
+            '-vcodec', 'mjpeg',
+            'pipe:1',
+        ]);
+        $process->setTimeout($timeout);
+
+        try {
+            $process->run();
+        } catch (Throwable $e) {
+            Log::error('Snapshot ffmpeg error', [
+                'device' => $this->device->getKey(),
+                'error' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
+
+        if (! $process->isSuccessful()) {
+            Log::error('Snapshot ffmpeg failed', [
+                'device' => $this->device->getKey(),
+                'stderr' => $process->getErrorOutput(),
+            ]);
+
+            return null;
+        }
+
+        $output = $process->getOutput();
+
+        if ($output === '') {
+            Log::error('Snapshot ffmpeg produced no frame', ['device' => $this->device->getKey()]);
+
+            return null;
+        }
+
+        return $output;
     }
 }

@@ -12,6 +12,7 @@ use App\Homeassistant\Number;
 use App\Homeassistant\Select;
 use App\Homeassistant\Sensor;
 use App\Models\BluetoothDevice;
+use App\Management\Rtsp;
 use App\Models\Device;
 use App\Petkit\Devices\Configuration\ConfigurationInterface;
 use App\Petkit\Interfaces\HasCamera;
@@ -94,6 +95,20 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     // TakeSnapshot's bookkeeping and the Filament admin preview (UI.php).
     public ?string $lastSnapshot;
 
+    /*
+     * The device's RTSP URL. Home Assistant's MQTT discovery has no RTSP
+     * camera platform, so this cannot become a camera entity on its own - it is
+     * published as a diagnostic sensor so the URL can be pasted into a
+     * generic/ffmpeg camera. Derived from $ipAddress in toArray(), never stored
+     * by the device.
+     */
+    #[Sensor(
+        technicalName: 'stream_url',
+        name: 'Stream URL',
+        icon: 'mdi:video-wireless',
+        valueTemplate: '{{ value_json.states.stream }}',
+        entityCategory: 'diagnostic'
+    )]
     public ?string $stream;
 
     // Fault flags - IMPLEMENT/w7h_error_states.csv, nested under the wire
@@ -1560,7 +1575,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
                 'lastUsedByPetId' => $this->lastUsedByPetId,
                 'lastUsedByName' => $this->lastUsedByName,
                 'lastSnapshot' => $this->lastSnapshot,
-                'stream' => $this->stream,
+                'stream' => $this->streamUrl(),
 
                 // Fault flags
                 'taryD' => $this->taryD,
@@ -1715,5 +1730,18 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     private function defaultScheduleSlots(): array
     {
         return array_fill(0, 20, ['id' => 0, 'type' => 0, 'time' => 0, 'repeats' => '']);
+    }
+
+    /**
+     * The device's RTSP URL, or null while we have not learned its IP yet.
+     * Derived rather than stored, so it follows the device across DHCP leases.
+     */
+    private function streamUrl(): ?string
+    {
+        if (empty($this->ipAddress)) {
+            return null;
+        }
+
+        return app(Rtsp::class)->urlForIp($this->ipAddress);
     }
 }

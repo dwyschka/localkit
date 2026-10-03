@@ -10,7 +10,7 @@ use Filament\Schemas\Components\Fieldset;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\ViewField;
 use App\Helpers\Time;
-use App\Management\Go2RTC;
+use App\Management\Rtsp;
 use Illuminate\Support\Carbon;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\TextInput;
@@ -55,9 +55,11 @@ class UI
 
             Section::make('Media')->schema([
                 View::make('camera_stream')->viewData(fn($record): array => [
-                    'streams' => app(Go2RTC::class)->streamUrls($record)
+                    'live' => app(Rtsp::class)->liveUrl($record),
+                    'poster' => app(Rtsp::class)->thumbnailUrl($record),
+                    'rtsp' => app(Rtsp::class)->url($record),
                 ])
-                    ->hidden(fn($record) => is_null($record->configuration()->ipAddress))
+                    ->hidden(fn($record) => !app(Rtsp::class)->available($record))
                     ->columnSpan('full'),
 
                 Placeholder::make('Snapshot')
