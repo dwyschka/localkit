@@ -10,7 +10,6 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use PhpMqtt\Client\Facades\MQTT;
-use Symfony\Component\Yaml\Yaml;
 
 class Playground extends Command
 {
@@ -44,13 +43,7 @@ class Playground extends Command
 //            echo "Winterzeit (MEZ)";
 //        }
 
-        $data = file_get_contents(public_path('petkit/D4H/go2rtc.yml'));
-
-        dd(Yaml::parse($data));
-
-
-
-
+        //
     }
 
 }

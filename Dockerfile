@@ -3,8 +3,10 @@ FROM ghcr.io/dwyschka/localkit-docker:latest
 USER root
 RUN docker-php-serversideup-s6-init
 
-# ffmpeg is used to grab a single JPEG frame from a device's video stream
-# for the cached camera thumbnails (see CameraThumbnailController).
+# ffmpeg is how localkit talks to the cameras: the devices only serve RTSP,
+# which no browser can play, so ffmpeg grabs the still frames for snapshots and
+# thumbnails (CameraThumbnailController, TakeSnapshot) and remuxes the stream to
+# MPEG-TS for the live view (CameraLiveController).
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ffmpeg \
     && rm -rf /var/lib/apt/lists/*

@@ -64,14 +64,29 @@ class PetkitPanelProvider extends PanelProvider
              * this module are changed together and a browser holding on to an
              * older copy of one of them fails in ways that look like a broken
              * device rather than a stale cache.
+             *
+             * The camera live view is here for the same reason - its Media
+             * section lives inside a Filament form, so it too arrives through a
+             * morph. mpegts.js is vendored (public/js/localkit/mpegts.js, from
+             * the npm package of the same name) rather than pulled from a CDN,
+             * because localkit runs on networks with no internet access.
              */
             ->renderHook(
                 \Filament\View\PanelsRenderHook::HEAD_END,
                 function (): string {
-                    $path = 'js/localkit/provisioning.js';
-                    $version = @filemtime(public_path($path)) ?: 0;
+                    $scripts = [
+                        'js/localkit/provisioning.js',
+                        'js/localkit/mpegts.js',
+                        'js/localkit/camera-stream.js',
+                    ];
 
-                    return '<script defer src="' . e(asset($path) . '?v=' . $version) . '"></script>';
+                    return collect($scripts)
+                        ->map(function (string $path): string {
+                            $version = @filemtime(public_path($path)) ?: 0;
+
+                            return '<script defer src="' . e(asset($path) . '?v=' . $version) . '"></script>';
+                        })
+                        ->implode('');
                 },
             )
             ->renderHook(

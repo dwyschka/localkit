@@ -4,7 +4,7 @@ namespace App\Providers;
 
 use Exception;
 use App\Localkit\OTA;
-use App\Management\Go2RTC;
+use App\Management\Rtsp;
 use App\Management\S6;
 use App\Models\User;
 use Illuminate\Support\Arr;
@@ -56,8 +56,8 @@ class AppServiceProvider extends ServiceProvider
             return new S6();
         });
 
-        $this->app->bind(Go2RTC::class, function () {
-            return new Go2RTC();
+        $this->app->bind(Rtsp::class, function () {
+            return new Rtsp();
         });
 
         $this->app->bind(OTA::class, fn() => new OTA());

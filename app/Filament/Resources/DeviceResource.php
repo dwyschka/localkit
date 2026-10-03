@@ -11,7 +11,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ViewColumn;
 use Filament\Support\Enums\TextSize;
 use Filament\Tables\Columns\IconColumn;
-use App\Management\Go2RTC;
+use App\Management\Rtsp;
 use Filament\Actions\EditAction;
 use Filament\Actions\Action;
 use App\Filament\Resources\DeviceResource\Pages\ListDevices;
@@ -81,10 +81,6 @@ class DeviceResource extends Resource
                         Toggle::make('debug_mode')
                             ->columnSpan('half')
                             ->helperText('Logs all incoming HTTP requests from this device to storage/logs/device_{serial}.log'),
-                        Toggle::make('provisioning')
-                            ->label('Telnet (provisioning)')
-                            ->columnSpan('half')
-                            ->helperText('While on, every heartbeat tells the device to start its telnetd, so it stays reachable over telnet. Set automatically for devices provisioned over BLE; turn it off once telnet is no longer needed.'),
                     ]),
 
                 Fieldset::make('OTA')
@@ -192,9 +188,9 @@ class DeviceResource extends Resource
                     ViewColumn::make('camera_stream_tile')
                         ->view('tables.columns.camera-stream-tile')
                         ->viewData(fn (Device $record) => [
-                            'streams' => ($record->isNextGen() ?? false)
-                                ? app(Go2RTC::class)->thumbnailUrls($record)
-                                : [],
+                            'thumbnail' => ($record->isNextGen() ?? false) && app(Rtsp::class)->available($record)
+                                ? app(Rtsp::class)->thumbnailUrl($record)
+                                : null,
                         ]),
                 ])->space(3),
             ])

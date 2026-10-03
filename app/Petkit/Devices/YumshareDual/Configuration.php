@@ -11,6 +11,7 @@ use App\Homeassistant\Interfaces\Video;
 use App\Homeassistant\Number;
 use App\Homeassistant\Sensor;
 use App\Models\BluetoothDevice;
+use App\Management\Rtsp;
 use App\Models\Device;
 use App\Petkit\Devices\Configuration\ConfigurationInterface;
 use App\Petkit\Interfaces\HasCamera;
@@ -119,6 +120,20 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     // TakeSnapshot's bookkeeping and the Filament admin preview (UI.php).
     public ?string $lastSnapshot;
 
+    /*
+     * The device's RTSP URL. Home Assistant's MQTT discovery has no RTSP
+     * camera platform, so this cannot become a camera entity on its own - it is
+     * published as a diagnostic sensor so the URL can be pasted into a
+     * generic/ffmpeg camera. Derived from $ipAddress in toArray(), never stored
+     * by the device.
+     */
+    #[Sensor(
+        technicalName: 'stream_url',
+        name: 'Stream URL',
+        icon: 'mdi:video-wireless',
+        valueTemplate: '{{ value_json.states.stream }}',
+        entityCategory: 'diagnostic'
+    )]
     public ?string $stream;
 
     // Switches
@@ -967,7 +982,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
                 'door' => $this->door,
                 'bowl' => $this->bowl,
                 'lastSnapshot' => $this->lastSnapshot,
-                'stream' => $this->stream,
+                'stream' => $this->streamUrl(),
             ],
             'settings' => [
                 'shareOpen' => $this->shareOpen,
@@ -1045,5 +1060,18 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     private function defaultRangeTable(): array
     {
         return array_map(fn (int $wday) => ['wday' => $wday, 'rangeSub' => [0]], range(0, 6));
+    }
+
+    /**
+     * The device's RTSP URL, or null while we have not learned its IP yet.
+     * Derived rather than stored, so it follows the device across DHCP leases.
+     */
+    private function streamUrl(): ?string
+    {
+        if (empty($this->ipAddress)) {
+            return null;
+        }
+
+        return app(Rtsp::class)->urlForIp($this->ipAddress);
     }
 }

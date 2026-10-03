@@ -10,7 +10,7 @@ use Filament\Schemas\Components\Fieldset;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\ViewField;
 use App\Helpers\Time;
-use App\Management\Go2RTC;
+use App\Management\Rtsp;
 use Illuminate\Support\Carbon;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\TextInput;
@@ -29,8 +29,14 @@ class UI
             Section::make('Stats')->schema([
                 TextInput::make('configuration.states.ipAddress')
                     ->label('IP Address')
-                    ->readOnly()
-                    ->disabled(true),
+                    // Editable, because the address is parsed out of the
+                    // device's own state report and some firmwares never put
+                    // it there - without it there is no camera stream and no
+                    // telnet. A value set here is used until the device
+                    // reports one itself, which then wins.
+                    ->helperText('Normally reported by the device. Set it by hand if it stays empty or wrong - the device overwrites it as soon as it reports an address itself.')
+                    ->ip()
+                    ->placeholder('192.168.1.42'),
             ]),
 
             Section::make('Consumables')->columns(2)->schema([
@@ -55,9 +61,11 @@ class UI
 
             Section::make('Media')->schema([
                 View::make('camera_stream')->viewData(fn($record): array => [
-                    'streams' => app(Go2RTC::class)->streamUrls($record)
+                    'live' => app(Rtsp::class)->liveUrl($record),
+                    'poster' => app(Rtsp::class)->thumbnailUrl($record),
+                    'rtsp' => app(Rtsp::class)->url($record),
                 ])
-                    ->hidden(fn($record) => is_null($record->configuration()->ipAddress))
+                    ->hidden(fn($record) => !app(Rtsp::class)->available($record))
                     ->columnSpan('full'),
 
                 Placeholder::make('Snapshot')

@@ -36,7 +36,8 @@ use PhpMqtt\Client\Facades\MQTT;
  * IMPLEMENT/w7h_actions.csv for the firmware-level reverse-engineering this
  * class is based on.
  *
- * `snapshot` (via Go2RTC, no vendor MQTT contract needed), the generic
+ * `snapshot` (grabbed from the device's RTSP stream, no vendor MQTT
+ * contract needed), the generic
  * settings/property_set push (shared infra, already proven by the other
  * NextGen devices), `add_water_reset` and the maintenance cycles
  * (drain-and-flush/refill/drain/deep-clean, all `thing.service.start` with a
