@@ -9,11 +9,14 @@
  *
  * Markup contract (resources/views/camera_stream.blade.php):
  *
- *   <div data-localkit-camera data-src="/camera/7/live.ts" data-poster="...">
- *     <video data-localkit-camera-video></video>
+ *   <div data-localkit-camera data-src="/camera/7/live.ts" data-state="idle">
+ *     <video data-localkit-camera-video hidden></video>
  *     <button data-localkit-camera-start>…</button>
- *     <p data-localkit-camera-status></p>
+ *     <span data-localkit-camera-status></span>
  *   </div>
+ *
+ * data-state is idle | connecting | playing and is what the stylesheet keys
+ * the LIVE badge off, so the badge cannot show while nothing is streaming.
  *
  * The stream is not started on page load. Every viewer holds an RTSP session
  * open on the device for as long as they watch, and the cameras only tolerate
@@ -67,6 +70,10 @@
             player = null;
         }
 
+        function setState(state) {
+            container.setAttribute('data-state', state);
+        }
+
         function stop() {
             destroy();
 
@@ -74,6 +81,7 @@
                 startButton.hidden = false;
             }
             video.hidden = true;
+            setState('idle');
         }
 
         function start() {
@@ -92,6 +100,7 @@
                 startButton.hidden = true;
             }
             video.hidden = false;
+            setState('connecting');
 
             player = window.mpegts.createPlayer(
                 { type: 'mpegts', isLive: true, url: src },
@@ -115,6 +124,7 @@
 
             player.on(window.mpegts.Events.MEDIA_INFO, function () {
                 say('');
+                setState('playing');
             });
 
             player.attachMediaElement(video);

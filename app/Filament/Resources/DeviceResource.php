@@ -81,10 +81,6 @@ class DeviceResource extends Resource
                         Toggle::make('debug_mode')
                             ->columnSpan('half')
                             ->helperText('Logs all incoming HTTP requests from this device to storage/logs/device_{serial}.log'),
-                        Toggle::make('provisioning')
-                            ->label('Telnet (provisioning)')
-                            ->columnSpan('half')
-                            ->helperText('While on, every heartbeat tells the device to start its telnetd, so it stays reachable over telnet. Set automatically for devices provisioned over BLE; turn it off once telnet is no longer needed.'),
                     ]),
 
                 Fieldset::make('OTA')
