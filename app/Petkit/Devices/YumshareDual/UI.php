@@ -38,8 +38,14 @@ class UI
             Section::make('Stats')->schema([
                 TextInput::make('configuration.states.ipAddress')
                     ->label('IP Address')
-                    ->readOnly()
-                    ->disabled(true),
+                    // Editable, because the address is parsed out of the
+                    // device's own state report and some firmwares never put
+                    // it there - without it there is no camera stream and no
+                    // telnet. A value set here is used until the device
+                    // reports one itself, which then wins.
+                    ->helperText('Normally reported by the device. Set it by hand if it stays empty or wrong - the device overwrites it as soon as it reports an address itself.')
+                    ->ip()
+                    ->placeholder('192.168.1.42'),
                 TextInput::make('configuration.states.bowl')
                     ->label('Bowl')
                     ->readOnly()

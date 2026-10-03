@@ -530,7 +530,6 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
             $settings->ipAddress = $match->value();
         }
 
-        $settings->ipAddress = $match->value();
         $settings->infrared = $content->ir;
         $settings->bowl = $content->bowl;
         $settings->door = $content->door;

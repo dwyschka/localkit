@@ -37,7 +37,10 @@
         var video = container.querySelector('[data-localkit-camera-video]');
         var startButton = container.querySelector('[data-localkit-camera-start]');
         var status = container.querySelector('[data-localkit-camera-status]');
-        var src = container.getAttribute('data-src');
+        // Absolute, because the demuxer runs in a worker created from a blob:
+        // URL - there is no page base there to resolve a root-relative path
+        // against, and fetch() inside the worker fails outright.
+        var src = new URL(container.getAttribute('data-src'), window.location.href).href;
         var player = null;
 
         function say(message) {
