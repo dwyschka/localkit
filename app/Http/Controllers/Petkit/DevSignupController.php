@@ -23,7 +23,12 @@ class DevSignupController extends Controller
         $update = [
             'firmware' => $request->get('firmware'),
             'mac' => $request->get('mac'),
-            'timezone' => 1.0,
+            // UTC offset in hours (DST-aware) of the device's reported locale
+            // (e.g. America/Los_Angeles), falling back to APP_TIMEZONE.
+            'timezone' => (function ($tz) {
+                try { return \Carbon\Carbon::now($tz)->utcOffset() / 60; }
+                catch (\Throwable) { return \Carbon\Carbon::now(config('app.timezone'))->utcOffset() / 60; }
+            })((string) $request->get('locale')),
             'locale' => $request->get('locale'),
             'bt_mac' => $request->get('bt_mac'),
             'ap_mac' => $request->get('ap_mac'),
