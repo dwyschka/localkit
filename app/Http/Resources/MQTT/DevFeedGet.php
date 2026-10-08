@@ -14,7 +14,7 @@ class DevFeedGet extends JsonResource
             "msgType" => 0,
             "payload" => [
                 "dataType" => "dev_feed_get",
-                "feed" => $this->resource->definition()->toFeed()
+                "feed" => $this->resource->definition()->toFeed($this->resource)
             ],
             "type" => sprintf('%s_data_get', $this->resource->device_type),
             'timestamp' => time()
