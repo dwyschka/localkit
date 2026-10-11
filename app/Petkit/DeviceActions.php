@@ -70,7 +70,11 @@ class DeviceActions
         return [
             Action::make('Check OTA')
                 ->label('Check OTA')
-                ->visible(fn(Device $record) => (bool) $record->mqtt_connected && !($record->isNextGen() ?? false))
+                // An unknown device type has no firmware repository entry to
+                // check against (OTA::getAvailable() filters on device_type),
+                // and handing an OTA to a device we cannot talk to is the last
+                // thing we want to offer.
+                ->visible(fn(Device $record) => (bool) $record->mqtt_connected && $record->isSupported() && !($record->isNextGen() ?? false))
                 ->mountUsing(function (Schema $schema, Device $record) {
                     $available = app(OTA::class)->getAvailable($record);
 

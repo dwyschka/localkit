@@ -64,15 +64,24 @@ class DeviceResource extends Resource
                         TextInput::make('firmware')->columnSpan('half')->readOnly(),
                         TextInput::make('serial_number')->columnSpan('half')->readOnly(),
                         TextInput::make('mac')->columnSpan('half')->readOnly(),
-                        Select::make('device_type')->options([
-                            't4' => PetkitPuraMax::deviceName(),
-                            'd3' => PetkitFreshElement3::deviceName(),
-                            'd4' => PetkitFreshElementSolo::deviceName(),
-                            'd4h' => PetkitYumshareSolo::deviceName(),
-                            'd4sh' => PetkitYumshareDual::deviceName(),
-                            't7' => PetkitPurobotCrystal::deviceName(),
-                            'w7h' => PetkitEversweetUltra::deviceName(),
-                        ])
+                        Select::make('device_type')
+                            // The device's own type is always in the list, even
+                            // when Localkit has no implementation for it - a
+                            // value with no matching option renders as empty,
+                            // and "no device type" is exactly the wrong thing to
+                            // show for the one device whose type is the point.
+                            ->options(fn (?Device $record): array => [
+                                't4' => PetkitPuraMax::deviceName(),
+                                'd3' => PetkitFreshElement3::deviceName(),
+                                'd4' => PetkitFreshElementSolo::deviceName(),
+                                'd4h' => PetkitYumshareSolo::deviceName(),
+                                'd4sh' => PetkitYumshareDual::deviceName(),
+                                't7' => PetkitPurobotCrystal::deviceName(),
+                                'w7h' => PetkitEversweetUltra::deviceName(),
+                                ...($record && filled($record->device_type) && ! $record->isSupported()
+                                    ? [$record->device_type => $record->definition()->deviceName()]
+                                    : []),
+                            ])
                             ->columnSpan('half')->disabled(),
 
                         TextInput::make('secret')->columnSpan('half'),
@@ -86,6 +95,11 @@ class DeviceResource extends Resource
                 Fieldset::make('OTA')
                     ->columnSpanFull()
                     ->columns(2)
+                    // There is no firmware for a type we don't know (the OTA
+                    // repository is indexed by device_type), and an update is
+                    // the one thing you really do not want to hand a device
+                    // Localkit cannot talk to afterwards.
+                    ->visible(fn (?Device $record): bool => $record?->isSupported() ?? true)
                     ->schema([
                         Toggle::make('ota_state')
                             ->helperText('If enabled, the MQTT Connection to Aliyun needs to be disabled')
@@ -121,17 +135,11 @@ class DeviceResource extends Resource
                         TextColumn::make('device_type')
                             ->weight(FontWeight::Bold)
                             ->size(TextSize::Large)
-                            ->formatStateUsing(function (string $state) {
-                                return match ($state) {
-                                    't4' => PetkitPuraMax::deviceName(),
-                                    'd3' => PetkitFreshElement3::deviceName(),
-                                    'd4' => PetkitFreshElementSolo::deviceName(),
-                                    'd4h' => PetkitYumshareSolo::deviceName(),
-                                    'd4sh' => PetkitYumshareDual::deviceName(),
-                                    't7' => PetkitPurobotCrystal::deviceName(),
-                                    'w7h' => PetkitEversweetUltra::deviceName(),
-                                };
-                            }),
+                            // Each definition names itself, so an unimplemented
+                            // type reads as "Unknown Device (<type>)" here
+                            // instead of throwing out of a match with no arm
+                            // for it.
+                            ->formatStateUsing(fn (Device $record): string => $record->definition()->deviceName()),
                         TextColumn::make('working_state')
                             ->badge()
                             ->grow(false)
@@ -159,6 +167,22 @@ class DeviceResource extends Resource
                         ->icon('heroicon-m-tag'),
 
                     Split::make([
+                        /*
+                         * A device whose type Localkit has no implementation
+                         * for is registered and talks to the server, but
+                         * nothing on this card can act on it - say so here
+                         * rather than letting it look like any other device
+                         * that just happens to have no actions right now.
+                         */
+                        TextColumn::make('support_state')
+                            ->label('Support')
+                            ->badge()
+                            ->grow(false)
+                            ->icon('heroicon-m-question-mark-circle')
+                            ->color('warning')
+                            ->formatStateUsing(fn (Device $record): ?string => $record->isSupported()
+                                ? null
+                                : 'unknown device'),
                         TextColumn::make('mqtt_connected')
                             ->badge()
                             ->grow(false)
