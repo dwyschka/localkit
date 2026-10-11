@@ -2,6 +2,8 @@
 
 namespace Tests\Unit;
 
+use App\DTOs\PetkitDTOInterface;
+use App\DTOs\UserHomeModeDTO;
 use App\Petkit\Devices\PurobotUltra\Configuration;
 use App\Petkit\Devices\PurobotUltra\Device;
 use PHPUnit\Framework\TestCase;
@@ -115,6 +117,64 @@ class PurobotUltraConfigurationTest extends TestCase
         $this->assertSame([3500, 5800, 3000, 3500, 3500], $d['sandFullWeight']);
         $this->assertSame(['homeMode' => 0, 'mic' => -1, 'camera' => -1, 'ptz' => -1],
             $d['userHomeMode']);
+    }
+
+    /**
+     * userHomeMode has to leave this process whole. JsonHelper's diff recurses,
+     * so a plain array would hand propertyChange() something like
+     * ['userHomeMode' => ['ptz' => 1]] - three members short - and nobody knows
+     * what the device does with that. The PetkitDTOInterface branch in
+     * propertyChange() is what prevents it, and it only fires for a DTO.
+     */
+    public function test_user_home_mode_goes_over_the_wire_whole(): void
+    {
+        $r = new ReflectionClass(Configuration::class);
+        $type = $r->getProperty('userHomeMode')->getType();
+
+        $this->assertSame(UserHomeModeDTO::class, $type?->getName(),
+            'userHomeMode must be a DTO, or propertyChange() sends a partial object');
+
+        $dtoClass = new ReflectionClass(UserHomeModeDTO::class);
+        $dto = $dtoClass->newInstanceWithoutConstructor();
+        foreach (['homeMode' => 1, 'mic' => 1, 'camera' => 0, 'ptz' => -1] as $k => $v) {
+            $dtoClass->getProperty($k)->setValue($dto, $v);
+        }
+
+        $this->assertInstanceOf(PetkitDTOInterface::class, $dto);
+        $this->assertSame(
+            ['homeMode' => 1, 'mic' => 1, 'camera' => 0, 'ptz' => -1],
+            $dto->toPetkitConfiguration(),
+            'all four members, always'
+        );
+    }
+
+    /**
+     * The polarity is the opposite of the key names, which is the single most
+     * likely thing to get re-broken by someone "tidying up" the labels: the
+     * form must not offer a plain on/off for a value whose -1 means
+     * "unconfigured", and the options have to say what the value does.
+     */
+    public function test_the_form_offers_all_three_states_with_honest_labels(): void
+    {
+        $ui = file_get_contents(
+            dirname(__DIR__, 2) . '/app/Petkit/Devices/PurobotUltra/UI.php'
+        );
+
+        foreach (['homeMode', 'camera', 'mic', 'ptz'] as $member) {
+            $this->assertStringContainsString(
+                "Select::make('configuration.settings.userHomeMode.$member')",
+                $ui,
+                "$member needs a Select - a Toggle cannot express -1"
+            );
+        }
+
+        // Every one of them offers the unconfigured state.
+        $this->assertSame(4, substr_count($ui, '-1 => '), 'each member needs its -1 option');
+
+        // And the labels say "off"/"muted"/"locked", not just the key name.
+        $this->assertStringContainsString('Camera off while home', $ui);
+        $this->assertStringContainsString('Muted while home', $ui);
+        $this->assertStringContainsString('Motor locked while home', $ui);
     }
 
     /**

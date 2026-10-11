@@ -4,6 +4,7 @@ namespace App\Petkit\Devices\PurobotUltra;
 
 use App\DTOs\DeviceConfigurationDTO;
 use App\DTOs\MultiRangeDTO;
+use App\DTOs\UserHomeModeDTO;
 use App\Homeassistant\BinarySensor;
 use App\Homeassistant\HASwitch;
 use App\Homeassistant\Image;
@@ -24,39 +25,10 @@ use WendellAdriel\ValidatedDTO\Casting\DTOCast;
 use WendellAdriel\ValidatedDTO\Casting\IntegerCast;
 use WendellAdriel\ValidatedDTO\Casting\StringCast;
 
-/**
- * Configuration for the PetKit PuroBot Ultra (T6) - a camera equipped
- * self-cleaning litter box with a waste-packaging unit and a pan motor.
- *
- * NOTE: the property names must match the device's setting keys exactly, since
- * {@see \App\Petkit\Devices\PurobotUltra\Device::propertyChange()} diffs the
- * stored `settings` array and forwards the changed keys straight to the device.
- * That is why `timestamp_enable`, `bag_tip_en`, `spary_tip_en` and `log_upload`
- * are snake_case while their neighbours are not, and why `spary_tip_en` keeps
- * the firmware's own misspelling.
- *
- * The settings below are the complete `app_conf` section a real T6 reported
- * (firmware 951), key for key - 56 of them. Where this device and the T7 share
- * a key the entity definition is the T7's, unchanged; the thirteen keys only
- * this device has are marked where they appear.
- *
- * Not here, and deliberately:
- *
- *  - The pan motor. `userHomeMode.ptz` is the only place it shows up in
- *    app_conf, and that is an on/off override, not a movement command. Moving
- *    it means a dispatch message to the vendor's own `ctrl` daemon, which is
- *    what `rptz` in the raptor tree does - there is no MQTT service for it.
- *  - `user_sta` (litter_used_cnt, need_clean_cnt, pack_over_sta) and
- *    `go_wc_cnt`. They would make good sensors, but they appear in the
- *    device's config dump and nobody has seen which MQTT message carries
- *    them, so entities for them would never update.
- */
 class Configuration extends DeviceConfigurationDTO implements ConfigurationInterface, Video, Snapshot, HasCamera
 {
     public array $schedule;
 
-
-    // States
     // States
     #[Sensor(
         technicalName: 'ip_address',
@@ -67,9 +39,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     )]
     public string $ipAddress;
 
-    // Internal only - not published to Home Assistant itself. This device
-    // has no weight sensor or pet_discern topic, so nothing currently
-    // resolves a real pet_id here; stays null until it does.
     public ?int $lastUsedByPetId;
 
     #[Sensor(
@@ -695,17 +664,21 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
 
     // Home mode
     /**
-     * Home mode: while the owner is home the device can be told to keep the
-     * microphone, the camera and the pan motor off regardless of their own
-     * switches. -1 on a member means "follow the normal setting".
+     * Home mode: while the device believes the owner is home, these three
+     * members can suppress the microphone, the camera and the pan motor
+     * regardless of their own switches.
      *
-     * Kept as a plain array rather than a DTO because the device sends it
-     * back verbatim and propertyChange() has to diff it as one value; the
-     * nested keys are homeMode, mic, camera and ptz. The ptz member is the
-     * only place the pan motor appears in app_conf at all - moving it is not
-     * an app_conf operation, see rptz in the raptor tree.
+     * A DTO and not a plain array on purpose: JsonHelper's diff recurses, so
+     * changing one member would send the device a partial object and what it
+     * does with three missing members is not known. See UserHomeModeDTO for
+     * the polarity, which is the opposite of what the key names suggest, and
+     * for the two runtime conditions that are not settable from here.
+     *
+     * The ptz member is the only place the pan motor appears in app_conf at
+     * all, and it is an on/off lock - moving the motor is a dispatch message
+     * to the vendor ctrl daemon, see rptz in the raptor tree.
      */
-    public array $userHomeMode;
+    public UserHomeModeDTO $userHomeMode;
 
 
     // Upload
@@ -840,6 +813,10 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
 
             // Home mode
             'userHomeMode' => ['array'],
+            'userHomeMode.homeMode' => ['integer', 'min:-1'],
+            'userHomeMode.mic' => ['integer', 'min:-1'],
+            'userHomeMode.camera' => ['integer', 'min:-1'],
+            'userHomeMode.ptz' => ['integer', 'min:-1'],
 
             // Upload
 
@@ -1100,7 +1077,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'spary_tip_en' => new BooleanCast(),
 
             // Home mode
-            'userHomeMode' => new ArrayCast(),
+            'userHomeMode' => new DTOCast(UserHomeModeDTO::class),
 
             // Upload
 

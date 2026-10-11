@@ -1,0 +1,4 @@
+GET http://localhost:8080/6/t6/dev_feed_get
+User-Agent: PETKIT DEV
+Host: api.eu-pet.com
+X-Device: id=345636&nonce=D8ea5O6BGK9l&timestamp=1739098321&type=T6&sign=3e4ee0dc2dece5350ccdffcaf06b4909

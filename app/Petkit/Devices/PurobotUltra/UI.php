@@ -189,6 +189,48 @@ class UI
                     ->label('Upload Logs'),
             ]),
 
+            Section::make('Home Mode')
+                ->description('What the device suppresses while it believes you are home. '
+                    . 'Takes effect only while home mode is actually active on the device.')
+                ->columns(2)
+                ->schema([
+                    Select::make('configuration.settings.userHomeMode.homeMode')
+                        ->label('Home Mode')
+                        ->helperText('Off leaves the three overrides below without effect')
+                        ->options([
+                            -1 => 'Not configured',
+                            0 => 'Off',
+                            1 => 'On',
+                        ]),
+
+                    Select::make('configuration.settings.userHomeMode.camera')
+                        ->label('Camera while home')
+                        ->helperText('The device stores this as an off-switch: On here means the camera is turned OFF while you are home')
+                        ->options([
+                            -1 => 'Not configured (camera stays on)',
+                            0 => 'Camera stays on',
+                            1 => 'Camera off while home',
+                        ]),
+
+                    Select::make('configuration.settings.userHomeMode.mic')
+                        ->label('Microphone while home')
+                        ->helperText("Stored as the firmware's `noSound`: On here means muted while you are home")
+                        ->options([
+                            -1 => 'Not configured (sound stays on)',
+                            0 => 'Sound stays on',
+                            1 => 'Muted while home',
+                        ]),
+
+                    Select::make('configuration.settings.userHomeMode.ptz')
+                        ->label('Pan motor while home')
+                        ->helperText('Locks the camera in place. Only the value 1 locks it; anything else leaves it free')
+                        ->options([
+                            -1 => 'Not configured (motor free)',
+                            0 => 'Motor free',
+                            1 => 'Motor locked while home',
+                        ]),
+                ]),
+
             Section::make('Health Monitoring')->columns(2)->schema([
                 Toggle::make('configuration.settings.voice')
                     ->helperText('Health monitoring for voice')
