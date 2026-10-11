@@ -21,6 +21,9 @@ use App\Petkit\Devices\YumshareDual\Configuration as YumshareDualConfiguration;
 use App\Petkit\Devices\PurobotCrystal\Device as PurobotCrystalDevice;
 use App\Petkit\Devices\PurobotCrystal\UI as PurobotCrystalUI;
 use App\Petkit\Devices\PurobotCrystal\Configuration as PurobotCrystalConfiguration;
+use App\Petkit\Devices\PurobotUltra\Device as PurobotUltraDevice;
+use App\Petkit\Devices\PurobotUltra\UI as PurobotUltraUI;
+use App\Petkit\Devices\PurobotUltra\Configuration as PurobotUltraConfiguration;
 use App\Petkit\Devices\EversweetUltra\Device as EversweetUltraDevice;
 use App\Petkit\Devices\EversweetUltra\UI as EversweetUltraUI;
 use App\Petkit\Devices\EversweetUltra\Configuration as EversweetUltraConfiguration;
@@ -243,6 +246,7 @@ class Device extends Model
             'd4h' => new YumshareSoloDevice($this),
             'd4sh' => new YumshareDualDevice($this),
             't7' => new PurobotCrystalDevice($this),
+            't6' => new PurobotUltraDevice($this),
             'w7h' => new EversweetUltraDevice($this),
             // Provisioning does not get to pick what signs up: a device is
             // matched on the type it reports, and an unrecognised one still
@@ -261,6 +265,7 @@ class Device extends Model
             'd4h' => YumshareSoloConfiguration::fromDevice($this),
             'd4sh' => YumshareDualConfiguration::fromDevice($this),
             't7' => PurobotCrystalConfiguration::fromDevice($this),
+            't6' => PurobotUltraConfiguration::fromDevice($this),
             'w7h' => EversweetUltraConfiguration::fromDevice($this),
             default => UnknownConfiguration::fromDevice($this),
         };
@@ -276,6 +281,7 @@ class Device extends Model
             'd4h' => new YumshareSoloUI($this),
             'd4sh' => new YumshareDualUI($this),
             't7' => new PurobotCrystalUI($this),
+            't6' => new PurobotUltraUI($this),
             'w7h' => new EversweetUltraUI($this),
             default => new UnknownUI($this),
         };
