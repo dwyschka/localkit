@@ -30,6 +30,18 @@ As an internal MQTT broker, [localkit-broker](https://github.com/dwyschka/localk
 - **K3 Spray** (`k3`)
 - **Eversweet Fountain** (`w5`)
 
+### Everything else
+
+A device whose type is not in that list is still registered, served and kept online: sign-up, server
+info, device info and the heartbeat are answered with the parts of the protocol that do not depend on
+the type, so the device stays on this server instead of going looking for PetKit's cloud. It shows up
+in the device list as *Unknown Device (`<type>`)* with an **unknown device** badge, and that is where
+it ends — no actions, no settings, no state reporting, because none of that is known for a type we
+have never seen.
+
+What it does give you is a starting point: everything such a device publishes over MQTT is written to
+`storage/logs/localkit_unknown_topics.log`, which is the raw material for adding real support for it.
+
 ## Provisioning
 
 New devices can be pointed at Localkit over Bluetooth, straight from the panel — no PetKit app, no

@@ -45,7 +45,13 @@ class OTA
 
     public function toOTA($device): array
     {
-        $detail = $this->firmwareByDevice($device)['detail'];
+        $firmware = $this->firmwareByDevice($device);
+
+        if (is_null($firmware)) {
+            throw new Exception('No firmware for device type ' . $device->device_type);
+        }
+
+        $detail = $firmware['detail'];
         $detail = Http::get($detail);
         if ($detail->successful()) {
             $result = $detail->json('result');
@@ -63,7 +69,14 @@ class OTA
         throw new Exception('No valid data');
     }
 
-    private function firmwareByDevice(Device $device): array
+    /**
+     * Null when the repository has no entry for this device's type - which is
+     * every device type Localkit has no implementation for, and any known one
+     * the repository has not published firmware for. getAvailable() has always
+     * checked for that; the return type said otherwise and turned the miss
+     * into a TypeError before the check was ever reached.
+     */
+    private function firmwareByDevice(Device $device): ?array
     {
         $repository = $this->loadRepository();
         return $repository->filter(fn($item) => $item['device_type'] === $device->device_type)->first();

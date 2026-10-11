@@ -24,6 +24,9 @@ use App\Petkit\Devices\PurobotCrystal\Configuration as PurobotCrystalConfigurati
 use App\Petkit\Devices\EversweetUltra\Device as EversweetUltraDevice;
 use App\Petkit\Devices\EversweetUltra\UI as EversweetUltraUI;
 use App\Petkit\Devices\EversweetUltra\Configuration as EversweetUltraConfiguration;
+use App\Petkit\Devices\Unknown\Device as UnknownDevice;
+use App\Petkit\Devices\Unknown\UI as UnknownUI;
+use App\Petkit\Devices\Unknown\Configuration as UnknownConfiguration;
 use App\Helpers\HomeassistantHelper;
 use App\Helpers\JsonHelper;
 use App\Homeassistant\Interfaces\Snapshot;
@@ -241,6 +244,10 @@ class Device extends Model
             'd4sh' => new YumshareDualDevice($this),
             't7' => new PurobotCrystalDevice($this),
             'w7h' => new EversweetUltraDevice($this),
+            // Provisioning does not get to pick what signs up: a device is
+            // matched on the type it reports, and an unrecognised one still
+            // has to be answered. See Devices/Unknown/Device.php.
+            default => new UnknownDevice($this),
         };
     }
 
@@ -255,6 +262,7 @@ class Device extends Model
             'd4sh' => YumshareDualConfiguration::fromDevice($this),
             't7' => PurobotCrystalConfiguration::fromDevice($this),
             'w7h' => EversweetUltraConfiguration::fromDevice($this),
+            default => UnknownConfiguration::fromDevice($this),
         };
     }
 
@@ -269,7 +277,19 @@ class Device extends Model
             'd4sh' => new YumshareDualUI($this),
             't7' => new PurobotCrystalUI($this),
             'w7h' => new EversweetUltraUI($this),
+            default => new UnknownUI($this),
         };
+    }
+
+    /**
+     * Whether Localkit has a real implementation for this device's type -
+     * false for anything that falls through to the Unknown definition, which
+     * answers the protocol but cannot control the device. The match in
+     * definition() stays the single source of truth for that.
+     */
+    public function isSupported(): bool
+    {
+        return ! $this->definition() instanceof UnknownDevice;
     }
 
     public function isNextGen(): ?bool
