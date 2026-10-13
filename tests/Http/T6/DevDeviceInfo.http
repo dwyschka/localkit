@@ -1,0 +1,27 @@
+POST http://localhost:8080/6/t6/dev_device_info
+User-Agent: PETKIT DEV
+Host: api.eu-pet.com
+Content-Type: application/x-www-form-urlencoded
+X-Device: id=345636&nonce=D8ea5O6BGK9l&timestamp=1739098321&type=T6&sign=3e4ee0dc2dece5350ccdffcaf06b4909
+
+> {%
+    client.test("200 und die eigene id", function () {
+        client.assert(response.status === 200, "Status " + response.status +
+            " -- ohne DevSignup gibt es das Gerät nicht");
+        client.assert(response.body.result.id.toString() === "345636", "falsche id");
+    });
+
+    client.test("die Settings dieses Geraets, nicht die des T7", function () {
+        const s = response.body.result.settings;
+        ["timestamp_enable", "toiletLight", "clickOkEnable", "sandSaving",
+         "wanderDetection", "phDetection", "bag_tip_en", "spary_tip_en",
+         "log_upload"].forEach(function (key) {
+            client.assert(s[key] !== undefined, "Setting fehlt: " + key);
+        });
+        ["timeDisplay", "microlight", "urine", "occult", "autoSpray",
+         "deepSpray", "downpos", "petSensitivity", "softModeClean",
+         "toiletLightAssist", "wifiLightAssist"].forEach(function (key) {
+            client.assert(s[key] === undefined, "T7-Setting durchgesickert: " + key);
+        });
+    });
+%}

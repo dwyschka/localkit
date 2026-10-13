@@ -1081,7 +1081,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'hertz' => new IntegerCast(),
 
             // Display / camera
-            'time' => new BooleanCast(),
+            'timeDisplay' => new BooleanCast(),
             'camera' => new BooleanCast(),
             'cameraMultiRange' => new DTOCast(MultiRangeDTO::class),
             'microphone' => new BooleanCast(),

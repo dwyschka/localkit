@@ -1,0 +1,7 @@
+# @no-redirect
+POST http://localhost:8080/6/t6/dev_signup
+User-Agent: PETKIT DEV
+Host: api.eu-pet.com
+Content-Type: application/x-www-form-urlencoded
+
+hardware=1&firmware=951&mac=0cb815aa0601&timezone=1.0&locale=Europe/Berlin&id=345636&sn=20250704T60001&bt_mac=0cb815aa0602&ap_mac=0cb815aa0601&chipid=7100042

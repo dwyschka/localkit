@@ -16,6 +16,7 @@ As an internal MQTT broker, [localkit-broker](https://github.com/dwyschka/localk
 **Litter boxes**
 - **Petkit Pura Max** (`t4`)
 - **Petkit Purobot Crystal** (`t7`)
+- **Petkit Purobot Ultra** (`t6`)
 
 **Feeders**
 - **Petkit Fresh Element 3** (`d3`)
