@@ -12,8 +12,10 @@ use App\Homeassistant\HomeassistantTopic;
 use App\Homeassistant\Interfaces\Snapshot;
 use App\Jobs\ServiceBle;
 use App\Jobs\ServiceConnect;
+use App\Jobs\ServiceContinue;
 use App\Jobs\ServiceEnd;
 use App\Jobs\ServiceStart;
+use App\Jobs\ServiceStop;
 use App\Jobs\SetProperty;
 use App\Jobs\TakeSnapshot;
 use App\Models\BluetoothDevice;
@@ -33,7 +35,7 @@ use PhpMqtt\Client\Facades\MQTT;
 
 /**
  * PetKit PuroBot Ultra (T6) - a camera equipped self-cleaning litter box with
- * a waste-packaging unit and a pan motor.
+ * a waste-packaging unit, a sealing door and a pan motor.
  *
  * Derived from the PuroBot Crystal (T7): same Aliyun thing-model protocol, same
  * services, same settings mechanics. What differs, and why:
@@ -52,12 +54,44 @@ use PhpMqtt\Client\Facades\MQTT;
  *
  * The work-mode numbers sent on thing/service/start are the family's: 0 clean,
  * 2 deodorize, 7 lightning are each confirmed by two independent litter boxes
- * (t4 PuraMax and t7), 4 level by the t7. The numbers for this device's extra
- * cycles (dump, smooth, melt, correct, package) are NOT known - ctrl_t6 passes
- * the number straight through to the HMI without interpreting it
- * (dispatch_handler_start_action -> pk_WAN_send_ctrl_action_2_HMI), so they
- * cannot be read out of the firmware. No button is offered for them rather than
- * guessing a number at a motor.
+ * (t4 PuraMax and t7), 4 level by the t7. ctrl_t6 itself passes every number
+ * straight through to the HMI without interpreting it
+ * (dispatch_handler_start_action -> pk_WAN_send_ctrl_action_2_HMI), so none of
+ * them can be read out of the firmware alone - but the companion app
+ * (com.petkit.oversea 13.4.1, T6*Presenter classes) hard-codes the numbers it
+ * sends for every one of its own buttons, which confirms the remaining codes:
+ *   - 1  dump      (T6SandGuideActivity.preparePack / "倾空" has no start of
+ *                    its own - it is a work-mode the device enters on its own
+ *                    during a clean cycle; the app only offers pause/continue/
+ *                    terminate for whatever work mode is currently running,
+ *                    see pauseClean()/continueClean()/terminateClean() below)
+ *   - 3  recover    ("复位", T6HomePresenter.optionRecover - resets the pan
+ *                    motor to its parked position; completes on correct_over/
+ *                    sand_correct_over)
+ *   - 9  pack       ("打包", T6HomePresenter/T6PackPresenter.startBagging -
+ *                    the only thing that triggers ctrl_t6's NFC/bag-auth call
+ *                    to the Petkit cloud, dispatch_handler_trash_bag_auth ->
+ *                    net_get_dev_package_auth -> GET /dev_package_auth;
+ *                    completes on package_over)
+ *   - 11 door       ("打开密封门") - a single toggle, not an open/close pair:
+ *                    the app always sends start_action:11 regardless of the
+ *                    door's current state (T6HomePresenter.optionDoor() calls
+ *                    controlDoor(deviceId, 1) unconditionally) and the device
+ *                    decides open vs. close itself from its own hall sensors.
+ *                    No dedicated *_over topic exists for it; its state comes
+ *                    back on the top-level `door` field of property/post
+ *                    (already read in prepareErrorReporting()).
+ * "melt" has no known trigger (no button for it was found in the app under
+ * any Chinese or English label) and is deliberately left listen-only.
+ *
+ * Pausing/resuming/stopping a running cycle (any of clean/dump/recover/level)
+ * is not its own start_action - the app re-sends whichever code is already
+ * active as a stop_action (pause), continue_action (resume) or end_action
+ * (stop), read from the device's own reported work mode
+ * (T6HomePresenter.pauseClean/continueToClean/terminateClean(long) - the
+ * 1-arg overloads, not the 3-arg ones used by the dedicated guide screens).
+ * This is why $workMode is tracked in Configuration: pauseClean() etc. below
+ * need to know which code is currently running to echo it back correctly.
  */
 class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
 {
@@ -68,7 +102,28 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
         DeviceActions::START_CLEAN, DeviceActions::DEODORIZE, DeviceActions::LEVEL, DeviceActions::TAKE_SNAPSHOT,
         DeviceActions::RESET_WORKING_STATE,
         DeviceActions::START_LIGHTNING, DeviceActions::STOP_LIGHTNING,
+        DeviceActions::PACK_WASTE_BAG, DeviceActions::RECOVER, DeviceActions::TOGGLE_DOOR,
+        DeviceActions::PAUSE_CLEAN, DeviceActions::CONTINUE_CLEAN, DeviceActions::TERMINATE_CLEAN,
     ];
+
+    /**
+     * start_action/stop_action/continue_action/end_action codes for the work
+     * modes this device reports on its own (property/post's workState.workMode)
+     * - see the class docblock for how each one was confirmed. Used by
+     * pauseClean()/continueClean()/terminateClean() to echo back whatever is
+     * currently running, exactly like the companion app's 1-arg
+     * pauseClean/continueToClean/terminateClean do.
+     *
+     * Deliberately does not include 9 (pack): the app's generic pause/
+     * continue/terminate switch (T6HomePresenter's 1-arg overloads) only
+     * handles work modes 0/1/3/4/5, so packing a bag is not interruptible
+     * through this mechanism on the real device either - its only control is
+     * packWasteBag() below.
+     */
+    private const WORK_MODE_CLEAN = 0;
+    private const WORK_MODE_DUMP = 1;
+    private const WORK_MODE_RECOVER = 3;
+    private const WORK_MODE_LEVEL = 4;
 
     public function __construct(protected DeviceModel $device)
     {
@@ -345,6 +400,11 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
             case DeviceActions::START_CLEAN:
             case DeviceActions::DEODORIZE:
             case DeviceActions::LEVEL:
+            case DeviceActions::PACK_WASTE_BAG:
+            case DeviceActions::RECOVER:
+                // Same gating the vendor app uses for its own "Jetzt
+                // reinigen"/"抚平"/"复位"/"打包" buttons: offered only while
+                // nothing else is running.
                 return $hasAction && $this->device->working_state === DeviceStates::IDLE->value;
 
             case DeviceActions::START_LIGHTNING:
@@ -352,9 +412,40 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
 
             case DeviceActions::STOP_LIGHTNING:
                 return $hasAction && ($this->device->configuration['states']['lightning'] ?? false);
+
+            case DeviceActions::TOGGLE_DOOR:
+                // The vendor app masks the door button during cleaning and
+                // most error states (see T6BottomView.disableDoor() call
+                // sites) - not offering it outside IDLE keeps that without
+                // reproducing its full per-error-code table here.
+                return $hasAction && $this->device->working_state === DeviceStates::IDLE->value;
+
+            case DeviceActions::PAUSE_CLEAN:
+            case DeviceActions::CONTINUE_CLEAN:
+            case DeviceActions::TERMINATE_CLEAN:
+                // Only meaningful while a cycle is actually running - and
+                // only for work modes the app's own pause/continue/terminate
+                // switch understands (see WORK_MODE_* above); packing (9) is
+                // excluded there on purpose.
+                return $hasAction
+                    && $this->device->working_state === DeviceStates::CLEANING->value
+                    && in_array($this->currentWorkMode(), [
+                        self::WORK_MODE_CLEAN, self::WORK_MODE_DUMP, self::WORK_MODE_RECOVER, self::WORK_MODE_LEVEL,
+                    ], true);
         }
 
         return $hasAction;
+    }
+
+    /**
+     * The work mode the device last reported on property/post's
+     * workState.workMode - null while idle or before the first state update.
+     */
+    private function currentWorkMode(): ?int
+    {
+        $workMode = $this->device->configuration['states']['workMode'] ?? null;
+
+        return $workMode === null ? null : (int) $workMode;
     }
 
     public function takeSnapshot(DeviceModel $record): void
@@ -493,6 +584,24 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
             case 'stop_lightning':
                 $this->stopLightning($this->getDevice());
                 break;
+            case 'pack_waste_bag':
+                $this->packWasteBag($this->getDevice());
+                break;
+            case 'recover':
+                $this->recover($this->getDevice());
+                break;
+            case 'toggle_door':
+                $this->toggleDoor($this->getDevice());
+                break;
+            case 'pause_clean':
+                $this->pauseClean($this->getDevice());
+                break;
+            case 'continue_clean':
+                $this->continueClean($this->getDevice());
+                break;
+            case 'terminate_clean':
+                $this->terminateClean($this->getDevice());
+                break;
         }
     }
 
@@ -532,6 +641,84 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
     public function stopLightning(DeviceModel $record): void
     {
         ServiceEnd::dispatchSync($record, 7);
+    }
+
+    /**
+     * "打包" - manually pack a waste bag. This is the only command that makes
+     * ctrl_t6 call out to the Petkit cloud for NFC/bag authentication
+     * (dispatch_handler_trash_bag_auth -> net_get_dev_package_auth -> GET
+     * /dev_package_auth); completes on package_over.
+     */
+    public function packWasteBag(DeviceModel $record): void
+    {
+        // 9 - not in WORK_MODE_* on purpose, see that block's docblock.
+        ServiceStart::dispatchSync($record, 9);
+    }
+
+    /**
+     * "复位" - resets the pan motor to its parked position. Completes on
+     * correct_over/sand_correct_over.
+     */
+    public function recover(DeviceModel $record): void
+    {
+        ServiceStart::dispatchSync($record, self::WORK_MODE_RECOVER);
+    }
+
+    /**
+     * "打开密封门" - the vendor app always sends start_action:11 for this,
+     * whether the door is currently open or closed; the device reads its own
+     * hall sensors to decide which way to move. There is deliberately no
+     * separate open()/close() here for the same reason the app has none.
+     */
+    public function toggleDoor(DeviceModel $record): void
+    {
+        ServiceStart::dispatchSync($record, 11);
+    }
+
+    /**
+     * Pauses whichever cycle is currently running, by re-sending its own
+     * start_action code as a stop_action - exactly what the companion app's
+     * 1-arg T6HomePresenter.pauseClean(long) does. hasAction() already
+     * restricts this to the work modes the app's switch understands.
+     */
+    public function pauseClean(DeviceModel $record): void
+    {
+        $workMode = $this->currentWorkMode();
+
+        if ($workMode === null) {
+            return;
+        }
+
+        ServiceStop::dispatchSync($record, $workMode);
+    }
+
+    /**
+     * Resumes a paused cycle - see pauseClean()'s docblock.
+     */
+    public function continueClean(DeviceModel $record): void
+    {
+        $workMode = $this->currentWorkMode();
+
+        if ($workMode === null) {
+            return;
+        }
+
+        ServiceContinue::dispatchSync($record, $workMode);
+    }
+
+    /**
+     * Stops/terminates the currently running cycle - see pauseClean()'s
+     * docblock.
+     */
+    public function terminateClean(DeviceModel $record): void
+    {
+        $workMode = $this->currentWorkMode();
+
+        if ($workMode === null) {
+            return;
+        }
+
+        ServiceEnd::dispatchSync($record, $workMode);
     }
 
     public function toOTA(): array
@@ -705,6 +892,16 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
 
             if ($match->value() !== null) {
                 $settings->ipAddress = $match->value();
+            }
+
+            // workState.workMode is the number pauseClean()/continueClean()/
+            // terminateClean() echo back as a stop/continue/end_action - see
+            // the class docblock. Only present while a cycle is running
+            // (isset($state->workState) is what tells the caller to mark the
+            // device CLEANING in the first place), so leave the stored value
+            // alone otherwise rather than overwriting it with null.
+            if (isset($content->workState->workMode)) {
+                $settings->workMode = (int) $content->workState->workMode;
             }
 
             foreach ($extra as $property => $value) {

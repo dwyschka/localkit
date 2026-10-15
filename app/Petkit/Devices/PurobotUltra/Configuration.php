@@ -68,6 +68,12 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     )]
     public ?string $error;
 
+    // Not published to Home Assistant - internal bookkeeping only, read by
+    // Device::pauseClean()/continueClean()/terminateClean() to echo back
+    // whichever start_action code is currently running as a stop/continue/
+    // end_action. See Device.php's class docblock for the known codes.
+    public ?int $workMode;
+
     #[BinarySensor(
         technicalName: 'lightning',
         name: 'Light',
@@ -715,6 +721,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'lastUsedByName' => ['nullable', 'string'],
             'workingState' => ['nullable', 'string'],
             'error' => ['nullable', 'string'],
+            'workMode' => ['nullable', 'integer'],
             'lightning' => ['bool'],
             'lastSnapshot' => ['nullable', 'string'],
             'stream' => ['nullable', 'string'],
@@ -840,6 +847,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'lastUsedByName' => null,
             'workingState' => null,
             'error' => null,
+            'workMode' => null,
             'lightning' => false,
             'lastSnapshot' => null,
             'stream' => null,
@@ -983,6 +991,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'lastUsedByName' => new StringCast(),
             'workingState' => new StringCast(),
             'error' => new StringCast(),
+            'workMode' => new IntegerCast(),
             'lightning' => new BooleanCast(),
             'lastSnapshot' => new StringCast(),
             'stream' => new StringCast(),
@@ -1107,6 +1116,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             $data['ipAddress'] = $states['ipAddress'] ?? null;
             $data['lastUsedByPetId'] = $states['lastUsedByPetId'] ?? null;
             $data['lastUsedByName'] = $states['lastUsedByName'] ?? null;
+            $data['workMode'] = $states['workMode'] ?? null;
             $data['lightning'] = $states['lightning'] ?? null;
             $data['lastSnapshot'] = $states['lastSnapshot'] ?? null;
             $data['stream'] = $states['stream'] ?? null;
@@ -1221,6 +1231,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
                 'lastUsedByName' => $this->lastUsedByName,
                 'lastSnapshot' => $this->lastSnapshot,
                 'stream' => $this->streamUrl(),
+                'workMode' => $this->workMode,
                 'lightning' => $this->lightning,
             ],
             'settings' => [
