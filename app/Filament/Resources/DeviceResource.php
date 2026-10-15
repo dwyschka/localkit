@@ -27,6 +27,7 @@ use App\Petkit\Devices\FreshElementSolo\Device as PetkitFreshElementSolo;
 use App\Petkit\Devices\PuraMax\Device as PetkitPuraMax;
 use App\Petkit\Devices\PurobotCrystal\Device as PetkitPurobotCrystal;
 use App\Petkit\Devices\PurobotUltra\Device as PetkitPurobotUltra;
+use App\Petkit\Devices\PurobotMax\Device as PetkitPurobotMax;
 use App\Petkit\Devices\YumshareSolo\Device as PetkitYumshareSolo;
 use App\Petkit\Devices\YumshareDual\Device as PetkitYumshareDual;
 use App\Petkit\Devices\EversweetUltra\Device as PetkitEversweetUltra;
@@ -79,6 +80,7 @@ class DeviceResource extends Resource
                                 'd4sh' => PetkitYumshareDual::deviceName(),
                                 't7' => PetkitPurobotCrystal::deviceName(),
                                 't6' => PetkitPurobotUltra::deviceName(),
+                                't5' => PetkitPurobotMax::deviceName(),
                                 'w7h' => PetkitEversweetUltra::deviceName(),
                                 ...($record && filled($record->device_type) && ! $record->isSupported()
                                     ? [$record->device_type => $record->definition()->deviceName()]

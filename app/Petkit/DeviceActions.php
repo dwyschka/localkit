@@ -46,6 +46,11 @@ class DeviceActions
 
     public const RESET_WORKING_STATE = 'reset_working_state';
 
+    public const RECOVER = 'recover';
+    public const PAUSE_CLEAN = 'pause_clean';
+    public const CONTINUE_CLEAN = 'continue_clean';
+    public const TERMINATE_CLEAN = 'terminate_clean';
+
     public const RESET_ADD_WATER = 'reset_add_water';
     public const RESET_CUBE = 'reset_cube';
     public const DRAIN_AND_FLUSH = 'drain_and_flush';
@@ -122,6 +127,27 @@ class DeviceActions
                 ->visible(fn(Device $record) => self::visible($record, self::LEVEL))
                 ->action(function (Device $record) {
                     $record->definition()->level($record);
+                }),
+            Action::make('Recover')
+                ->visible(fn(Device $record) => self::visible($record, self::RECOVER))
+                ->requiresConfirmation()
+                ->action(function (Device $record) {
+                    $record->definition()->recover($record);
+                }),
+            Action::make('Pause Cleaning')
+                ->visible(fn(Device $record) => self::visible($record, self::PAUSE_CLEAN))
+                ->action(function (Device $record) {
+                    $record->definition()->pauseClean($record);
+                }),
+            Action::make('Continue Cleaning')
+                ->visible(fn(Device $record) => self::visible($record, self::CONTINUE_CLEAN))
+                ->action(function (Device $record) {
+                    $record->definition()->continueClean($record);
+                }),
+            Action::make('Terminate Cleaning')
+                ->visible(fn(Device $record) => self::visible($record, self::TERMINATE_CLEAN))
+                ->action(function (Device $record) {
+                    $record->definition()->terminateClean($record);
                 }),
             Action::make('Start Maintenance')
                 ->visible(fn(Device $record) => self::visible($record, self::START_MAINTENANCE))
