@@ -104,6 +104,7 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
         DeviceActions::START_LIGHTNING, DeviceActions::STOP_LIGHTNING,
         DeviceActions::PACK_WASTE_BAG, DeviceActions::RECOVER, DeviceActions::TOGGLE_DOOR,
         DeviceActions::PAUSE_CLEAN, DeviceActions::CONTINUE_CLEAN, DeviceActions::TERMINATE_CLEAN,
+        DeviceActions::RESET_DESICCANT,
     ];
 
     /**
@@ -466,6 +467,24 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
     public function configuration()
     {
         return $this->configurationDefinition()->toArray();
+    }
+
+    /**
+     * Local bookkeeping only, same as FreshElementSolo/YumshareSolo/
+     * FreshElement3 - no app screen or wire key for a desiccant was found on
+     * this device, so there is nothing to send it over MQTT either.
+     */
+    public function resetDesiccant(DeviceModel $record): void
+    {
+        $configuration = $this->configurationDefinition();
+        $durability = $configuration->desiccantDurability;
+        $nextChange = Carbon::now()->addDays((int)$durability);
+
+        $configuration->desiccantNextChange = $nextChange->timestamp;
+
+        $record->update([
+            'configuration' => $configuration->toArray(),
+        ]);
     }
 
     /**

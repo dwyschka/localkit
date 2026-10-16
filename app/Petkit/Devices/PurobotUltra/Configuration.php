@@ -259,9 +259,25 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
 
     // Lights
     // Indicator / assist lights
-    // Not in Localkit UI - not exposed to HA
+    // App string "Set_screen" = "Set Screen Display" (T6SettingActivity's
+    // t6_screen_checkbox).
+    #[HASwitch(
+        technicalName: 'light_mode',
+        name: 'Set Screen Display',
+        commandTopic: 'setting/set',
+        icon: 'mdi:brightness-6',
+        valueTemplate: '{{ value_json.settings.lightMode }}',
+        commandTemplate: '{"lightMode":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
     public bool $lightMode;
 
+    // Active-time schedule for the screen display above - app screen
+    // "Choose_light_screen_title" / "Screen_light_time" = "Screen Period".
     public MultiRangeDTO $lightMultiRange;
 
     #[HASwitch(
@@ -298,13 +314,49 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
 
 
     // Do not disturb
-    // Do not disturb / tone - not in Localkit UI - not exposed to HA
+    // Do not disturb / tone. App screen "Speech_settings" ("Voice Settings"),
+    // cb_tone_switch labeled "Dont_disturb" = "Do Not Disturb", helper
+    // "The device is muted within the following period." - named
+    // differently here from $disturbMode below because the app shows them
+    // on two separate screens but this admin form needs one label each.
+    #[HASwitch(
+        technicalName: 'tone_mode',
+        name: 'Do Not Disturb (Voice)',
+        commandTopic: 'setting/set',
+        icon: 'mdi:volume-off',
+        valueTemplate: '{{ value_json.settings.toneMode }}',
+        commandTemplate: '{"toneMode":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
     public bool $toneMode;
 
+    // App string "Dont_disturb_time" = "Undisturbed Period".
     public MultiRangeDTO $toneMultiRange;
 
+    // App screen "Set_clean" ("Cleaning Settings"), checkbox labeled
+    // "Do_not_disturb" = "Do Not Disturb", helper
+    // "Stop_cleaning_during_the_undisturbed_period" = "The device doesn't
+    // work during the do-not-disturb period".
+    #[HASwitch(
+        technicalName: 'disturb_mode',
+        name: 'Do Not Disturb',
+        commandTopic: 'setting/set',
+        icon: 'mdi:bell-off',
+        valueTemplate: '{{ value_json.settings.disturbMode }}',
+        commandTemplate: '{"disturbMode":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
     public bool $disturbMode;
 
+    // App screen "Choose_do_not_disturb_title" = "Undisturbed Period".
     public MultiRangeDTO $distrubMultiRange;
 
 
@@ -394,7 +446,21 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     )]
     public bool $avoidRepeat;
 
-    // Not in Localkit UI - not exposed to HA
+    // App string "Underweight_not_clean_up" = "Disable auto cleaning for
+    // light weight".
+    #[HASwitch(
+        technicalName: 'underweight',
+        name: 'Disable Auto Cleaning For Light Weight',
+        commandTopic: 'setting/set',
+        icon: 'mdi:scale',
+        valueTemplate: '{{ value_json.settings.underweight }}',
+        commandTemplate: '{"underweight":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
     public bool $underweight;
 
     #[HASwitch(
@@ -412,9 +478,36 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     )]
     public bool $kitten;
 
-    // Not in Localkit UI - not exposed to HA
+    // App string "Auxiliary_burial" = "Waste Covering".
+    #[HASwitch(
+        technicalName: 'bury',
+        name: 'Waste Covering',
+        commandTopic: 'setting/set',
+        icon: 'mdi:broom',
+        valueTemplate: '{{ value_json.settings.bury }}',
+        commandTemplate: '{"bury":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
     public bool $bury;
 
+    // App string "Toilet_deep_clean" = "Deep Cleaning".
+    #[HASwitch(
+        technicalName: 'deep_clean',
+        name: 'Deep Cleaning',
+        commandTopic: 'setting/set',
+        icon: 'mdi:broom',
+        valueTemplate: '{{ value_json.settings.deepClean }}',
+        commandTemplate: '{"deepClean":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
     public bool $deepClean;
 
     #[HASwitch(
@@ -458,15 +551,40 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     )]
     public int $stillTime;
 
-    // Litter Type - not exposed to HA
+    // Litter type - resolved against OverseaToiletLitterSettingFragment
+    // (shared with T4/T5/T6), which calls selectCatLitterStatus(sandType-1):
+    // the app is 1-based, 0 = not set yet, panels declared in the order
+    // Bentonite(1), Tofu(2), Mixed(3).
+    #[Select(
+        technicalName: 'sand_type',
+        name: 'Litter Type',
+        options: ['0', '1', '2', '3'],
+        commandTopic: 'setting/set',
+        icon: 'mdi:grain',
+        valueTemplate: '{{ value_json.settings.sandType }}',
+        commandTemplate: '{"sandType": {{value}}}',
+        entityCategory: 'config'
+    )]
     public int $sandType;
 
-    // No weight sensor on this device - not exposed to HA
+    // kg/lb display unit - T6SettingActivity's ll_t6_weight_switch opens a
+    // unit picker, same as every other device in this family.
+    #[Select(
+        technicalName: 'unit',
+        name: 'Weight Unit',
+        options: ['0', '1'],
+        commandTopic: 'setting/set',
+        icon: 'mdi:scale-balance',
+        valueTemplate: '{{ value_json.settings.unit }}',
+        commandTemplate: '{"unit": {{value}}}',
+        entityCategory: 'config'
+    )]
     public int $unit;
 
+    // App string "Sand_saving_mode" = "Litter-saving Mode".
     #[HASwitch(
         technicalName: 'sand_saving',
-        name: 'Litter Saving',
+        name: 'Litter-saving Mode',
         commandTopic: 'setting/set',
         icon: 'mdi:leaf',
         valueTemplate: '{{ value_json.settings.sandSaving }}',
@@ -509,9 +627,10 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     )]
     public bool $toiletDetection;
 
+    // App string "Soft_mode" = "Loose Stool Mode".
     #[HASwitch(
         technicalName: 'soft_mode',
-        name: 'Loose Stool Recognition',
+        name: 'Loose Stool Mode',
         commandTopic: 'setting/set',
         icon: 'mdi:cog',
         valueTemplate: '{{ value_json.settings.softMode }}',
@@ -622,11 +741,31 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
 
 
     // Sound
-    // Sound (no speaker on this device - not exposed to HA)
-    public bool $soundEnable;
-
+    // App screen "Speech_settings" ("Voice Settings"), section "Cue_sound"
+    // ("VOICE REMINDER"), cb_system_open_voice labeled "System_voice" =
+    // "Voice Prompt".
+    #[HASwitch(
+        technicalName: 'system_sound_enable',
+        name: 'Voice Prompt',
+        commandTopic: 'setting/set',
+        icon: 'mdi:bullhorn',
+        valueTemplate: '{{ value_json.settings.systemSoundEnable }}',
+        commandTemplate: '{"systemSoundEnable":{{ value }}}',
+        payloadOn: true,
+        payloadOff: false,
+        stateOn: true,
+        stateOff: false,
+        entityCategory: 'config'
+    )]
     public bool $systemSoundEnable;
 
+    // No single app control found for a blanket sound on/off - not exposed.
+    public bool $soundEnable;
+
+    // Real UI control (sb_volume SeekBar on the "Speech_settings" screen),
+    // but the app resolves it from a server-provided discrete list
+    // (T6SpeechSettingsActivity.initVolume()) rather than a plain range, so
+    // not promoted to a HA number here.
     public int $volume;
 
     public int $selectedSound;
@@ -635,9 +774,11 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
 
 
     // Reminders
+    // App string "Garbage_bags_replace_remind" = "Refill Ring Replacement
+    // Reminder".
     #[HASwitch(
         technicalName: 'bag_tip',
-        name: 'Bag Reminder',
+        name: 'Refill Ring Replacement Reminder',
         commandTopic: 'setting/set',
         icon: 'mdi:bag-personal',
         valueTemplate: '{{ value_json.settings.bag_tip_en }}',
@@ -652,9 +793,11 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
 
     // 'spary' is the firmware's own spelling, and the property name has to be
     // the wire key - do not correct it here.
+    // App string "Deodorization_allowance_warning" = "Purifying liquid
+    // reminder".
     #[HASwitch(
         technicalName: 'spray_tip',
-        name: 'Spray Reminder',
+        name: 'Purifying Liquid Reminder',
         commandTopic: 'setting/set',
         icon: 'mdi:spray',
         valueTemplate: '{{ value_json.settings.spary_tip_en }}',
@@ -707,6 +850,35 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     public bool $log_upload;
 
     public array $capacity;
+
+
+    // Desiccant
+    // Local bookkeeping only, same pattern as FreshElementSolo/YumshareSolo/
+    // FreshElement3 - no app screen or wire key for this was found on this
+    // device, the reset is purely a Localkit-side reminder.
+    #[Number(
+        technicalName: 'desiccant_durability',
+        name: 'Desiccant Durability',
+        commandTopic: 'setting/set',
+        icon: 'mdi:diamond-stone',
+        valueTemplate: '{{ value_json.consumables.desiccantDurability }}',
+        commandTemplate: '{"desiccantDurability":{{ value }}}',
+        entityCategory: 'config',
+        min: 0,
+        max: 90,
+        step: 1
+    )]
+    public int $desiccantDurability;
+
+    #[Sensor(
+        technicalName: 'desiccant_durability_in_days',
+        name: 'Next Desiccant Change in Days',
+        icon: 'mdi:update',
+        unitOfMeasurement: 'd',
+        valueTemplate: '{{ ((value_json.consumables.desiccantNextChange - as_timestamp(now())) / 86400) | round(1) }}',
+        entityCategory: 'diagnostic'
+    )]
+    public int $desiccantNextChange;
 
     protected function rules(): array
     {
@@ -782,7 +954,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'tumbling' => ['bool'],
             'lightest' => ['integer', 'min:0'],
             'stillTime' => ['integer', 'min:0'],
-            'sandType' => ['integer', 'in:0,1,2'],
+            'sandType' => ['integer', 'in:0,1,2,3'],
             'unit' => ['integer', 'in:0,1'],
             'sandSaving' => ['bool'],
             'sandSetUseConfig' => ['array', 'size:4'],
@@ -831,6 +1003,10 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'capacity' => ['array'],
             'log_upload' => ['bool'],
             'capacity' => ['array'],
+
+            // Desiccant
+            'desiccantDurability' => ['integer', 'min:0', 'max:90'],
+            'desiccantNextChange' => ['integer', 'min:0'],
         ];
     }
 
@@ -975,6 +1151,10 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
                 ['name' => 'eventImage'],
                 ['name' => 'dynamicVideo'],
             ],
+
+            // Desiccant
+            'desiccantDurability' => 30,
+            'desiccantNextChange' => 0,
         ];
     }
 
@@ -1094,6 +1274,10 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'capacity' => new ArrayCast(),
             'log_upload' => new BooleanCast(),
             'capacity' => new ArrayCast(),
+
+            // Desiccant
+            'desiccantDurability' => new IntegerCast(),
+            'desiccantNextChange' => new IntegerCast(),
         ];
     }
 
@@ -1214,6 +1398,13 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         $data['schedule'] = $config['schedule'] ?? null;
         $data['capacity'] = $config['capacity'] ?? null;
 
+        // Desiccant - local bookkeeping only, see Configuration.php's
+        // class-level notes.
+        if (isset($config['consumables'])) {
+            $data['desiccantDurability'] = $config['consumables']['desiccantDurability'] ?? null;
+            $data['desiccantNextChange'] = $config['consumables']['desiccantNextChange'] ?? null;
+        }
+
         // detectMultiRange is a legitimate empty array; keep it if present
         $filtered = array_filter($data, fn ($value) => $value !== null);
 
@@ -1322,6 +1513,10 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             ],
             'schedule' => $this->schedule,
             'capacity' => $this->capacity,
+            'consumables' => [
+                'desiccantDurability' => $this->desiccantDurability,
+                'desiccantNextChange' => $this->desiccantNextChange,
+            ],
         ];
     }
 
