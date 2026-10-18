@@ -57,9 +57,11 @@ class UI
                     ->numeric(),
                 TextInput::make('configuration.settings.factor')
                     ->label('Factor')
-                    ->helperText('Device-side calibration factor amounts are divided by before dispensing')
-                    ->readOnly()
-                    ->disabled(true),
+                    ->helperText('Grams per portion. The feeder only dispenses whole portions (amount / factor, rounded down) and reports each one as this many grams, so set it to your measured portion weight.')
+                    ->numeric()
+                    ->integer()
+                    ->minValue(1)
+                    ->maxValue(100),
             ]),
             Section::make('Settings')->columns(1)->schema([
                 Toggle::make('configuration.settings.foodWarn')
