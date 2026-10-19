@@ -66,6 +66,7 @@ class History extends Model
             'EAT' => $this->createEatMessage(),
             'DRINK' => $this->createDrinkMessage(),
             'DETECT' => $this->createDetectMessage(),
+            'WORKING' => $this->createFeedingMessage(),
             default => '',
         };
 
@@ -151,6 +152,35 @@ class History extends Model
         return $count > 0
             ? __('petkit.history.detect_count', ['count' => $count])
             : __('petkit.history.detect');
+    }
+
+    /**
+     * A WORKING row is a feed_over event. The device reports its outcome in
+     * result/err_code and the amount actually dispensed in real_amount - a
+     * non-zero result means the feed was refused or aborted and nothing (or
+     * only part of the requested amount) came out. Without this the timeline
+     * rendered every attempt as a successful "Feeding".
+     */
+    private function createFeedingMessage()
+    {
+        $params = $this->parameters;
+
+        if (!array_key_exists('result', $params)) {
+            return __('petkit.history.feeding_started');
+        }
+
+        $result = (int) $params['result'];
+        $amount = (int) ($params['real_amount'] ?? 0);
+
+        if ($result === 0) {
+            return __('petkit.history.fed', ['amount' => $amount]);
+        }
+
+        return __('petkit.history.feed_failed', [
+            'result' => $result,
+            'error' => $params['err_code'] ?? '-',
+            'amount' => $amount,
+        ]);
     }
 }
 

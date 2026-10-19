@@ -53,6 +53,16 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     )]
     public ?string $lastUsedByName;
 
+    #[Sensor(
+        technicalName: 'bowl_weight',
+        name: 'Bowl Weight',
+        icon: 'mdi:scale',
+        unitOfMeasurement: 'g',
+        valueTemplate: '{{ value_json.states.weight }}',
+        entityCategory: 'diagnostic'
+    )]
+    public ?int $weight;
+
     #[HASwitch(
         technicalName: 'manual_lock',
         name: 'Child lock',
@@ -276,6 +286,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'workingState' => ['nullable', 'string'],
             'lastUsedByPetId' => ['nullable', 'integer'],
             'lastUsedByName' => ['nullable', 'string'],
+            'weight' => ['nullable', 'integer'],
             'manualLock' => ['bool'],
             'lightMode' => ['bool'],
             'lightRange' => [],
@@ -304,6 +315,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'workingState' => 'IDLE',
             'lastUsedByPetId' => null,
             'lastUsedByName' => null,
+            'weight' => null,
             'manualLock' => false,
             'lightMode' => true,
             'soundEnable' => false,
@@ -366,6 +378,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         $data['error'] = $config['states']['error'] ?? null;
         $data['lastUsedByPetId'] = $config['states']['lastUsedByPetId'] ?? null;
         $data['lastUsedByName'] = $config['states']['lastUsedByName'] ?? null;
+        $data['weight'] = $config['states']['weight'] ?? null;
 
         // Load settings
         $data['manualLock'] = $config['settings']['manualLock'] ?? null;
@@ -403,6 +416,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
                 'error' => $this->error,
                 'lastUsedByPetId' => $this->lastUsedByPetId,
                 'lastUsedByName' => $this->lastUsedByName,
+                'weight' => $this->weight,
             ],
             'settings' => [
                 'manualLock' => $this->manualLock,
