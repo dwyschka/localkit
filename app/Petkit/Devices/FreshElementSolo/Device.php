@@ -82,7 +82,8 @@ class Device implements DeviceDefinition, BluetoothProxyInterface
                 $this->publishDispenseEvent($device, $message?->params?->content ?? null);
 
                 $device->update([
-                    'working_state' => DeviceStates::IDLE->value
+                    'working_state' => DeviceStates::IDLE->value,
+                    ...$this->foodStateChanges($device, $message),
                 ]);
                 $this->reply($topic, $message);
 
@@ -99,7 +100,8 @@ class Device implements DeviceDefinition, BluetoothProxyInterface
                 ]);
 
                 $device->update([
-                    'working_state' => DeviceStates::WORKING->value
+                    'working_state' => DeviceStates::WORKING->value,
+                    ...$this->foodStateChanges($device, $message),
                 ]);
 
                 $this->reply($topic, $message);
@@ -332,6 +334,32 @@ class Device implements DeviceDefinition, BluetoothProxyInterface
             'typeCode' => $config['typeCode'] ?? 1,
             'userId' => "1"
         ];
+    }
+
+    /**
+     * feed_start/feed_over carry a `state` block with only the fields that
+     * changed since the device last reported - `food` is there when the
+     * hopper has just run empty or been refilled, and absent otherwise, so
+     * a missing `food` must not be read as 0. Without this, food_empty only
+     * cleared on the next full property/post, which can be hours after a
+     * refill. Only food_empty is cleared, never another device error.
+     */
+    private function foodStateChanges(DeviceModel $device, ?stdClass $message): array
+    {
+        $state = $message?->params?->state ?? null;
+        if (is_string($state)) {
+            $state = json_decode($state, false);
+        }
+
+        if (!isset($state->food)) {
+            return [];
+        }
+
+        if ((int) $state->food === 0) {
+            return ['error' => 'food_empty'];
+        }
+
+        return $device->error === 'food_empty' ? ['error' => null] : [];
     }
 
     private function updateDevice(?stdClass $message)
