@@ -54,7 +54,14 @@ class UI
                 TextInput::make('configuration.settings.amount')
                     ->label('Feeding Amount')
                     ->helperText('Default amount for manual feeding')
-                    ->numeric()
+                    ->numeric(),
+
+                TextInput::make('configuration.states.weight')
+                    ->label('Bowl Weight')
+                    ->helperText('Last reading reported by the device. Press the bowl reset button on the device (bowl in place) to zero the scale.')
+                    ->suffix('g')
+                    ->readOnly()
+                    ->dehydrated(false),
             ]),
             Section::make('Settings')->columns(2)->schema([
                 Toggle::make('configuration.settings.manualLock')
@@ -106,7 +113,10 @@ class UI
 
                 TextInput::make('configuration.settings.surplus')
                     ->label('Surplus Amount')
+                    ->helperText('Scheduled feeds are skipped while the bowl is above this. Manual feeds bypass the check.')
                     ->numeric()
+                    ->minValue(0)
+                    ->maxValue(500)
                     ->suffix('g'),
 
 
