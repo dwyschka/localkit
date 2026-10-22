@@ -268,6 +268,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         technicalName: 'energy_consumed',
         name: 'Energy Consumption',
         deviceClass: 'energy',
+        stateClass: 'total_increasing',
         unitOfMeasurement: 'kWh',
         valueTemplate: '{{ value_json.stats.energyConsumedKwh }}',
         entityCategory: 'diagnostic'
