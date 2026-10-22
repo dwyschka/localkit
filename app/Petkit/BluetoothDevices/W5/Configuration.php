@@ -64,8 +64,8 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         icon: 'mdi:cancel',
         valueTemplate: '{{ value_json.states.dndState }}',
         entityCategory: 'diagnostic',
-        payloadOn: 1,
-        payloadOff: 0
+        payloadOn: 'on',
+        payloadOff: 'off'
     )]
     public bool $dndState;
 
@@ -75,8 +75,8 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         icon: 'mdi:bell-off-outline',
         valueTemplate: '{{ value_json.settings.doNotDisturbSwitch }}',
         entityCategory: 'diagnostic',
-        payloadOn: 1,
-        payloadOff: 0
+        payloadOn: 'on',
+        payloadOff: 'off'
     )]
     public bool $doNotDisturbSwitch;
 
@@ -109,8 +109,8 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         deviceClass: 'problem',
         valueTemplate: '{{ value_json.states.warningBreakdown }}',
         entityCategory: 'diagnostic',
-        payloadOn: 1,
-        payloadOff: 0
+        payloadOn: 'on',
+        payloadOff: 'off'
     )]
     public bool $warningBreakdown;
 
@@ -121,8 +121,8 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         deviceClass: 'problem',
         valueTemplate: '{{ value_json.states.warningWaterMissing }}',
         entityCategory: 'diagnostic',
-        payloadOn: 1,
-        payloadOff: 0
+        payloadOn: 'on',
+        payloadOff: 'off'
     )]
     public bool $warningWaterMissing;
 
@@ -133,8 +133,8 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         deviceClass: 'problem',
         valueTemplate: '{{ value_json.states.warningFilter }}',
         entityCategory: 'diagnostic',
-        payloadOn: 1,
-        payloadOff: 0
+        payloadOn: 'on',
+        payloadOff: 'off'
     )]
     public bool $warningFilter;
 
@@ -206,8 +206,8 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         icon: 'mdi:lightbulb-outline',
         valueTemplate: '{{ value_json.settings.ledSwitch }}',
         entityCategory: 'diagnostic',
-        payloadOn: 1,
-        payloadOff: 0
+        payloadOn: 'on',
+        payloadOff: 'off'
     )]
     public bool $ledSwitch;
 
@@ -268,6 +268,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         technicalName: 'energy_consumed',
         name: 'Energy Consumption',
         deviceClass: 'energy',
+        stateClass: 'total_increasing',
         unitOfMeasurement: 'kWh',
         valueTemplate: '{{ value_json.stats.energyConsumedKwh }}',
         entityCategory: 'diagnostic'
