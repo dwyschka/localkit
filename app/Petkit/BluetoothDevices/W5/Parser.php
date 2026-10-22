@@ -197,9 +197,13 @@ class Parser
             'warningWaterMissing' => $data[4],
             'warningFilter'       => $data[5],
             'pumpRuntime'         => self::bytesToInteger(array_slice($data, 6, 4)),
-            'filterPercentage'    => ($data[10] & 0xFF) / 100,
+            // Raw 0-100, as CMD 230 publishes it - not the 0-1 fraction
+            // calculateRemainingFilterDays() takes.
+            'filterPercentage'    => $data[10] & 0xFF,
             'runningStatus'       => $data[11] & 0xFF,
-        ];
+        ] + (count($data) >= 16 ? [
+            'pumpRuntimeToday'    => self::bytesToInteger(array_slice($data, 12, 4)),
+        ] : []);
     }
 
     protected function parseDeviceStateCTW3(array $data): array
@@ -404,6 +408,48 @@ class Parser
         $length = $framed ? count($bytes) - 9 : count($bytes);
 
         return $length >= 36 ? 'CTW3' : 'W5';
+    }
+
+    /**
+     * Same as aliasForStatusPayload() for a CMD 210 state payload: the W5
+     * family sends 12-16 bytes, CTW3 a 26-byte state section.
+     */
+    public static function aliasForStatePayload(string $hex): string
+    {
+        $bytes = self::hexToBytes($hex);
+        $framed = count($bytes) >= 9 && array_slice($bytes, 0, 3) === self::FRAME_HEADER;
+        $length = $framed ? count($bytes) - 9 : count($bytes);
+
+        return $length >= 26 ? 'CTW3' : 'W5';
+    }
+
+    /**
+     * Recomputes the derived fields for a state assembled from more than one
+     * report - a CMD 210 state merged over the last CMD 230 status, which
+     * alone carries the smart on/off times the filter days depend on.
+     */
+    public function withDerivedFields(array $state): array
+    {
+        $mode             = (int) ($state['mode'] ?? 1);
+        $pumpRuntime      = (int) ($state['pumpRuntime'] ?? 0);
+        $pumpRuntimeToday = (int) ($state['pumpRuntimeToday'] ?? 0);
+
+        $tOn  = ($mode === 1) ? 1 : (int) ($state['smartTimeOn'] ?? 0);
+        $tOff = ($mode === 1) ? 0 : (int) ($state['smartTimeOff'] ?? 0);
+
+        $derived = [
+            'pumpRuntimeReadable'      => self::secondsToDaysHours($pumpRuntime),
+            'pumpRuntimeTodayReadable' => self::secondsToHoursMinutes($pumpRuntimeToday),
+            'purifiedWaterLiters'      => round($this->calculateWaterPurified($pumpRuntime), 2),
+            'purifiedWaterTodayLiters' => round($this->calculateWaterPurified($pumpRuntimeToday), 2),
+            'energyConsumedKwh'        => number_format($this->calculateEnergyUsage($pumpRuntime), 6),
+        ];
+
+        if (isset($state['filterPercentage'])) {
+            $derived['filterTimeLeftDays'] = $this->calculateRemainingFilterDays($state['filterPercentage'] / 100, $tOn, $tOff);
+        }
+
+        return array_merge($state, $derived);
     }
 
     protected function parseUnknown(int $cmd, array $data): array

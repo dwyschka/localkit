@@ -44,6 +44,10 @@ class Device implements DeviceInterface, HasParserInterface
 
         Log::info('W5', ['cmd' => $cmd, 'payload' => $payload]);
 
+        if ($cmd == Parser::CMD_DEVICE_STATE) {
+            return $this->handleStateReport($payload);
+        }
+
         if($cmd != 230) {
             return false;
         }
@@ -83,6 +87,42 @@ class Device implements DeviceInterface, HasParserInterface
 
         return true;
 
+    }
+
+    /**
+     * CMD 210 is the short state the proxy relays by itself every `interval`
+     * minutes (power, mode, warnings, pump runtime, filter %), where CMD 230
+     * only follows a connect. It's merged over the last known state rather
+     * than run through fromParser() alone, which would blank everything 210
+     * doesn't carry (smart times, LED and DND settings).
+     */
+    private function handleStateReport(string $payload): bool
+    {
+        $binary = bin2hex(base64_decode(urldecode($payload)));
+        $parser = $this->parser()->setAlias(Parser::aliasForStatePayload($binary));
+
+        try {
+            $state = $parser->decode($binary, Parser::CMD_DEVICE_STATE)['decoded'];
+        } catch (UnderflowException $e) {
+            Log::warning('W5 state frame too short to parse, ignoring', [
+                'bluetooth_device_id' => $this->model->id,
+                'binary' => $binary,
+                'error' => $e->getMessage(),
+            ]);
+            return false;
+        }
+
+        $sections = array_filter($this->model->configuration ?? [], 'is_array');
+        $previous = array_merge(...array_values($sections));
+
+        $configuration = Configuration::fromParser($parser->withDerivedFields(array_merge($previous, $state)));
+        $configuration->bleSequence = $this->model->configuration()->bleSequence;
+        $configuration->lastUpdate = now()->toIso8601String();
+
+        $this->model->configuration = $configuration->toArray();
+        $this->model->save();
+
+        return true;
     }
 
     /**
