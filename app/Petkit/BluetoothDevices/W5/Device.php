@@ -21,6 +21,8 @@ class Device implements DeviceInterface, HasParserInterface
 
     protected Parser $parser;
 
+    private static bool $savingReport = false;
+
     protected array $actions = [
         Actions::REFRESH,
         Actions::RESET_FILTER,
@@ -79,7 +81,7 @@ class Device implements DeviceInterface, HasParserInterface
 
         $this->model->configuration = $configuration->toArray();
 
-        $this->model->save();
+        $this->saveReport();
 
         return true;
 
@@ -166,8 +168,29 @@ class Device implements DeviceInterface, HasParserInterface
      * lands here, where a change to either gets turned into a single
      * setMode() write (the device takes both together in one command).
      */
+    /**
+     * Saves state the fountain reported. The save still publishes to Home
+     * Assistant, but mustn't reach propertyChange(): a report that differs
+     * from what's stored would be sent straight back to the fountain - and a
+     * report of the old value arriving before a change has gone out would
+     * send the old value again, undoing the change.
+     */
+    private function saveReport(): void
+    {
+        self::$savingReport = true;
+        try {
+            $this->model->save();
+        } finally {
+            self::$savingReport = false;
+        }
+    }
+
     public function propertyChange(BluetoothDevice $device): void
     {
+        if (self::$savingReport) {
+            return;
+        }
+
         $old = $device->getOriginal('configuration')['states'] ?? [];
         $new = $device->configuration['states'] ?? [];
 
