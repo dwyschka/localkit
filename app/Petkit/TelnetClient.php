@@ -21,7 +21,7 @@ class TelnetClient
     public function __construct(
         private readonly string $host,
         private readonly int $port = 23,
-        private readonly float $timeout = 5.0,
+        private readonly float $timeout = 60.0,
     ) {
     }
 
@@ -43,11 +43,11 @@ class TelnetClient
         $this->readUntil(['#', '$']);
     }
 
-    public function exec(string $command): string
+    public function exec(string $command, ?float $timeout = null): string
     {
         $this->write($command);
 
-        return $this->readUntil(['#', '$']);
+        return $this->readUntil(['#', '$'], $timeout);
     }
 
     public function close(): void
@@ -64,10 +64,11 @@ class TelnetClient
         fwrite($this->socket, $line . "\r\n");
     }
 
-    private function readUntil(array $markers): string
+    private function readUntil(array $markers, ?float $timeout = null): string
     {
         $buffer = '';
-        $deadline = microtime(true) + $this->timeout;
+        $effectiveTimeout = $timeout ?? $this->timeout;
+        $deadline = microtime(true) + $effectiveTimeout;
 
         while (microtime(true) < $deadline) {
             $chunk = fread($this->socket, 2048);
