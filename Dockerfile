@@ -16,7 +16,14 @@ COPY --chmod=644 ./certs/server.crt /etc/ssl/private/self-signed-web.crt
 COPY --chmod=644 ./certs/server.key /etc/ssl/private/self-signed-web.key
 
 COPY --chmod=755 s6/services/ /etc/s6-overlay/s6-rc.d/
-COPY --chmod=755 s6/user/contents.d/ /etc/s6-overlay/s6-rc.d/user/contents.d/
+# The whole bundle directory, not just contents.d: without s6/user/type the
+# 'user' bundle has no type file, and s6-rc.init tries to synthesise one at
+# startup - which fails with "cannot create
+# /etc/s6-overlay/s6-rc.d/user/type: Permission denied", because the
+# directory is root-owned from this COPY while the container runs as
+# www-data (below). Shipping the type file means nothing has to be written
+# to /etc at runtime.
+COPY --chmod=755 s6/user/ /etc/s6-overlay/s6-rc.d/user/
 
 USER www-data
 
