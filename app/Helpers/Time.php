@@ -37,10 +37,26 @@ class Time
     public static function toSeconds(string $time)
     {
         $time = Carbon::parse($time);
-        // The TimePicker this feeds only carries H:i, so $time->second is
-        // always 0 here - fixed at :18 instead, to offset the device's
-        // observed ~6s-early firing (see schedule.md) with some margin.
-        return $time->hour * 3600 + $time->minute * 60 + 18;
+
+        // Whole minutes, no seconds offset. A :18 offset was tried (commit
+        // 2af4d36) to compensate the device's observed ~6s-early firing, and
+        // it is what broke scheduled feeds on the D4SH: calculateLatest()
+        // derives a 'latest' entry's countdown via toTimeFromSeconds(), which
+        // truncates to H:i, so the countdown targeted HH:MM:00 while the item
+        // it names said HH:MM:18. Confirmed against two live D4SH captures:
+        //
+        //   2026-08-25 (fired):     item t=50700, latest s_20260825_50700
+        //                           countdown -> 14:05:00  (identical)
+        //   2026-10-22 (never fired): item t=78318, latest s_20261022_78318
+        //                           countdown -> 21:45:00  (18s apart)
+        //
+        // and the device echoed the split straight back in feed_over:
+        // "id":"s_20261019_54018" with "time":54000, fired at 15:00:01, then
+        // result:8 / err_code:10 / real_amount1:0 / real_amount2:0 - i.e. it
+        // fires on the countdown and then finds no schedule item at that
+        // second. Keep this a whole minute; every 't' the device has ever
+        // reported back is a multiple of 60.
+        return $time->hour * 3600 + $time->minute * 60;
     }
 
     public static function toMinutes(string $time)
