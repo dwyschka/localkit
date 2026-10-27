@@ -12,7 +12,9 @@ class GenericReply
     {
         return new AnswerDTO(
             topic: sprintf('%s_reply', $topic),
-            message: SuccessResource::make($message)
+            // The incoming topic, not the reply topic: it is what the ack's
+            // 'method' is derived from when the message carries none.
+            message: SuccessResource::make($message)->forTopic($topic)
         );
     }
 }
