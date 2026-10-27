@@ -54,9 +54,14 @@ class BluetoothDevice extends Model
             $definition = $device->device();
 
             if(config('app.enable.homeassistant')) {
+                // Disconnect like Device's hook does: left open, the
+                // connection goes idle until the broker times it out, and
+                // the next Home Assistant publish in this process (e.g. a
+                // feed event) is written to the dead socket and lost.
                 try {
-                    MQTT::connection('homeassistant-publisher')
-                        ->publish(HomeassistantHelper::deviceTopic($device), $definition->toHomeassistant(), 0, true);
+                    $mqtt = MQTT::connection('homeassistant-publisher');
+                    $mqtt->publish(HomeassistantHelper::deviceTopic($device), $definition->toHomeassistant(), 0, true);
+                    $mqtt->disconnect();
                 } catch (Exception $e) {
                 }
             }
