@@ -593,11 +593,31 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         technicalName: 'action_feed',
         name: 'Feed',
         commandTopic: 'action/start',
-        icon: 'mdi:information-outline',
+        icon: 'mdi:bowl-mix',
         commandTemplate: '{"action": "feed"}',
         availabilityTemplate: 'online',
     )]
     private $actionFeed = 1;
+
+    #[Button(
+        technicalName: 'action_feed_hopper_1',
+        name: 'Feed 1 Dose Hopper 1',
+        commandTopic: 'action/start',
+        icon: 'mdi:numeric-1-box-outline',
+        commandTemplate: '{"action": "feed_hopper_1"}',
+        availabilityTemplate: 'online',
+    )]
+    private $actionFeedHopper1 = 1;
+
+    #[Button(
+        technicalName: 'action_feed_hopper_2',
+        name: 'Feed 1 Dose Hopper 2',
+        commandTopic: 'action/start',
+        icon: 'mdi:numeric-2-box-outline',
+        commandTemplate: '{"action": "feed_hopper_2"}',
+        availabilityTemplate: 'online',
+    )]
+    private $actionFeedHopper2 = 1;
 
     #[Number(
         technicalName: 'desiccant_durability',
