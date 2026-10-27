@@ -20,13 +20,43 @@ class Rtsp
     {
         $ip = $this->deviceIp($device);
 
-        return $ip !== null ? $this->urlForIp($ip) : null;
+        if ($ip === null) {
+            return null;
+        }
+
+        $user = $device->configuration['settings']['rtsp_username']
+            ?? $device->configuration['rtsp_user']
+            ?? config('camera.rtsp.user');
+        $pass = $device->configuration['settings']['rtsp_password']
+            ?? $device->configuration['rtsp_password']
+            ?? config('camera.rtsp.password');
+        $port = (int) ($device->configuration['settings']['rtsp_port']
+            ?? $device->configuration['rtsp_port']
+            ?? config('camera.rtsp.port', 8554));
+        $path = ltrim((string) ($device->configuration['settings']['rtsp_path']
+            ?? $device->configuration['rtsp_path']
+            ?? config('camera.rtsp.path', 'stream0')), '/');
+
+        $auth = ($user && $pass) ? sprintf('%s:%s@', urlencode((string)$user), urlencode((string)$pass)) : '';
+
+        return sprintf(
+            'rtsp://%s%s:%d/%s',
+            $auth,
+            $ip,
+            $port,
+            $path
+        );
     }
 
     public function urlForIp(string $ip): string
     {
+        $user = config('camera.rtsp.user');
+        $pass = config('camera.rtsp.password');
+        $auth = ($user && $pass) ? sprintf('%s:%s@', urlencode((string)$user), urlencode((string)$pass)) : '';
+
         return sprintf(
-            'rtsp://%s:%d/%s',
+            'rtsp://%s%s:%d/%s',
+            $auth,
             $ip,
             config('camera.rtsp.port'),
             ltrim((string) config('camera.rtsp.path'), '/')
