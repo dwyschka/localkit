@@ -280,7 +280,10 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     // eat_video (Video/Photo Upload) not published to Home Assistant.
     public bool $eatVideo;
 
-    // Hopper calibration factors (bowl 1 / bowl 2)
+    // Hopper calibration factors (bowl 1 / bowl 2). min is 0, not 1: a factor
+    // of 0 is a value the device takes and the rest of the stack already
+    // allowed (rules say min:0, the admin form says minValue(0)) - the Number
+    // entity was the only place clamping it away from Home Assistant.
     #[Number(
         technicalName: 'factor1',
         name: 'Hopper 1 Calibration Factor',
@@ -289,7 +292,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         valueTemplate: '{{ value_json.settings.factor1 }}',
         commandTemplate: '{"factor1":{{ value }}}',
         entityCategory: 'config',
-        min: 1,
+        min: 0,
         max: 100,
         step: 1
     )]
@@ -303,7 +306,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         valueTemplate: '{{ value_json.settings.factor2 }}',
         commandTemplate: '{"factor2":{{ value }}}',
         entityCategory: 'config',
-        min: 1,
+        min: 0,
         max: 100,
         step: 1
     )]
