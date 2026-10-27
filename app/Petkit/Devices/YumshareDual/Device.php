@@ -94,16 +94,22 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
                 $this->reply($topic, $message);
             },
             sprintf('/sys/%s/%s/thing/event/eat_over/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
-                $this->mergeHistory($message?->params?->event_id, $message?->params?->content);
+                $endTimestamp = !empty($message?->params?->timestamp) ? (int)$message->params->timestamp : null;
+                $this->mergeHistory($message?->params?->event_id, $message?->params?->content, null, $endTimestamp);
                 EventPublisher::publish($device, 'eat_over');
 
-                $this->parseState($device, $message);
+                $this->parseState($device, $message, DeviceStates::IDLE->value, function () use ($device) {
+                    $config = $device->configuration;
+                    $config['states']['isEating'] = false;
+                    $device->configuration = $config;
+                });
                 $this->reply($topic, $message);
             },
             sprintf('/sys/%s/%s/thing/event/eat_start/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
+                $petId = $this->resolvePetId();
                 if (isset($message->params->event_id)) {
                     History::updateOrCreate(['messageId' => $message->params->event_id], [
-                        'pet_id' => null,
+                        'pet_id' => $petId,
                         'type' => 'EAT',
                         'parameters' => json_decode($message->params->content ?? '{}', true),
                         'device_id' => $device->id,
@@ -111,7 +117,15 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
                     EventPublisher::publish($device, 'eat_start');
                 }
 
-                $this->parseState($device, $message);
+                if ($petId) {
+                    $this->setLastUsedBy($petId);
+                }
+
+                $this->parseState($device, $message, DeviceStates::WORKING->value, function () use ($device) {
+                    $config = $device->configuration;
+                    $config['states']['isEating'] = true;
+                    $device->configuration = $config;
+                });
                 $this->reply($topic, $message);
             },
             sprintf('/sys/%s/%s/thing/event/move_detect/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
@@ -119,14 +133,19 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
                 $this->reply($topic, $message);
             },
             sprintf('/sys/%s/%s/thing/event/pet_detect/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
+                $petId = $this->resolvePetId();
                 if (isset($message->params->event_id)) {
                     History::updateOrCreate(['messageId' => $message->params->event_id], [
-                        'pet_id' => null,
+                        'pet_id' => $petId,
                         'type' => 'DETECT',
                         'parameters' => json_decode($message->params->content ?? '{}', true),
                         'device_id' => $device->id,
                     ]);
                     EventPublisher::publish($device, 'detect');
+                }
+
+                if ($petId) {
+                    $this->setLastUsedBy($petId);
                 }
 
                 $this->parseState($device, $message);
@@ -219,7 +238,20 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
      * own content when no *_start row exists yet; callers that don't pass
      * it keep the old silently-do-nothing behavior.
      */
-    private function mergeHistory(?string $messageId, ?string $rawContent, ?string $type = null): void
+    private function resolvePetId(?int $explicitId = null): ?int
+    {
+        if ($explicitId !== null && $explicitId > 0) {
+            return $explicitId;
+        }
+
+        if (Pet::count() === 1) {
+            return Pet::first()?->id;
+        }
+
+        return null;
+    }
+
+    private function mergeHistory(?string $messageId, ?string $rawContent, ?string $type = null, ?int $eventEnd = null): void
     {
         if ($messageId === null) {
             return;
@@ -228,6 +260,9 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
         $content = json_decode($rawContent ?? '{}', true) ?? [];
         $history = History::where('messageId', $messageId)->first();
 
+        $explicitPetId = !empty($content['pet_id']) ? (int) $content['pet_id'] : null;
+        $petId = $this->resolvePetId($explicitPetId);
+
         if ($history === null) {
             if ($type === null) {
                 return;
@@ -235,25 +270,32 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
 
             History::create([
                 'messageId' => $messageId,
-                'pet_id' => !empty($content['pet_id']) ? $content['pet_id'] : null,
+                'pet_id' => $petId,
                 'type' => $type,
                 'parameters' => $content,
                 'device_id' => $this->device->id,
             ]);
 
+            if ($petId) {
+                $this->setLastUsedBy($petId);
+            }
+
             return;
         }
 
+        $mergedParams = array_merge((array) ($history->parameters ?? []), (array) $content);
+        if ($eventEnd !== null && !empty($mergedParams['start_time'])) {
+            $mergedParams['event_start'] = (int) $mergedParams['start_time'];
+            $mergedParams['event_end'] = $eventEnd;
+        }
+
         $history->update([
-            'parameters' => [
-                ...$history->parameters,
-                ...$content,
-            ],
-            ...(!empty($content['pet_id']) ? ['pet_id' => $content['pet_id']] : []),
+            'parameters' => $mergedParams,
+            ...($petId ? ['pet_id' => $petId] : []),
         ]);
 
-        if (!empty($content['pet_id'])) {
-            $this->setLastUsedBy((int) $content['pet_id']);
+        if ($petId) {
+            $this->setLastUsedBy($petId);
         }
     }
 
@@ -578,6 +620,9 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
 
         $settings->bowl = $content->bowl;
         $settings->door = $content->door;
+        if (isset($content->eating)) {
+            $settings->isEating = ((int) $content->eating === 1);
+        }
 
         return $settings->toArray();
     }
