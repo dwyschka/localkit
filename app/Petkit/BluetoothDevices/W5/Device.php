@@ -122,7 +122,7 @@ class Device implements DeviceInterface, HasParserInterface
         $configuration->lastUpdate = now()->toIso8601String();
 
         $this->model->configuration = $configuration->toArray();
-        $this->model->save();
+        $this->saveReport();
 
         return true;
     }

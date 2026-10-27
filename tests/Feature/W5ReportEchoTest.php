@@ -71,6 +71,18 @@ class W5ReportEchoTest extends TestCase
         Bus::assertNotDispatched(ServiceBle::class);
     }
 
+    public function test_a_10_minute_state_report_is_stored_but_not_sent_back(): void
+    {
+        $this->assertSame(1, $this->storedMode());
+
+        // CMD 210 from the same fountain: power on, mode 2 (Smart).
+        $handled = $this->fountain->device()->handleMessage((object) ['cmd' => 210, 'data' => 'AQIAAAAAAADgaGEBAAB1jw==']);
+
+        $this->assertTrue($handled);
+        $this->assertSame(2, $this->storedMode());
+        Bus::assertNotDispatched(ServiceBle::class);
+    }
+
     public function test_a_change_made_here_is_still_sent(): void
     {
         $configuration = $this->fountain->configuration;
