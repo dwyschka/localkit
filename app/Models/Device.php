@@ -89,23 +89,29 @@ class Device extends Model
             $definition = $device->definition();
 
             if (config('app.enable.homeassistant')) {
-
-                MQTT::connection('homeassistant-publisher')
-                    ->publish(HomeassistantHelper::deviceTopic($device), $definition->toHomeassistant(), 0, true);
+                try {
+                    MQTT::connection('homeassistant-publisher')
+                        ->publish(HomeassistantHelper::deviceTopic($device), $definition->toHomeassistant(), 0, true);
+                } catch (Exception $e) {
+                    Log::error('homeassistant-publisher publish failed for device ' . $device->id, [
+                        'exception' => $e,
+                    ]);
+                }
             }
             if ($definition instanceof Snapshot) {
                 $snapshotMessage = $definition->toSnapshot();
                 if (!is_null($snapshotMessage)) {
                     if (config('app.enable.homeassistant')) {
-                        MQTT::connection('homeassistant-publisher')
-                            ->publish(HomeassistantHelper::snapshotTopic($device), $snapshotMessage, 0, true);
+                        try {
+                            MQTT::connection('homeassistant-publisher')
+                                ->publish(HomeassistantHelper::snapshotTopic($device), $snapshotMessage, 0, true);
+                        } catch (Exception $e) {
+                            Log::error('homeassistant-publisher snapshot publish failed for device ' . $device->id, [
+                                'exception' => $e,
+                            ]);
+                        }
                     }
                 }
-            }
-
-            if (config('app.enable.homeassistant')) {
-
-                MQTT::connection('homeassistant-publisher')->disconnect();
             }
 //            }
         });
