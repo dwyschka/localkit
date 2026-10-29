@@ -15,7 +15,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  *   {"code":200,"data":{},"id":"107","message":"success",
  *    "method":"thing.event.work_start.post","version":"1.0"}
  *
- * `method` matters: the device's own `thing/event/*/post` messages carry no
+ * `method` matters: the device's own `thing/event/<event>/post` messages carry no
  * top-level `method` (only `id`, `version`, `params`, `sys`), so reading it
  * off the incoming message yields null - and a JSON null in that slot is what
  * the firmware's cJSON parser reads back through valuestring with no NULL
