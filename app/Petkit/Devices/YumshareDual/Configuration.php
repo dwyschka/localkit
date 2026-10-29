@@ -739,7 +739,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         icon: 'mdi:restore',
         commandTemplate: '{"action": "reset_desiccant"}',
         availabilityTemplate: 'online',
-        entityCategory: 'config',
     )]
     private $actionResetDesiccant = 1;
 
