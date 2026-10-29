@@ -142,7 +142,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         name: 'Feedings Today',
         icon: 'mdi:bowl-mix',
         stateClass: 'total_increasing',
-        unitOfMeasurement: 'feedings',
         valueTemplate: '{{ value_json.states.feedingsToday }}',
         entityCategory: 'diagnostic'
     )]
@@ -153,7 +152,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         name: 'Meals Today',
         icon: 'mdi:food-drumstick',
         stateClass: 'total_increasing',
-        unitOfMeasurement: 'meals',
         valueTemplate: '{{ value_json.states.mealsToday }}',
         entityCategory: 'diagnostic'
     )]
@@ -164,7 +162,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         name: 'Visits Today',
         icon: 'mdi:cat',
         stateClass: 'total_increasing',
-        unitOfMeasurement: 'visits',
         valueTemplate: '{{ value_json.states.visitsToday }}',
         entityCategory: 'diagnostic'
     )]
@@ -175,7 +172,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         name: 'Portions Dispensed Hopper 1 Today',
         icon: 'mdi:numeric-1-box-multiple',
         stateClass: 'total_increasing',
-        unitOfMeasurement: 'portions',
         valueTemplate: '{{ value_json.states.portionsHopper1Today }}',
         entityCategory: 'diagnostic'
     )]
@@ -186,7 +182,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         name: 'Portions Dispensed Hopper 2 Today',
         icon: 'mdi:numeric-2-box-multiple',
         stateClass: 'total_increasing',
-        unitOfMeasurement: 'portions',
         valueTemplate: '{{ value_json.states.portionsHopper2Today }}',
         entityCategory: 'diagnostic'
     )]
@@ -197,7 +192,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         name: 'Manual Portions Today',
         icon: 'mdi:hand-pointing-right',
         stateClass: 'total_increasing',
-        unitOfMeasurement: 'portions',
         valueTemplate: '{{ value_json.states.manualPortionsToday }}',
         entityCategory: 'diagnostic'
     )]
@@ -207,7 +201,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         technicalName: 'planned_meals_today',
         name: 'Planned Meals Today',
         icon: 'mdi:calendar-clock',
-        unitOfMeasurement: 'meals',
         valueTemplate: '{{ value_json.states.plannedMealsToday }}',
         entityCategory: 'diagnostic'
     )]
@@ -217,7 +210,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         technicalName: 'planned_portions_today',
         name: 'Planned Portions Today',
         icon: 'mdi:counter',
-        unitOfMeasurement: 'portions',
         valueTemplate: '{{ value_json.states.plannedPortionsToday }}',
         entityCategory: 'diagnostic'
     )]
