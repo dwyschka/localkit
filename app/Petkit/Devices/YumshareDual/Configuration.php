@@ -727,10 +727,21 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         name: 'Next Desiccant Change in Days',
         icon: 'mdi:update',
         unitOfMeasurement: 'd',
-        valueTemplate: '{{ ((value_json.consumables.desiccantNextChange - as_timestamp(now())) / 86400) | round(1) }}',
+        valueTemplate: '{{ [((value_json.consumables.desiccantNextChange - as_timestamp(now())) / 86400) | round(1), 0] | max if (value_json.consumables.desiccantNextChange | default(0) > 0) else 0 }}',
         entityCategory: 'diagnostic'
     )]
     public int $desiccantNextChange;
+
+    #[Button(
+        technicalName: 'action_reset_desiccant',
+        name: 'Reset Desiccant',
+        commandTopic: 'action/start',
+        icon: 'mdi:restore',
+        commandTemplate: '{"action": "reset_desiccant"}',
+        availabilityTemplate: 'online',
+        entityCategory: 'config',
+    )]
+    private $actionResetDesiccant = 1;
 
     protected function rules(): array
     {

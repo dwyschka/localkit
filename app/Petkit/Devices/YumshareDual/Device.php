@@ -489,6 +489,9 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
             case 'snapshot':
                 $this->takeSnapshot($this->getDevice());
                 break;
+            case 'reset_desiccant':
+                $this->resetDesiccant($this->getDevice());
+                break;
         }
     }
 
