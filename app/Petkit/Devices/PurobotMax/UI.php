@@ -37,12 +37,10 @@ class UI
     {
         return [
             Section::make('Consumables')
-                ->description('N50 and N60 are alternative Pet Odor Eliminator generations. Only the module actually installed in the device is relevant; the other counter stays unused.')
                 ->columns(2)
                 ->schema([
                 TextInput::make('configuration.consumables.n50Durability')
                     ->label('N50 Durability (days)')
-                    ->helperText('Pet Odor Eliminator N50. Only relevant if this generation is installed.')
                     ->numeric(),
 
                 TextInput::make('configuration.consumables.n50NextChange')
@@ -59,7 +57,6 @@ class UI
 
                 TextInput::make('configuration.consumables.n60Durability')
                     ->label('N60 Durability (days)')
-                    ->helperText('Pet Odor Eliminator N60 / K4. Only relevant if this generation is installed.')
                     ->numeric(),
 
                 TextInput::make('configuration.consumables.n60NextChange')
@@ -98,13 +95,11 @@ class UI
             Section::make('Network')->columns(2)->schema([
                 TextInput::make('configuration.states.ipAddress')
                     ->label('IP Address')
-                    ->helperText('Normally detected from the `other` field of the device state report. Enter it manually if detection is missing or wrong.')
                     ->ip()
                     ->placeholder('192.168.1.42'),
 
                 Toggle::make('configuration.states.ipAddressOverride')
                     ->label('Keep manual IP')
-                    ->helperText('When enabled, later state reports cannot overwrite the manually entered IP. Turn it off to let automatic detection take over again.')
                     ->inline(false),
             ]),
 
@@ -133,7 +128,6 @@ class UI
 
                 Select::make('configuration.settings.stillTime')
                     ->label('Delayed Cleaning')
-                    ->helperText('Wait time before the device starts cleaning. The firmware value is in seconds.')
                     ->options([
                         '0' => '0 seconds',
                         '30' => '30 seconds',
@@ -174,20 +168,17 @@ class UI
                     ->helperText('Covers waste with litter before the cleaning cycle.'),
 
                 Toggle::make('configuration.settings.tumbling')
-                    ->label('Tumbling')
-                    ->helperText('Runs the tumbling motor routine; also used by the app\'s "look inside" feature.'),
+                    ->label('Tumbling'),
 
                 Toggle::make('configuration.settings.sandSaving')
                     ->label('Litter Saving')
                     ->helperText('Turn on when clumps are relatively large.'),
 
                 Toggle::make('configuration.settings.fixedTimeClear')
-                    ->label('Scheduled Cleaning Enabled')
-                    ->helperText('Enables the clean schedule managed in the PetKit app. The schedule itself is stored by PetKit\'s cloud API, not here.'),
+                    ->label('Scheduled Cleaning Enabled'),
 
                 Toggle::make('configuration.settings.toiletLight')
-                    ->label('Toilet Light')
-                    ->helperText('Turns the light on while the toilet is in use. See "Light Setting" for the active period.'),
+                    ->label('Toilet Light'),
 
                 Toggle::make('configuration.settings.autoSpray')
                     ->label('Auto Deodorizing')
@@ -198,12 +189,10 @@ class UI
                     ->helperText('Deodorizes twice consecutively each time.'),
 
                 Toggle::make('configuration.settings.fixedTimeSpray')
-                    ->label('Scheduled Deodorizing Enabled')
-                    ->helperText('Enables the deodorizing schedule managed in the PetKit app.'),
+                    ->label('Scheduled Deodorizing Enabled'),
 
                 Toggle::make('configuration.settings.disturbMode')
-                    ->label('Do Not Disturb (Cleaning)')
-                    ->helperText('Stops cleaning during the period below.'),
+                    ->label('Do Not Disturb (Cleaning)'),
 
                 Repeater::make('configuration.settings.distrubMultiRange.ranges')
                     ->columns(2)
@@ -230,8 +219,7 @@ class UI
             // T6BasicSettingsActivity + T6WorkingTimeActivity.
             Section::make('Camera Settings')->columns(2)->schema([
                 Toggle::make('configuration.settings.camera')
-                    ->label('Camera Switch')
-                    ->helperText('No video is recorded when this is off; cleaning still works.'),
+                    ->label('Camera Switch'),
 
                 Toggle::make('configuration.settings.microphone')
                     ->label('Microphone'),
@@ -241,8 +229,7 @@ class UI
                     ->helperText('Infrared night vision in dark environments.'),
 
                 Toggle::make('configuration.settings.timeDisplay')
-                    ->label('Timestamp Overlay')
-                    ->helperText('Burns the clock into the video. ctrl_t5\'s wire key is timeDisplay, not timestamp_enable.'),
+                    ->label('Timestamp Overlay'),
 
                 Toggle::make('configuration.settings.cameraLight')
                     ->label('Camera Light'),
@@ -254,7 +241,6 @@ class UI
                 Repeater::make('configuration.settings.cameraMultiRange.ranges')
                     ->columns(2)
                     ->label('Camera Working Time')
-                    ->helperText('From/till in minutes (0 = 00:00, 1440 = 24:00). The T5 applies these windows to every day; ctrl_t5 receives them as its {enable, rpt, time} camera range objects.')
                     ->reorderableWithButtons()
                     ->schema([
                         MinutesTimePicker::make('from'),
@@ -272,16 +258,13 @@ class UI
                     ->label('Toilet Use Detection'),
 
                 Toggle::make('configuration.settings.phDetection')
-                    ->label('pH Detection')
-                    ->helperText('Urine pH health monitoring (AiPhActivity).'),
+                    ->label('pH Detection'),
 
                 Toggle::make('configuration.settings.voice')
-                    ->label('AI Voice Messages')
-                    ->helperText('Per-pet AI voice messages (AiVoiceActivity).'),
+                    ->label('AI Voice Messages'),
 
                 Toggle::make('configuration.settings.moveTracking')
-                    ->label('Move Tracking')
-                    ->helperText('The app\'s activity-detection sensitivity screen is not shown for every T5 firmware; ctrl_t5 still accepts the key.'),
+                    ->label('Move Tracking'),
 
                 Select::make('configuration.settings.moveSensitivity')
                     ->label('Move Sensitivity')
@@ -297,7 +280,6 @@ class UI
                 Repeater::make('configuration.settings.detectMultiRange.ranges')
                     ->columns(2)
                     ->label('Detection Period')
-                    ->helperText('ctrl_t5 accepts up to five [from,till] pairs here.')
                     ->reorderableWithButtons()
                     ->schema([
                         MinutesTimePicker::make('from'),
@@ -323,7 +305,6 @@ class UI
 
                 TextInput::make('configuration.settings.selectedSound')
                     ->label('Selected Sound')
-                    ->helperText('Raw device value. The app reads the available list from PetKit\'s server, so this numeric value is not verified.')
                     ->numeric(),
 
                 Repeater::make('configuration.settings.toneMultiRange.ranges')
@@ -341,7 +322,6 @@ class UI
             Section::make('Privacy')->columns(2)->schema([
                 Toggle::make('configuration.settings.upload')
                     ->label('Upload Videos')
-                    ->helperText('Allows cloud upload of event videos.'),
             ]),
 
             // KidLockActivity.
@@ -372,7 +352,6 @@ class UI
 
                 Select::make('configuration.settings.sandType')
                     ->label('Litter Type')
-                    ->helperText('The app is 1-based: 0 = not set yet, 1 = bentonite, 2 = tofu, 3 = mixed.')
                     ->options([
                         '0' => 'Not set',
                         '1' => 'Bentonite / Ore',
@@ -382,7 +361,6 @@ class UI
 
                 Select::make('configuration.settings.language')
                     ->label('Device Language')
-                    ->helperText('Locale string from the app\'s language list. ctrl_t5 accepts it directly.')
                     ->options([
                         'en_US' => 'English',
                         'de_DE' => 'German',
