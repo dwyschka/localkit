@@ -9,6 +9,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\ViewField;
+use Filament\Forms\Components\KeyValue;
 use Illuminate\Support\Carbon;
 use App\Filament\Forms\Components\MinutesTimePicker;
 
@@ -70,6 +71,26 @@ class UI
                     })
                     ->readOnly()
                     ->disabled(true),
+            ]),
+
+            Section::make('Litter')->columns(3)->schema([
+                TextInput::make('history_count')
+                    ->label('Used Today')
+                    ->readOnly()
+                    ->formatStateUsing(function ($record) {
+                        return $record->histories()
+                            ->whereDate('created_at', now()->toDateTime())
+                            ->where('type', '=', 'IN_USE')
+                            ->count();
+                    }),
+
+                TextInput::make('configuration.litter.percent')
+                    ->label('Litter Percentage')
+                    ->readOnly(),
+
+                TextInput::make('configuration.litter.weight')
+                    ->label('Litter Weight')
+                    ->readOnly(),
             ]),
 
             Section::make('Network')->columns(2)->schema([
@@ -348,11 +369,15 @@ class UI
                 Toggle::make('configuration.settings.lightMode')
                     ->label('Set Screen Display'),
 
+                Toggle::make('configuration.settings.downpos')
+                    ->label('Uninterrupted Rotation')
+                    ->helperText('Cylinder will rotate from its initial level and will not pause during the process.'),
+
                 Select::make('configuration.settings.unit')
                     ->label('Weight Unit')
                     ->options([
-                        '0' => 'Kilograms',
-                        '1' => 'Pounds',
+                        '0' => 'Kg',
+                        '1' => 'Pound',
                     ]),
 
                 Select::make('configuration.settings.sandType')
@@ -365,9 +390,21 @@ class UI
                         '3' => 'Mixed',
                     ]),
 
-                TextInput::make('configuration.settings.language')
+                Select::make('configuration.settings.language')
                     ->label('Device Language')
-                    ->helperText('Locale string from the app\'s language list, e.g. en_US, de_DE. ctrl_t5 accepts it directly.'),
+                    ->helperText('Locale string from the app\'s language list. ctrl_t5 accepts it directly.')
+                    ->options([
+                        'en_US' => 'English',
+                        'de_DE' => 'German',
+                        'es_ES' => 'Spanish',
+                        'zh_CN' => 'Chinese',
+                        'ja_JP' => 'Japanese',
+                        'it_IT' => 'Italiano',
+                        'pt_PT' => 'Portuguese',
+                        'tr_TR' => 'Turkish',
+                        'ru_RU' => 'Russian',
+                        'fr_FR' => 'French',
+                    ]),
             ]),
 
             Section::make('Schedules (read-only)')->schema([
@@ -392,9 +429,19 @@ class UI
                     ->disabled()
                     ->dehydrated(false),
 
-                TextInput::make('configuration.settings.stopTime')
+                Select::make('configuration.settings.stopTime')
                     ->label('Stop Time')
                     ->helperText('Read-only state value; not a property/set key.')
+                    ->options([
+                        '0' => 'Off',
+                        '30' => '30 seconds',
+                        '60' => '1 Minute',
+                        '300' => '5 Minutes',
+                        '600' => '10 Minutes',
+                        '900' => '15 Minutes',
+                        '1800' => '30 Minutes',
+                        '3600' => '1 Hour',
+                    ])
                     ->disabled()
                     ->dehydrated(false),
 
@@ -404,11 +451,6 @@ class UI
                     ->disabled()
                     ->dehydrated(false),
 
-                TextInput::make('configuration.settings.downpos')
-                    ->label('Rest Position')
-                    ->helperText('Target rest position of the cleaning mechanism. ctrl_t5 accepts it, but the concrete values are not documented.')
-                    ->numeric(),
-
                 Textarea::make('configuration.settings.soundList')
                     ->label('Sound List')
                     ->helperText('Raw soundList array accepted by ctrl_t5. Not exposed by the app as a simple list.')
@@ -417,19 +459,15 @@ class UI
                     ->disabled()
                     ->dehydrated(false),
 
-                Textarea::make('configuration.settings.sandSetUseConfig')
+                KeyValue::make('configuration.settings.sandSetUseConfig')
                     ->label('Sand Set Use Config')
-                    ->helperText('Device-internal, not exposed by the app either.')
-                    ->formatStateUsing(fn ($state) => is_array($state) ? json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) : (string) $state)
-                    ->rows(4)
+                    ->helperText('The meaning is currently unknown')
                     ->disabled()
                     ->dehydrated(false),
 
-                Textarea::make('configuration.settings.sandFullWeight')
-                    ->label('Sand Full Weight')
-                    ->helperText('Device-internal weight table, not exposed by the app either.')
-                    ->formatStateUsing(fn ($state) => is_array($state) ? json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) : (string) $state)
-                    ->rows(4)
+                KeyValue::make('configuration.settings.sandFullWeight')
+                    ->label('SandFullWeight')
+                    ->helperText('The meaning is currently unknown')
                     ->disabled()
                     ->dehydrated(false),
             ]),

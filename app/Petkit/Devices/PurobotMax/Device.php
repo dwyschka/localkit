@@ -1017,6 +1017,35 @@ class Device implements DeviceDefinition, BluetoothProxyInterface
                     $settings->lightning = $state->lightState !== null;
                 }
 
+                // PuraMax-style litter object, with a fallback to the T5
+                // state field names (sandWeight/sandPercent/sandUse).
+                $litter = $state->litter ?? null;
+                if (is_array($litter)) {
+                    $litter = (object) $litter;
+                }
+
+                if (is_object($litter)) {
+                    if (isset($litter->weight)) {
+                        $settings->litterWeight = (int) $litter->weight;
+                    }
+                    if (isset($litter->percent)) {
+                        $settings->litterPercent = (int) $litter->percent;
+                    }
+                    if (isset($litter->usedTimes)) {
+                        $settings->litterUsedTimes = (int) $litter->usedTimes;
+                    }
+                }
+
+                if (isset($state->sandWeight)) {
+                    $settings->litterWeight = (int) $state->sandWeight;
+                }
+                if (isset($state->sandPercent)) {
+                    $settings->litterPercent = (int) $state->sandPercent;
+                }
+                if (isset($state->sandUse)) {
+                    $settings->litterUsedTimes = (int) $state->sandUse;
+                }
+
                 $source = $state->settings ?? $state;
 
                 if (is_string($source)) {

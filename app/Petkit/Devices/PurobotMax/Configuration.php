@@ -66,6 +66,35 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     )]
     public ?string $lastUsedByName;
 
+    #[Sensor(
+        technicalName: 'litter_weight',
+        name: 'Litter Weight',
+        icon: 'mdi:information-outline',
+        deviceClass: 'weight',
+        unitOfMeasurement: 'g',
+        valueTemplate: '{{ value_json.litter.weight }}',
+        entityCategory: 'diagnostic'
+    )]
+    public int $litterWeight;
+
+    #[Sensor(
+        technicalName: 'used_times',
+        name: 'Used Times',
+        icon: 'mdi:counter',
+        valueTemplate: '{{ value_json.litter.usedTimes }}',
+        entityCategory: 'diagnostic'
+    )]
+    public int $litterUsedTimes;
+
+    #[Sensor(
+        technicalName: 'litter_percent',
+        name: 'Litter Percentage',
+        icon: 'mdi:information-outline',
+        valueTemplate: '{{ value_json.litter.percent }}',
+        entityCategory: 'diagnostic'
+    )]
+    public int $litterPercent;
+
     public ?int $lastUsedByPetId;
 
     #[Sensor(
@@ -954,6 +983,9 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'ipAddress' => ['string'],
             'ipAddressOverride' => ['bool'],
             'lastUsedByName' => ['nullable', 'string'],
+            'litterWeight' => ['integer', 'min:0'],
+            'litterUsedTimes' => ['integer', 'min:0'],
+            'litterPercent' => ['integer', 'min:0', 'max:100'],
             'lastUsedByPetId' => ['nullable', 'integer'],
             'workingState' => ['nullable', 'string'],
             'error' => ['nullable', 'string'],
@@ -1048,6 +1080,9 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'ipAddress' => '',
             'ipAddressOverride' => false,
             'lastUsedByName' => null,
+            'litterWeight' => 0,
+            'litterUsedTimes' => 0,
+            'litterPercent' => 100,
             'lastUsedByPetId' => null,
             'workingState' => null,
             'error' => null,
@@ -1157,6 +1192,9 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'ipAddress' => new StringCast(),
             'ipAddressOverride' => new BooleanCast(),
             'lastUsedByName' => new StringCast(),
+            'litterWeight' => new IntegerCast(),
+            'litterUsedTimes' => new IntegerCast(),
+            'litterPercent' => new IntegerCast(),
             'lastUsedByPetId' => new IntegerCast(),
             'workingState' => new StringCast(),
             'error' => new StringCast(),
@@ -1389,6 +1427,10 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             $data['language'] = $settings['language'] ?? null;
         }
 
+        $data['litterWeight'] = $config['litter']['weight'] ?? null;
+        $data['litterPercent'] = $config['litter']['percent'] ?? null;
+        $data['litterUsedTimes'] = $config['litter']['usedTimes'] ?? null;
+
         $data['schedule'] = $config['schedule'] ?? null;
         $data['capacity'] = $config['capacity'] ?? null;
 
@@ -1427,6 +1469,11 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
                 'lastUsedByName' => $this->lastUsedByName,
                 'workMode' => $this->workMode,
                 'lightning' => $this->lightning,
+            ],
+            'litter' => [
+                'weight' => $this->litterWeight,
+                'usedTimes' => $this->litterUsedTimes,
+                'percent' => $this->litterPercent,
             ],
             'settings' => [
                 // Meta
