@@ -36,9 +36,13 @@ class UI
     public function formFields(): array
     {
         return [
-            Section::make('Consumables')->columns(2)->schema([
+            Section::make('Consumables')
+                ->description('N50 and N60 are alternative Pet Odor Eliminator generations. Only the module actually installed in the device is relevant; the other counter stays unused.')
+                ->columns(2)
+                ->schema([
                 TextInput::make('configuration.consumables.n50Durability')
                     ->label('N50 Durability (days)')
+                    ->helperText('Pet Odor Eliminator N50. Only relevant if this generation is installed.')
                     ->numeric(),
 
                 TextInput::make('configuration.consumables.n50NextChange')
@@ -55,6 +59,7 @@ class UI
 
                 TextInput::make('configuration.consumables.n60Durability')
                     ->label('N60 Durability (days)')
+                    ->helperText('Pet Odor Eliminator N60 / K4. Only relevant if this generation is installed.')
                     ->numeric(),
 
                 TextInput::make('configuration.consumables.n60NextChange')
