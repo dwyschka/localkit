@@ -74,7 +74,7 @@ class PurobotMaxConfigurationTest extends TestCase
             'toiletLight', 'night', 'timeDisplay', 'upload', 'tumbling', 'kitten',
             'autoWork', 'fixedTimeClear', 'deepClean', 'sandSaving', 'avoidRepeat',
             'autoIntervalMin', 'underweight', 'stillTime', 'bury', 'disturbMode',
-            'sandType', 'lightest', 'soundList', 'deepSpray', 'fixedTimeSpray',
+            'sandType', 'lightest', 'deepSpray', 'fixedTimeSpray',
             'autoSpray', 'sprayDays', 'downpos',
             // algo parser
             'moveTracking', 'moveSensitivity', 'petDetection', 'petTracking',
@@ -152,6 +152,20 @@ class PurobotMaxConfigurationTest extends TestCase
     public function test_t5_is_registered_for_discern_updates(): void
     {
         $this->assertContains('t5', PublishDiscernUpdate::DISCERN_CAPABLE_DEVICE_TYPES);
+    }
+
+    public function test_deliberately_unmodelled_fields_are_absent(): void
+    {
+        $own = $this->own(new ReflectionClass(Configuration::class));
+
+        // ctrl_t5 may accept some of these, but Localkit has no usable
+        // control/display for them, so they are not part of the T5 DTO.
+        foreach ([
+            'softMode', 'stopTime', 'deodor_tip_en', 'preLive', 'soundList',
+            'sandSetUseConfig', 'sandFullWeight',
+        ] as $key) {
+            $this->assertNotContains($key, $own, "unused field '$key' is still modelled");
+        }
     }
 
     public function test_device_name(): void

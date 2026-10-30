@@ -492,7 +492,7 @@ class Device implements DeviceDefinition, BluetoothProxyInterface
         $data['settings'] = array_filter(
             $data['settings'],
             fn (string $key) => ! Str::contains($key, 'MultiRange')
-                && ! in_array($key, ['cameraMultiRange', 'detectMultiRange', 'schedule', 'soundList', 'sandSetUseConfig', 'sandFullWeight'], true),
+                && ! in_array($key, ['cameraMultiRange', 'detectMultiRange', 'schedule'], true),
             ARRAY_FILTER_USE_KEY
         );
 
@@ -813,7 +813,6 @@ class Device implements DeviceDefinition, BluetoothProxyInterface
                 'manualLock' => (int) $config['manualLock'],
                 'clickOkEnable' => (int) $config['clickOkEnable'],
                 'lightMode' => (int) $config['lightMode'],
-                'softMode' => (int) $config['softMode'],
                 'toiletLight' => (int) $config['toiletLight'],
                 'toiletDetection' => (int) $config['toiletDetection'],
                 'lightAssist' => (int) $config['lightAssist'],
@@ -847,19 +846,16 @@ class Device implements DeviceDefinition, BluetoothProxyInterface
                 'deepSpray' => (int) $config['deepSpray'],
                 'fixedTimeSpray' => (int) $config['fixedTimeSpray'],
                 'sprayDays' => (int) $config['sprayDays'],
-                'deodor_tip_en' => (int) $config['deodor_tip_en'],
                 'camera' => (int) $config['camera'],
                 'microphone' => (int) $config['microphone'],
                 'night' => (int) $config['night'],
                 'timeDisplay' => (int) $config['timeDisplay'],
                 'cameraLight' => (int) $config['cameraLight'],
-                'preLive' => (int) $config['preLive'],
                 'moveTracking' => (int) $config['moveTracking'],
                 'moveSensitivity' => (int) $config['moveSensitivity'],
                 'petDetection' => (int) $config['petDetection'],
                 'petTracking' => (int) $config['petTracking'],
                 'petSensitivity' => (int) $config['petSensitivity'],
-                'stopTime' => (int) $config['stopTime'],
             ],
             'userId' => '1',
             'multiConfig' => (bool) $config['multiConfig'],
@@ -1062,16 +1058,16 @@ class Device implements DeviceDefinition, BluetoothProxyInterface
 
                 $scalarSettings = [
                     'shareOpen', 'multiConfig', 'autoUpgrade', 'typeCode', 'serviceStatus', 'hertz',
-                    'camera', 'microphone', 'night', 'timeDisplay', 'cameraLight', 'preLive',
+                    'camera', 'microphone', 'night', 'timeDisplay', 'cameraLight',
                     'petDetection', 'moveTracking', 'moveSensitivity', 'petTracking', 'petSensitivity',
                     'toiletDetection', 'phDetection', 'voice', 'detectInterval',
                     'lightMode', 'lightAssist', 'toiletLight',
                     'autoWork', 'autoIntervalMin', 'fixedTimeClear', 'avoidRepeat', 'underweight',
                     'kitten', 'bury', 'deepClean', 'tumbling', 'lightest', 'stillTime',
-                    'sandType', 'unit', 'sandSaving', 'disturbMode', 'downpos', 'softMode', 'stopTime',
+                    'sandType', 'unit', 'sandSaving', 'disturbMode', 'downpos',
                     'toneMode', 'systemSoundEnable', 'soundEnable', 'volume', 'selectedSound',
                     'manualLock', 'clickOkEnable',
-                    'autoSpray', 'deepSpray', 'fixedTimeSpray', 'sprayDays', 'deodor_tip_en',
+                    'autoSpray', 'deepSpray', 'fixedTimeSpray', 'sprayDays',
                     'upload', 'language',
                 ];
 

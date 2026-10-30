@@ -5,11 +5,8 @@ namespace App\Petkit\Devices\PurobotMax;
 use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\ViewField;
-use Filament\Forms\Components\KeyValue;
 use Illuminate\Support\Carbon;
 use App\Filament\Forms\Components\MinutesTimePicker;
 
@@ -340,18 +337,6 @@ class UI
                 Toggle::make('configuration.settings.upload')
                     ->label('Upload Videos')
                     ->helperText('Allows cloud upload of event videos.'),
-
-                Toggle::make('configuration.settings.preLive')
-                    ->label('Pre-live Preview')
-                    ->helperText('The app sends this, but ctrl_t5 has no property parser for preLive - read-only here.')
-                    ->disabled()
-                    ->dehydrated(false),
-
-                Toggle::make('configuration.settings.shareOpen')
-                    ->label('Share Open')
-                    ->helperText('Cloud sharing flag, not an MQTT setting.')
-                    ->disabled()
-                    ->dehydrated(false),
             ]),
 
             // KidLockActivity.
@@ -407,70 +392,6 @@ class UI
                     ]),
             ]),
 
-            Section::make('Schedules (read-only)')->schema([
-                Textarea::make('configuration.schedule')
-                    ->label('Clean / Deodorize Schedule')
-                    ->helperText('ctrl_t5 accepts a `schedule` array of {id, type, time, repeats} items (type 0 = cleaning, 1 = deodorizing). The app manages it through PetKit\'s cloud API; Localkit currently stores it read-only.')
-                    ->formatStateUsing(fn ($state) => is_array($state) ? json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) : (string) $state)
-                    ->rows(8)
-                    ->disabled()
-                    ->dehydrated(false),
-            ]),
-
-            Section::make('Unknown / Unverified')->schema([
-                ViewField::make('warning')
-                    ->columnSpanFull()
-                    ->view('filament.forms.warning')
-                    ->viewData(['message' => 'These fields exist on the device, but either ctrl_t5 does not parse them over MQTT or their meaning/value range is not verified. Change with caution - read-only rows are deliberately not sent.']),
-
-                Toggle::make('configuration.settings.softMode')
-                    ->label('Soft Mode')
-                    ->helperText('Present in /dev_only_iot_device_info, but ctrl_t5 has no property parser for it.')
-                    ->disabled()
-                    ->dehydrated(false),
-
-                Select::make('configuration.settings.stopTime')
-                    ->label('Stop Time')
-                    ->helperText('Read-only state value; not a property/set key.')
-                    ->options([
-                        '0' => 'Off',
-                        '30' => '30 seconds',
-                        '60' => '1 Minute',
-                        '300' => '5 Minutes',
-                        '600' => '10 Minutes',
-                        '900' => '15 Minutes',
-                        '1800' => '30 Minutes',
-                        '3600' => '1 Hour',
-                    ])
-                    ->disabled()
-                    ->dehydrated(false),
-
-                Toggle::make('configuration.settings.deodor_tip_en')
-                    ->label('Deodorant Reminder')
-                    ->helperText('Read-only reminder flag; not a property/set key.')
-                    ->disabled()
-                    ->dehydrated(false),
-
-                Textarea::make('configuration.settings.soundList')
-                    ->label('Sound List')
-                    ->helperText('Raw soundList array accepted by ctrl_t5. Not exposed by the app as a simple list.')
-                    ->formatStateUsing(fn ($state) => is_array($state) ? json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) : (string) $state)
-                    ->rows(4)
-                    ->disabled()
-                    ->dehydrated(false),
-
-                KeyValue::make('configuration.settings.sandSetUseConfig')
-                    ->label('Sand Set Use Config')
-                    ->helperText('The meaning is currently unknown')
-                    ->disabled()
-                    ->dehydrated(false),
-
-                KeyValue::make('configuration.settings.sandFullWeight')
-                    ->label('SandFullWeight')
-                    ->helperText('The meaning is currently unknown')
-                    ->disabled()
-                    ->dehydrated(false),
-            ]),
         ];
     }
 }

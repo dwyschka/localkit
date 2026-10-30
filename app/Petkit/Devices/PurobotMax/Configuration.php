@@ -277,10 +277,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     // ({enable, rpt, time:[[from,till],...]}) on the way out.
     public MultiRangeDTO $cameraMultiRange;
 
-    // The app sends preLive on the privacy screen, but ctrl_t5 has no
-    // parser branch for it - read-only here.
-    public bool $preLive;
-
     // Intelligent detection
     #[HASwitch(
         technicalName: 'pet_detection',
@@ -684,13 +680,8 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
 
     public MultiRangeDTO $distrubMultiRange;
 
-    // Device-internal, not exposed by the vendor app either.
-    public array $sandSetUseConfig;
-    public array $sandFullWeight;
-
     public int $downpos;
-    public bool $softMode;
-    public int $stopTime;
+
 
     // Speech
     #[HASwitch(
@@ -765,9 +756,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         step: 1
     )]
     public int $selectedSound;
-
-    // Raw sound list accepted by ctrl_t5 (`soundList`). Not exposed to HA.
-    public array $soundList;
 
     // Lock
     #[HASwitch(
@@ -854,17 +842,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         valueTemplate: '{{ value_json.settings.sprayDays }}'
     )]
     public int $sprayDays;
-
-    #[BinarySensor(
-        technicalName: 'deodor_tip_en',
-        name: 'Deodorant Reminder',
-        icon: 'mdi:bell-ring',
-        entityCategory: 'diagnostic',
-        valueTemplate: '{{ value_json.settings.deodor_tip_en }}',
-        payloadOn: true,
-        payloadOff: false
-    )]
-    public bool $deodor_tip_en;
 
     #[Number(
         technicalName: 'n50_durability',
@@ -1005,7 +982,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'timeDisplay' => ['bool'],
             'cameraLight' => ['bool'],
             'cameraMultiRange' => ['array'],
-            'preLive' => ['bool'],
 
             'petDetection' => ['bool'],
             'moveTracking' => ['bool'],
@@ -1040,11 +1016,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'sandSaving' => ['bool'],
             'disturbMode' => ['bool'],
             'distrubMultiRange' => ['array'],
-            'sandSetUseConfig' => ['array'],
-            'sandFullWeight' => ['array'],
             'downpos' => ['integer'],
-            'softMode' => ['bool'],
-            'stopTime' => ['integer'],
 
             'toneMode' => ['bool'],
             'toneMultiRange' => ['array'],
@@ -1052,7 +1024,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'soundEnable' => ['bool'],
             'volume' => ['integer', 'min:0'],
             'selectedSound' => ['integer'],
-            'soundList' => ['array'],
 
             'manualLock' => ['bool'],
             'clickOkEnable' => ['bool'],
@@ -1061,7 +1032,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'deepSpray' => ['bool'],
             'fixedTimeSpray' => ['bool'],
             'sprayDays' => ['integer', 'min:0'],
-            'deodor_tip_en' => ['bool'],
             'n50Durability' => ['integer', 'min:0', 'max:90'],
             'n50NextChange' => ['nullable'],
 
@@ -1105,7 +1075,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
                 'name' => 'cameraMultiRange',
                 'ranges' => [['from' => 0, 'till' => 1440]],
             ],
-            'preLive' => false,
 
             'petDetection' => true,
             'moveTracking' => true,
@@ -1149,11 +1118,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
                 'name' => 'distrubMultiRange',
                 'ranges' => [['from' => 40, 'till' => 520]],
             ],
-            'sandSetUseConfig' => [[40, 40, 85], [40, 40, 85], [40, 40, 85], [40, 40, 85]],
-            'sandFullWeight' => [3500, 5800, 3000, 3500, 3500],
             'downpos' => 0,
-            'softMode' => false,
-            'stopTime' => 0,
 
             'toneMode' => false,
             'toneMultiRange' => [
@@ -1164,7 +1129,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'soundEnable' => true,
             'volume' => 7,
             'selectedSound' => -1,
-            'soundList' => [],
 
             'manualLock' => false,
             'clickOkEnable' => true,
@@ -1173,7 +1137,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'deepSpray' => false,
             'fixedTimeSpray' => false,
             'sprayDays' => 0,
-            'deodor_tip_en' => true,
             'n50Durability' => 30,
             'n50NextChange' => 0,
 
@@ -1214,7 +1177,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'timeDisplay' => new BooleanCast(),
             'cameraLight' => new BooleanCast(),
             'cameraMultiRange' => new DTOCast(MultiRangeDTO::class),
-            'preLive' => new BooleanCast(),
 
             'petDetection' => new BooleanCast(),
             'moveTracking' => new BooleanCast(),
@@ -1249,11 +1211,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'sandSaving' => new BooleanCast(),
             'disturbMode' => new BooleanCast(),
             'distrubMultiRange' => new DTOCast(MultiRangeDTO::class),
-            'sandSetUseConfig' => new ArrayCast(),
-            'sandFullWeight' => new ArrayCast(),
             'downpos' => new IntegerCast(),
-            'softMode' => new BooleanCast(),
-            'stopTime' => new IntegerCast(),
 
             'toneMode' => new BooleanCast(),
             'toneMultiRange' => new DTOCast(MultiRangeDTO::class),
@@ -1261,7 +1219,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'soundEnable' => new BooleanCast(),
             'volume' => new IntegerCast(),
             'selectedSound' => new IntegerCast(),
-            'soundList' => new ArrayCast(),
 
             'manualLock' => new BooleanCast(),
             'clickOkEnable' => new BooleanCast(),
@@ -1270,7 +1227,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'deepSpray' => new BooleanCast(),
             'fixedTimeSpray' => new BooleanCast(),
             'sprayDays' => new IntegerCast(),
-            'deodor_tip_en' => new BooleanCast(),
             'n50Durability' => new IntegerCast(),
 
             'n60Durability' => new IntegerCast(),
@@ -1366,7 +1322,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             $data['timeDisplay'] = $settings['timeDisplay'] ?? null;
             $data['cameraLight'] = $settings['cameraLight'] ?? null;
             $data['cameraMultiRange'] = self::normalizeCameraRange($settings['cameraMultiRange'] ?? null);
-            $data['preLive'] = $settings['preLive'] ?? null;
 
             $data['petDetection'] = $settings['petDetection'] ?? null;
             $data['moveTracking'] = $settings['moveTracking'] ?? null;
@@ -1400,11 +1355,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             $data['sandSaving'] = $settings['sandSaving'] ?? null;
             $data['disturbMode'] = $settings['disturbMode'] ?? null;
             $data['distrubMultiRange'] = $settings['distrubMultiRange'] ?? null;
-            $data['sandSetUseConfig'] = $settings['sandSetUseConfig'] ?? null;
-            $data['sandFullWeight'] = $settings['sandFullWeight'] ?? null;
             $data['downpos'] = $settings['downpos'] ?? null;
-            $data['softMode'] = $settings['softMode'] ?? null;
-            $data['stopTime'] = $settings['stopTime'] ?? null;
 
             $data['toneMode'] = $settings['toneMode'] ?? null;
             $data['toneMultiRange'] = $settings['toneMultiRange'] ?? null;
@@ -1412,7 +1363,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             $data['soundEnable'] = $settings['soundEnable'] ?? null;
             $data['volume'] = $settings['volume'] ?? null;
             $data['selectedSound'] = $settings['selectedSound'] ?? null;
-            $data['soundList'] = $settings['soundList'] ?? null;
 
             $data['manualLock'] = $settings['manualLock'] ?? null;
             $data['clickOkEnable'] = $settings['clickOkEnable'] ?? null;
@@ -1421,7 +1371,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             $data['deepSpray'] = $settings['deepSpray'] ?? null;
             $data['fixedTimeSpray'] = $settings['fixedTimeSpray'] ?? null;
             $data['sprayDays'] = $settings['sprayDays'] ?? null;
-            $data['deodor_tip_en'] = $settings['deodor_tip_en'] ?? null;
 
             $data['upload'] = $settings['upload'] ?? null;
             $data['language'] = $settings['language'] ?? null;
@@ -1491,7 +1440,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
                 'timeDisplay' => $this->timeDisplay,
                 'cameraLight' => $this->cameraLight,
                 'cameraMultiRange' => $this->cameraMultiRange,
-                'preLive' => $this->preLive,
 
                 // Detection
                 'petDetection' => $this->petDetection,
@@ -1528,11 +1476,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
                 'sandSaving' => $this->sandSaving,
                 'disturbMode' => $this->disturbMode,
                 'distrubMultiRange' => $this->distrubMultiRange,
-                'sandSetUseConfig' => $this->sandSetUseConfig,
-                'sandFullWeight' => $this->sandFullWeight,
                 'downpos' => $this->downpos,
-                'softMode' => $this->softMode,
-                'stopTime' => $this->stopTime,
 
                 // Speech
                 'toneMode' => $this->toneMode,
@@ -1541,7 +1485,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
                 'soundEnable' => $this->soundEnable,
                 'volume' => $this->volume,
                 'selectedSound' => $this->selectedSound,
-                'soundList' => $this->soundList,
 
                 // Lock
                 'manualLock' => $this->manualLock,
@@ -1552,7 +1495,6 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
                 'deepSpray' => $this->deepSpray,
                 'fixedTimeSpray' => $this->fixedTimeSpray,
                 'sprayDays' => $this->sprayDays,
-                'deodor_tip_en' => $this->deodor_tip_en,
 
                 // Privacy / misc
                 'upload' => $this->upload,
