@@ -4,6 +4,7 @@ namespace App\Petkit\Devices\PurobotMax;
 
 use stdClass;
 use Throwable;
+use App\DTOs\MultiRangeDTO;
 use App\DTOs\PetkitDTOInterface;
 use App\Helpers\JsonHelper;
 use App\Homeassistant\EventPublisher;
@@ -457,7 +458,11 @@ class Device implements DeviceDefinition, BluetoothProxyInterface
         foreach ($difference as $key => $val) {
             $value = $dto->$key;
 
-            if ($value instanceof PetkitDTOInterface) {
+            if ($key === 'cameraMultiRange' && $value instanceof MultiRangeDTO) {
+                // The admin UI edits plain from/till minute pairs; ctrl_t5's
+                // camera parser wants objects with rpt/time.
+                $difference[$key] = $this->cameraRanges($value);
+            } elseif ($value instanceof PetkitDTOInterface) {
                 $difference[$key] = $value->toPetkitConfiguration();
             } elseif (is_numeric($value)) {
                 $difference[$key] = (int) $value;
@@ -922,36 +927,61 @@ class Device implements DeviceDefinition, BluetoothProxyInterface
             $range = json_decode($range, true);
         }
 
+        if ($range instanceof MultiRangeDTO) {
+            $range = $range->ranges;
+        }
+
         if (! is_array($range)) {
             return [];
         }
 
-        $out = [];
+        // Preserve the old object shape (including its weekday rpt) if the
+        // stored config still has it. Otherwise the admin form's simple
+        // from/till pairs apply to every day.
+        $objects = [];
+        $hasObjectShape = false;
         foreach ($range as $item) {
-            if (! is_array($item)) {
-                continue;
+            if (is_array($item) && (array_key_exists('time', $item) || array_key_exists('rpt', $item))) {
+                $hasObjectShape = true;
+                break;
             }
-
-            $time = $item['time'] ?? [];
-            $pairs = [];
-            if (is_array($time)) {
-                foreach ($time as $pair) {
-                    if (is_array($pair) && array_key_exists('from', $pair) && array_key_exists('till', $pair)) {
-                        $pairs[] = [(int) $pair['from'], (int) $pair['till']];
-                    } elseif (is_array($pair) && array_key_exists(0, $pair) && array_key_exists(1, $pair)) {
-                        $pairs[] = [(int) $pair[0], (int) $pair[1]];
-                    }
-                }
-            }
-
-            $out[] = [
-                'enable' => (int) ($item['enable'] ?? 1),
-                'rpt' => (string) ($item['rpt'] ?? '1,2,3,4,5,6,7'),
-                'time' => $pairs,
-            ];
         }
 
-        return $out;
+        if ($hasObjectShape) {
+            foreach ($range as $item) {
+                if (! is_array($item)) {
+                    continue;
+                }
+
+                $time = $item['time'] ?? [];
+                $pairs = [];
+                if (is_array($time)) {
+                    foreach ($time as $pair) {
+                        if (is_array($pair) && array_key_exists('from', $pair) && array_key_exists('till', $pair)) {
+                            $pairs[] = [(int) $pair['from'], (int) $pair['till']];
+                        } elseif (is_array($pair) && array_key_exists(0, $pair) && array_key_exists(1, $pair)) {
+                            $pairs[] = [(int) $pair[0], (int) $pair[1]];
+                        }
+                    }
+                }
+
+                $objects[] = [
+                    'enable' => (int) ($item['enable'] ?? 1),
+                    'rpt' => (string) ($item['rpt'] ?? '1,2,3,4,5,6,7'),
+                    'time' => $pairs,
+                ];
+            }
+
+            return $objects;
+        }
+
+        $pairs = $this->rangePairs($range);
+
+        return $pairs === [] ? [] : [[
+            'enable' => 1,
+            'rpt' => '1,2,3,4,5,6,7',
+            'time' => $pairs,
+        ]];
     }
 
     private function updateConfiguration(mixed $content, array $extra = []): array

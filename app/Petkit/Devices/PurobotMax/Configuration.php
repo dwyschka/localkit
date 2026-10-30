@@ -242,11 +242,11 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     )]
     public bool $cameraLight;
 
-    // Camera working-time windows. ctrl_t5's pk_parse_cameraMultiNew_func
-    // expects objects with `rpt` (weekdays 1-7) and `time` ([[from,till],...]);
-    // `enable` is accepted but ignored by the firmware. Kept as a raw array
-    // because this is not a simple pair list like the other ranges.
-    public array $cameraMultiRange;
+    // Camera working-time windows, edited as from/till minute pairs in the
+    // admin UI. Device::propertyChange()/cameraRanges() expands them to the
+    // object shape ctrl_t5 actually parses
+    // ({enable, rpt, time:[[from,till],...]}) on the way out.
+    public MultiRangeDTO $cameraMultiRange;
 
     // The app sends preLive on the privacy screen, but ctrl_t5 has no
     // parser branch for it - read-only here.
@@ -1067,11 +1067,8 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'timeDisplay' => false,
             'cameraLight' => false,
             'cameraMultiRange' => [
-                [
-                    'enable' => 1,
-                    'rpt' => '1,2,3,4,5,6,7',
-                    'time' => [[0, 1440]],
-                ],
+                'name' => 'cameraMultiRange',
+                'ranges' => [['from' => 0, 'till' => 1440]],
             ],
             'preLive' => false,
 
@@ -1178,7 +1175,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'night' => new BooleanCast(),
             'timeDisplay' => new BooleanCast(),
             'cameraLight' => new BooleanCast(),
-            'cameraMultiRange' => new ArrayCast(),
+            'cameraMultiRange' => new DTOCast(MultiRangeDTO::class),
             'preLive' => new BooleanCast(),
 
             'petDetection' => new BooleanCast(),
@@ -1246,6 +1243,57 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         ];
     }
 
+    /**
+     * The admin UI and the T6/T7 use a simple {name, ranges:[{from,till}]}
+     * DTO. Older T5 saves stored ctrl_t5's object shape
+     * ({enable, rpt, time:[[from,till],...]}) or a bare pair list; accept
+     * both so an existing device config still loads.
+     */
+    private static function normalizeCameraRange(mixed $value): ?array
+    {
+        if (is_string($value)) {
+            $value = json_decode($value, true);
+        }
+
+        if (! is_array($value)) {
+            return null;
+        }
+
+        if (isset($value['ranges']) && is_array($value['ranges'])) {
+            return $value;
+        }
+
+        $ranges = [];
+        foreach ($value as $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+
+            if (array_key_exists('from', $item) && array_key_exists('till', $item)) {
+                $ranges[] = ['from' => (int) $item['from'], 'till' => (int) $item['till']];
+                continue;
+            }
+
+            if (array_key_exists(0, $item) && array_key_exists(1, $item)) {
+                $ranges[] = ['from' => (int) $item[0], 'till' => (int) $item[1]];
+                continue;
+            }
+
+            foreach (($item['time'] ?? []) as $pair) {
+                if (is_array($pair) && array_key_exists(0, $pair) && array_key_exists(1, $pair)) {
+                    $ranges[] = ['from' => (int) $pair[0], 'till' => (int) $pair[1]];
+                } elseif (is_array($pair) && array_key_exists('from', $pair) && array_key_exists('till', $pair)) {
+                    $ranges[] = ['from' => (int) $pair['from'], 'till' => (int) $pair['till']];
+                }
+            }
+        }
+
+        return $ranges === [] ? null : [
+            'name' => 'cameraMultiRange',
+            'ranges' => $ranges,
+        ];
+    }
+
     public static function fromDevice(Device|BluetoothDevice $device): self
     {
         $config = $device->configuration;
@@ -1279,7 +1327,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             $data['night'] = $settings['night'] ?? null;
             $data['timeDisplay'] = $settings['timeDisplay'] ?? null;
             $data['cameraLight'] = $settings['cameraLight'] ?? null;
-            $data['cameraMultiRange'] = $settings['cameraMultiRange'] ?? null;
+            $data['cameraMultiRange'] = self::normalizeCameraRange($settings['cameraMultiRange'] ?? null);
             $data['preLive'] = $settings['preLive'] ?? null;
 
             $data['petDetection'] = $settings['petDetection'] ?? null;

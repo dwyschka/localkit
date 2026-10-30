@@ -130,15 +130,14 @@ class PurobotMaxConfigurationTest extends TestCase
         $this->assertNotContains('toggle_door', $actions);
     }
 
-    public function test_camera_range_uses_the_firmwares_object_shape(): void
+    public function test_camera_working_time_is_a_from_till_minute_range(): void
     {
         $r = new ReflectionClass(Configuration::class);
         $defaults = $r->getMethod('defaults')->invoke($r->newInstanceWithoutConstructor());
 
         $this->assertIsArray($defaults['cameraMultiRange']);
-        $this->assertArrayHasKey('rpt', $defaults['cameraMultiRange'][0]);
-        $this->assertArrayHasKey('time', $defaults['cameraMultiRange'][0]);
-        $this->assertSame([[0, 1440]], $defaults['cameraMultiRange'][0]['time']);
+        $this->assertSame('cameraMultiRange', $defaults['cameraMultiRange']['name']);
+        $this->assertSame([['from' => 0, 'till' => 1440]], $defaults['cameraMultiRange']['ranges']);
     }
 
     public function test_fixed_schedule_enables_are_booleans(): void

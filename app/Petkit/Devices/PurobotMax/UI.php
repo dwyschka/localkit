@@ -228,13 +228,15 @@ class UI
                     ->label('Detection Interval (s)')
                     ->numeric(),
 
-                Textarea::make('configuration.settings.cameraMultiRange')
+                Repeater::make('configuration.settings.cameraMultiRange.ranges')
+                    ->columns(2)
                     ->label('Camera Working Time')
-                    ->helperText('Raw ctrl_t5 cameraMultiRange: an array of {enable, rpt, time:[[from,till],...]} objects. The app edits this on its "Camera time" screen; kept read-only here because it is a nested weekday/range structure, not a simple pair list.')
-                    ->formatStateUsing(fn ($state) => is_array($state) ? json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) : (string) $state)
-                    ->rows(8)
-                    ->disabled()
-                    ->dehydrated(false)
+                    ->helperText('From/till in minutes (0 = 00:00, 1440 = 24:00). The T5 applies these windows to every day; ctrl_t5 receives them as its {enable, rpt, time} camera range objects.')
+                    ->reorderableWithButtons()
+                    ->schema([
+                        MinutesTimePicker::make('from'),
+                        MinutesTimePicker::make('till'),
+                    ])
                     ->columnSpanFull(),
             ]),
 
