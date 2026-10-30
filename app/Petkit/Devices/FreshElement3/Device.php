@@ -80,12 +80,24 @@ class Device implements DeviceDefinition, BluetoothProxyInterface
             sprintf('/sys/%s/%s/thing/event/feed_over/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $this->mergeHistory($message?->params?->event_id ?? null, $message?->params?->content ?? null, DeviceStates::WORKING->value);
                 $this->publishDispenseEvent($device, $message?->params?->content ?? null);
+                $this->recordWeight($device, $message?->params?->state ?? null);
 
                 $device->update([
                     'working_state' => DeviceStates::IDLE->value
                 ]);
                 $this->reply($topic, $message);
 
+            },
+            sprintf('/sys/%s/%s/thing/event/eat_over/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
+                $content = json_decode($message?->params?->content ?? '{}', true) ?? [];
+
+                $this->recordWeight(
+                    $device,
+                    $message?->params?->state ?? null,
+                    isset($content['left_weight']) ? (int) $content['left_weight'] : null
+                );
+
+                $this->reply($topic, $message);
             },
             sprintf('/sys/%s/%s/thing/event/feed_start/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
 
@@ -156,6 +168,11 @@ class Device implements DeviceDefinition, BluetoothProxyInterface
             sprintf('/sys/%s/%s/thing/event/property/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $this->reply($topic, $message);
                 $this->updateDevice($message);
+                $this->recordWeight(
+                    $device,
+                    $message?->params?->state ?? null,
+                    isset($message?->params?->weight) ? (int) $message->params->weight : null
+                );
                 $msg = UserGet::replyToState($device->productKey(), $device->deviceName(), $message);
                 MQTT::connection('publisher')->publish($msg->getTopic(), $msg->getMessage());
             }
@@ -342,19 +359,54 @@ class Device implements DeviceDefinition, BluetoothProxyInterface
 
     private function updateDevice(?stdClass $message)
     {
-        $hasError = $message->params->food == 0;
-        $isFeeding = $message->params->feeding == 1;
-        $err = null;
+        $params = $message?->params;
+        $food = $params?->food ?? null;
+        $updates = [];
 
-        if($hasError) {
-            $err = 'food_empty';
+        if ($params !== null && property_exists($params, 'feeding')) {
+            $updates['working_state'] = ((int) $params->feeding) === 1
+                ? DeviceStates::WORKING->value
+                : DeviceStates::IDLE->value;
         }
 
-        $this->getDevice()->update([
-            'working_state' => $isFeeding ? DeviceStates::WORKING->value : DeviceStates::IDLE->value,
-            'error' => $err,
-        ]);
+        if ($food !== null) {
+            $updates['error'] = ((int) $food) === 0 ? 'food_empty' : null;
+        }
 
+        if ($updates !== []) {
+            $this->getDevice()->update($updates);
+        }
+    }
+
+    /**
+     * Persist the bowl scale reading carried in a FE3 event's state payload.
+     * The device only includes it on eat/feed events, and an empty state must
+     * not overwrite the last known reading.
+     */
+    private function recordWeight(DeviceModel $device, ?string $rawState, ?int $fallback = null): void
+    {
+        $state = json_decode($rawState ?? '', true);
+        $weight = is_array($state) ? ($state['weight'] ?? null) : null;
+        $weight ??= $fallback;
+
+        if ($weight === null) {
+            return;
+        }
+
+        $weight = (int) $weight;
+        $config = $device->configuration ?? [];
+
+        if (($config['states']['weight'] ?? null) === $weight) {
+            return;
+        }
+
+        $config['states']['weight'] = $weight;
+        $device->update(['configuration' => $config]);
+
+        Log::info('FE3 bowl weight updated', [
+            'device' => $device->serial_number,
+            'weight' => $weight,
+        ]);
     }
 
     public function btConnect(BluetoothDevice $btDevice): void
