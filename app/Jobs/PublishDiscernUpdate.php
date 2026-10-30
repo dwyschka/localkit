@@ -16,7 +16,7 @@ class PublishDiscernUpdate implements ShouldQueue
      * Device types with a pet_discern/post MQTT handler (see
      * DevDiscernPicController's docblock - confirmed on both D4SH and W7H).
      */
-    public const DISCERN_CAPABLE_DEVICE_TYPES = ['d4sh', 'w7h'];
+    public const DISCERN_CAPABLE_DEVICE_TYPES = ['d4sh', 'w7h', 't5'];
 
     public function __construct(protected Device $device)
     {
