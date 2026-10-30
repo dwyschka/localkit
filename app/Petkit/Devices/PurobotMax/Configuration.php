@@ -52,6 +52,11 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     )]
     public string $ipAddress;
 
+    // Manual override for devices whose state report carries a missing or
+    // wrong IP. When true, Device::updateConfiguration() leaves $ipAddress
+    // alone instead of replacing it with the value parsed from `other`.
+    public bool $ipAddressOverride;
+
     #[Sensor(
         technicalName: 'last_used_by',
         name: 'Last Used By',
@@ -947,6 +952,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     {
         return [
             'ipAddress' => ['string'],
+            'ipAddressOverride' => ['bool'],
             'lastUsedByName' => ['nullable', 'string'],
             'lastUsedByPetId' => ['nullable', 'integer'],
             'workingState' => ['nullable', 'string'],
@@ -1040,6 +1046,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     {
         return [
             'ipAddress' => '',
+            'ipAddressOverride' => false,
             'lastUsedByName' => null,
             'lastUsedByPetId' => null,
             'workingState' => null,
@@ -1151,6 +1158,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     {
         return [
             'ipAddress' => new StringCast(),
+            'ipAddressOverride' => new BooleanCast(),
             'lastUsedByName' => new StringCast(),
             'lastUsedByPetId' => new IntegerCast(),
             'workingState' => new StringCast(),
@@ -1249,6 +1257,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         if (isset($config['states'])) {
             $states = $config['states'];
             $data['ipAddress'] = $states['ipAddress'] ?? '';
+            $data['ipAddressOverride'] = $states['ipAddressOverride'] ?? null;
             $data['lastUsedByPetId'] = $states['lastUsedByPetId'] ?? null;
             $data['lastUsedByName'] = $states['lastUsedByName'] ?? null;
             $data['workMode'] = $states['workMode'] ?? null;
@@ -1365,6 +1374,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
                 'state' => $this->workingState,
                 'error' => $this->error,
                 'ipAddress' => $this->ipAddress,
+                'ipAddressOverride' => $this->ipAddressOverride,
                 'lastUsedByPetId' => $this->lastUsedByPetId,
                 'lastUsedByName' => $this->lastUsedByName,
                 'workMode' => $this->workMode,

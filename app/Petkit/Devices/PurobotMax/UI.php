@@ -72,12 +72,17 @@ class UI
                     ->disabled(true),
             ]),
 
-            Section::make('Stats')->schema([
+            Section::make('Network')->columns(2)->schema([
                 TextInput::make('configuration.states.ipAddress')
                     ->label('IP Address')
-                    ->helperText('Normally reported by the device in the `other` field of its state report. Set it by hand if it stays empty - the device overwrites it as soon as it reports one itself.')
+                    ->helperText('Normally detected from the `other` field of the device state report. Enter it manually if detection is missing or wrong.')
                     ->ip()
                     ->placeholder('192.168.1.42'),
+
+                Toggle::make('configuration.states.ipAddressOverride')
+                    ->label('Keep manual IP')
+                    ->helperText('When enabled, later state reports cannot overwrite the manually entered IP. Turn it off to let automatic detection take over again.')
+                    ->inline(false),
             ]),
 
             // T6SmartSettingActivity, T5 variant.

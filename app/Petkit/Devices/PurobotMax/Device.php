@@ -975,7 +975,7 @@ class Device implements DeviceDefinition, BluetoothProxyInterface
                 $pattern = '/(?:^|,)Ip:\\\\?"(\d{1,3}(?:\.\d{1,3}){3})\\\\?"/';
                 $match = Str::of((string) ($state->other ?? ''))->match($pattern);
 
-                if ($match->value() !== null) {
+                if ($match->value() !== null && ! $settings->ipAddressOverride) {
                     $settings->ipAddress = $match->value();
                 }
 
