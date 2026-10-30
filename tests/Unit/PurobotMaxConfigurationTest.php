@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Petkit\Devices\PurobotMax\Configuration;
 use App\Petkit\Devices\PurobotMax\Device;
+use App\Jobs\PublishDiscernUpdate;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use ReflectionProperty;
@@ -147,6 +148,11 @@ class PurobotMaxConfigurationTest extends TestCase
 
         $this->assertIsBool($defaults['fixedTimeClear']);
         $this->assertIsBool($defaults['fixedTimeSpray']);
+    }
+
+    public function test_t5_is_registered_for_discern_updates(): void
+    {
+        $this->assertContains('t5', PublishDiscernUpdate::DISCERN_CAPABLE_DEVICE_TYPES);
     }
 
     public function test_device_name(): void
