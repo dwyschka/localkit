@@ -17,6 +17,15 @@ class DevScheduleGetResource extends PetkitHttpResource
      */
     public function toArray(Request $request): array
     {
+        $definition = $this->resource->definition();
+
+        // Device types that model their own schedule (currently the T5,
+        // whose ctrl uses flat id/type/time/repeats rows) answer this
+        // themselves. Everything else keeps the legacy placeholder payload.
+        if (method_exists($definition, 'toScheduleGet')) {
+            return $definition->toScheduleGet();
+        }
+
         return [
             [
                 'id' => 0,

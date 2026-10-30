@@ -31,6 +31,10 @@ class DeviceActions
     public const STOP_MAINTENANCE = 'stop_maintenance';
     public const CLEAN_LITTER = 'clean_litter';
     public const START_ODOUR = 'start_odour';
+    public const SMOOTH = 'smooth';
+    public const CALIBRATE = 'calibrate';
+    public const POWER_ON = 'power_on';
+    public const POWER_OFF = 'power_off';
     public const START_LIGHTNING = 'start_lightning';
     public const STOP_LIGHTNING = 'stop_lightning';
     public const RESET_N50 = 'reset_n50';
@@ -53,9 +57,10 @@ class DeviceActions
     public const DRAIN = 'drain';
     public const DEEP_CLEAN = 'deep_clean';
 
-    // PurobotUltra (T6) only - see its Device.php docblock for where the
-    // start_action codes (9 pack, 3 recover, 11 door) and the stop/continue
-    // pause mechanism were confirmed.
+    // PurobotUltra (T6) / PurobotMax (T5) - see their Device.php docblocks
+    // for where the start_action codes and the stop/continue pause mechanism
+    // were confirmed. PACK_WASTE_BAG/TOGGLE_DOOR are T6-only; the T5 has no
+    // bag/NFC or sealing door.
     public const PACK_WASTE_BAG = 'pack_waste_bag';
     public const RECOVER = 'recover';
     public const TOGGLE_DOOR = 'toggle_door';
@@ -132,6 +137,31 @@ class DeviceActions
                 ->visible(fn(Device $record) => self::visible($record, self::LEVEL))
                 ->action(function (Device $record) {
                     $record->definition()->level($record);
+                }),
+            Action::make('Power On')
+                ->visible(fn(Device $record) => self::visible($record, self::POWER_ON))
+                ->requiresConfirmation()
+                ->action(function (Device $record) {
+                    $record->definition()->powerOn($record);
+                }),
+            Action::make('Power Off')
+                ->visible(fn(Device $record) => self::visible($record, self::POWER_OFF))
+                ->requiresConfirmation()
+                ->modalDescription('Powers the litter box off. Cleaning, deodorizing and the light stop until it is powered on again.')
+                ->action(function (Device $record) {
+                    $record->definition()->powerOff($record);
+                }),
+            Action::make('Smooth Litter')
+                ->visible(fn(Device $record) => self::visible($record, self::SMOOTH))
+                ->action(function (Device $record) {
+                    $record->definition()->smooth($record);
+                }),
+            Action::make('Calibrate Litter')
+                ->visible(fn(Device $record) => self::visible($record, self::CALIBRATE))
+                ->requiresConfirmation()
+                ->modalDescription('Starts the litter-weight calibration routine. Run it only after the tray has been filled and levelled according to the app instructions.')
+                ->action(function (Device $record) {
+                    $record->definition()->calibrate($record);
                 }),
             Action::make('Start Maintenance')
                 ->visible(fn(Device $record) => self::visible($record, self::START_MAINTENANCE))
