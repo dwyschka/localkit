@@ -71,7 +71,6 @@ class UI
                     ->readOnly()
                     ->disabled(true),
             ]),
-
             Section::make('Litter')->columns(3)->schema([
                 TextInput::make('history_count')
                     ->label('Used Today')
@@ -91,18 +90,78 @@ class UI
                     ->label('Litter Weight')
                     ->readOnly(),
             ]),
+            // T6SettingActivity main screen.
+            Section::make('Device')->columns(2)->schema([
+                Toggle::make('configuration.settings.lightMode')
+                    ->label('Set Screen Display'),
 
-            Section::make('Network')->columns(2)->schema([
-                TextInput::make('configuration.states.ipAddress')
-                    ->label('IP Address')
-                    ->ip()
-                    ->placeholder('192.168.1.42'),
+                Toggle::make('configuration.settings.downpos')
+                    ->label('Uninterrupted Rotation')
+                    ->helperText('Cylinder will rotate from its initial level and will not pause during the process.'),
 
-                Toggle::make('configuration.states.ipAddressOverride')
-                    ->label('Keep manual IP')
-                    ->inline(false),
+                Select::make('configuration.settings.unit')
+                    ->label('Weight Unit')
+                    ->options([
+                        '0' => 'Kg',
+                        '1' => 'Pound',
+                    ]),
+
+                Select::make('configuration.settings.sandType')
+                    ->label('Litter Type')
+                    ->options([
+                        '0' => 'Not set',
+                        '1' => 'Bentonite / Ore',
+                        '2' => 'Tofu',
+                        '3' => 'Mixed',
+                    ]),
+
+                Select::make('configuration.settings.language')
+                    ->label('Device Language')
+                    ->options([
+                        'en_US' => 'English',
+                        'de_DE' => 'German',
+                        'es_ES' => 'Spanish',
+                        'zh_CN' => 'Chinese',
+                        'ja_JP' => 'Japanese',
+                        'it_IT' => 'Italiano',
+                        'pt_PT' => 'Portuguese',
+                        'tr_TR' => 'Turkish',
+                        'ru_RU' => 'Russian',
+                        'fr_FR' => 'French',
+                    ]),
             ]),
+            // T6BasicSettingsActivity + T6WorkingTimeActivity.
+            Section::make('Camera Settings')->columns(2)->schema([
+                Toggle::make('configuration.settings.camera')
+                    ->label('Camera Switch'),
 
+                Toggle::make('configuration.settings.microphone')
+                    ->label('Microphone'),
+
+                Toggle::make('configuration.settings.night')
+                    ->label('Night Vision')
+                    ->helperText('Infrared night vision in dark environments.'),
+
+                Toggle::make('configuration.settings.timeDisplay')
+                    ->label('Timestamp Overlay'),
+
+                Toggle::make('configuration.settings.cameraLight')
+                    ->label('Camera Light'),
+
+                TextInput::make('configuration.settings.detectInterval')
+                    ->label('Detection Interval (s)')
+                    ->numeric(),
+
+                Repeater::make('configuration.settings.cameraMultiRange.ranges')
+                    ->columns(2)
+                    ->label('Camera Working Time')
+                    ->reorderableWithButtons()
+                    ->schema([
+                        MinutesTimePicker::make('from'),
+                        MinutesTimePicker::make('till'),
+                    ])
+                    ->columnSpanFull(),
+            ]),
             // T6SmartSettingActivity, T5 variant.
             Section::make('Set Clean')->columns(2)->schema([
                 Toggle::make('configuration.settings.autoWork')
@@ -203,7 +262,16 @@ class UI
                         MinutesTimePicker::make('till'),
                     ]),
             ]),
+            Section::make('Network')->columns(2)->schema([
+                TextInput::make('configuration.states.ipAddress')
+                    ->label('IP Address')
+                    ->ip()
+                    ->placeholder('192.168.1.42'),
 
+                Toggle::make('configuration.states.ipAddressOverride')
+                    ->label('Keep manual IP')
+                    ->inline(false),
+            ]),
             // T6LightSettingActivity.
             Section::make('Light Setting')->schema([
                 Repeater::make('configuration.settings.lightMultiRange.ranges')
@@ -215,40 +283,6 @@ class UI
                         MinutesTimePicker::make('till'),
                     ]),
             ]),
-
-            // T6BasicSettingsActivity + T6WorkingTimeActivity.
-            Section::make('Camera Settings')->columns(2)->schema([
-                Toggle::make('configuration.settings.camera')
-                    ->label('Camera Switch'),
-
-                Toggle::make('configuration.settings.microphone')
-                    ->label('Microphone'),
-
-                Toggle::make('configuration.settings.night')
-                    ->label('Night Vision')
-                    ->helperText('Infrared night vision in dark environments.'),
-
-                Toggle::make('configuration.settings.timeDisplay')
-                    ->label('Timestamp Overlay'),
-
-                Toggle::make('configuration.settings.cameraLight')
-                    ->label('Camera Light'),
-
-                TextInput::make('configuration.settings.detectInterval')
-                    ->label('Detection Interval (s)')
-                    ->numeric(),
-
-                Repeater::make('configuration.settings.cameraMultiRange.ranges')
-                    ->columns(2)
-                    ->label('Camera Working Time')
-                    ->reorderableWithButtons()
-                    ->schema([
-                        MinutesTimePicker::make('from'),
-                        MinutesTimePicker::make('till'),
-                    ])
-                    ->columnSpanFull(),
-            ]),
-
             // T6IntelligentDetectionActivity + AiPhActivity + AiVoiceActivity.
             Section::make('Intelligent Detection')->columns(2)->schema([
                 Toggle::make('configuration.settings.petDetection')
@@ -287,7 +321,6 @@ class UI
                     ])
                     ->columnSpanFull(),
             ]),
-
             // T6SpeechSettingsActivity + T6SpeechDoNotDisturbSettingActivity.
             Section::make('Speech Settings')->columns(2)->schema([
                 Toggle::make('configuration.settings.toneMode')
@@ -317,13 +350,6 @@ class UI
                     ])
                     ->columnSpanFull(),
             ]),
-
-            // T6PrivacySettingActivity - only the keys ctrl_t5 actually parses.
-            Section::make('Privacy')->columns(2)->schema([
-                Toggle::make('configuration.settings.upload')
-                    ->label('Upload Videos')
-            ]),
-
             // KidLockActivity.
             Section::make('Child Lock')->columns(2)->schema([
                 Toggle::make('configuration.settings.manualLock')
@@ -333,46 +359,10 @@ class UI
                 Toggle::make('configuration.settings.clickOkEnable')
                     ->label('OK Button'),
             ]),
-
-            // T6SettingActivity main screen.
-            Section::make('Device')->columns(2)->schema([
-                Toggle::make('configuration.settings.lightMode')
-                    ->label('Set Screen Display'),
-
-                Toggle::make('configuration.settings.downpos')
-                    ->label('Uninterrupted Rotation')
-                    ->helperText('Cylinder will rotate from its initial level and will not pause during the process.'),
-
-                Select::make('configuration.settings.unit')
-                    ->label('Weight Unit')
-                    ->options([
-                        '0' => 'Kg',
-                        '1' => 'Pound',
-                    ]),
-
-                Select::make('configuration.settings.sandType')
-                    ->label('Litter Type')
-                    ->options([
-                        '0' => 'Not set',
-                        '1' => 'Bentonite / Ore',
-                        '2' => 'Tofu',
-                        '3' => 'Mixed',
-                    ]),
-
-                Select::make('configuration.settings.language')
-                    ->label('Device Language')
-                    ->options([
-                        'en_US' => 'English',
-                        'de_DE' => 'German',
-                        'es_ES' => 'Spanish',
-                        'zh_CN' => 'Chinese',
-                        'ja_JP' => 'Japanese',
-                        'it_IT' => 'Italiano',
-                        'pt_PT' => 'Portuguese',
-                        'tr_TR' => 'Turkish',
-                        'ru_RU' => 'Russian',
-                        'fr_FR' => 'French',
-                    ]),
+            // T6PrivacySettingActivity - only the keys ctrl_t5 actually parses.
+            Section::make('Privacy')->columns(2)->schema([
+                Toggle::make('configuration.settings.upload')
+                    ->label('Upload Videos')
             ]),
 
         ];
