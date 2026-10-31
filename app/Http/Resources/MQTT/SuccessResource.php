@@ -40,15 +40,16 @@ class SuccessResource extends JsonResource
     public function toArray(Request $request): array
     {
         $data = new stdClass();
+        $id = $this->resource->id ?? null;
 
         return [
             'code' => 200,
             'data' => $data,
-            'id' => $this->resource->id ?? null,
+            'id' => is_scalar($id) ? (string) $id : $id,
             'message' => "success",
             'method' => $this->resource->method
                 ?? ($this->replyTopic !== null ? MQTTTopic::topic2Method($this->replyTopic) : null),
-            'version' => "1.0.0"
+            'version' => "1.0"
         ];
     }
 
