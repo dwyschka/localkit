@@ -414,19 +414,32 @@ class UI
                     ->label('Vomit Detection')
                     ->helperText('Uses AI behavior recognition to detect signs of vomiting in cats and sends an instant notification'),
 
+                // Same values as the Petkit app's D4SH "Surplus Food Control"
+                // screen (ControlFoodMainFragment): an on/off switch plus a
+                // Low/Moderate/Full level, defaulting to Moderate when enabled.
                 Select::make('configuration.settings.surplusControl')
                     ->label('Surplus Food Control')
-                    ->helperText('Pause feeding while surplus food remains in the bowl')
+                    ->helperText('Pause scheduled feeds while the camera sees leftover food in the bowl')
                     ->options([
                         0 => 'off',
                         1 => 'on',
-                    ]),
+                    ])
+                    ->live()
+                    ->afterStateUpdated(function (Get $get, Set $set, $state) {
+                        if ((int) $state === 1 && !in_array((int) $get('configuration.settings.surplusStandard'), [1, 2, 3], true)) {
+                            $set('configuration.settings.surplusStandard', 2);
+                        }
+                    }),
 
-                TextInput::make('configuration.settings.surplusStandard')
+                Select::make('configuration.settings.surplusStandard')
                     ->label('Surplus Food Standard')
-                    ->helperText('Minimum amount of surplus food in the bowl before feeding pauses')
-                    ->numeric()
-                    ->minValue(0),
+                    ->helperText('Scheduled feeds pause once the camera sees this much leftover food in the bowl: Low = 30 %, Moderate = 60 %, Full = 80 % (same as the Petkit cloud)')
+                    ->options([
+                        1 => 'Low',
+                        2 => 'Moderate',
+                        3 => 'Full',
+                    ])
+                    ->visible(fn (Get $get) => (int) $get('configuration.settings.surplusControl') === 1),
             ]),
 
             Section::make('Unknown')->columns(3)->schema([

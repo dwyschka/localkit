@@ -66,6 +66,7 @@ class History extends Model
             'EAT' => $this->createEatMessage(),
             'DRINK' => $this->createDrinkMessage(),
             'DETECT' => $this->createDetectMessage(),
+            'WORKING' => $this->createFeedMessage(),
             default => '',
         };
 
@@ -142,6 +143,51 @@ class History extends Model
         return __('petkit.history.drink', [
             'duration' => $this->eventDuration(),
         ]);
+    }
+
+    /**
+     * Feeder rows (feed_start/feed_over, see HandlesFeederSchedule::mergeHistory()).
+     * Decoded the way the Petkit app (13.4.1, D4shHomeRecordAdapter) does it:
+     * `result` picks the outcome, and only result 3 (failure), result 7
+     * (cancelled) and err_code 8 (door / piled-up food) look at err_code too.
+     * result 8 is surplus food control pausing the feed - the D4SH's own log
+     * prints "surplus ctrl, feed not allowed,reason:10" for those, which is
+     * where the accompanying err_code 10 comes from. The feeder blocks while
+     * the camera's leftover estimate (percent) is >= the threshold
+     * HandlesSurplusControl::surplusThreshold() sends; feed_over carries
+     * neither number, so none is shown here.
+     */
+    private function createFeedMessage(): string
+    {
+        $params = $this->parameters ?? [];
+
+        if (!isset($params['result'])) {
+            return '';
+        }
+
+        $result = (int) $params['result'];
+        $errCode = (int) ($params['err_code'] ?? 0);
+        $amounts = array_key_exists('real_amount1', $params) || array_key_exists('real_amount2', $params)
+            ? sprintf('%d + %d', $params['real_amount1'] ?? 0, $params['real_amount2'] ?? 0)
+            : (string) ($params['real_amount'] ?? 0);
+
+        if ($result === 8) {
+            return __('petkit.history.feed_skipped_surplus');
+        }
+
+        $reason = match (true) {
+            $result === 3 => __('petkit.feed_error.' . $errCode),
+            $result === 7 => __('petkit.feed_cancel.' . $errCode),
+            $errCode === 8 => __('petkit.feed_error.8'),
+            default => __('petkit.feed_result.' . $result),
+        };
+
+        // __() hands the key back when there's no translation for it.
+        if (str_starts_with($reason, 'petkit.')) {
+            $reason = __('petkit.history.feed_unknown', ['result' => $result, 'err_code' => $errCode]);
+        }
+
+        return __('petkit.history.feed', ['amount' => $amounts, 'reason' => $reason]);
     }
 
     private function createDetectMessage()

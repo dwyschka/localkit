@@ -377,11 +377,36 @@ class UI
                     ),
 
             ]),
-            Section::make('AI LAB')->schema([
-                Select::make('configuration.settings.surplusControl')->options([
-                    0 => 'off',
-                    1 => 'on',
-                ])
+            Section::make('AI LAB')->columns(2)->schema([
+                // Same values as the Petkit app's "Surplus Food Control"
+                // screen: an on/off switch plus a Low/Moderate/Full level,
+                // defaulting to Moderate when enabled. Device::toDeviceInfo()
+                // turns them into the percentage the firmware expects.
+                Select::make('configuration.settings.surplusControl')
+                    ->label('Surplus Food Control')
+                    ->helperText('Pause scheduled feeds while the camera sees leftover food in the bowl')
+                    ->options([
+                        0 => 'off',
+                        1 => 'on',
+                    ])
+                    // Older configs stored a percentage here (default 60) - any non-zero value is "on".
+                    ->formatStateUsing(fn ($state) => (int) $state > 0 ? 1 : 0)
+                    ->live()
+                    ->afterStateUpdated(function (Get $get, Set $set, $state) {
+                        if ((int) $state === 1 && !in_array((int) $get('configuration.settings.surplusStandard'), [1, 2, 3], true)) {
+                            $set('configuration.settings.surplusStandard', 2);
+                        }
+                    }),
+
+                Select::make('configuration.settings.surplusStandard')
+                    ->label('Surplus Food Standard')
+                    ->helperText('Scheduled feeds pause once the camera sees this much leftover food in the bowl: Low = 30 %, Moderate = 60 %, Full = 80 % (same as the Petkit cloud)')
+                    ->options([
+                        1 => 'Low',
+                        2 => 'Moderate',
+                        3 => 'Full',
+                    ])
+                    ->visible(fn (Get $get) => (int) $get('configuration.settings.surplusControl') > 0),
             ]),
 
             Section::make('Unknown')->columns(3)->schema([

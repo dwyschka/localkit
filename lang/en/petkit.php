@@ -13,6 +13,10 @@ return [
         'maintenance_title' => 'Maintenance',
         'maintenance' => 'Maintenance for :duration seconds',
         'working_title' => 'Feeding',
+        // History::createFeedMessage() - wording from the Petkit app's D4SH feed record.
+        'feed' => 'Dispensed :amount portion(s) - :reason',
+        'feed_skipped_surplus' => 'Dispensing paused by Surplus Food Control: the camera saw leftover food in the bowl. Turn Surplus Food Control off if scheduled feeds should always dispense.',
+        'feed_unknown' => 'unknown outcome (result :result, error code :err_code)',
         'error' => 'Error',
         'error_title' => 'Error',
         'eat_title' => 'Eating',
@@ -49,5 +53,34 @@ return [
         'blk_d' => 'The dispenser is blocked',
         'camera' => 'The camera has a fault',
         'serial' => 'A serial communication fault was detected',
-    ]
+    ],
+    // Feeder feed_over `result` values (Petkit app 13.4.1, D4SH record list).
+    // 8 (surplus food control) is handled separately, see History::createFeedMessage().
+    'feed_result' => [
+        0 => 'completed',
+        1 => 'dispensing was manually halted',
+        2 => 'dispensing was manually halted',
+        4 => 'insufficient food in hopper 1, please refill it',
+        5 => 'insufficient food in hopper 2, please refill it',
+        6 => 'insufficient food in both hoppers, please refill them',
+        9 => 'hopper 1 ran empty, please refill it',
+        10 => 'hopper 2 ran empty, please refill it',
+        11 => 'both hoppers ran empty, please refill them',
+        12 => 'hopper 1 insufficient, hopper 2 ran empty',
+        13 => 'hopper 1 ran empty, hopper 2 insufficient',
+    ],
+    // err_code for result 3 (dispensing failed), plus err_code 8 on any result.
+    'feed_error' => [
+        1 => 'dispensing failed: power failure',
+        2 => 'dispensing failed: system malfunction',
+        3 => 'dispensing failed: food is jammed',
+        4 => 'dispensing failed: system malfunction',
+        5 => 'dispensing failed: low battery',
+        8 => 'food has piled up in the dispenser, please clean it',
+    ],
+    // err_code for result 7 (dispensing cancelled).
+    'feed_cancel' => [
+        6 => 'cancelled: firmware upgrading',
+        7 => 'cancelled: already dispensing',
+    ],
 ];

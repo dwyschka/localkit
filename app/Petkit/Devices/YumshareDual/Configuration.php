@@ -498,6 +498,9 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     public int $selectedSound;
 
     // AI and other settings
+    // Values as the Petkit app sends them: surplusControl 0/1, surplusStandard
+    // 1 = Low, 2 = Moderate, 3 = Full. Set in UI.php, read-only in Home
+    // Assistant like YumshareSolo (D4H).
     #[Sensor(
         technicalName: 'surplus_control',
         name: 'Surplus Food Control',
@@ -507,17 +510,12 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     )]
     public int $surplusControl;
 
-    #[Number(
+    #[Sensor(
         technicalName: 'surplus_standard',
         name: 'Surplus Food Standard',
-        commandTopic: 'setting/set',
         icon: 'mdi:food-off',
-        valueTemplate: '{{ value_json.settings.surplusStandard }}',
-        commandTemplate: '{"surplusStandard":{{ value }}}',
-        entityCategory: 'config',
-        min: 0,
-        max: 100,
-        step: 1
+        entityCategory: 'diagnostic',
+        valueTemplate: '{{ value_json.settings.surplusStandard }}'
     )]
     public int $surplusStandard;
 
