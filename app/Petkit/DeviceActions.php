@@ -31,6 +31,10 @@ class DeviceActions
     public const STOP_MAINTENANCE = 'stop_maintenance';
     public const CLEAN_LITTER = 'clean_litter';
     public const START_ODOUR = 'start_odour';
+    public const SMOOTH = 'smooth';
+    public const CALIBRATE = 'calibrate';
+    public const POWER_ON = 'power_on';
+    public const POWER_OFF = 'power_off';
     public const START_LIGHTNING = 'start_lightning';
     public const STOP_LIGHTNING = 'stop_lightning';
     public const RESET_N50 = 'reset_n50';
@@ -52,6 +56,17 @@ class DeviceActions
     public const REFILL = 'refill';
     public const DRAIN = 'drain';
     public const DEEP_CLEAN = 'deep_clean';
+
+    // PurobotUltra (T6) / PurobotMax (T5) - see their Device.php docblocks
+    // for where the start_action codes and the stop/continue pause mechanism
+    // were confirmed. PACK_WASTE_BAG/TOGGLE_DOOR are T6-only; the T5 has no
+    // bag/NFC or sealing door.
+    public const PACK_WASTE_BAG = 'pack_waste_bag';
+    public const RECOVER = 'recover';
+    public const TOGGLE_DOOR = 'toggle_door';
+    public const PAUSE_CLEAN = 'pause_clean';
+    public const CONTINUE_CLEAN = 'continue_clean';
+    public const TERMINATE_CLEAN = 'terminate_clean';
 
     /**
      * Every action here sends a command over MQTT, so none of them do
@@ -122,6 +137,31 @@ class DeviceActions
                 ->visible(fn(Device $record) => self::visible($record, self::LEVEL))
                 ->action(function (Device $record) {
                     $record->definition()->level($record);
+                }),
+            Action::make('Power On')
+                ->visible(fn(Device $record) => self::visible($record, self::POWER_ON))
+                ->requiresConfirmation()
+                ->action(function (Device $record) {
+                    $record->definition()->powerOn($record);
+                }),
+            Action::make('Power Off')
+                ->visible(fn(Device $record) => self::visible($record, self::POWER_OFF))
+                ->requiresConfirmation()
+                ->modalDescription('Powers the litter box off. Cleaning, deodorizing and the light stop until it is powered on again.')
+                ->action(function (Device $record) {
+                    $record->definition()->powerOff($record);
+                }),
+            Action::make('Smooth Litter')
+                ->visible(fn(Device $record) => self::visible($record, self::SMOOTH))
+                ->action(function (Device $record) {
+                    $record->definition()->smooth($record);
+                }),
+            Action::make('Calibrate Litter')
+                ->visible(fn(Device $record) => self::visible($record, self::CALIBRATE))
+                ->requiresConfirmation()
+                ->modalDescription('Starts the litter-weight calibration routine. Run it only after the tray has been filled and levelled according to the app instructions.')
+                ->action(function (Device $record) {
+                    $record->definition()->calibrate($record);
                 }),
             Action::make('Start Maintenance')
                 ->visible(fn(Device $record) => self::visible($record, self::START_MAINTENANCE))
@@ -319,6 +359,54 @@ class DeviceActions
                 ->requiresConfirmation()
                 ->action(function (Device $record) {
                     $record->definition()->resetWorkingState($record);
+                }),
+            // Pack a waste bag (start_action:9) - this is the companion
+            // app's manual "pack now" button and the only thing that
+            // triggers the device's NFC bag-authentication call to the
+            // Petkit cloud (dev_package_auth), so it gets a confirmation
+            // like the other consequential maintenance actions above.
+            Action::make('Pack Waste Bag')
+                ->visible(fn(Device $record) => self::visible($record, self::PACK_WASTE_BAG))
+                ->requiresConfirmation()
+                ->action(function (Device $record) {
+                    $record->definition()->packWasteBag($record);
+                }),
+            // Reset to home position (start_action:3, "复位" in the app) -
+            // runs the pan motor back to its parked position.
+            Action::make('Recover')
+                ->visible(fn(Device $record) => self::visible($record, self::RECOVER))
+                ->requiresConfirmation()
+                ->action(function (Device $record) {
+                    $record->definition()->recover($record);
+                }),
+            // The sealing door is a single toggle in the vendor app too -
+            // it always sends start_action:11 and lets the device decide
+            // open vs. close from its own hall sensors, see PurobotUltra's
+            // toggleDoor().
+            Action::make('Toggle Sealing Door')
+                ->visible(fn(Device $record) => self::visible($record, self::TOGGLE_DOOR))
+                ->action(function (Device $record) {
+                    $record->definition()->toggleDoor($record);
+                }),
+            // Pause/resume/stop whichever cycle is currently running
+            // (cleaning, litter dump, recover, smooth...) - the vendor app
+            // sends the same stop/continue/end_action code as the
+            // in-progress start_action, read back from the device's own
+            // reported work mode rather than guessed here.
+            Action::make('Pause')
+                ->visible(fn(Device $record) => self::visible($record, self::PAUSE_CLEAN))
+                ->action(function (Device $record) {
+                    $record->definition()->pauseClean($record);
+                }),
+            Action::make('Continue')
+                ->visible(fn(Device $record) => self::visible($record, self::CONTINUE_CLEAN))
+                ->action(function (Device $record) {
+                    $record->definition()->continueClean($record);
+                }),
+            Action::make('Terminate')
+                ->visible(fn(Device $record) => self::visible($record, self::TERMINATE_CLEAN))
+                ->action(function (Device $record) {
+                    $record->definition()->terminateClean($record);
                 }),
             // Available to every device: the `error` field is model-level (set e.g.
             // by a failed OTA, see DevOtaCompleteController), so clearing it does not need

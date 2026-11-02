@@ -42,7 +42,17 @@ class DevUploadFileInfoV2Controller extends Controller
 
         $fileInfos = json_decode((string) $request->input('fileInfos', '[]'), true) ?: [];
 
-        Log::info('dev_upload_file_info_v2 received', ['deviceId' => $deviceId, 'fileInfos' => $fileInfos]);
+        return $this->processFileInfos($deviceType, $deviceId, $device, $fileInfos);
+    }
+
+    /**
+     * Shared by the v2 endpoint (`fileInfos` array) and the v1 endpoint
+     * (`fileInfo` single object) so lapse/legacy uploads get the same
+     * decrypt/remux handling.
+     */
+    public function processFileInfos(string $deviceType, string $deviceId, Device $device, array $fileInfos): JsonResponse
+    {
+        Log::info('dev_upload_file_info received', ['deviceId' => $deviceId, 'fileInfos' => $fileInfos]);
 
         foreach ($fileInfos as $fileInfo) {
             if (empty($fileInfo['fileId'])) {
