@@ -9,6 +9,8 @@ return [
     'rtsp' => [
         'port' => (int) env('CAMERA_RTSP_PORT', 8554),
         'path' => env('CAMERA_RTSP_PATH', 'stream0'),
+        'user' => env('CAMERA_RTSP_USER', null),
+        'password' => env('CAMERA_RTSP_PASSWORD', null),
 
         // RTSP over TCP - UDP loses packets on busy WiFi and the resulting
         // corrupt frames are worse than the slightly higher latency.
