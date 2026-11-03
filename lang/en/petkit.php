@@ -29,6 +29,7 @@ return [
     'error' => [
         'hallT' =>'The lid is not closed',
         'full' =>'The bin is full',
+        'food_low' => 'The food bin is running low',
         'food_empty' => 'The food bin is empty',
         'wastebin_full' => 'The waste water tank is full',
         'water_tank_empty' => 'The fresh water tank is empty',

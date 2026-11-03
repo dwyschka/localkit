@@ -370,12 +370,49 @@ class Device implements DeviceDefinition, BluetoothProxyInterface
         }
 
         if ($food !== null) {
-            $updates['error'] = ((int) $food) === 0 ? 'food_empty' : null;
+            $this->recordFoodLevel($this->getDevice(), (int) $food);
+
+            $updates['error'] = self::foodError((int) $food, $this->getDevice()->error);
         }
 
         if ($updates !== []) {
             $this->getDevice()->update($updates);
         }
+    }
+
+    /**
+     * Map the D3 hopper level onto the device error. The sensor reports 2 when
+     * it sees enough food, 1 when the food is running low and 0 when it is
+     * empty - PetKit's own clients treat anything below 2 as a problem, so
+     * decoding 0 alone leaves a low hopper looking healthy.
+     */
+    private static function foodError(int $level, ?string $currentError): ?string
+    {
+        return match (true) {
+            $level <= 0 => 'food_empty',
+            $level === 1 => 'food_low',
+            // A refilled hopper clears a food warning, but must not wipe an
+            // unrelated device fault (e.g. a bowl or motor error).
+            in_array($currentError, ['food_empty', 'food_low'], true) => null,
+            default => $currentError,
+        };
+    }
+
+    /**
+     * Persist the hopper food level (0 empty, 1 low, 2 ok). The error string
+     * cannot carry it - that is cleared again as soon as the hopper is
+     * refilled.
+     */
+    private function recordFoodLevel(DeviceModel $device, int $level): void
+    {
+        $config = $device->configuration ?? [];
+
+        if (($config['states']['food'] ?? null) === $level) {
+            return;
+        }
+
+        $config['states']['food'] = $level;
+        $device->update(['configuration' => $config]);
     }
 
     /**

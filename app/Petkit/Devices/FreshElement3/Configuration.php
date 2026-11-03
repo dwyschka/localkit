@@ -63,6 +63,18 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     )]
     public ?int $weight;
 
+    // The D3 hopper sensor reports 2 (enough), 1 (running low) or 0 (empty).
+    // Kept as its own state so alerts can use the level itself - states.error
+    // is cleared again as soon as the hopper is refilled.
+    #[Sensor(
+        technicalName: 'food_level',
+        name: 'Food Level',
+        icon: 'mdi:food-drumstick',
+        valueTemplate: "{{ 'Empty' if value_json.states.food == 0 else ('Low' if value_json.states.food == 1 else ('Ok' if value_json.states.food == 2 else 'Unknown')) }}",
+        entityCategory: 'diagnostic'
+    )]
+    public ?int $food;
+
     #[HASwitch(
         technicalName: 'manual_lock',
         name: 'Child lock',
@@ -287,6 +299,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'lastUsedByPetId' => ['nullable', 'integer'],
             'lastUsedByName' => ['nullable', 'string'],
             'weight' => ['nullable', 'integer'],
+            'food' => ['nullable', 'integer', 'min:0', 'max:2'],
             'manualLock' => ['bool'],
             'lightMode' => ['bool'],
             'lightRange' => [],
@@ -316,6 +329,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
             'lastUsedByPetId' => null,
             'lastUsedByName' => null,
             'weight' => null,
+            'food' => null,
             'manualLock' => false,
             'lightMode' => true,
             'soundEnable' => false,
@@ -379,6 +393,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         $data['lastUsedByPetId'] = $config['states']['lastUsedByPetId'] ?? null;
         $data['lastUsedByName'] = $config['states']['lastUsedByName'] ?? null;
         $data['weight'] = $config['states']['weight'] ?? null;
+        $data['food'] = $config['states']['food'] ?? null;
 
         // Load settings
         $data['manualLock'] = $config['settings']['manualLock'] ?? null;
@@ -417,6 +432,7 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
                 'lastUsedByPetId' => $this->lastUsedByPetId,
                 'lastUsedByName' => $this->lastUsedByName,
                 'weight' => $this->weight,
+                'food' => $this->food,
             ],
             'settings' => [
                 'manualLock' => $this->manualLock,
