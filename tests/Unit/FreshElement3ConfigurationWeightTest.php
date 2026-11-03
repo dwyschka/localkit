@@ -8,8 +8,8 @@ use Tests\TestCase;
 
 /**
  * The FE3 reports its bowl scale reading in event state payloads, not in its
- * settings. Keep that reading in the device configuration so the panel and
- * Home Assistant can show it without a schema change.
+ * settings. Keep that reading in the device configuration so it survives a
+ * settings round-trip.
  */
 class FreshElement3ConfigurationWeightTest extends TestCase
 {
