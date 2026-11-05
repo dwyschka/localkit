@@ -26,6 +26,17 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Applied here rather than in the config file: config:cache would
+        // otherwise freeze one process's id for all of them. The suffix is
+        // stripped first because config:cache runs this too.
+        if (config('mqtt-client.client_id_per_process')) {
+            foreach (['publisher', 'homeassistant-publisher'] as $connection) {
+                $clientId = preg_replace('/_\d+$/', '', config("mqtt-client.connections.$connection.client_id"));
+                config([
+                    "mqtt-client.connections.$connection.client_id" => $clientId . '_' . getmypid(),
+                ]);
+            }
+        }
 
         if(config('petkit.bypass_auth')) {
             try {
