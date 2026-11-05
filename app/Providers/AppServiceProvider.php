@@ -26,6 +26,18 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Every process (web workers, localkit:listen, localkit:homeassistant)
+        // would otherwise publish with the same client id, and each connect
+        // makes the broker drop another process's connection, losing its next
+        // publish. The suffix is stripped first because config:cache runs this
+        // too. Session and auto-reconnect settings stay as configured: the
+        // listener holds its publisher open for hours and needs auto-reconnect.
+        foreach (['publisher', 'homeassistant-publisher'] as $connection) {
+            $clientId = preg_replace('/_\d+$/', '', config("mqtt-client.connections.$connection.client_id"));
+            config([
+                "mqtt-client.connections.$connection.client_id" => $clientId . '_' . getmypid(),
+            ]);
+        }
 
         if(config('petkit.bypass_auth')) {
             try {
