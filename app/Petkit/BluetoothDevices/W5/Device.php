@@ -9,6 +9,8 @@ use App\Petkit\BluetoothDevices\BluetoothDeviceTrait;
 use App\Petkit\BluetoothDevices\BluetoothProxyInterface;
 use App\Petkit\BluetoothDevices\DeviceInterface;
 use App\Petkit\BluetoothDevices\HasParserInterface;
+use App\Petkit\BluetoothDevices\RelayConnection;
+use App\Petkit\BluetoothDevices\ReportsBleRelayInterface;
 use App\Petkit\BluetoothDevices\W5\Parser;
 use App\Homeassistant\HomeassistantTopic;
 use Illuminate\Support\Facades\Log;
@@ -277,7 +279,18 @@ class Device implements DeviceInterface, HasParserInterface
         // UTF-8) ever touch a queued job - Laravel's payload builder
         // json_encode()s the whole thing even for dispatchSync(), which
         // chokes on raw binary.
-        $definition->btWrite($this->model, base64_encode($buildFrame($seq)), $cmd);
+        $frame = base64_encode($buildFrame($seq));
+
+        // The proxy drops writes unless it's connected to the fountain at
+        // that moment, so where it reports its link state, connect first.
+        if (!($definition instanceof ReportsBleRelayInterface) || RelayConnection::isOpen($this->model->mac)) {
+            $definition->btWrite($this->model, $frame, $cmd);
+            return;
+        }
+
+        if (RelayConnection::queue($this->model->mac, $frame, $cmd)) {
+            $definition->btConnect($this->model);
+        }
     }
 
     private function nextSequence(): int
