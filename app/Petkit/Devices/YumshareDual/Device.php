@@ -156,7 +156,6 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
                         'parameters' => $parameters,
                         'device_id' => $device->id,
                     ]);
-                    EventPublisher::publish($device, 'feed_start');
                 }
 
                 $this->parseState($device, $message, DeviceStates::WORKING->value);
