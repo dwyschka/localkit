@@ -9,7 +9,7 @@ class MQTTTopic
      * itself - `/sys/<pk>/<dev>/thing/event/feed_over/post` becomes
      * `thing.event.feed_over.post`.
      *
-     * Needed because the device's `thing/event/*/post` messages carry no
+     * Needed because the device's `thing/event/<event>/post` messages carry no
      * `method` field of their own (only `id`, `version`, `params` and
      * `sys.ack`), while the ack it expects back does - see SuccessResource.
      *

@@ -23,6 +23,7 @@ use App\Petkit\BluetoothDevices\Message;
 use App\Petkit\DeviceActions;
 use App\Petkit\DeviceDefinition;
 use App\Petkit\Devices\Concerns\HandlesFeederSchedule;
+use App\Petkit\Devices\Concerns\HandlesSurplusControl;
 use App\Petkit\Devices\Configuration\ConfigurationInterface;
 use App\Petkit\DeviceStates;
 use Carbon\Carbon;
@@ -32,6 +33,7 @@ use PhpMqtt\Client\Facades\MQTT;
 class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
 {
     use HandlesFeederSchedule;
+    use HandlesSurplusControl;
 
     /** schedule.md §4e/§4f: this is D4SH, the one confirmed dual-hopper feeder (a1/a2). */
     public const FEEDER_COUNT = 2;
@@ -560,8 +562,8 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
                 'feedSound' => (int)$config['feedSound'],
                 'volume' => (int)$config['volume'],
                 'selectedSound' => (int)$config['selectedSound'],
-                'surplusControl' => (int)$config['surplusControl'],
-                'surplusStandard' => (int)$config['surplusStandard'],
+                'surplusControl' => self::surplusThreshold((int)$config['surplusControl'], (int)$config['surplusStandard']),
+                'surplusStandard' => self::surplusStandardForWire((int)$config['surplusStandard']),
                 'smartFrame' => (int)$config['smartFrame'],
                 'upload' => (int)$config['upload'],
                 'attireId' => (int)$config['attireId'],
