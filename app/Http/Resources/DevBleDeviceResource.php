@@ -24,7 +24,7 @@ class DevBleDeviceResource extends PetkitHttpResource
             "list" => $devices->map(function ($device) {
                 return [
                     "interval" => $device->interval,
-                    "id" => $device->petkit_id,
+                    "id" => (int)$device->petkit_id,
                     "secret" => $device->secret,
                     "type" => $device->bluetoothDeviceType(),
                     "mac" => $device->mac
