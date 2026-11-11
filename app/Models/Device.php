@@ -113,6 +113,20 @@ class Device extends Model
                     }
                 }
             }
+
+            // Close the connection once published, as upstream does: each
+            // process (localkit:listen, localkit:homeassistant, php-fpm)
+            // publishes here, and a connection left open goes idle until the
+            // broker drops it, so the next publish would hit a dead socket.
+            if (config('app.enable.homeassistant')) {
+                try {
+                    MQTT::connection('homeassistant-publisher')->disconnect();
+                } catch (Exception $e) {
+                    Log::error('homeassistant-publisher disconnect failed for device ' . $device->id, [
+                        'exception' => $e,
+                    ]);
+                }
+            }
 //            }
         });
 
