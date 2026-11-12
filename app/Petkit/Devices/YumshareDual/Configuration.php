@@ -1270,7 +1270,24 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         $feedEvents = History::where('device_id', $device->id)
             ->where('type', DeviceStates::WORKING->value)
             ->where('created_at', '>=', $startOfDay)
-            ->get();
+            ->get()
+            // A feed_over that dispensed nothing (e.g. result 8 / err_code 10:
+            // surplus food control skipped the scheduled feed because the
+            // camera saw leftover food) is still stored as a WORKING row, but
+            // it is not a feeding. Rows without a 'result' yet (feed_start
+            // received, feed_over still pending) are kept as before.
+            ->reject(function ($h) {
+                $p = $h->parameters ?? [];
+                if (!array_key_exists('result', $p)) {
+                    return false;
+                }
+
+                $dispensed = (int) ($p['real_amount'] ?? 0)
+                    + (int) ($p['real_amount1'] ?? 0)
+                    + (int) ($p['real_amount2'] ?? 0);
+
+                return $dispensed === 0;
+            });
 
         $feedingsToday = $feedEvents->count();
 
