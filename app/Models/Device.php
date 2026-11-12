@@ -89,23 +89,43 @@ class Device extends Model
             $definition = $device->definition();
 
             if (config('app.enable.homeassistant')) {
-
-                MQTT::connection('homeassistant-publisher')
-                    ->publish(HomeassistantHelper::deviceTopic($device), $definition->toHomeassistant(), 0, true);
+                try {
+                    MQTT::connection('homeassistant-publisher')
+                        ->publish(HomeassistantHelper::deviceTopic($device), $definition->toHomeassistant(), 0, true);
+                } catch (Exception $e) {
+                    Log::error('homeassistant-publisher publish failed for device ' . $device->id, [
+                        'exception' => $e,
+                    ]);
+                }
             }
             if ($definition instanceof Snapshot) {
                 $snapshotMessage = $definition->toSnapshot();
                 if (!is_null($snapshotMessage)) {
                     if (config('app.enable.homeassistant')) {
-                        MQTT::connection('homeassistant-publisher')
-                            ->publish(HomeassistantHelper::snapshotTopic($device), $snapshotMessage, 0, true);
+                        try {
+                            MQTT::connection('homeassistant-publisher')
+                                ->publish(HomeassistantHelper::snapshotTopic($device), $snapshotMessage, 0, true);
+                        } catch (Exception $e) {
+                            Log::error('homeassistant-publisher snapshot publish failed for device ' . $device->id, [
+                                'exception' => $e,
+                            ]);
+                        }
                     }
                 }
             }
 
+            // Close the connection once published, as upstream does: each
+            // process (localkit:listen, localkit:homeassistant, php-fpm)
+            // publishes here, and a connection left open goes idle until the
+            // broker drops it, so the next publish would hit a dead socket.
             if (config('app.enable.homeassistant')) {
-
-                MQTT::connection('homeassistant-publisher')->disconnect();
+                try {
+                    MQTT::connection('homeassistant-publisher')->disconnect();
+                } catch (Exception $e) {
+                    Log::error('homeassistant-publisher disconnect failed for device ' . $device->id, [
+                        'exception' => $e,
+                    ]);
+                }
             }
 //            }
         });
