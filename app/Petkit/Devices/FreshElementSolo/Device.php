@@ -18,8 +18,9 @@ use App\Models\Pet;
 use App\MQTT\GenericReply;
 use App\MQTT\OtaMessage;
 use App\MQTT\UserGet;
-use App\Petkit\BluetoothDevices\BluetoothProxyInterface;
 use App\Petkit\BluetoothDevices\Message;
+use App\Petkit\BluetoothDevices\RelayConnection;
+use App\Petkit\BluetoothDevices\ReportsBleRelayInterface;
 use App\Petkit\DeviceActions;
 use App\Petkit\DeviceDefinition;
 use App\Petkit\Devices\Concerns\HandlesFeederSchedule;
@@ -30,7 +31,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use PhpMqtt\Client\Facades\MQTT;
 
-class Device implements DeviceDefinition, BluetoothProxyInterface
+class Device implements DeviceDefinition, ReportsBleRelayInterface
 {
     use HandlesFeederSchedule;
 
@@ -67,6 +68,14 @@ class Device implements DeviceDefinition, BluetoothProxyInterface
             sprintf('/sys/%s/%s/thing/event/ble_response/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
                 $content = json_decode($message?->params?->content, false);
                 Message::handleProxyMessage($content);
+
+                $this->reply($topic, $message);
+            },
+            sprintf('/sys/%s/%s/thing/event/ble_relay_over/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
+                $content = json_decode($message?->params?->content ?? 'null', false);
+                if ($content instanceof stdClass) {
+                    RelayConnection::relayOver($content, $this);
+                }
 
                 $this->reply($topic, $message);
             },
