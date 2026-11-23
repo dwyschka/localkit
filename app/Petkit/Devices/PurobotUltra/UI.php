@@ -23,6 +23,25 @@ class UI
     public function formFields(): array
     {
         return [
+            Section::make('Consumables')->columns(2)->schema([
+                TextInput::make('configuration.consumables.desiccantDurability')
+                    ->label('Desiccant Durability (days)')
+                    ->numeric(),
+                TextInput::make('configuration.consumables.desiccantNextChange')
+                    ->label('Next Desiccant Change')
+                    ->formatStateUsing(function ($state) {
+                        if ($state <= 0) {
+                            return 'Not set';
+                        }
+                        $date = Carbon::parse($state);
+                        $now = Carbon::now();
+
+                        return round($now->diffInDays($date));
+                    })
+                    ->readOnly()
+                    ->disabled(true),
+            ]),
+
             Section::make('Stats')->schema([
                 TextInput::make('configuration.states.ipAddress')
                     ->label('IP Address')
@@ -82,16 +101,11 @@ class UI
                     Toggle::make('configuration.settings.cameraLight')
                         ->label('Camera Light'),
 
-                    Toggle::make('configuration.settings.tumbling')
-                        ->helperText('Sets the Tumbling for Camera')
-                        ->label('Tumbling'),
-
-
             ]),
 
             Section::make('Smart Detection')->columns(2)->schema([
                 Toggle::make('configuration.settings.petDetection')
-                    ->helperText('For auto detection of pet movement')
+                    ->helperText('Detect when a pet appears in the frame')
                     ->label('Pet Appearance Detection'),
 
                 Toggle::make('configuration.settings.wanderDetection')
@@ -121,6 +135,11 @@ class UI
                         8 => 8,
                         9 => 9,
                     ]),
+
+                TextInput::make('configuration.settings.detectInterval')
+                    ->helperText('Detection period')
+                    ->label('Detection interval')
+                    ->numeric(),
                 ]),
 
 
@@ -138,38 +157,116 @@ class UI
                     ->label('Delayed Cleaning')
                     ->helperText('Set time interval before device starts cleaning')
                     ->options([
-                        1200 => '20 Minutes',
-                        1800 => '30 Minutes',
-                        2400 => '40 Minutes',
-                        3000 => '50 Minutes',
-                        3600 => '60 Minutes',
+                        '0' => 'Off',
+                        '30' => '30 seconds',
+                        '60' => '1 Minute',
+                        '300' => '5 Minutes',
+                        '600' => '10 Minutes',
+                        '900' => '15 Minutes',
+                        '1800' => '30 Minutes',
+                        '3600' => '1 Hour',
+                    ]),
+
+                Select::make('configuration.settings.autoIntervalMin')
+                    ->label('Time interval of each cleaning')
+                    ->helperText('During the set time, the device will not clean repeatedly after the pet used it for multiple times')
+                    ->options([
+                        '0' => 'Off',
+                        '30' => '30 seconds',
+                        '60' => '1 Minute',
+                        '300' => '5 Minutes',
+                        '600' => '10 Minutes',
+                        '900' => '15 Minutes',
+                        '1800' => '30 Minutes',
+                        '3600' => '1 Hour',
                     ]),
 
                 Toggle::make('configuration.settings.avoidRepeat')
-                    ->helperText('Avoid repeated cleaning within a short period')
-                    ->label('Avoid Repeated Cleaning')
+                    ->helperText('Set based on cleaning interval or pet weight')
+                    ->label('Avoid Repeated Cleaning'),
+
+                Toggle::make('configuration.settings.underweight')
+                    ->helperText("When the device detects that the pet's weight is less than the actual minimum weight, it will not start automatic cleaning")
+                    ->label('Disable auto cleaning for light weight'),
+
+                TextInput::make('configuration.settings.lightest')
+                    ->label('Minimum Weight'),
+
+                Toggle::make('configuration.settings.deepClean')
+                    ->helperText('After being enabled, it can effectively remove the waste residue')
+                    ->label('Deep Cleaning'),
+
+                Toggle::make('configuration.settings.bury')
+                    ->helperText('Help evenly cover waste with cat litter before cleaning cycle')
+                    ->label('Waste Covering'),
+
+                Toggle::make('configuration.settings.sandSaving')
+                    ->helperText('Turn it on when clumps are relatively large')
+                    ->label('Litter-saving Mode'),
+
+                Select::make('configuration.settings.sandType')
+                    ->label('Litter Type')
+                    ->helperText('Resolved from OverseaToiletLitterSettingFragment: the app is 1-based, 0 = not set yet')
+                    ->options([
+                        '0' => 'Not set',
+                        '1' => 'Bentonite / Ore',
+                        '2' => 'Tofu',
+                        '3' => 'Mixed',
+                    ]),
+
+                Select::make('configuration.settings.unit')
+                    ->label('Weight Unit')
+                    ->options([
+                        '0' => 'Kg',
+                        '1' => 'Pound',
+                    ]),
+            ]),
+
+            Section::make('Do Not Disturb')->columns(2)->schema([
+                Toggle::make('configuration.settings.disturbMode')
+                    ->helperText("The device doesn't work during the do-not-disturb period")
+                    ->label('Do Not Disturb'),
+
+                $this->multiRangeRepeater('configuration.settings.distrubMultiRange.ranges', 'Undisturbed Period'),
             ]),
 
             Section::make('Reminders')->columns(2)->schema([
                 Toggle::make('configuration.settings.bag_tip_en')
                     ->helperText('Remind when the waste bag needs changing')
-                    ->label('Bag Reminder'),
+                    ->label('Refill Ring Replacement Reminder'),
 
                 Toggle::make('configuration.settings.spary_tip_en')
-                    ->helperText("Remind to refill the spray. The wire key keeps the firmware's own misspelling")
-                    ->label('Spray Reminder'),
+                    ->helperText("Remind to refill the purifying liquid. The wire key keeps the firmware's own misspelling")
+                    ->label('Purifying Liquid Reminder'),
             ]),
 
             Section::make('Lights')->columns(2)->schema([
 
-
                 Toggle::make('configuration.settings.toiletLight')
-                    ->label('Toilet Light'),
+                    ->helperText('The light will turn on automatically when the cat enters')
+                    ->label('Light Assist during Toileting'),
 
                 Toggle::make('configuration.settings.lightAssist')
-                    ->helperText('Once turned off, no toileting event playback is available in low light')
-                    ->label('Light Assist for Cleaning'),
+                    ->helperText('The light will turn on automatically during cleaning. Once turned off, no toileting event playback is available in low light')
+                    ->label('Light Assist during Cleaning'),
 
+                Toggle::make('configuration.settings.lightMode')
+                    ->helperText('After turning it off, the display will automatically turn off when the device is not in operation')
+                    ->label('Set Screen Display'),
+
+                $this->multiRangeRepeater('configuration.settings.lightMultiRange.ranges', 'Screen Period'),
+
+            ]),
+
+            Section::make('Voice Settings')->columns(2)->schema([
+                Toggle::make('configuration.settings.systemSoundEnable')
+                    ->label('Voice Prompt'),
+
+                Toggle::make('configuration.settings.toneMode')
+                    ->helperText('The device is muted within the following period.')
+                    ->label('Do Not Disturb (Voice)'),
+
+                $this->multiRangeRepeater('configuration.settings.toneMultiRange.ranges', 'Undisturbed Period (Voice)'),
             ]),
 
             Section::make('General')->columns(2)->schema([
@@ -180,9 +277,6 @@ class UI
                 Toggle::make('configuration.settings.clickOkEnable')
                     ->helperText('The OK button on the device itself')
                     ->label('OK Button'),
-
-                Toggle::make('configuration.settings.sandSaving')
-                    ->label('Litter Saving'),
 
                 Toggle::make('configuration.settings.log_upload')
                     ->helperText('Upload device logs for diagnostics')
@@ -241,9 +335,15 @@ class UI
                     ->label('pH Detection'),
 
                 Toggle::make('configuration.settings.softMode')
-                    ->label('Loose Stool Recognition'),
+                    ->helperText('Cylinder will rotate several times to have cat litter wrapped thoroughly - cleaning takes longer while this is on')
+                    ->label('Loose Stool Mode'),
             ]),
 
+            Section::make('Unverified')->schema([
+                Toggle::make('configuration.settings.tumbling')
+                    ->helperText('No app screen reference found for this field')
+                    ->label('Tumbling'),
+            ]),
 
         ];
     }
