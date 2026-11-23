@@ -21,6 +21,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Per-process Publisher Client IDs
+    |--------------------------------------------------------------------------
+    |
+    | Every process (web workers, localkit:listen, localkit:homeassistant)
+    | connects the publisher connections with the same client id, and each
+    | connect makes the broker drop another process's connection, losing its
+    | next publish. When enabled, the process id is appended to the
+    | 'publisher' and 'homeassistant-publisher' client ids at boot
+    | (AppServiceProvider).
+    |
+    */
+
+    'client_id_per_process' => env('MQTT_CLIENT_ID_PER_PROCESS', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | MQTT Connections
     |--------------------------------------------------------------------------
     |
