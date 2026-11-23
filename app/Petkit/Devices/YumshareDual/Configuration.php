@@ -597,6 +597,16 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     )]
     private $actionFeed = 1;
 
+    #[Button(
+        technicalName: 'action_reset_desiccant',
+        name: 'Reset Desiccant',
+        commandTopic: 'action/start',
+        icon: 'mdi:diamond-stone',
+        commandTemplate: '{"action": "reset_desiccant"}',
+        availabilityTemplate: 'online',
+    )]
+    private $actionResetDesiccant = 1;
+
     #[Number(
         technicalName: 'desiccant_durability',
         name: 'Desiccant Durability',

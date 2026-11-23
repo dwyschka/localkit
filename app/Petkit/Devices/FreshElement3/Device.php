@@ -280,6 +280,9 @@ class Device implements DeviceDefinition, BluetoothProxyInterface
             case 'feed':
                 $this->startFeeding($this->getDevice());
                 break;
+            case 'reset_desiccant':
+                $this->resetDesiccant($this->getDevice());
+                break;
         }
     }
 
