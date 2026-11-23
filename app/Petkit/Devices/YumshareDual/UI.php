@@ -136,6 +136,15 @@ class UI
                     ->label('Feeding Photo')
                     ->helperText('Save a photo to the cloud when food is dispensed'),
 
+                TextInput::make('configuration.settings.rtsp_username')
+                    ->label('RTSP Username')
+                    ->helperText('RTSP Digest authentication username (from raptor.conf). Leave blank to use global default.'),
+
+                TextInput::make('configuration.settings.rtsp_password')
+                    ->label('RTSP Password')
+                    ->password()
+                    ->helperText('RTSP Digest authentication password (from raptor.conf). Avoid #, ;, quotes, or spaces.'),
+
                 Fieldset::make('Detection')->schema([
                     Toggle::make('configuration.settings.petDetection')
                         ->helperText('For events of pet visiting the feeder')
