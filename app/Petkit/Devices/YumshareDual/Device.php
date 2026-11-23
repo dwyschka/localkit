@@ -143,14 +143,20 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
                 $this->reply($topic, $message);
             },
             sprintf('/sys/%s/%s/thing/event/feed_start/post', $this->device->productKey(), $this->device->deviceName()) => function (DeviceModel $device, string $topic, stdClass|null $message) {
-                $content = json_decode($message?->params?->content, false);
+                $content = json_decode($message?->params?->content ?? '{}', true) ?? [];
+                $eventId = $message?->params?->event_id ?? null;
 
-                History::updateOrCreate(['messageId' => $message->params->event_id], [
-                    'pet_id' => null,
-                    'type' => DeviceStates::WORKING->value,
-                    'parameters' => $content,
-                    'device_id' => $device->id
-                ]);
+                if ($eventId !== null) {
+                    $existing = History::where('messageId', $eventId)->first();
+                    $parameters = $existing ? array_merge((array)($existing->parameters ?? []), $content) : $content;
+
+                    History::updateOrCreate(['messageId' => $eventId], [
+                        'pet_id' => null,
+                        'type' => DeviceStates::WORKING->value,
+                        'parameters' => $parameters,
+                        'device_id' => $device->id,
+                    ]);
+                }
 
                 $this->parseState($device, $message, DeviceStates::WORKING->value);
                 $this->reply($topic, $message);
@@ -230,6 +236,36 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
         $content = json_decode($rawContent ?? '{}', true) ?? [];
         $history = History::where('messageId', $messageId)->first();
 
+        if ($history === null && isset($content['start_time'])) {
+            $startMessageId = $this->device->petkit_id . '_' . $content['start_time'];
+            $history = History::where('messageId', $startMessageId)->first();
+        }
+
+        if ($history === null && !empty($content['id'])) {
+            $history = History::where('device_id', $this->device->id)
+                ->where('parameters->id', $content['id'])
+                ->latest()
+                ->first();
+        }
+
+        // Last-resort match: a WORKING row started within 3 minutes of this
+        // feed. Anchored on the feed's own time (start_time/completed_at),
+        // not on now(): a feed_over can reach us long after the fact (the
+        // device queues it until acked and flushes the backlog on reconnect),
+        // and anchored on now() every unmatched old feed of such a backlog
+        // got merged into the first row created during the flush.
+        $happenedAt = (int) ($content['start_time'] ?? $content['completed_at'] ?? 0);
+        if ($history === null && $type === DeviceStates::WORKING->value && $happenedAt > 0) {
+            $history = History::where('device_id', $this->device->id)
+                ->where('type', DeviceStates::WORKING->value)
+                ->whereBetween('created_at', [
+                    Carbon::createFromTimestamp($happenedAt - 180, config('app.timezone')),
+                    Carbon::createFromTimestamp($happenedAt + 180, config('app.timezone')),
+                ])
+                ->latest()
+                ->first();
+        }
+
         if ($history === null) {
             if ($type === null) {
                 return;
@@ -246,11 +282,9 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
             return;
         }
 
+        $mergedParams = array_merge((array) ($history->parameters ?? []), (array) $content);
         $history->update([
-            'parameters' => [
-                ...$history->parameters,
-                ...$content,
-            ],
+            'parameters' => $mergedParams,
             ...(!empty($content['pet_id']) ? ['pet_id' => $content['pet_id']] : []),
         ]);
 
@@ -441,7 +475,7 @@ class Device implements DeviceDefinition, Snapshot, BluetoothProxyInterface
     #[HomeassistantTopic('action/start')]
     public function action(stdClass $message): void
     {
-        $action = $message->action;
+        $action = $message->action ?? null;
         switch ($action) {
             case 'feed':
                 $this->startFeeding($this->getDevice());
