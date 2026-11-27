@@ -144,10 +144,10 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     #[BinarySensor(
         technicalName: 'clean_water_tank_installed',
         name: 'Clean Water Tank Installed',
-        valueTemplate: '{{ value_json.states.cwtInstall }}',
+        valueTemplate: "{{ '1' if value_json.states.cwtInstall else '0' }}",
         entityCategory: 'diagnostic',
-        payloadOn: true,
-        payloadOff: false
+        payloadOn: '1',
+        payloadOff: '0'
     )]
     public bool $cwtInstall;
 
@@ -296,11 +296,11 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
     #[BinarySensor(
         technicalName: 'add_water_frequent',
         name: 'Add Water Too Frequent',
-        valueTemplate: '{{ value_json.states.addWaterFrequent }}',
+        valueTemplate: "{{ '1' if value_json.states.addWaterFrequent else '0' }}",
         entityCategory: 'diagnostic',
         deviceClass: 'problem',
-        payloadOn: true,
-        payloadOff: false
+        payloadOn: '1',
+        payloadOff: '0'
     )]
     public bool $addWaterFrequent;
 
@@ -536,10 +536,10 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         name: 'Clean Water Tank Low',
         icon: 'mdi:water-alert-outline',
         deviceClass: 'problem',
-        valueTemplate: '{{ value_json.settings.cleanWaterLackLight }}',
+        valueTemplate: "{{ '1' if value_json.settings.cleanWaterLackLight else '0' }}",
         entityCategory: 'diagnostic',
-        payloadOn: true,
-        payloadOff: false
+        payloadOn: '1',
+        payloadOff: '0'
     )]
     public bool $cleanWaterLackLight;
 
@@ -548,10 +548,10 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         name: 'Clean Water Tank Empty',
         icon: 'mdi:water-off-outline',
         deviceClass: 'problem',
-        valueTemplate: '{{ value_json.settings.cleanWaterEmptyLight }}',
+        valueTemplate: "{{ '1' if value_json.settings.cleanWaterEmptyLight else '0' }}",
         entityCategory: 'diagnostic',
-        payloadOn: true,
-        payloadOff: false
+        payloadOn: '1',
+        payloadOff: '0'
     )]
     public bool $cleanWaterEmptyLight;
 
@@ -560,10 +560,10 @@ class Configuration extends DeviceConfigurationDTO implements ConfigurationInter
         name: 'Waste Water Tank Full',
         icon: 'mdi:water-alert',
         deviceClass: 'problem',
-        valueTemplate: '{{ value_json.settings.wasteWaterFullLight }}',
+        valueTemplate: "{{ '1' if value_json.settings.wasteWaterFullLight else '0' }}",
         entityCategory: 'diagnostic',
-        payloadOn: true,
-        payloadOff: false
+        payloadOn: '1',
+        payloadOff: '0'
     )]
     public bool $wasteWaterFullLight;
 
